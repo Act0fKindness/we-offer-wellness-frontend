@@ -1,0 +1,187 @@
+/* We Offer Wellness — Card System (Therapies, Events, Workshops/Classes, Retreats)
+   This stylesheet scopes variables to .wow-card to avoid global conflicts. */
+
+/* ---------- Base Card ---------- */
+.wow-card{
+  /* Local design tokens (scoped) */
+  --ring: var(--ink-200, #e2e8f0);
+  --card: #ffffff;
+  --chip: #f1f5f9;
+  --chip-ink: #0f172a;
+  --accent: var(--brand-600, #4a8878);
+  --star: #f59e0b;
+  --danger: #ef4444;
+  --ok: #16a34a;
+  --ok-ink: #065f46;
+  --danger-bg: #fff1f2;
+  --danger-br: #fecdd3;
+  --radius: 16px;
+  --shadow: 0 12px 28px rgba(11,19,35,.06);
+  --shadow-lg: 0 18px 44px rgba(11,19,35,.10);
+  --card-h: 540px; /* default height; can be overridden by size variants */
+  --ticker-h: 34px;
+
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--ring);
+  overflow: hidden;
+  transition: border-color .25s ease; /* no hover lift/shadow */
+  position: relative;
+  display: flex; flex-direction: column;
+  /* Fixed height as requested (use variable to allow size variants) */
+  height: var(--card-h);
+  /* Fixed card width for carousels */
+  width: 416px; max-width: 416px; flex: 0 0 auto;
+  isolation: isolate;
+}
+.wow-card:hover{ transform: none; box-shadow: var(--shadow); border-color: var(--ring); }
+
+/* Media */
+.wow-media{ position: relative; aspect-ratio: 16/10; overflow: hidden; background: #eaeef5; }
+.wow-media img{ width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.02); transition: none; }
+/* Disable hover zoom */
+.wow-card:hover .wow-media img{ transform: scale(1.02); }
+
+/* Overlay actions — TOP RIGHT */
+.wow-overlay-actions{ position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 8px; align-items: end; z-index: 6; }
+
+/* Badges (top-left) */
+.wow-badges{ position: absolute; top: 12px; left: 12px; z-index: 5; display: flex; gap: 8px; flex-wrap: wrap; }
+.badge-chip{ background: #111827d9; color: #fff; border: 1px solid #000; font-size: .75rem; padding: .25rem .5rem; border-radius: 999px; display: inline-flex; align-items: center; gap: .35rem; backdrop-filter: saturate(180%) blur(6px); }
+.badge-chip .bi{ font-size: .9em; }
+
+/* Quick-view hover */
+.quick-view{ position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.45), transparent 40%); opacity: 0; transition: opacity .25s ease; display: flex; align-items: end; justify-content: flex-end; padding: 12px; z-index: 4; }
+.wow-card:hover .quick-view{ opacity: 1; }
+
+/* Body */
+.wow-body{ padding: 16px 16px 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.wow-type{ font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-600, #667085); }
+.wow-title{ font-weight: 700; line-height: 1.25; font-size: 1.05rem; }
+.truncate-2{ display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+/* Rating tile */
+.wow-rating{ display: inline-flex; align-items: center; gap: 8px; }
+.rating-tile{
+  background: #d1fae5; /* light green */
+  color: #065f46;      /* dark teal-green text for contrast */
+  font-weight: 700;
+  border-radius: 10px;
+  border: 1px solid #a7f3d0;
+  /* tighter left, extra right for icon spacing */
+  padding: .25rem .7rem .25rem .5rem;
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+/* WOW variant → richer, but still light‑green family */
+.rating-tile--wow{
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #a7f3d0, #86efac);
+  color: #064e3b;
+  border: 1px solid #34d399; /* emerald-400 */
+}
+/* Keep hover same tone; no extra glow */
+.rating-tile--wow:hover{ color: #064e3b; box-shadow: none; }
+.rating-tile svg{ width: 18px; height: 18px; display: inline-block; }
+/* Make inline SVG icons follow text color inside rating tiles */
+.rating-tile svg *[fill="none"]{ fill: none; }
+.rating-tile svg *{ stroke: currentColor; }
+.rating-tile svg *:not([fill="none"]){ fill: currentColor; }
+.rating-text{ color: var(--ink-600, #667085); font-size: .9rem; }
+.rating-tile .bi{ opacity: .9; }
+
+/* ===== Approved badge behaviour (md cards) ===== */
+.wow-card.md .rating-tile--wow.rating-approved{
+  height:28px; width:28px; min-width:28px;
+  padding:0; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:20px;
+  gap:.35rem; /* restore small space between icon and label */
+}
+.wow-card.md .rating-tile--wow.rating-approved .rating-label{ display:none; margin-left:.35rem; white-space:nowrap; }
+.wow-card.md .rating-tile--wow.rating-approved:hover{
+  width:auto; min-width:28px; height:28px; line-height:28px;
+  padding:0 .45rem 0 .35rem; border-radius:20px 9px 9px 20px;
+}
+.wow-card.md .rating-tile--wow.rating-approved:hover .rating-label{ display:inline; }
+
+/* Meta chips */
+.wow-meta{ display: flex; flex-wrap: wrap; gap: 8px; }
+.chip{ background: var(--chip); border: 1px solid var(--ring); color: var(--chip-ink); border-radius: 999px; padding: .35rem .6rem; font-size: .85rem; display: inline-flex; gap: .5rem; align-items: center; white-space: nowrap; }
+.chip .bi{ font-size: 1rem; opacity: .85; }
+.chip.good{ background: transparent; border-color: transparent; padding: 0; border-radius: 0; color: var(--ok); font-weight: 600; gap: .4rem; }
+.chip-dark{ opacity: 1; background: #000 !important; color: #fff; border-color: #000; }
+
+/* Bottom row */
+.wow-bottom{ margin-top: auto; padding: 12px 16px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.price-block small{ color: var(--ink-600, #667085); font-size: 0.8rem; }
+.price{ font-weight: 800; font-size: 1.1rem; }
+.avail{ display: inline-flex; align-items: center; gap: .45rem; padding: .25rem .6rem; border-radius: 999px; font-size: .85rem; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
+.avail.low{ color: var(--danger); background: var(--danger-bg); border-color: var(--danger-br); }
+
+/* Buttons row under price (non-event cards) */
+.wow-actions{ display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; }
+
+/* ---------- EVENT variant ---------- */
+.wow-card.event{ border-color: transparent; }
+.wow-card.event .wow-media{ aspect-ratio: auto; height: 100%; }
+.wow-card.event::before{ content: ""; position: absolute; inset: -1px; border-radius: inherit; background: conic-gradient(from 0deg, var(--ev1, #7c3aed), var(--ev2, #22d3ee), var(--ev3, #fb7185), var(--ev1, #7c3aed)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 2px; z-index: 0; opacity: .9; animation: spin 6s linear infinite; }
+@keyframes spin{ to{ transform: rotate(1turn) } }
+.event-glaze{ position: absolute; inset: 0; background: radial-gradient(120% 120% at 0% 100%, rgba(255,255,255,.0) 40%, rgba(255,255,255,.25) 70%, rgba(255,255,255,0) 80%); mix-blend-mode: overlay; pointer-events: none; z-index: 1; }
+
+.event-ticker{ position: absolute; left: 0; right: 0; bottom: 0; height: var(--ticker-h); display: flex; align-items: center; background: linear-gradient(90deg, rgba(12,14,24,.80), rgba(12,14,24,.45)); color: #fff; font-weight: 600; font-size: .85rem; overflow: hidden; border-top: 1px solid rgba(255,255,255,.25); z-index: 4; pointer-events: none; }
+.event-ticker span{ white-space: nowrap; padding-left: 100%; display: inline-block; animation: marq 12s linear infinite; }
+@keyframes marq{ to{ transform: translateX(-100%) } }
+
+.event-head{ position: absolute; left: 0; right: 0; bottom: calc(var(--ticker-h) - 5px); z-index: 5; color: #fff; padding: 16px 16px 14px; background: linear-gradient(180deg, rgba(2,6,23,0) 0%, rgba(2,6,23,.45) 40%, rgba(2,6,23,.9) 100%); pointer-events: none; transition: opacity .2s ease, transform .25s ease; }
+.event-head .wow-type{ color: #e2e8f0; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); padding: .25rem .5rem; border-radius: 999px; width: max-content; }
+.event-head .wow-title{ color: #fff; font-size: clamp(1.2rem, 2.2vw, 1.6rem); margin: .5rem 0 0; }
+
+.event-details{ position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; color: #fff; padding: 16px 16px 14px; gap: 12px; background: linear-gradient(180deg, rgba(2,6,23,0) 0%, rgba(2,6,23,.65) 30%, rgba(2,6,23,.95) 100%); transform: translateY(100%); transition: transform .35s ease; display: flex; flex-direction: column; }
+/* Reveal details on hover/focus only */
+.wow-card.event:hover .event-details,
+.wow-card.event:focus-within .event-details{ transform: translateY(0); }
+/* Only fade/move the head on hover */
+.wow-card.event:hover .event-head{ opacity: 0; transform: translateY(8px); }
+.event-details .rating-text{ color: #ffffff; }
+.event-details .wow-meta .chip{ background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff; }
+.event-details .chip.good{ background: transparent; border-color: transparent; padding: 0; color: #d1fae5; }
+.event-price{ display:flex; align-items:center; justify-content:space-between; }
+.event-price .price{ color:#fff; }
+.event-price .price small{ color:#cbd5e1; font-size: 0.8rem; }
+.event-actions{ display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; }
+.event-details .avail{ margin-top: 5px; }
+
+/* ---------- RETREAT extras ---------- */
+.wow-card.retreat{ --sea:#0ea5e9; --sand:#fbbf24; --leaf:#22c55e; }
+.wow-card.retreat .retreat-strip{ position: absolute; inset: 0; background: linear-gradient(135deg, color-mix(in srgb, var(--sea) 20%, transparent), transparent 55%), linear-gradient(225deg, color-mix(in srgb, var(--sand) 18%, transparent), transparent 60%), linear-gradient(315deg, color-mix(in srgb, var(--leaf) 12%, transparent), transparent 65%); z-index: 1; pointer-events: none; }
+.wow-card.retreat .retreat-perks{ position: absolute; left: 12px; bottom: 12px; z-index: 5; display: flex; gap: 6px; flex-wrap: wrap; }
+.wow-card.is-fluid{ width: 100%; max-width: none; }
+
+/* ---------- MEDIUM SIZE (compact content) ---------- */
+.wow-card.md{ --card-h: 530px; width: 309px; max-width: 309px; }
+.wow-card.md .wow-body{ padding: 14px 14px 0 14px; gap: 8px; }
+.wow-card.md .wow-type{ font-size: .78rem; }
+.wow-card.md .wow-title{ font-size: 1rem; }
+.wow-card.md .rating-text{ font-size: .85rem; }
+.wow-card.md .rating-tile{ padding: .2rem .45rem; border-radius: 9px; }
+.wow-card.md .chip{ font-size: .82rem; padding: .3rem .55rem; }
+.wow-card.md .wow-bottom{ padding: 10px 14px 14px 14px; gap: 10px; }
+
+/* Updated price style for MD */
+.wow-card.md .price{ font-size: 1.4rem; font-weight: 400; }
+
+/* Make overlay controls and badges slightly more compact on MD */
+.wow-card.md .badge-chip{ font-size: .72rem; padding: .22rem .45rem; }
+.wow-card.md .quick-view{ padding: 10px; }
+.wow-card.md .event-ticker{ --ticker-h: 30px; font-size: .8rem; }
+.wow-card.md.event .event-head{ padding: 14px 14px 12px; }
+.wow-card.md.event .event-details{ padding: 14px 14px 12px; gap: 10px; }
+.wow-card.md.event .event-head .wow-title{ font-size: clamp(1.05rem, 2vw, 1.35rem); }
+
+/* Show only the most important meta on medium */
+.wow-card.md .wow-meta .chip:nth-child(n+4){ display: none; } /* keep first 3 chips visible */
+.wow-card.md .wow-meta .chip.good{ display: inline-flex; order: 99; flex-basis: 100%; }
+
+/* Fluid override for MD size (list/grid views) */
+.wow-card.md.is-fluid{ width: 100%; max-width: none; }

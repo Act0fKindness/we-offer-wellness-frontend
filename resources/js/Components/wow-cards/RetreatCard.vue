@@ -1,0 +1,135 @@
+<script setup>
+import { ref } from 'vue'
+import SquareButton from '@/Components/ui/SquareButton.vue'
+import WowButton from '@/Components/ui/WowButton.vue'
+import { useCart } from '@/stores/cart'
+
+const props = defineProps({
+  size: { type: String, default: 'md' }, // 'md' | 'xl'
+  image: { type: String, required: true },
+  alt: { type: String, default: '' },
+  badges: { type: Array, default: () => [
+    { icon: 'bi-stars', text: 'Featured' },
+    { icon: 'bi-sunrise', text: '3 nights' },
+  ] },
+  typeLabel: { type: String, default: 'Retreat • Cornwall, UK' },
+  title: { type: String, required: true },
+  rating: { type: [String, Number], default: '5.0' },
+  hasReviews: { type: Boolean, default: true },
+  reviewsText: { type: String, default: 'Exceptional • 18 reviews' },
+  meta: { type: Array, default: () => [
+    { icon: 'bi-calendar4-week', text: '22–25 May' },
+    { icon: 'bi-people', text: 'Max 16 guests' },
+    { icon: 'bi-bag-heart', text: 'Giftable' },
+  ] },
+  policyText: { type: String, default: 'Free cancellation 24h' },
+  perks: { type: Array, default: () => [
+    { icon: 'bi-cup-hot', text: 'Breakfast' },
+    { icon: 'bi-spa', text: 'Spa access' },
+    { icon: 'bi-water', text: 'Cold-water dips' },
+  ] },
+  price: { type: String, default: '£389' },
+  priceNote: { type: String, default: '/ person' },
+  ctaLabel: { type: String, default: 'Book Retreat' },
+  ctaHref: { type: String, default: '#' },
+  product: { type: Object, default: () => ({}) },
+  showQuickView: { type: Boolean, default: true },
+})
+
+const liked = ref(false)
+const sharing = ref(false)
+const cart = useCart()
+
+function addToCart(e){
+  const p = props.product || {}
+  const item = { id: p.id || props.title, title: p.title || props.title, price: p.price || 0, image: props.image, url: p.url || props.ctaHref, qty: 1 }
+  cart.add(item)
+  try { const btn = e?.currentTarget; if (btn) { btn.classList.add('btn-press'); setTimeout(()=>btn.classList.remove('btn-press'), 160) } ; window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail: { id: item.id } })) } catch {}
+}
+async function share(){
+  const url = props.product?.url || props.ctaHref || window.location.href
+  try { await navigator.clipboard.writeText(url); sharing.value = true; setTimeout(()=>sharing.value=false, 900) } catch { alert('Link: ' + url) }
+}
+</script>
+
+<template>
+  <article :class="['wow-card', props.size === 'md' ? 'md' : '', 'retreat']" data-type="retreat">
+    <div class="retreat-strip"></div>
+    <div class="wow-media">
+      <img :src="image" :alt="alt || title">
+      <div class="wow-badges">
+        <span v-for="(b,i) in badges" :key="i" class="badge-chip"><i :class="['bi', b.icon]"></i> {{ b.text }}</span>
+      </div>
+      <div class="retreat-perks">
+        <span v-for="(p,i) in perks" :key="i" class="badge rounded-pill text-dark bg-white/90 border" style="border-color: rgba(0,0,0,0.08) !important;">
+          <i :class="['bi', p.icon, 'me-1']"></i>{{ p.text }}
+        </span>
+      </div>
+      <div class="wow-overlay-actions">
+        <WowButton variant="outline" size="sm" :squarish="true" :aria-label="liked ? 'Remove from favourites' : 'Add to favourites'" @click="liked=!liked">
+          <i :class="['bi', liked ? 'bi-heart-fill' : 'bi-heart']"></i>
+        </WowButton>
+        <WowButton variant="outline" size="sm" :squarish="true" aria-label="Share" @click="share">
+          <i class="bi bi-share" :class="{ 'text-brand-400': sharing }"></i>
+        </WowButton>
+        <template v-if="!hasReviews">
+          <span class="rating-tile rating-tile--wow rating-approved" title="Approved" aria-label="Approved">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1764 1764" aria-hidden="true">
+              <g transform="translate(324.5,200)">
+                <path fill="#ffffff" d="M556.68,1.16c56.42,35.17,110.95,73.94,161.8,116.78,60.19,50.71,118.5,108.96,158.45,177.22l-242.91,230.97c-22.66,19.27-43.36,41.78-66,60.96-2.23,1.89-9.41,8.52-11.54,8.46L237.07,295.16c39.98-68.26,98.26-126.5,158.45-177.22,50.75-42.76,105.2-81.14,161.15-116.78Z"/>
+                <g>
+                  <path fill="#ffffff" d="M529,1364h-8l-67.23-10.27C193.22,1301.1,47.58,1096.94,8.13,843.75L0,775.43v-19.99l360.47,345.75c7.82-13.07-4.98-32.27-12.06-43.89-26.58-43.62-67.87-89.47-101.9-128-73.96-83.76-152.99-162.93-231.03-242.84l-.31-3.19c13.08-47.87,26.91-101.54,52.67-144.33.69-1.15,2.13-4.89,3.63-4.31,72.21,73.62,147.03,144.85,228.07,208.78,20.54,16.2,41.42,32.43,63.44,46.52-66.4-117.24-164.66-213.16-259.83-307.01-.97-3.59,9.33-22.48,11.68-26.93,17.09-32.38,40.68-66.66,64.2-94.73,2.68-3.2,18-21.54,20.48-21.54l328.55,315.25,1.01,3.99-.06,705.04Z"/>
+                  <path fill="#ffffff" d="M586,1364l-.06-705.04,1.01-3.99,328.55-315.25c2.47,0,17.8,18.35,20.48,21.54,23.51,28.08,47.1,62.35,64.2,94.73,2.35,4.45,12.66,23.34,11.68,26.93-68.85,67.19-137.24,135.48-196.25,211.67-23.38,30.18-45.7,61.52-63.58,95.34,22.01-14.09,42.9-30.32,63.44-46.52,81.05-63.93,155.86-135.16,228.07-208.78,1.51-.58,3.3,3.77,3.99,4.95,4.57,7.81,9.53,18.32,13.34,26.64,17.49,38.26,30.27,79.02,38.67,120.25-78.05,79.9-157.08,159.07-231.04,242.83-34.14,38.67-87.03,96.17-109.66,141.24-4.1,8.18-12.22,23.24-4.29,30.64l360.46-345.74v19.99c-1.22,2.15-1.76,6.02-1.99,8.5-26.33,281.9-169.3,518.64-463.83,571.76l-56.19,8.31h-7Z"/>
+                </g>
+              </g>
+            </svg>
+            <span class="rating-label">Approved</span>
+          </span>
+        </template>
+      </div>
+      <div v-if="showQuickView" class="quick-view" style="align-items:end; justify-content:end;">
+        <SquareButton variant="outline" size="sm">Quick view</SquareButton>
+      </div>
+    </div>
+
+    <div class="wow-body">
+      <div class="wow-type">{{ typeLabel }}</div>
+      <h3 class="wow-title truncate-2">{{ title }}</h3>
+
+      <div class="wow-rating">
+        <template v-if="hasReviews">
+          <span class="rating-tile"><i class="bi bi-star-fill"></i> {{ rating }}</span>
+          <span class="rating-text">{{ reviewsText }}</span>
+        </template>
+        <!-- no else: Approved badge shown in overlay-actions -->
+      </div>
+
+      <div class="wow-meta">
+        <template v-for="(m,idx) in meta" :key="idx">
+          <span v-if="m.good" class="chip good"><i class="bi bi-check2-circle"></i>{{ m.text }}</span>
+          <span v-else :class="['chip', m.dark ? 'chip-dark' : '']"><i :class="['bi', m.icon]"></i>{{ m.text }}</span>
+        </template>
+      </div>
+      <div class="wow-meta" v-if="policyText">
+        <span class="chip good"><i class="bi bi-check2-circle"></i>{{ policyText }}</span>
+      </div>
+    </div>
+
+    <div class="wow-bottom">
+      <div class="price-block">
+        <div class="price">{{ price }} <small class="text-muted">{{ priceNote }}</small></div>
+      </div>
+      <div class="wow-actions">
+        <SquareButton as="a" :href="ctaHref" variant="cta" size="md">{{ ctaLabel }}</SquareButton>
+        <SquareButton type="button" variant="outline" size="md" class="btn-icon is-square d-inline-flex align-items-center" @click="addToCart" aria-label="Add to cart">
+          <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h1.5L8 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm.75-3H7.5M11 7H6.312M17 4v6m-3-3h6"/>
+          </svg>
+        </SquareButton>
+      </div>
+    </div>
+  </article>
+</template>
+
+<style scoped>
+</style>
