@@ -52,16 +52,22 @@
   if(!hasSSR){ list.innerHTML = '<div class="text-muted">Loading gifts…</div>'; }
 
   function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]); }); }
+  function normalizePrice(v){
+    var n = Number(v);
+    if(!isFinite(n)) return null;
+    if(n >= 100) n = n / 100; // treat as pennies
+    return n;
+  }
   function render(items){
     if(hasSSR) return;
     if(!Array.isArray(items) || items.length===0){ list.innerHTML = '<div class="text-muted">No gifts found under £50 right now. <a class="link-wow" href="/gifts">Browse all gifts</a>.</div>'; return; }
     list.innerHTML = '';
     items.forEach(function(it){
+      var priceMin = normalizePrice(it.price_min);
+      if(priceMin != null && priceMin > 50) return; // keep under £50 only
       var a = document.createElement('a');
       a.href = it.url || '#';
       a.className = 'wow-card md';
-      var priceMin = it.price_min;
-      if(typeof priceMin === 'number' && priceMin > 1000 && priceMin % 100 === 0){ priceMin = priceMin / 100; }
       a.innerHTML =
         '<div class="wow-media">' + (it.image ? '<img src="' + esc(it.image) + '" alt="' + esc(it.title) + '">' : '') + '</div>' +
         '<div class="wow-body">' +
@@ -70,7 +76,7 @@
           (it.rating ? ('<div class="rating-text">★ ' + Number(it.rating).toFixed(1) + (it.review_count ? ' <small class="text-muted">(' + it.review_count + ')</small>' : '') + '</div>') : '') +
         '</div>' +
         '<div class="wow-bottom">' +
-          (priceMin ? ('<div class="price">£' + Number(priceMin).toFixed(2) + ' <small>from</small></div>') : '') +
+          (priceMin != null ? ('<div class="price">£' + Number(priceMin).toFixed(2) + ' <small>from</small></div>') : '') +
           '<div class="actions"><span class="link-wow">View</span></div>' +
         '</div>';
       list.appendChild(a);

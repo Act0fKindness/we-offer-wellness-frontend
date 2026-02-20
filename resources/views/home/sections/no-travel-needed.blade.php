@@ -101,6 +101,7 @@
     if(ctaLabel){ ctaLabel.textContent = 'See all under £' + price + ' (' + group + ')'; }
   }
 
+  function normalizePrice(v){ var n = Number(v); if(!isFinite(n)) return null; if(n >= 100) n = n/100; return n; }
   function renderCards(items){
     if(!cardsEl) return;
     if(!Array.isArray(items) || items.length===0){
@@ -112,8 +113,8 @@
       var a = document.createElement('a');
       a.href = it.url || '#';
       a.className = 'wow-card md';
-      var priceMin = it.price_min;
-      if(typeof priceMin === 'number' && priceMin > 1000 && priceMin % 100 === 0){ priceMin = priceMin / 100; }
+      var priceMin = normalizePrice(it.price_min);
+      if(priceMin != null && priceMin > 50 && price === 50) return; // keep under £50 when that tab is selected
       a.innerHTML =
         '<div class="wow-media">'
           + '<img src="' + esc(it.image) + '" alt="' + esc(it.title) + '" loading="lazy">'
@@ -124,7 +125,7 @@
           + (it.rating ? ('<div class="rating-text">★ ' + Number(it.rating).toFixed(1) + (it.review_count ? ' <small class="text-muted">(' + it.review_count + ')</small>' : '') + '</div>') : '')
         + '</div>'
         + '<div class="wow-bottom">'
-          + (priceMin ? ('<div class="price">£' + Number(priceMin).toFixed(2) + ' <small>from</small></div>') : '')
+          + (priceMin != null ? ('<div class="price">£' + Number(priceMin).toFixed(2) + ' <small>from</small></div>') : '')
           + '<div class="actions"><span class="link-wow">View</span></div>'
         + '</div>';
       cardsEl.appendChild(a);
