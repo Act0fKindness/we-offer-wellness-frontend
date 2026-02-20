@@ -5,6 +5,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 import '../css/app.css';
 import '../css/wow-buttons.css';
 import '../css/wow-cards.css';
+import '../css/site.css';
 // Load Bootstrap JS (Popper included via dependency)
 import 'bootstrap';
 import './bootstrap';
