@@ -12,12 +12,6 @@
         href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&amp;display=swap"
         rel="stylesheet">
 
-    <!-- Styles: Vite when built; fallback to public asset in dev/preview -->
-    @php $manifest = public_path('build/manifest.json'); @endphp
-    @if (file_exists($manifest))
-        @vite('resources/css/we-offer-wellness-base-styles.css')
-    @else
         <link rel="stylesheet" href="{{ asset('css/we-offer-wellness-base-styles.css') }}">
-    @endif
     {{-- Removed static hashed asset preloads/meta from static export to avoid conflicts --}}
     <title inertia="">Holistic Therapy That Works | We Offer Wellness®</title>
