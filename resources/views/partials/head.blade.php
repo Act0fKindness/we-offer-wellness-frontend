@@ -12,7 +12,15 @@
         rel="stylesheet">
 
     <!-- Built CSS bundle from Vite/Laravel -->
+    @routes
+    @php $manifest = public_path('build/manifest.json'); @endphp
+    @if (file_exists($manifest))
+        @vite('resources/js/app.js')
+    @else
+        <!-- Vite manifest missing; run `npm run build` to generate assets. -->
+    @endif
 
+    @include('partials.styles')
 
     <meta name="description"
           content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
@@ -23,3 +31,4 @@
           content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
           inertia="">
     <meta property="og:url" content="" inertia="">
+    @inertiaHead
