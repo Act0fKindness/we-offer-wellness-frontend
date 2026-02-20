@@ -36,6 +36,9 @@ Route::get('/', function () {
         $giftsUnder50 = (clone $base)
             ->where(function($q){
                 $q->whereRaw("LOWER(COALESCE(tags_list,'')) like '%gift%'")
+                  ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%voucher%'")
+                  ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%card%'")
+                  ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%present%'")
                   ->orWhereRaw("LOWER(COALESCE(product_type,'')) like '%gift%'");
             })
             ->where(function($q){
@@ -68,16 +71,30 @@ Route::get('/', function () {
         if ($giftsUnder50->isEmpty()) {
             $giftsUnder50 = (clone $base)
                 ->where(function($q){
-                    $q->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                })
-                ->orWhereHas('variants', function($qv){
-                    $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                    $q->where(function($inner){
+                            $inner->where('price','<',1000)->where('price','<=',50);
+                        })
+                      ->orWhere(function($inner){
+                            $inner->where('price','>=',1000)->where('price','<=',50*100);
+                        })
+                      ->orWhereHas('variants', function($qv){
+                            $qv->where(function($qq){ $qq->where('price','<',1000)->where('price','<=',50); })
+                               ->orWhere(function($qq){ $qq->where('price','>=',1000)->where('price','<=',50*100); });
+                        });
                 })
                 ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
                 ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
                 ->orderByRaw('COALESCE(reviews_count, 0) DESC')
                 ->limit(12)
-                ->get();
+                ->get()
+                ->filter(function($p){
+                    $min = $p->variants_min_price ?? $p->price;
+                    if (!is_numeric($min)) return false;
+                    $min = (float) $min;
+                    if ($min >= 1000) $min = $min / 100;
+                    return $min <= 50.0;
+                })
+                ->values();
         }
 
         // Online options under £50 (consider variant prices too)
