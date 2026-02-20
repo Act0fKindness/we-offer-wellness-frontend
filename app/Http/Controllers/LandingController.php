@@ -916,7 +916,7 @@ class LandingController extends Controller
             })->values(),
         ];
 
-        return Inertia::render('Offering/Show', [
+        return view('offering.show', [
             'type' => $type,
             'product' => $data,
         ]);
