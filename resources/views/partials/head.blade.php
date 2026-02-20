@@ -15,12 +15,11 @@
     @routes
     @php $manifest = public_path('build/manifest.json'); @endphp
     @if (file_exists($manifest))
+        @vite('resources/css/we-offer-wellness-base-styles.css')
         @vite('resources/js/app.js')
     @else
-        <!-- Vite manifest missing; run `npm run build` to generate assets. -->
+        <link rel="stylesheet" href="{{ asset('css/we-offer-wellness-base-styles.css') }}">
     @endif
-
-    @include('partials.styles')
 
     <meta name="description"
           content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
@@ -31,4 +30,6 @@
           content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
           inertia="">
     <meta property="og:url" content="" inertia="">
-    @inertiaHead
+    @isset($page)
+        @inertiaHead
+    @endisset
