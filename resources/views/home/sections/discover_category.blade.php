@@ -28,7 +28,7 @@
         </a><a data-v-f43bb09d=""
                class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
                href="/therapies/massage-therapy"><img data-v-f43bb09d=""
-                                                      src="https://images.unsplash.com/photo-1612152918775-49ed1e1c1d1f?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
+                                                      src="https://images.pexels.com/photos/6560298/pexels-photo-6560298.jpeg"
                                                       class="h-48 w-full object-cover"
                                                       alt="Massage Therapy">
             <div data-v-f43bb09d=""
@@ -59,7 +59,7 @@
         </a><a data-v-f43bb09d=""
                class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
                href="/search?type=therapy&amp;what=coaching"><img data-v-f43bb09d=""
-                                                                  src="https://images.unsplash.com/photo-1497352305433-9b09be07364b?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
+                                                                  src="https://images.pexels.com/photos/3958432/pexels-photo-3958432.jpeg"
                                                                   class="h-48 w-full object-cover"
                                                                   alt="Coaching &amp; Mindset">
             <div data-v-f43bb09d=""
