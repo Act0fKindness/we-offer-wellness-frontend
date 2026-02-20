@@ -8,6 +8,8 @@ import '../css/wow-cards.css';
 // Load Bootstrap JS (Popper included via dependency)
 import 'bootstrap';
 import './bootstrap';
+// Header + homepage interactivity (mega menu, mobile drawer, search panes)
+import './home';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
