@@ -84,6 +84,23 @@
   var cache = Object.create(null);
   var ssrHTML = cardsEl ? cardsEl.innerHTML : '';
   var ssrHasCards = !!(cardsEl && cardsEl.querySelector('.wow-card'));
+  if(DEBUG){
+    try{
+      var ssrCards = cardsEl ? cardsEl.querySelectorAll('.wow-card') : [];
+      console.log('[Comfort] SSR cards count:', ssrCards.length);
+      if(ssrCards && ssrCards.length){
+        var rows = [];
+        ssrCards.forEach(function(card){
+          rows.push({
+            title: (card.querySelector('.wow-title')?.textContent||'').trim(),
+            price: (card.querySelector('.price')?.textContent||'').trim(),
+            href: card.getAttribute('href')
+          });
+        });
+        console.table(rows);
+      }
+    }catch(e){}
+  }
 
   function setActive(btn){
     var groupEl = btn.closest('.seg-group');
@@ -161,7 +178,11 @@
       setActive(btn);
       updateCta();
       // If £50 and SSR exists, restore SSR markup for consistency
-      if(price === 50 && ssrHasCards){ cardsEl.innerHTML = ssrHTML; return; }
+      if(price === 50 && ssrHasCards){
+        cardsEl.innerHTML = ssrHTML;
+        if(DEBUG){ try{ console.log('[Comfort] Restored SSR for £50'); }catch(e){} }
+        return;
+      }
       // Use cache if available
       var cached = cache[String(price)];
       if(Array.isArray(cached) && cached.length){ renderCards(cached); return; }

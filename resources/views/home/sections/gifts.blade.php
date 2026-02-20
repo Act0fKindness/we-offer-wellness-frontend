@@ -50,6 +50,23 @@
   if(!list) return;
   var DEBUG = true;
   var hasSSR = !!list.querySelector('.wow-card');
+  if(DEBUG){
+    try{
+      var ssrCards = list.querySelectorAll('.wow-card');
+      console.log('[Gifts] SSR cards count:', ssrCards.length);
+      if(ssrCards.length){
+        var rows = [];
+        ssrCards.forEach(function(card){
+          rows.push({
+            title: (card.querySelector('.wow-title')?.textContent||'').trim(),
+            price: (card.querySelector('.price')?.textContent||'').trim(),
+            href: card.getAttribute('href')
+          });
+        });
+        console.table(rows);
+      }
+    }catch(e){}
+  }
   if(!hasSSR){ list.innerHTML = '<div class="text-muted">Loading gifts…</div>'; }
 
   function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]); }); }
