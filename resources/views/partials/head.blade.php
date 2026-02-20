@@ -16,7 +16,7 @@
     @php $manifest = public_path('build/manifest.json'); @endphp
 
         <link rel="stylesheet" href="{{ asset('css/we-offer-wellness-base-styles.css') }}">
-    
+
 
     <meta name="description"
           content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
