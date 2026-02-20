@@ -21,5 +21,33 @@
                 stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg></span><span data-v-f43bb09d=""
                                                                                    class="btn-spinner"
                                                                                    aria-hidden="true"><span
-                data-v-f43bb09d="" class="spin"></span></span></a></div><!----></div>
+                data-v-f43bb09d="" class="spin"></span></span></a></div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="mt-articles"></div>
+    </div>
+
+    <script>
+    (function(){
+      var mount = document.getElementById('mt-articles');
+      if(!mount) return;
+      function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]); }); }
+      function card(a){
+        var img = a.img ? '<img src="'+esc(a.img)+'" alt="'+esc(a.title)+'" class="h-44 w-full object-cover rounded-t-xl">' : '';
+        var tag = a.tag ? '<div class="kicker mb-2">'+esc(a.tag)+'</div>' : '';
+        return '<a href="'+esc(a.href)+'" class="block overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card focus:outline-none focus:ring-2 focus:ring-emerald-500">'
+          + img
+          + '<div class="p-4">'+ tag +'<div class="font-semibold leading-snug">'+esc(a.title)+'</div>'
+          + (a.excerpt ? '<div class="text-ink-600 mt-1 text-sm">'+esc(a.excerpt)+'</div>' : '')
+          + '</div></a>';
+      }
+      mount.innerHTML = '<div class="text-muted">Loading latest stories…</div>';
+      fetch('/api/articles?limit=6', { headers: { 'Accept':'application/json' }})
+        .then(function(r){ return r.json(); })
+        .then(function(items){
+          if(!Array.isArray(items) || items.length===0){ mount.innerHTML = '<div class="text-muted">No stories yet. <a class="link-wow" href="https://times.weofferwellness.co.uk">Visit Mindful Times</a>.</div>'; return; }
+          mount.innerHTML = items.slice(0,6).map(card).join('');
+        })
+        .catch(function(){ mount.innerHTML = '<div class="text-muted">Couldn\'t load stories right now.</div>'; });
+    })();
+    </script>
 </section>
