@@ -67,11 +67,12 @@ if [[ "$NO_VERIFY" != "true" ]]; then
     die_or_warn "Missing $HEAD_PARTIAL"
   fi
 
-  # accept multiple Vite forms and quoting
-  if ! ( contains "@vite('resources/js/app.js')" "$HEAD_PARTIAL" \
-      || contains '@vite("resources/js/app.js")' "$HEAD_PARTIAL" \
-      || contains '@vite([\'resources/js/app.js\'])' "$HEAD_PARTIAL" \
-      || contains '@vite(["resources/js/app.js"])' "$HEAD_PARTIAL" ); then
+  # accept multiple Vite forms and quoting (loop to avoid complex quoting bugs)
+  has_vite="false"
+  for pat in "@vite('resources/js/app.js')" '@vite("resources/js/app.js")' "@vite(['resources/js/app.js'])" '@vite(["resources/js/app.js"])'; do
+    if contains "$pat" "$HEAD_PARTIAL"; then has_vite="true"; break; fi
+  done
+  if [[ "$has_vite" != "true" ]]; then
     die_or_warn "$HEAD_PARTIAL missing a @vite call for resources/js/app.js. Assets may not load."
   fi
 
