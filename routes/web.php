@@ -19,9 +19,7 @@ use App\Models\Review;
 use App\Http\Controllers\Api\V3SubscriberController;
 
 Route::get('/', function () {
-    return Inertia::render('Home', [
-        'mapboxKey' => env('MAPBOX_API_KEY'),
-    ]);
+    return view('home.index');
 });
 
 // V3 holding page

@@ -15,6 +15,16 @@ const mindfulTimesUrl = 'https://times.weofferwellness.co.uk'
 const podcastUrl = `${mindfulTimesUrl}/seeking-wellness`
 const sevenDayGuideHref = `${mindfulTimesUrl}/7-day-reset-starter-kit`
 const corporateComingSoonUrl = '/corporate-wellness'
+// Toggle corporate link visibility via env; default hidden
+const showCorporateLink = computed(() => {
+  const v = String(env.VITE_SHOW_CORPORATE_LINK ?? '').trim().toLowerCase()
+  return v === '1' || v === 'true' || v === 'yes'
+})
+// Toggle all Business-related footer content via env; default hidden
+const showBusinessFooter = computed(() => {
+  const v = String(env.VITE_SHOW_BUSINESS_FOOTER ?? '').trim().toLowerCase()
+  return v === '1' || v === 'true' || v === 'yes'
+})
 const giftCardsUrl = '/gift-cards'
 const practitionerSignupUrl = env.VITE_ATEASE_SIGNUP_URL || 'https://atease.weofferwellness.co.uk/register'
 const supportEmail = 'hello@weofferwellness.co.uk'
@@ -48,6 +58,9 @@ const megaInnerRef = ref(null)
 const megaHeight = ref(0)
 const hasEvents = ref(null)
 const hasRetreats = ref(null)
+watch(mobileOpen, (v) => {
+  try { document.body.style.overflow = v ? 'hidden' : '' } catch {}
+})
 
 const link = (label, href, opts = {}) => ({ label, href, ...opts })
 
@@ -58,7 +71,8 @@ const utilityPrimaryLinks = [
   link('Safety & Contraindications', '/safety-and-contraindications'),
 ]
 const utilitySecondaryLinks = [
-  link('For Business', '/for-business'),
+  // Hide clickable Corporate; show as coming soon text instead
+  { label: 'Corporate (coming 2026)', href: corporateComingSoonUrl, disabled: true },
   link('For Practitioners', practitionerSignupUrl),
 ]
 
@@ -337,7 +351,10 @@ function openV3NotifyModal(event){
             <Link v-for="item in utilityPrimaryLinks" :key="item.href" :href="item.href">{{ item.label }}</Link>
           </div>
           <div class="utility-links__secondary">
-            <Link v-for="item in utilitySecondaryLinks" :key="item.href" :href="item.href">{{ item.label }}</Link>
+            <template v-for="item in utilitySecondaryLinks" :key="item.label + (item.href||'')">
+              <span v-if="item.disabled" class="link disabled" aria-disabled="true">{{ item.label }}</span>
+              <Link v-else :href="item.href" class="link">{{ item.label }}</Link>
+            </template>
           </div>
         </div>
       </div>
@@ -410,7 +427,10 @@ function openV3NotifyModal(event){
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="mobileOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'"/></svg>
         </button>
       </div>
-      <div v-if="mobileOpen" class="md:hidden border-t border-ink-200 bg-white">
+      <!-- Mobile drawer overlay -->
+      <div v-if="mobileOpen" class="fixed inset-0 z-30 md:hidden bg-black/25" @click="mobileOpen=false"></div>
+      <!-- Mobile drawer (full-height, scrollable) -->
+      <div v-if="mobileOpen" class="mobile-drawer md:hidden">
         <div class="container-page py-2">
           <div class="mb-2">
             <!-- Sticky search at top of drawer -->
@@ -421,7 +441,7 @@ function openV3NotifyModal(event){
               <span class="btn-label">Near me</span>
               <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
             </button>
-            <Link :href="giftCardsUrl" class="btn-wow btn-wow--ghost is-square btn-sm">Gift vouchers</Link>
+            <Link :href="giftCardsUrl" class="btn-wow btn-wow--ghost is-square btn-sm">WOW gift vouchers</Link>
             <Link :href="accountHref" class="btn-wow btn-wow--ghost is-square btn-sm">{{ accountButtonLabel }}</Link>
           </div>
           <div class="mobile-nav-scroll">
@@ -462,7 +482,10 @@ function openV3NotifyModal(event){
                 <Link v-for="item in utilityPrimaryLinks" :key="item.href" :href="item.href" class="drawer-link">{{ item.label }}</Link>
               </div>
               <div class="mt-3 grid gap-1">
-                <Link v-for="item in utilitySecondaryLinks" :key="item.href" :href="item.href" class="drawer-link">{{ item.label }}</Link>
+                <template v-for="item in utilitySecondaryLinks" :key="item.label + (item.href||'')">
+                  <span v-if="item.disabled" class="drawer-link disabled" aria-disabled="true">{{ item.label }}</span>
+                  <Link v-else :href="item.href" class="drawer-link">{{ item.label }}</Link>
+                </template>
               </div>
             </div>
           </div>
@@ -574,7 +597,7 @@ function openV3NotifyModal(event){
           </div>
         </div>
 
-        <div class="footer-cta">
+        <div class="footer-cta" v-if="showBusinessFooter">
           <div>
             <div class="title">Practitioners</div>
             <p>Share your expertise with the WOW community. Trauma-aware, inclusive practitioners are always welcome.</p>
@@ -588,6 +611,9 @@ function openV3NotifyModal(event){
           <div>
             <div class="title">Safety &amp; Contraindications</div>
             <p>Always consult your GP or healthcare provider if you are pregnant, have a diagnosed condition or take prescription medication. Review contraindications for every therapy and contact the practitioner if you are unsure.</p>
+            <p class="mt-2" style="color:#cbd5f5; max-width: 60ch;">
+              This information does not replace medical advice. Stop any session if you feel unwell and seek urgent care for red‑flag symptoms (call 999 in the UK).
+            </p>
           </div>
           <a href="/safety-and-contraindications" class="btn-wow btn-wow--ghost">Read full guidance</a>
         </div>
@@ -600,7 +626,7 @@ function openV3NotifyModal(event){
               <li><a href="/therapies">Therapies</a></li>
               <li><a href="/classes">Classes</a></li>
               <li><a href="/events-and-workshops">Events &amp; Workshops</a></li>
-              <li><a :href="giftCardsUrl">Gift vouchers</a></li>
+              <li><a :href="giftCardsUrl">WOW gift vouchers</a></li>
               <li><a :href="mindfulTimesUrl" target="_blank" rel="noopener">Mindful Times</a></li>
               <li><a :href="podcastUrl" target="_blank" rel="noopener">Podcast</a></li>
               <li><a :href="sevenDayGuideHref" target="_blank" rel="noopener">Free 7-day reset</a></li>
@@ -611,8 +637,8 @@ function openV3NotifyModal(event){
             <ul>
               <li><a href="/about">About</a></li>
               <li><a href="/contact">Contact</a></li>
-              <li><a :href="corporateComingSoonUrl">Corporate wellness (coming 2026)</a></li>
-              <li><a href="/partners">Partner spotlight</a></li>
+              <li v-if="showCorporateLink"><a :href="corporateComingSoonUrl">Corporate wellness (coming 2026)</a></li>
+              <li v-if="showBusinessFooter"><a href="/partners">Partner spotlight</a></li>
               <li><a :href="`${mindfulTimesUrl}#practitioner-chats`" target="_blank" rel="noopener">Practitioner chats</a></li>
             </ul>
           </div>
@@ -636,6 +662,9 @@ function openV3NotifyModal(event){
             <a href="/terms">Terms</a>
             <a href="/cookies">Cookies</a>
           </div>
+          <a :href="practitionerSignupUrl" class="btn-wow btn-wow--cta btn-sm" target="_blank" rel="noopener">
+            Become a practitioner
+          </a>
         </div>
       </div>
     </footer>
@@ -646,9 +675,12 @@ function openV3NotifyModal(event){
 
 <style>
 /* Mobile drawer */
-.mobile-nav-scroll{ max-height: calc(100vh - 220px); overflow-y: auto; padding-right: 4px; }
+.mobile-drawer{ position: fixed; z-index: 40; top: 64px; left: 0; right: 0; bottom: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; background:#fff; border-top:1px solid rgba(148,163,184,.3); }
+.mobile-nav-scroll{ max-height: none; overflow-y: visible; padding-right: 4px; }
 .drawer-link{ display:block; padding:0.65rem 1rem; border-radius:0.75rem; font-weight:600; color:var(--ink-800); text-decoration:none; }
 .drawer-link:hover{ background:var(--ink-100); color:var(--ink-900); }
+.drawer-link.disabled, .utility-links__secondary .link.disabled{ color:#94a3b8; cursor:default; text-decoration:none; }
+.utility-links__secondary .link{ color:inherit; text-decoration:none; }
 .utility-bar{ background:#f8fafc; border-bottom:1px solid rgba(148,163,184,.3); font-size:.85rem }
 .utility-bar .utility-links{ display:flex; align-items:center; gap:1.5rem; padding:.35rem 0; color:var(--ink-600); font-weight:500 }
 .utility-links__primary, .utility-links__secondary{ display:flex; gap:1.25rem; }
