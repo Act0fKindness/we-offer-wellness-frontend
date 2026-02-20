@@ -40,10 +40,15 @@ Route::get('/', function () {
             })
             ->where(function($q){
                 $q->where(function($inner){
-                    $inner->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                })->orWhereHas('variants', function($qv){
-                    $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                });
+                        $inner->where('price', '<', 1000)->where('price', '<=', 50);
+                    })
+                  ->orWhere(function($inner){
+                        $inner->where('price', '>=', 1000)->where('price', '<=', 50 * 100);
+                    })
+                  ->orWhereHas('variants', function($qv){
+                        $qv->where(function($qq){ $qq->where('price','<',1000)->where('price','<=',50); })
+                           ->orWhere(function($qq){ $qq->where('price','>=',1000)->where('price','<=',50*100); });
+                    });
             })
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
@@ -85,10 +90,15 @@ Route::get('/', function () {
             })
             ->where(function($q){
                 $q->where(function($inner){
-                    $inner->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                })->orWhereHas('variants', function($qv){
-                    $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                });
+                        $inner->where('price', '<', 1000)->where('price', '<=', 50);
+                    })
+                  ->orWhere(function($inner){
+                        $inner->where('price', '>=', 1000)->where('price', '<=', 50 * 100);
+                    })
+                  ->orWhereHas('variants', function($qv){
+                        $qv->where(function($qq){ $qq->where('price','<',1000)->where('price','<=',50); })
+                           ->orWhere(function($qq){ $qq->where('price','>=',1000)->where('price','<=',50*100); });
+                    });
             })
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')

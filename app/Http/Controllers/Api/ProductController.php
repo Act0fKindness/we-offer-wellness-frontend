@@ -115,15 +115,24 @@ class ProductController extends Controller
 
         if ($request->filled('price_max')) {
             $pm = (float) $request->input('price_max');
-            // Support prices stored in pennies (<= pm*100) or pounds (<= pm)
-            // Use variants relation (no reliance on select aliases)
+            // Unit-aware price filter:
+            // - Treat values < 1000 as pounds
+            // - Treat values >= 1000 as pennies
             $query->where(function($q) use ($pm) {
-                $q->where('price', '<=', $pm)
-                  ->orWhere('price', '<=', $pm * 100)
+                $q->where(function($qp) use ($pm){
+                        $qp->where('price', '<', 1000)->where('price', '<=', $pm);
+                    })
+                  ->orWhere(function($qp) use ($pm){
+                        $qp->where('price', '>=', 1000)->where('price', '<=', $pm * 100);
+                    })
                   ->orWhereHas('variants', function($qv) use ($pm){
-                      $qv->where('price', '<=', $pm)
-                         ->orWhere('price', '<=', $pm * 100);
-                  });
+                        $qv->where(function($qq) use ($pm){
+                                $qq->where('price', '<', 1000)->where('price', '<=', $pm);
+                            })
+                           ->orWhere(function($qq) use ($pm){
+                                $qq->where('price', '>=', 1000)->where('price', '<=', $pm * 100);
+                            });
+                    });
             });
         }
 
@@ -215,12 +224,20 @@ class ProductController extends Controller
             if ($request->filled('price_max')) {
                 $pm = (float) $request->input('price_max');
                 $retry->where(function($q) use ($pm) {
-                    $q->where('price', '<=', $pm)
-                      ->orWhere('price', '<=', $pm * 100)
+                    $q->where(function($qp) use ($pm){
+                            $qp->where('price', '<', 1000)->where('price', '<=', $pm);
+                        })
+                      ->orWhere(function($qp) use ($pm){
+                            $qp->where('price', '>=', 1000)->where('price', '<=', $pm * 100);
+                        })
                       ->orWhereHas('variants', function($qv) use ($pm){
-                          $qv->where('price', '<=', $pm)
-                             ->orWhere('price', '<=', $pm * 100);
-                      });
+                            $qv->where(function($qq) use ($pm){
+                                    $qq->where('price', '<', 1000)->where('price', '<=', $pm);
+                                })
+                               ->orWhere(function($qq) use ($pm){
+                                    $qq->where('price', '>=', 1000)->where('price', '<=', $pm * 100);
+                                });
+                        });
                 });
             }
             if ($request->filled('category_id')) {
