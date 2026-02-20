@@ -1,11 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('partials.head')
 </head>
 <body class="font-sans antialiased">
-<div id="app"
-     data-page="{&quot;component&quot;:&quot;Home&quot;,&quot;props&quot;:{&quot;errors&quot;:{},&quot;auth&quot;:{&quot;user&quot;:null},&quot;mapboxKey&quot;:&quot;&quot;},&quot;url&quot;:&quot;/&quot;,&quot;version&quot;:&quot;static&quot;}"
-     data-v-app=""><!---->
     <div class="min-h-screen text-ink-800">
         @include('partials.header')
         <main class="">
@@ -13,31 +11,8 @@
         </main>
         @include('partials.footer')
     </div>
- </div>
-
-<script>
-(function(){
-  function setupUltraSearchBar(prefix){
-    var root = document.querySelector('[id^="'+prefix+'-seg-"]')?.closest('.wow-ultra') || document.querySelector('#'+prefix+'-seg-what')?.closest('.wow-ultra');
-    // If structure not found, bail
-    if(!root) return;
-
-    function byId(s){ return document.getElementById(prefix + '-' + s) }
-    var panes = ['what-pane','where-pane','when-pane','who-pane'];
-
-    function hideAll(){
-      panes.forEach(function(id){ var el = byId(id); if(el) el.classList.add('d-none') })
-      var what = byId('what'); if(what) what.setAttribute('aria-expanded','false');
-    }
-    function openPane(which){
-      hideAll();
-      var pane = byId(which+'-pane');
-      if(pane){ pane.classList.remove('d-none') }
-      if(which==='what'){ var what = byId('what'); if(what) what.setAttribute('aria-expanded','true') }
-    }
-
-    // Open on clicks/focus
-    var whatInput = byId('what');
+</body>
+</html>
     if(whatInput){
       whatInput.addEventListener('focus', function(e){ openPane('what') });
       whatInput.addEventListener('input', function(e){ openPane('what') });
