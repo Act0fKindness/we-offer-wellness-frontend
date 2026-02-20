@@ -31,8 +31,21 @@
       var mount = document.getElementById('mt-articles');
       if(!mount) return;
       function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]); }); }
+      function mtImg(u){
+        if(!u) return '';
+        try {
+          var url = new URL(u, window.location.origin);
+          var path = url.pathname + (url.search||'');
+          return 'https://atease.weofferwellness.co.uk' + path;
+        } catch(e) {
+          var p = String(u||'');
+          if(p && p.charAt(0) !== '/') p = '/' + p;
+          return 'https://atease.weofferwellness.co.uk' + p;
+        }
+      }
       function card(a){
-        var img = a.img ? '<img src="'+esc(a.img)+'" alt="'+esc(a.title)+'" class="h-44 w-full object-cover rounded-t-xl">' : '';
+        var src = a.img ? mtImg(a.img) : '';
+        var img = src ? '<img src="'+esc(src)+'" alt="'+esc(a.title)+'" class="h-44 w-full object-cover rounded-t-xl">' : '';
         var tag = a.tag ? '<div class="kicker mb-2">'+esc(a.tag)+'</div>' : '';
         return '<a href="'+esc(a.href)+'" class="block overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card focus:outline-none focus:ring-2 focus:ring-emerald-500">'
           + img
