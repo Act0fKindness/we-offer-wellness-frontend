@@ -32,16 +32,20 @@ Route::get('/', function () {
                   ->orWhereNull('product_status_id');
             });
 
-        // Gifts under £50
+        // Gifts under £50 (consider variant prices too)
         $giftsUnder50 = (clone $base)
             ->where(function($q){
                 $q->whereRaw("LOWER(COALESCE(tags_list,'')) like '%gift%'")
                   ->orWhereRaw("LOWER(COALESCE(product_type,'')) like '%gift%'");
             })
             ->where(function($q){
-                // Support pennies or pounds
-                $q->where('price', '<=', 50)
-                  ->orWhere('price', '<=', 50 * 100);
+                // Support pennies or pounds on product price OR any variant price
+                $q->where(function($qp){
+                      $qp->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                  })
+                  ->orWhereHas('variants', function($qv){
+                      $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                  });
             })
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
@@ -49,7 +53,7 @@ Route::get('/', function () {
             ->limit(12)
             ->get();
 
-        // Online options under £50 (solo default)
+        // Online options under £50 (consider variant prices too)
         $onlineUnder50 = (clone $base)
             ->whereHas('options', function ($q) {
                 $q->where('meta_name', 'locations')
@@ -58,8 +62,12 @@ Route::get('/', function () {
                   });
             })
             ->where(function($q){
-                $q->where('price', '<=', 50)
-                  ->orWhere('price', '<=', 50 * 100);
+                $q->where(function($qp){
+                      $qp->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                  })
+                  ->orWhereHas('variants', function($qv){
+                      $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                  });
             })
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
