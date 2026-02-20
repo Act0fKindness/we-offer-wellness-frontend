@@ -35,6 +35,19 @@ git fetch --all --prune
 git checkout "$BRANCH"
 git pull --ff-only origin "$BRANCH"
 
+# Ensure Laravel writable directories have correct permissions/ownership
+echo "==> Ensuring permissions on storage and bootstrap/cache"
+WEB_USER="${WEB_USER:-www-data}"
+WEB_GROUP="${WEB_GROUP:-www-data}"
+mkdir -p storage/framework/{cache,data,sessions,views} bootstrap/cache || true
+# Try chown if allowed; ignore errors on environments without sudo/permissions
+if command -v sudo >/dev/null 2>&1; then
+  sudo chown -R "$WEB_USER:$WEB_GROUP" storage bootstrap/cache || true
+else
+  chown -R "$WEB_USER:$WEB_GROUP" storage bootstrap/cache 2>/dev/null || true
+fi
+chmod -R ug+rwx storage bootstrap/cache || true
+
 # Sanity checks for Blade partials that affect styling (avoid shipping a broken head)
 if [[ "$NO_VERIFY" != "true" ]]; then
   echo "==> Verifying Blade layout/partials integrity"
