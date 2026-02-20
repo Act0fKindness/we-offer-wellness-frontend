@@ -116,12 +116,14 @@ class ProductController extends Controller
         if ($request->filled('price_max')) {
             $pm = (float) $request->input('price_max');
             // Support prices stored in pennies (<= pm*100) or pounds (<= pm)
-            // Include variant min price via withMin alias: variants_min_price
+            // Use variants relation (no reliance on select aliases)
             $query->where(function($q) use ($pm) {
                 $q->where('price', '<=', $pm)
                   ->orWhere('price', '<=', $pm * 100)
-                  ->orWhereRaw('COALESCE(variants_min_price, 1e12) <= ?', [$pm])
-                  ->orWhereRaw('COALESCE(variants_min_price, 1e12) <= ?', [$pm * 100]);
+                  ->orWhereHas('variants', function($qv) use ($pm){
+                      $qv->where('price', '<=', $pm)
+                         ->orWhere('price', '<=', $pm * 100);
+                  });
             });
         }
 
@@ -214,7 +216,11 @@ class ProductController extends Controller
                 $pm = (float) $request->input('price_max');
                 $retry->where(function($q) use ($pm) {
                     $q->where('price', '<=', $pm)
-                      ->orWhere('price', '<=', $pm * 100);
+                      ->orWhere('price', '<=', $pm * 100)
+                      ->orWhereHas('variants', function($qv) use ($pm){
+                          $qv->where('price', '<=', $pm)
+                             ->orWhere('price', '<=', $pm * 100);
+                      });
                 });
             }
             if ($request->filled('category_id')) {

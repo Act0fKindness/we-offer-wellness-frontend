@@ -39,13 +39,11 @@ Route::get('/', function () {
                   ->orWhereRaw("LOWER(COALESCE(product_type,'')) like '%gift%'");
             })
             ->where(function($q){
-                // Support pennies or pounds on product price OR any variant price
-                $q->where(function($qp){
-                      $qp->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                  })
-                  ->orWhereHas('variants', function($qv){
-                      $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                  });
+                $q->where(function($inner){
+                    $inner->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                })->orWhereHas('variants', function($qv){
+                    $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                });
             })
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
@@ -86,12 +84,11 @@ Route::get('/', function () {
                   });
             })
             ->where(function($q){
-                $q->where(function($qp){
-                      $qp->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                  })
-                  ->orWhereHas('variants', function($qv){
-                      $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
-                  });
+                $q->where(function($inner){
+                    $inner->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                })->orWhereHas('variants', function($qv){
+                    $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                });
             })
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
