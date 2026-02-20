@@ -1,8 +1,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>We Offer Wellness®</title>
-    <meta name="description"
-          content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®.">
+    <title>@yield('title', 'We Offer Wellness®')</title>
+    <meta name="description" content="@yield('meta_description', 'Safe, trusted therapies and wellness services that help you feel better — today.')">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
+    @stack('styles')
+    @stack('scripts_head')
 
     <!-- Fonts: Instrument Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,9 +19,9 @@
     {{-- Home head CSS (migrated from inline) --}}
     @php $manifest = public_path('build/manifest.json'); @endphp
     @if (file_exists($manifest))
-        @vite('resources/css/home-head.css')
+        @vite('resources/css/site.css')
     @else
-        <link rel="stylesheet" href="{{ asset('css/home-head.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/site.css') }}">
     @endif
     <link rel="modulepreload" as="script" crossorigin="" href="/build/assets/Home-PUJfnV1T.js">
     <link rel="modulepreload" as="script" crossorigin="" href="/build/assets/SiteLayout-DKnyduE5.js">
@@ -44,4 +47,3 @@
           inertia="">
     <meta property="og:url" content="" inertia="">
     <title inertia="">Holistic Therapy That Works | We Offer Wellness®</title>
-
