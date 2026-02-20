@@ -25,13 +25,13 @@
                 </div>
             </div>
             <div data-v-f43bb09d="" class="hidden sm:flex items-center gap-2 ml-auto">
-                <button data-v-f43bb09d="" class="carousel-arrow" aria-label="Previous">
+                <button data-v-f43bb09d="" id="comfort-prev" class="carousel-arrow" aria-label="Previous">
                     <svg data-v-f43bb09d="" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                          fill="none" stroke="currentColor" stroke-width="2">
                         <path data-v-f43bb09d="" d="M15 18l-6-6 6-6"></path>
                     </svg>
                 </button>
-                <button data-v-f43bb09d="" class="carousel-arrow" aria-label="Next">
+                <button data-v-f43bb09d="" id="comfort-next" class="carousel-arrow" aria-label="Next">
                     <svg data-v-f43bb09d="" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                          fill="none" stroke="currentColor" stroke-width="2">
                         <path data-v-f43bb09d="" d="M9 6l6 6-6 6"></path>
@@ -157,5 +157,18 @@
 
   // Initialize CTA on load
   updateCta();
+
+  // Carousel controls
+  try {
+    var prev = root.querySelector('#comfort-prev');
+    var next = root.querySelector('#comfort-next');
+    function scrollByStep(dir){
+      if(!cardsEl) return;
+      var step = Math.max(280, Math.floor(cardsEl.clientWidth * 0.9));
+      cardsEl.scrollBy({ left: dir * step, behavior: 'smooth' });
+    }
+    if(prev){ prev.addEventListener('click', function(){ scrollByStep(-1); }); }
+    if(next){ next.addEventListener('click', function(){ scrollByStep(1); }); }
+  } catch(e) {}
 })();
 </script>
