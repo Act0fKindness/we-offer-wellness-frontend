@@ -14,12 +14,9 @@
     <!-- Built CSS bundle from Vite/Laravel -->
     @routes
     @php $manifest = public_path('build/manifest.json'); @endphp
-    @if (file_exists($manifest))
-        @vite('resources/css/we-offer-wellness-base-styles.css')
-        @vite('resources/js/app.js')
-    @else
+
         <link rel="stylesheet" href="{{ asset('css/we-offer-wellness-base-styles.css') }}">
-    @endif
+    
 
     <meta name="description"
           content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
