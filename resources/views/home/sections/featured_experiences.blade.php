@@ -1,6 +1,7 @@
 <section class="section" aria-labelledby="featured-experiences-title">
     <div class="container-page">
-        <h2 id="featured-experiences-title" class="section-title">Featured experiences</h2>
+        <div class="kicker">Popular now</div>
+        <h2 id="featured-experiences-title">Featured experiences</h2>
         <div class="row g-3 mt-1">
             @for ($i=0; $i<6; $i++)
                 <div class="col-12 col-sm-6 col-lg-4">
@@ -18,4 +19,3 @@
         </div>
     </div>
 </section>
-

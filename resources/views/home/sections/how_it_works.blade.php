@@ -1,6 +1,7 @@
 <section class="section" aria-labelledby="how-it-works-title">
     <div class="container-page">
-        <h2 id="how-it-works-title" class="section-title">How it works</h2>
+        <div class="kicker">Simple and clear</div>
+        <h2 id="how-it-works-title">How it works</h2>
         <div class="row g-4 mt-1">
             <div class="col-12 col-md-4">
                 <div class="card p-3 h-100">
@@ -26,4 +27,3 @@
         </div>
     </div>
 </section>
-

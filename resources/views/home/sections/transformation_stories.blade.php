@@ -1,6 +1,7 @@
 <section class="section" aria-labelledby="stories-title">
     <div class="container-page">
-        <h2 id="stories-title" class="section-title">Real transformation stories</h2>
+        <div class="kicker">Before → After</div>
+        <h2 id="stories-title">Real transformation stories</h2>
         <div class="row g-3 mt-1">
             <div class="col-12 col-md-6">
                 <div class="card p-3 h-100">
@@ -17,4 +18,3 @@
         </div>
     </div>
 </section>
-
