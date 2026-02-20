@@ -283,6 +283,15 @@ class ProductController extends Controller
             elseif (str_contains($t, 'retreat')) $typeSeg = 'retreats';
             elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $typeSeg = 'gifts';
             $slug = Str::slug($p->title ?: (string)$p->id);
+            // Normalize prices (always GBP pounds)
+            $norm = function($v){ if(!is_numeric($v)) return null; $n = (float)$v; if($n >= 1000) $n = $n/100; return $n; };
+            $pPrice = $norm($p->price ?? null);
+            $vMin = $norm($p->variants_min_price ?? null);
+            $vMax = $norm($p->variants_max_price ?? null);
+            $minPrice = null; $maxPrice = null;
+            foreach ([$pPrice, $vMin] as $cand) { if($cand !== null) { $minPrice = $minPrice === null ? $cand : min($minPrice, $cand); } }
+            foreach ([$pPrice, $vMax] as $cand) { if($cand !== null) { $maxPrice = $maxPrice === null ? $cand : max($maxPrice, $cand); } }
+
             return [
                 'id' => $p->id,
                 'title' => $p->title,
@@ -296,9 +305,9 @@ class ProductController extends Controller
                 'date' => $date,
                 'start_date' => $start,
                 'end_date' => $end,
-                'price' => $p->price ?? null,
-                'price_min' => $p->variants_min_price ?? ($p->price ?? null),
-                'price_max' => $p->variants_max_price ?? ($p->price ?? null),
+                'price' => $minPrice,
+                'price_min' => $minPrice,
+                'price_max' => $maxPrice,
                 'compare_at_price' => $meta['compare_at_price'] ?? null,
                 'currency' => $meta['currency'] ?? 'GBP',
                 'rating' => round((float)($p->reviews_avg_rating ?? 0), 1) ?: null,
