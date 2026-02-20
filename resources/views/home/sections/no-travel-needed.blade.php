@@ -1,4 +1,4 @@
-<section data-v-f43bb09d="" class="section" aria-labelledby="comfort-title">
+<section data-v-f43bb09d="" id="comfort-section" class="section" aria-labelledby="comfort-title">
     <div data-v-f43bb09d="" class="container-page">
         <div data-v-f43bb09d="" class="mb-6">
             <div data-v-f43bb09d="" class="kicker">No travel needed</div>
@@ -11,21 +11,16 @@
                 <div data-v-f43bb09d="" class="flex items-center gap-2"><span data-v-f43bb09d=""
                                                                               class="font-semibold text-ink-800">Under</span>
                     <div data-v-f43bb09d="" class="seg-group" role="tablist" aria-label="Under price">
-                        <button data-v-f43bb09d="" class="seg active" role="tab" aria-selected="true">£50
-                        </button>
-                        <button data-v-f43bb09d="" class="seg" role="tab" aria-selected="false">£100
-                        </button>
-                        <button data-v-f43bb09d="" class="seg" role="tab" aria-selected="false">£500
-                        </button>
+                        <button data-v-f43bb09d="" class="seg active" role="tab" aria-selected="true" data-price="50">£50</button>
+                        <button data-v-f43bb09d="" class="seg" role="tab" aria-selected="false" data-price="100">£100</button>
+                        <button data-v-f43bb09d="" class="seg" role="tab" aria-selected="false" data-price="500">£500</button>
                     </div>
                 </div>
                 <div data-v-f43bb09d="" class="flex items-center gap-2"><span data-v-f43bb09d=""
                                                                               class="font-semibold text-ink-800">For</span>
                     <div data-v-f43bb09d="" class="seg-group" role="tablist" aria-label="For">
-                        <button data-v-f43bb09d="" class="seg active" role="tab" aria-selected="true">Solo
-                        </button>
-                        <button data-v-f43bb09d="" class="seg" role="tab" aria-selected="false">Couple
-                        </button>
+                        <button data-v-f43bb09d="" class="seg active" role="tab" aria-selected="true" data-group="solo">Solo</button>
+                        <button data-v-f43bb09d="" class="seg" role="tab" aria-selected="false" data-group="couple">Couple</button>
                     </div>
                 </div>
             </div>
@@ -45,7 +40,7 @@
             </div>
         </div>
         <div data-v-f43bb09d="">
-            <div data-v-f43bb09d=""
+            <div data-v-f43bb09d="" id="comfort-cards"
                  class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent">
                 @forelse(($onlineUnder50 ?? []) as $product)
                     @include('partials.product_card', ['product' => $product])
@@ -53,25 +48,114 @@
                     <div class="text-muted">No online options under £50 right now. <a class="link-wow" href="/search?price_max=50&amp;format=online">See all under £50</a>.</div>
                 @endforelse
             </div>
-            <div data-v-f43bb09d="" class="mt-4 text-right"><a data-v-f43bb09d=""
+            <div data-v-f43bb09d="" class="mt-4 text-right"><a data-v-f43bb09d="" id="comfort-cta"
                                                                href="/search?price_max=50&amp;format=online"
                                                                class="btn-wow btn-wow--outline btn-sm btn-arrow"
                                                                data-loader-init="1"><span data-v-f43bb09d=""
                                                                                           class="btn-label">See all under £50 (solo)</span><span
-                data-v-f43bb09d="" class="btn-icon-wrap" aria-hidden="true"><svg data-v-f43bb09d=""
+                 data-v-f43bb09d="" class="btn-icon-wrap" aria-hidden="true"><svg data-v-f43bb09d=""
                                                                                  class="btn-icon-hover"
                                                                                  xmlns="http://www.w3.org/2000/svg"
                                                                                  viewBox="0 0 24 24"><path
-                data-v-f43bb09d="" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg><svg data-v-f43bb09d=""
+                 data-v-f43bb09d="" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                 stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg><svg data-v-f43bb09d=""
                                                                                  class="btn-icon-default"
                                                                                  xmlns="http://www.w3.org/2000/svg"
                                                                                  viewBox="0 0 24 24"><path
-                data-v-f43bb09d="" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg></span><span data-v-f43bb09d=""
+                 data-v-f43bb09d="" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"
+                 stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg></span><span data-v-f43bb09d=""
                                                                                    class="btn-spinner"
                                                                                    aria-hidden="true"><span
                 data-v-f43bb09d="" class="spin"></span></span></a></div>
         </div>
     </div>
 </section>
+
+<script>
+(function(){
+  var root = document.getElementById('comfort-section');
+  if(!root) return;
+  var cardsEl = root.querySelector('#comfort-cards');
+  var cta = root.querySelector('#comfort-cta');
+  var ctaLabel = cta ? cta.querySelector('.btn-label') : null;
+  var price = 50;
+  var group = 'solo';
+
+  function setActive(btn){
+    var groupEl = btn.closest('.seg-group');
+    if(!groupEl) return;
+    groupEl.querySelectorAll('.seg').forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+  }
+
+  function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt','"':'&quot;','\'':'&#39;'}[c]); }); }
+
+  function updateCta(){
+    if(!cta) return;
+    var href = '/search?price_max=' + encodeURIComponent(price) + '&format=online' + (group==='couple' ? '&q=couples' : '');
+    cta.href = href;
+    if(ctaLabel){ ctaLabel.textContent = 'See all under £' + price + ' (' + group + ')'; }
+  }
+
+  function renderCards(items){
+    if(!cardsEl) return;
+    if(!Array.isArray(items) || items.length===0){
+      cardsEl.innerHTML = '<div class="text-muted">No options found. <a class="link-wow" href="' + cta.href + '">See all</a>.</div>';
+      return;
+    }
+    cardsEl.innerHTML = '';
+    items.forEach(function(it){
+      var a = document.createElement('a');
+      a.href = it.url || '#';
+      a.className = 'wow-card md';
+      var priceMin = it.price_min;
+      if(typeof priceMin === 'number' && priceMin > 1000 && priceMin % 100 === 0){ priceMin = priceMin / 100; }
+      a.innerHTML =
+        '<div class="wow-media">'
+          + '<img src="' + esc(it.image) + '" alt="' + esc(it.title) + '" loading="lazy">'
+        + '</div>'
+        + '<div class="wow-body">'
+          + '<div class="wow-type text-muted">' + esc(it.type || 'Experience') + '</div>'
+          + '<div class="wow-title">' + esc(it.title) + '</div>'
+          + (it.rating ? ('<div class="rating-text">★ ' + Number(it.rating).toFixed(1) + (it.review_count ? ' <small class="text-muted">(' + it.review_count + ')</small>' : '') + '</div>') : '')
+        + '</div>'
+        + '<div class="wow-bottom">'
+          + (priceMin ? ('<div class="price">£' + Number(priceMin).toFixed(2) + ' <small>from</small></div>') : '')
+          + '<div class="actions"><span class="link-wow">View</span></div>'
+        + '</div>';
+      cardsEl.appendChild(a);
+    });
+  }
+
+  function fetchAndRender(){
+    if(!cardsEl) return;
+    cardsEl.innerHTML = '<div class="text-muted">Loading…</div>';
+    var url = '/api/products?mode=online&price_max=' + encodeURIComponent(price) + '&limit=12&sort=popular';
+    fetch(url, { headers: { 'Accept': 'application/json' }}).then(function(r){ return r.json(); }).then(function(items){
+      renderCards(items);
+    }).catch(function(){ cardsEl.innerHTML = '<div class="text-muted">Could not load options. Try again.</div>'; });
+  }
+
+  // Event bindings
+  root.querySelectorAll('[data-price]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      price = parseInt(btn.getAttribute('data-price'), 10) || 50;
+      setActive(btn);
+      updateCta();
+      fetchAndRender();
+    });
+  });
+  root.querySelectorAll('[data-group]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      group = btn.getAttribute('data-group') || 'solo';
+      setActive(btn);
+      updateCta();
+      // Group selection does not change the listing; only the CTA
+    });
+  });
+
+  // Initialize CTA on load
+  updateCta();
+})();
+</script>
