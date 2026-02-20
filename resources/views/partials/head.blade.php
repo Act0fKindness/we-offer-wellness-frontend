@@ -13,9 +13,7 @@
 
     <!-- Built CSS bundle from Vite/Laravel -->
 
-    @include('partials.styles')
 
-    
     <meta name="description"
           content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
           inertia="">
