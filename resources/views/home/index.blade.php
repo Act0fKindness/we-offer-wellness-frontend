@@ -8,7 +8,9 @@
 
 @include('home.sections.search_bar')
 
+@if (!empty($hasClassesThisWeek))
 @include('home.sections.schedule')
+@endif
 
 @include('home.sections.gifts')
 

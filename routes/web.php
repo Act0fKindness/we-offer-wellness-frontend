@@ -130,14 +130,50 @@ Route::get('/', function () {
                 return $min <= 50.0;
             })
             ->values();
+
+        // Check if there are any classes with a scheduled date within the current week
+        $weekStart = now()->startOfWeek();
+        $weekEnd = now()->endOfWeek();
+        $hasClassesThisWeek = false;
+        try {
+            $classes = (clone $base)
+                ->whereRaw("LOWER(COALESCE(product_type,'')) like '%class%'")
+                ->latest('id')
+                ->limit(120)
+                ->get();
+            foreach ($classes as $p) {
+                $meta = $p->meta_json ?? [];
+                $date = $meta['date'] ?? null;
+                $start = $meta['start_date'] ?? null;
+                $end = $meta['end_date'] ?? null;
+                // Normalise potential strings to Carbon
+                $d = $date ? \Illuminate\Support\Carbon::parse((string)$date) : null;
+                $s = $start ? \Illuminate\Support\Carbon::parse((string)$start) : null;
+                $e = $end ? \Illuminate\Support\Carbon::parse((string)$end) : null;
+                // If single date, check it's within the week
+                if ($d && $d->between($weekStart, $weekEnd)) { $hasClassesThisWeek = true; break; }
+                // If a range, check overlap with week
+                if ($s || $e) {
+                    $rs = $s ?: $e; // if only end provided, treat as point
+                    $re = $e ?: $s;
+                    if ($rs && $re) {
+                        if ($rs <= $weekEnd && $re >= $weekStart) { $hasClassesThisWeek = true; break; }
+                    } elseif ($rs) {
+                        if ($rs->between($weekStart, $weekEnd)) { $hasClassesThisWeek = true; break; }
+                    }
+                }
+            }
+        } catch (\Throwable $e) { $hasClassesThisWeek = false; }
     } catch (\Throwable $e) {
         $giftsUnder50 = collect();
         $onlineUnder50 = collect();
+        $hasClassesThisWeek = false;
     }
 
     return view('home.index', [
         'giftsUnder50' => $giftsUnder50,
         'onlineUnder50' => $onlineUnder50,
+        'hasClassesThisWeek' => $hasClassesThisWeek,
     ]);
 });
 
