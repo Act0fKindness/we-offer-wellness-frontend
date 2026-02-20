@@ -58,7 +58,7 @@ Route::get('/', function () {
             ->whereHas('options', function ($q) {
                 $q->where('meta_name', 'locations')
                   ->whereHas('values', function ($q2) {
-                      $q2->where('value', 'Online');
+                      $q2->whereRaw('LOWER(value) = ?', ['online']);
                   });
             })
             ->where(function($q){

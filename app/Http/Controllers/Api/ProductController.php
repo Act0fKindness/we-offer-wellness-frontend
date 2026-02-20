@@ -75,9 +75,9 @@ class ProductController extends Controller
                 $q->where('meta_name', 'locations')
                   ->whereHas('values', function ($q2) use ($mode) {
                       if ($mode === 'online') {
-                          $q2->where('value', 'Online');
+                          $q2->whereRaw('LOWER(value) = ?', ['online']);
                       } else {
-                          $q2->where('value', '!=', 'Online');
+                          $q2->whereRaw('LOWER(value) != ?', ['online']);
                       }
                   });
             });
@@ -174,9 +174,9 @@ class ProductController extends Controller
                     $q->where('meta_name', 'locations')
                       ->whereHas('values', function ($q2) use ($mode) {
                           if ($mode === 'online') {
-                              $q2->where('value', 'Online');
+                              $q2->whereRaw('LOWER(value) = ?', ['online']);
                           } else {
-                              $q2->where('value', '!=', 'Online');
+                              $q2->whereRaw('LOWER(value) != ?', ['online']);
                           }
                       });
                 });
