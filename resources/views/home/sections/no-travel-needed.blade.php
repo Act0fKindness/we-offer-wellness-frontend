@@ -101,7 +101,7 @@
     if(ctaLabel){ ctaLabel.textContent = 'See all under £' + price + ' (' + group + ')'; }
   }
 
-  function normalizePrice(v){ var n = Number(v); if(!isFinite(n)) return null; if(n >= 100) n = n/100; return n; }
+  function normalizePrice(v){ var n = Number(v); if(!isFinite(n)) return null; if(n >= 1000) n = n/100; return n; }
   function renderCards(items){
     if(!cardsEl) return;
     if(!Array.isArray(items) || items.length===0){

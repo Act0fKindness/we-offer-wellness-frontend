@@ -51,7 +51,15 @@ Route::get('/', function () {
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
             ->orderByRaw('COALESCE(reviews_count, 0) DESC')
             ->limit(12)
-            ->get();
+            ->get()
+            ->filter(function($p){
+                $min = $p->variants_min_price ?? $p->price;
+                if (!is_numeric($min)) return false;
+                $min = (float) $min;
+                if ($min >= 1000) $min = $min / 100; // treat pennies only for large values
+                return $min <= 50.0;
+            })
+            ->values();
 
         // Fallback: if no explicit gift-tagged items, show popular under £50 of any type
         if ($giftsUnder50->isEmpty()) {
@@ -89,7 +97,15 @@ Route::get('/', function () {
             ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
             ->orderByRaw('COALESCE(reviews_count, 0) DESC')
             ->limit(12)
-            ->get();
+            ->get()
+            ->filter(function($p){
+                $min = $p->variants_min_price ?? $p->price;
+                if (!is_numeric($min)) return false;
+                $min = (float) $min;
+                if ($min >= 1000) $min = $min / 100;
+                return $min <= 50.0;
+            })
+            ->values();
     } catch (\Throwable $e) {
         $giftsUnder50 = collect();
         $onlineUnder50 = collect();

@@ -55,7 +55,7 @@
   function normalizePrice(v){
     var n = Number(v);
     if(!isFinite(n)) return null;
-    if(n >= 100) n = n / 100; // treat as pennies
+    if(n >= 1000) n = n / 100; // treat as pennies only for large values
     return n;
   }
   function render(items){
