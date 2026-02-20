@@ -63,7 +63,19 @@ class ProductController extends Controller
 
         $tag = $request->string('tag')->toString();
         if ($tag) {
-            $query->where('tags_list', 'like', "%{$tag}%");
+            $lc = strtolower($tag);
+            if (in_array($lc, ['gift','gifts'], true)) {
+                // Treat "gift" broadly: gift, gifts, voucher, card, present
+                $query->where(function($q){
+                    $q->whereRaw("LOWER(COALESCE(tags_list,'')) like '%gift%'")
+                      ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%voucher%'")
+                      ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%card%'")
+                      ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%present%'");
+                });
+            } else {
+                $safe = str_replace(['%','_'], ['\\%','\\_'], strtolower($tag));
+                $query->whereRaw("LOWER(COALESCE(tags_list,'')) like ?", ['%'.$safe.'%']);
+            }
         }
 
         // Mode (Online / In-person) derived from options meta 'locations'

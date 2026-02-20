@@ -53,6 +53,22 @@ Route::get('/', function () {
             ->limit(12)
             ->get();
 
+        // Fallback: if no explicit gift-tagged items, show popular under £50 of any type
+        if ($giftsUnder50->isEmpty()) {
+            $giftsUnder50 = (clone $base)
+                ->where(function($q){
+                    $q->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                })
+                ->orWhereHas('variants', function($qv){
+                    $qv->where('price', '<=', 50)->orWhere('price', '<=', 50 * 100);
+                })
+                ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
+                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+                ->orderByRaw('COALESCE(reviews_count, 0) DESC')
+                ->limit(12)
+                ->get();
+        }
+
         // Online options under £50 (consider variant prices too)
         $onlineUnder50 = (clone $base)
             ->whereHas('options', function ($q) {

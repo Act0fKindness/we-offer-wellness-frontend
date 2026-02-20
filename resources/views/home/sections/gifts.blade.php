@@ -80,7 +80,13 @@
   if(!hasSSR){
     fetch('/api/products?tag=Gift&price_max=50&limit=12&sort=popular', { headers: { 'Accept':'application/json' }})
       .then(function(r){ return r.json(); })
-      .then(render)
+      .then(function(items){
+        if(Array.isArray(items) && items.length){ render(items); return; }
+        // Fallback without tag if none returned
+        return fetch('/api/products?price_max=50&limit=12&sort=popular', { headers: { 'Accept':'application/json' }})
+          .then(function(r){ return r.json(); })
+          .then(render);
+      })
       .catch(function(){ list.innerHTML = '<div class="text-muted">Could not load gifts.</div>'; });
   }
 
