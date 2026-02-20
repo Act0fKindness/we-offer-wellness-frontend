@@ -91,6 +91,44 @@
     }
     var whoDone = byId('who-done');
     if(whoDone){ whoDone.addEventListener('click', function(){ hideAll() }) }
+
+    // Submit handler → build /search URL
+    try {
+      var form = root.closest('form') || root.querySelector('form') || document.querySelector('.wow-ultra form.bar');
+      if(form){
+        form.addEventListener('submit', function(e){
+          try { e.preventDefault(); } catch(_) {}
+          var params = new URLSearchParams();
+          // what
+          var what = byId('what')?.value?.trim();
+          if(what) params.set('what', what);
+          // where
+          var whereHidden = byId('where');
+          var whereText = byId('where-editor')?.textContent?.trim();
+          var where = (whereHidden && whereHidden.value) ? whereHidden.value : (whereText || '');
+          if(where) params.set('where', where);
+          // when (as-is string)
+          var when = byId('when')?.value?.trim();
+          if(when) params.set('when', when);
+          // group type
+          var groupList = byId('group-type-list') || document.getElementById(prefix + '-group-type-list');
+          if(groupList){
+            var sel = groupList.querySelector('.item[aria-selected="true"]');
+            var gt = sel?.getAttribute('data-group') || sel?.textContent?.trim();
+            if(gt){ params.set('group_type', gt.toLowerCase()); }
+          }
+          // adults count
+          var adultsVal = document.getElementById(prefix + '-adults-val');
+          var adults = adultsVal ? parseInt(adultsVal.textContent, 10) : NaN;
+          if(Number.isFinite(adults) && adults > 0) params.set('adults', String(adults));
+          // Mode: Online shortcut
+          if(/^(online)$/i.test(where)){ params.set('mode','online'); }
+          // Build URL and navigate
+          var url = '/search' + (params.toString() ? ('?' + params.toString()) : '');
+          try { window.location.assign(url); } catch(_) { window.location.href = url; }
+        });
+      }
+    } catch(err) { /* no-op */ }
   }
 
   // Initialize bars present on the page
