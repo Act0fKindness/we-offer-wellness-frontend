@@ -34,7 +34,12 @@
                                                                                               d="M15 12l-4 4m4-4-4-4"></path></svg></span><span
                     class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a></div>
         </div>
-        <div
-            class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent"></div>
+        <div class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent">
+            @forelse(($giftsUnder50 ?? []) as $product)
+                @include('partials.product_card', ['product' => $product])
+            @empty
+                <div class="text-muted">No gifts found under £50 right now. <a class="link-wow" href="/gifts">Browse all gifts</a>.</div>
+            @endforelse
+        </div>
     </div>
 </section>

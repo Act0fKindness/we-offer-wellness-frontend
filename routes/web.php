@@ -19,7 +19,62 @@ use App\Models\Review;
 use App\Http\Controllers\Api\V3SubscriberController;
 
 Route::get('/', function () {
-    return view('home.index');
+    // Fetch a few curated product slices for the home page
+    try {
+        $base = \App\Models\Product::query()
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->withMin('variants', 'price')
+            ->with(['media', 'options.values', 'category'])
+            // Only visible products: include live/approved OR legacy rows without status set
+            ->where(function($q){
+                $q->whereHas('status', function($qs){ $qs->whereIn('status', ['live','approved']); })
+                  ->orWhereNull('product_status_id');
+            });
+
+        // Gifts under £50
+        $giftsUnder50 = (clone $base)
+            ->where(function($q){
+                $q->whereRaw("LOWER(COALESCE(tags_list,'')) like '%gift%'")
+                  ->orWhereRaw("LOWER(COALESCE(product_type,'')) like '%gift%'");
+            })
+            ->where(function($q){
+                // Support pennies or pounds
+                $q->where('price', '<=', 50)
+                  ->orWhere('price', '<=', 50 * 100);
+            })
+            ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
+            ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+            ->orderByRaw('COALESCE(reviews_count, 0) DESC')
+            ->limit(12)
+            ->get();
+
+        // Online options under £50 (solo default)
+        $onlineUnder50 = (clone $base)
+            ->whereHas('options', function ($q) {
+                $q->where('meta_name', 'locations')
+                  ->whereHas('values', function ($q2) {
+                      $q2->where('value', 'Online');
+                  });
+            })
+            ->where(function($q){
+                $q->where('price', '<=', 50)
+                  ->orWhere('price', '<=', 50 * 100);
+            })
+            ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
+            ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+            ->orderByRaw('COALESCE(reviews_count, 0) DESC')
+            ->limit(12)
+            ->get();
+    } catch (\Throwable $e) {
+        $giftsUnder50 = collect();
+        $onlineUnder50 = collect();
+    }
+
+    return view('home.index', [
+        'giftsUnder50' => $giftsUnder50,
+        'onlineUnder50' => $onlineUnder50,
+    ]);
 });
 
 // V3 holding page

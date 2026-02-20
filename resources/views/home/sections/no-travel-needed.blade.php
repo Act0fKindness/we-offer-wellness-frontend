@@ -46,7 +46,13 @@
         </div>
         <div data-v-f43bb09d="">
             <div data-v-f43bb09d=""
-                 class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent"></div>
+                 class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent">
+                @forelse(($onlineUnder50 ?? []) as $product)
+                    @include('partials.product_card', ['product' => $product])
+                @empty
+                    <div class="text-muted">No online options under £50 right now. <a class="link-wow" href="/search?price_max=50&amp;format=online">See all under £50</a>.</div>
+                @endforelse
+            </div>
             <div data-v-f43bb09d="" class="mt-4 text-right"><a data-v-f43bb09d=""
                                                                href="/search?price_max=50&amp;format=online"
                                                                class="btn-wow btn-wow--outline btn-sm btn-arrow"
