@@ -48,6 +48,7 @@
 (function(){
   var list = document.getElementById('gifts-cards');
   if(!list) return;
+  var DEBUG = true;
   var hasSSR = !!list.querySelector('.wow-card');
   if(!hasSSR){ list.innerHTML = '<div class="text-muted">Loading gifts…</div>'; }
 
@@ -62,6 +63,16 @@
     if(hasSSR) return;
     if(!Array.isArray(items) || items.length===0){ list.innerHTML = '<div class="text-muted">No gifts found under £50 right now. <a class="link-wow" href="/gifts">Browse all gifts</a>.</div>'; return; }
     list.innerHTML = '';
+    if(DEBUG){
+      try {
+        console.groupCollapsed('Gifts under £50 render');
+        console.table(items.map(function(x){
+          var p = normalizePrice(x.price_min ?? x.price);
+          return { id:x.id, title:x.title, raw_price:x.price, price_min:x.price_min, norm:p, url:x.url };
+        }));
+        console.groupEnd();
+      } catch(e) {}
+    }
     items.forEach(function(it){
       var priceMin = normalizePrice(it.price_min);
       if(priceMin != null && priceMin > 50) return; // keep under £50 only
@@ -84,14 +95,22 @@
   }
 
   if(!hasSSR){
-    fetch('/api/products?tag=Gift&price_max=50&limit=12&sort=popular', { headers: { 'Accept':'application/json' }})
+    var url1 = '/api/products?tag=Gift&price_max=50&limit=12&sort=popular';
+    if(DEBUG) try{ console.log('Gifts fetch 1:', url1); }catch(e){}
+    fetch(url1, { headers: { 'Accept':'application/json' }})
       .then(function(r){ return r.json(); })
       .then(function(items){
+        if(DEBUG) try{ console.log('Gifts resp 1 count:', Array.isArray(items)?items.length:items); }catch(e){}
         if(Array.isArray(items) && items.length){ render(items); return; }
         // Fallback without tag if none returned
-        return fetch('/api/products?price_max=50&limit=12&sort=popular', { headers: { 'Accept':'application/json' }})
+        var url2 = '/api/products?price_max=50&limit=12&sort=popular';
+        if(DEBUG) try{ console.log('Gifts fetch 2 (fallback):', url2); }catch(e){}
+        return fetch(url2, { headers: { 'Accept':'application/json' }})
           .then(function(r){ return r.json(); })
-          .then(render);
+          .then(function(items2){
+            if(DEBUG) try{ console.log('Gifts resp 2 count:', Array.isArray(items2)?items2.length:items2); }catch(e){}
+            render(items2);
+          });
       })
       .catch(function(){ list.innerHTML = '<div class="text-muted">Could not load gifts.</div>'; });
   }

@@ -80,6 +80,7 @@
   var ctaLabel = cta ? cta.querySelector('.btn-label') : null;
   var price = 50;
   var group = 'solo';
+  var DEBUG = true;
   var cache = Object.create(null);
   var ssrHTML = cardsEl ? cardsEl.innerHTML : '';
   var ssrHasCards = !!(cardsEl && cardsEl.querySelector('.wow-card'));
@@ -137,7 +138,18 @@
     if(!cardsEl) return;
     cardsEl.innerHTML = '<div class="text-muted">Loading…</div>';
     var url = '/api/products?mode=online&price_max=' + encodeURIComponent(price) + '&limit=12&sort=popular';
+    if(DEBUG) try{ console.log('Comfort fetch:', url); }catch(e){}
     fetch(url, { headers: { 'Accept': 'application/json' }}).then(function(r){ return r.json(); }).then(function(items){
+      if(DEBUG){
+        try{
+          console.groupCollapsed('Comfort resp', price);
+          console.table((Array.isArray(items)?items:[]).map(function(x){
+            var n = normalizePrice(x.price_min ?? x.price);
+            return { id:x.id, title:x.title, price:x.price, price_min:x.price_min, norm:n, url:x.url };
+          }));
+          console.groupEnd();
+        }catch(e){}
+      }
       renderCards(items);
     }).catch(function(){ cardsEl.innerHTML = '<div class="text-muted">Could not load options. Try again.</div>'; });
   }
