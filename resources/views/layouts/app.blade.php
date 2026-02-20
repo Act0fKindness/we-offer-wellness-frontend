@@ -132,7 +132,7 @@
   }
 
   // Initialize bars present on the page
-  ['home-template','home-sticky'].forEach(function(prefix){
+  ['home-template','home-sticky','search-top'].forEach(function(prefix){
     try { setupUltraSearchBar(prefix) } catch(err) { /* no-op */ }
   });
 

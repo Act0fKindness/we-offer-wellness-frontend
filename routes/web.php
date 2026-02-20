@@ -214,7 +214,7 @@ Route::get('/search', function (\Illuminate\Http\Request $request) {
         $to = url('/search') . '?' . http_build_query($qs);
         return redirect($to, 302);
     }
-    return Inertia::render('Search/Index', [
+    return view('search.index', [
         'mapsKey' => env('GOOGLE_MAPS_API_KEY'),
     ]);
 })->name('search');
