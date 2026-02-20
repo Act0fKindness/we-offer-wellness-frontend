@@ -185,7 +185,8 @@ Route::get('/experiences/{slug}', function (string $slug) {
     return redirect('/therapies/'.$s, 301);
 });
 
-// Static placeholders (trust/corporate/legal). These can be swapped to specific controllers later.
+// Static placeholders (trust/corporate/legal). Guarded by ENABLE_STATIC_PAGES
+if (config('wow.enable_static_pages')) {
 Route::get('/corporate', function () {
     return Inertia::render('Corporate/Hub');
 });
@@ -203,33 +204,7 @@ Route::get('/gift-cards', function () {
     return Inertia::render('GiftCards');
 });
 Route::redirect('/gift-vouchers', '/gift-cards', 301);
-
-// Static pages via General/Page
-Route::get('/our-standards', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Our Standards',
-        'metaDescription' => 'How we vet practitioners and keep sessions safe and effective.',
-        'bodyHtml' => '<p>We set high standards for safety, qualifications and client care. Replace with full policy content.</p>',
-        'canonical' => url('/our-standards'),
-    ]);
-})->name('standards');
-Route::get('/safety-and-contraindications', function(){
-    return Inertia::render('SafetyAndContraindications', [
-        'meta' => [
-            'title' => 'Safety & Contraindications | We Offer Wellness',
-            'description' => 'Detailed guidance on when to seek medical advice, red flags to watch for and how we vet practitioners.',
-            'canonical' => url('/safety-and-contraindications'),
-        ],
-    ]);
-});
-Route::get('/refunds-and-cancellations', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Refunds & Cancellations',
-        'metaDescription' => 'How refunds and cancellations work on We Offer Wellness.',
-        'bodyHtml' => '<p>Policy overview and timelines. Replace with full policy.</p>',
-        'canonical' => url('/refunds-and-cancellations'),
-    ]);
-});
+}
 
 Route::get('/reviews', function(){
     $reviews = Review::with(['user:id,first_name,last_name,name,location', 'product:id,title,slug', 'vendor:id,vendor_name'])
@@ -263,6 +238,7 @@ Route::get('/reviews', function(){
         ],
     ]);
 })->name('reviews.index');
+if (config('wow.enable_static_pages')) {
 Route::get('/about', function(){
     return Inertia::render('General/Page', [
         'title' => 'About We Offer Wellness',
@@ -347,6 +323,7 @@ Route::get('/corporate/{slug}', function (string $slug) {
 Route::redirect('/legal/privacy', '/privacy', 301);
 Route::redirect('/legal/terms', '/terms', 301);
 Route::view('/404', 'app');
+}
 
 // Cart page
 Route::get('/cart', function () {
@@ -384,7 +361,8 @@ Route::get('/provider/{slug}', function(string $slug){
     ]);
 });
 
-// Help / Partners
+// Help / Partners (guarded)
+if (config('wow.enable_static_pages')) {
 Route::get('/help', function(){
     $body = <<<'HTML'
 <p>Need a hand with bookings, accounts or vouchers? Start with our FAQ, then reach out if you still need support.</p>
@@ -439,6 +417,7 @@ Route::get('/partners', function(){
         'canonical' => url('/partners'),
     ]);
 });
+}
 
 // XML sitemap
 Route::get('/sitemap.xml', function () {
@@ -498,7 +477,8 @@ Route::get('/sitemap.xml', function () {
 });
 Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
 
-// General content pages (privacy, terms, cookies, about, contact, help, partners)
+// General content pages (privacy, terms, cookies) guarded
+if (config('wow.enable_static_pages')) {
 Route::get('/privacy', function(){
     return Inertia::render('General/Page', [
         'title' => 'Privacy Policy',
@@ -523,6 +503,7 @@ Route::get('/cookies', function(){
         'canonical' => url('/cookies'),
     ]);
 });
+}
 
 // Dynamic CMS-like pages stored in shared DB (from Backend admin)
 Route::fallback([\App\Http\Controllers\PageController::class, 'show']);
