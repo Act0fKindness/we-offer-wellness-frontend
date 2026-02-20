@@ -21,11 +21,11 @@
     @include('home.sections.how_it_works')
     @include('home.sections.browse_by_outcome')
     @include('home.sections.social_proof')
-    @include('home.sections.reset_quiz')
+    {{-- @include('home.sections.reset_quiz') --}}
     @include('home.sections.featured_experiences')
     @include('home.sections.transformation_stories')
     @include('home.sections.why_different')
-    @include('home.sections.corporate_entry')
+    {{-- @include('home.sections.corporate_entry') --}}
     @include('home.sections.studio_entry')
     @include('home.sections.limited_availability')
     @include('home.sections.faq')
