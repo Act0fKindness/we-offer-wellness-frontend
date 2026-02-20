@@ -4,7 +4,7 @@
 </head>
 <body class="font-sans antialiased">
 <div id="app"
-     data-page="{&quot;component&quot;:&quot;Home&quot;,&quot;props&quot;:{&quot;errors&quot;:{},&quot;auth&quot;:{&quot;user&quot;:null},&quot;mapboxKey&quot;:&quot;&quot;},&quot;url&quot;:&quot;/&quot;,&quot;version&quot;:&quot;static&quot;}"
+     data-page="{'component':'Home','props':{'errors':{},'auth':{'user':null},'mapboxKey':''},'url':'/','version':'static'}"
      data-v-app=""><!---->
     <div class="min-h-screen text-ink-800">
         <div class="pointer-events-none fixed inset-0 -z-10"></div>
@@ -18,141 +18,7 @@
                 </div>
             </div>
         </div>
-        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b"
-                style="border-bottom: 1px solid rgb(153, 153, 153);">
-            <div class="container-page h-16 flex items-center justify-between">
-                <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/"><img
-                    src="https://cdn.shopify.com/s/files/1/0820/3947/2469/files/logo.png?v=1738109013"
-                    alt="We Offer Wellness" class="h-8 w-auto"></a>
-                    <nav class="hidden md:flex items-center gap-1">
-                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="need" tabindex="0" href="/feel">By Need</a></div>
-                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="therapies" ex="0" href="/therapies">Therapies</a>
-                        </div>
-                        <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/classes">Classes</a></div>
-                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events-and-workshops">Events
-                            &amp; Workshops</a></div>
-                        <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/near-me">Online &amp; Near
-                            Me</a></div>
-                        <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/mindful-times">Mindful
-                            Times</a></div>
-                    </nav>
-                </div>
-                <div class="hidden md:flex items-center gap-2 position-relative"><a class="icon-btn" aria-label="Search"
-                                                                                    href="/search">
-                    <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                         fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
-                              d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"></path>
-                    </svg>
-                </a><!----><a class="icon-btn" aria-label="Sign in" href="/login">
-                    <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                         fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
-                    </svg>
-                </a>
-                    <button class="icon-btn position-relative" aria-label="Open cart" aria-expanded="false">
-                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
-                             height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"></path>
-                        </svg>
-                        <span
-                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge bg-danger">0</span>
-                    </button><!----></div><!---->
-                <button
-                    class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100"
-                    aria-label="Toggle menu">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-            </div><!----><!---->
-            <!-- Static mega panel (desktop) -->
-            <div id="mega-panel" class="mega-panel" style="display:none">
-                <div class="container-page py-4">
-                    <!-- By Need -->
-                    <div data-menu="need" class="grid md:grid-cols-3 gap-6">
-                        <div class="menu-col">
-                            <div class="kicker mb-2">How are you feeling?</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/feel/stress-and-anxiety">Stress &amp; anxiety</a></li>
-                                <li><a class="menu-link" href="/feel/sleep-issues">Trouble sleeping</a></li>
-                                <li><a class="menu-link" href="/feel/low-mood-burnout">Low mood &amp; burnout</a></li>
-                                <li><a class="menu-link" href="/feel/overwhelm">Overwhelmed &amp; frazzled</a></li>
-                                <li><a class="menu-link" href="/feel/worry">Worry &amp; racing thoughts</a></li>
-                            </ul>
-                        </div>
-                        <div class="menu-col">
-                            <div class="kicker mb-2">What do you want?</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/feel/mens-health">Men’s health</a></li>
-                                <li><a class="menu-link" href="/feel/digestive-health">Digestive &amp; gut health</a></li>
-                                <li><a class="menu-link" href="/feel/fertility-pregnancy">Fertility &amp; pregnancy</a></li>
-                                <li><a class="menu-link" href="/feel/pain-relief">Pain relief &amp; tension</a></li>
-                                <li><a class="menu-link" href="/feel/trauma-and-nervous-system">Nervous system &amp; trauma support</a></li>
-                            </ul>
-                        </div>
-                        <div class="menu-col">
-                            <div class="kicker mb-2">Help me choose</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/help/which-therapy">Match me to a therapy (quiz)</a></li>
-                                <li><a class="menu-link" href="/therapies?tag=gentle-beginner">Gentle &amp; beginner‑friendly options</a></li>
-                                <li><a class="menu-link" href="/feel">View all needs</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <!-- Therapies -->
-                    <div data-menu="therapies" class="grid md:grid-cols-3 gap-6">
-                        <div class="menu-col">
-                            <div class="kicker mb-2">Popular therapies</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/therapy/massage">Massage therapy</a></li>
-                                <li><a class="menu-link" href="/therapy/reiki">Reiki</a></li>
-                                <li><a class="menu-link" href="/therapy/reflexology">Reflexology</a></li>
-                                <li><a class="menu-link" href="/therapy/acupuncture">Acupuncture</a></li>
-                                <li><a class="menu-link" href="/therapy/breathwork">Breathwork (1:1)</a></li>
-                                <li><a class="menu-link" href="/therapy/hypnotherapy">Hypnotherapy</a></li>
-                                <li><a class="menu-link" href="/therapy/coaching-and-counselling">Coaching &amp; counselling</a></li>
-                            </ul>
-                        </div>
-
-                        <div class="menu-col">
-                            <div class="kicker mb-2">Guides</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
-                                <li><a class="menu-link" href="/help">Help centre</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <!-- Events & Workshops -->
-                    <div data-menu="events" class="grid md:grid-cols-3 gap-6">
-                        <div class="menu-col">
-                            <div class="kicker mb-2">Highlights</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/events-and-workshops">Upcoming events &amp; workshops</a></li>
-                                <li><a class="menu-link" href="/classes">Classes</a></li>
-                            </ul>
-                        </div>
-                        <div class="menu-col">
-                            <div class="kicker mb-2">Explore</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/near-me">Online &amp; near me</a></li>
-                                <li><a class="menu-link" href="/help">Help centre</a></li>
-                            </ul>
-                        </div>
-                        <div class="menu-col">
-                            <div class="kicker mb-2">Guides</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
+        @include('partials.header')
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">
             <nav class="mobile-menu__nav">
@@ -1065,102 +931,11 @@
                 </div>
             </section>
         </main>
-        <footer class="wow-footer mt-24">
-            <div class="container-page py-10">
-                <div class="footer-hero">
-                    <div class="brand-col"><img
-                        src="https://cdn.shopify.com/s/files/1/0820/3947/2469/files/wow-logo-white_b5bc0fc0-ae06-4aa2-af86-f7a42ff78107.png?v=1757430233"
-                        alt="We Offer Wellness" class="logo">
-                        <p class="tagline">Safe, trusted therapies and wellness services that help you feel better —
-                            today.</p>
-                        <p class="about-snippet">We Offer Wellness™ connects you with trusted holistic therapies and
-                            gentle classes to support your mind, body and spirit — from the comfort of home or in-person
-                            with verified practitioners.</p></div>
-                    <div class="subscribe-col">
-                        <div class="subscribe-card">
-                            <div class="social"><a href="https://www.instagram.com/we_offer_wellness/"
-                                                   aria-label="Instagram" class="social-btn" target="_blank"
-                                                   rel="noopener"><i class="bi bi-instagram"></i></a><a
-                                href="https://www.tiktok.com/@weofferwellness" aria-label="TikTok" class="social-btn"
-                                target="_blank" rel="noopener"><i class="bi bi-tiktok"></i></a><a
-                                href="https://www.linkedin.com/company/weofferwellness/" aria-label="LinkedIn"
-                                class="social-btn" target="_blank" rel="noopener"><i class="bi bi-linkedin"></i></a><a
-                                href="https://www.youtube.com/@weofferwellness" aria-label="YouTube" class="social-btn"
-                                target="_blank" rel="noopener"><i class="bi bi-youtube"></i></a></div>
-                            <div class="sub-title">Join our Community</div>
-                            <form class="subscribe"><input class="sub-input" type="email" required=""
-                                                           placeholder="Email address" aria-label="Email address">
-                                <button class="sub-btn" type="submit"><span>Join Community</span><i
-                                    class="bi bi-arrow-right-short"></i></button>
-                            </form>
-                            <div class="sub-note">No spam. Unsubscribe any time.</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="footer-cta">
-                    <div>
-                        <div class="title">Practitioners</div>
-                        <p>Share your expertise with the WOW community. Trauma-aware, inclusive practitioners are always
-                            welcome.</p></div>
-                    <a href="https://studio.weofferwellness.co.uk" class="btn-wow btn-wow--cta btn-sm"
-                       target="_blank" rel="noopener" data-loader-init="1"> Become a practitioner <span
-                        class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a></div>
-                <div class="safety-card">
-                    <div>
-                        <div class="title">Safety &amp; Contraindications</div>
-                        <p>Always consult your GP or healthcare provider if you are pregnant, have a diagnosed condition
-                            or take prescription medication. Review contraindications for every therapy and contact the
-                            practitioner if you are unsure.</p></div>
-                    <a href="/safety-and-contraindications" class="btn-wow btn-wow--ghost" data-loader-init="1">Read
-                        full guidance<span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a>
-                </div>
-                <div class="links-col">
-                    <div class="col">
-                        <div class="title">Explore</div>
-                        <ul>
-                            <li><a href="/therapies">Therapies</a></li>
-                            <li><a href="/classes">Classes</a></li>
-                            <li><a href="/events-and-workshops">Events &amp; Workshops</a></li>
-                            <li><a href="/gift-cards">WOW gift vouchers</a></li>
-                            <li><a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener">Mindful
-                                Times</a></li>
-                            <li><a href="https://times.weofferwellness.co.uk/seeking-wellness" target="_blank"
-                                   rel="noopener">Podcast</a></li>
-                            <li style="display:none"><a href="https://times.weofferwellness.co.uk/7-day-reset-starter-kit" target="_blank"
-                                   rel="noopener">Free 7-day reset</a></li>
-                        </ul>
-                    </div>
-                    <div class="col">
-                        <div class="title">Company</div>
-                        <ul>
-                            <li><a href="/about">About</a></li>
-                            <li><a href="/contact">Contact</a></li>
-                            <li><a href="/corporate-wellness">Corporate wellness (coming 2026)</a></li>
-                            <li><a href="/partners">Partner spotlight</a></li>
-                            <li><a href="https://times.weofferwellness.co.uk#practitioner-chats" target="_blank"
-                                   rel="noopener">Practitioner chats</a></li>
-                        </ul>
-                    </div>
-                    <div class="col">
-                        <div class="title">Help Centre &amp; FAQ</div>
-                        <ul>
-                            <li><a href="/help">Help centre</a></li>
-                            <li><a href="/help/faq">FAQ</a></li>
-                            <li><a href="/safety-and-contraindications">Safety &amp; contraindications</a></li>
-                            <li><a href="/refunds-and-cancellations">Booking &amp; cancellations</a></li>
-                            <li><a href="/contact?topic=feedback">Contact support</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="footer-bottom mb-3"><p>© 2026 We Offer Wellness</p>
-                    <div class="legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookies</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
+        @include('partials.footer')
     </div>
  </div>
 
+@push('scripts')
 <script>
 (function(){
   function setupUltraSearchBar(prefix){
@@ -1315,5 +1090,8 @@
   } catch {}
 })();
 </script>
+@endpush
+
+@stack('scripts')
 </body>
 </html>
