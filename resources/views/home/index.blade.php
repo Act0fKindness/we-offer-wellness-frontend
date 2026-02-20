@@ -10,45 +10,8 @@
 
 @include('home.sections.schedule')
 
-<section data-v-f43bb09d="" class="section">
-    <div class="container-page">
-        <div class="mb-6 flex items-end justify-between">
-            <div>
-                <div class="kicker">Thoughtful ways to nourish someone you love</div>
-                <h2>Gifts that glow (under £50)</h2></div>
-            <div class="flex items-center gap-2">
-                <button class="hidden sm:inline-flex carousel-arrow" aria-label="Previous">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M15 18l-6-6 6-6"></path>
-                    </svg>
-                </button>
-                <button class="hidden sm:inline-flex carousel-arrow" aria-label="Next">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M9 6l6 6-6 6"></path>
-                    </svg>
-                </button>
-                <a href="/search?tag=Gift&amp;price_max=50"
-                   class="btn-wow btn-wow--outline btn-sm btn-arrow" data-loader-init="1"><span
-                    class="btn-label">Find a thoughtful gift</span><span class="btn-icon-wrap"
-                                                                         aria-hidden="true"><svg
-                    class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path
-                    stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg><svg class="btn-icon-default"
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    viewBox="0 0 24 24"><path fill="none"
-                                                                                              stroke="#fff"
-                                                                                              stroke-linecap="round"
-                                                                                              stroke-linejoin="round"
-                                                                                              stroke-width="2"
-                                                                                              d="M15 12l-4 4m4-4-4-4"></path></svg></span><span
-                    class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a></div>
-        </div>
-        <div
-            class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent"></div>
-    </div>
-</section>
+@include('home.sections.gifts')
+
 <section data-v-f43bb09d="" class="section" aria-labelledby="comfort-title">
     <div data-v-f43bb09d="" class="container-page">
         <div data-v-f43bb09d="" class="mb-6">
@@ -266,149 +229,15 @@
         </div>
     </div>
 </section>
-<section data-v-f43bb09d="" id="practitioner-chats" class="section"
-         aria-labelledby="practitioner-chats-title">
-    <div data-v-f43bb09d="" class="container-page">
-        <div data-v-f43bb09d="" class="card p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
-            <div data-v-f43bb09d="" class="flex-1">
-                <div data-v-f43bb09d="" class="kicker">New series</div>
-                <h2 data-v-f43bb09d="" id="practitioner-chats-title">Practitioner Chats</h2>
-                <p data-v-f43bb09d="" class="text-ink-600 mt-2">Monthly conversations with WOW practitioners
-                    on how they hold space, approach safety, and design therapies that work.</p></div>
-            <div data-v-f43bb09d="" class="flex gap-3"><a data-v-f43bb09d=""
-                                                          href="https://times.weofferwellness.co.uk#practitioner-chats"
-                                                          class="btn-wow btn-wow--cta btn-arrow"
-                                                          data-loader-init="1"><span data-v-f43bb09d=""
-                                                                                     class="btn-label">Explore chats</span><span
-                class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a><a
-                data-v-f43bb09d="" href="https://times.weofferwellness.co.uk" class="btn-wow btn-wow--ghost"
-                data-loader-init="1">See notes<span class="btn-spinner" aria-hidden="true"><span
-                class="spin"></span></span></a></div>
-        </div>
-    </div>
-</section><!---->
-<section data-v-f43bb09d="" id="mindful-times" class="section">
-    <div data-v-f43bb09d="" class="container-page">
-        <div data-v-f43bb09d="" class="mb-8 flex items-end justify-between">
-            <div data-v-f43bb09d="">
-                <div data-v-f43bb09d="" class="kicker">Mindful Times</div>
-                <h2 data-v-f43bb09d="">Guides, practitioner interviews and tools to help you feel
-                    better</h2></div>
-            <a data-v-f43bb09d="" class="btn-wow btn-wow--outline btn-sm btn-arrow"
-               href="https://times.weofferwellness.co.uk" data-loader-init="1"><span data-v-f43bb09d=""
-                                                                                     class="btn-label">Visit Mindful Times</span><span
-                data-v-f43bb09d="" class="btn-icon-wrap" aria-hidden="true"><svg data-v-f43bb09d=""
-                                                                                 class="btn-icon-hover"
-                                                                                 xmlns="http://www.w3.org/2000/svg"
-                                                                                 viewBox="0 0 24 24"><path
-                data-v-f43bb09d="" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg><svg data-v-f43bb09d=""
-                                                                                 class="btn-icon-default"
-                                                                                 xmlns="http://www.w3.org/2000/svg"
-                                                                                 viewBox="0 0 24 24"><path
-                data-v-f43bb09d="" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg></span><span data-v-f43bb09d=""
-                                                                                   class="btn-spinner"
-                                                                                   aria-hidden="true"><span
-                data-v-f43bb09d="" class="spin"></span></span></a></div><!----></div>
-</section>
-<section data-v-f43bb09d="" class="section">
-    <div data-v-f43bb09d="" class="container-page">
-        <div data-v-f43bb09d="" class="mb-8">
-            <div data-v-f43bb09d="" class="kicker">Discover</div>
-            <h2 data-v-f43bb09d="">Shop by category</h2></div>
-        <div data-v-f43bb09d="" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"><a data-v-f43bb09d=""
-                                                                                    class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-                                                                                    href="/search?type=therapy&amp;what=breathwork"><img
-            data-v-f43bb09d=""
-            src="https://images.unsplash.com/photo-1520880867055-1e30d1cb001c?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
-            class="h-48 w-full object-cover" alt="Breathwork">
-            <div data-v-f43bb09d=""
-                 class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-            <div data-v-f43bb09d="" class="absolute bottom-3 left-3 text-white text-lg font-semibold">
-                Breathwork
-            </div>
-        </a><a data-v-f43bb09d=""
-               class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-               href="/search?type=therapy&amp;what=sound%20bath"><img data-v-f43bb09d=""
-                                                                      src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
-                                                                      class="h-48 w-full object-cover"
-                                                                      alt="Sound Healing">
-            <div data-v-f43bb09d=""
-                 class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-            <div data-v-f43bb09d="" class="absolute bottom-3 left-3 text-white text-lg font-semibold">Sound
-                Healing
-            </div>
-        </a><a data-v-f43bb09d=""
-               class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-               href="/therapies/massage-therapy"><img data-v-f43bb09d=""
-                                                      src="https://images.unsplash.com/photo-1612152918775-49ed1e1c1d1f?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
-                                                      class="h-48 w-full object-cover"
-                                                      alt="Massage Therapy">
-            <div data-v-f43bb09d=""
-                 class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-            <div data-v-f43bb09d="" class="absolute bottom-3 left-3 text-white text-lg font-semibold">
-                Massage Therapy
-            </div>
-        </a><a data-v-f43bb09d=""
-               class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-               href="/classes/yoga"><img data-v-f43bb09d=""
-                                         src="https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
-                                         class="h-48 w-full object-cover" alt="Yoga &amp; Movement">
-            <div data-v-f43bb09d=""
-                 class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-            <div data-v-f43bb09d="" class="absolute bottom-3 left-3 text-white text-lg font-semibold">Yoga
-                &amp; Movement
-            </div>
-        </a><a data-v-f43bb09d=""
-               class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-               href="/therapies/reiki"><img data-v-f43bb09d=""
-                                            src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
-                                            class="h-48 w-full object-cover" alt="Reiki &amp; Energy">
-            <div data-v-f43bb09d=""
-                 class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-            <div data-v-f43bb09d="" class="absolute bottom-3 left-3 text-white text-lg font-semibold">Reiki
-                &amp; Energy
-            </div>
-        </a><a data-v-f43bb09d=""
-               class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-               href="/search?type=therapy&amp;what=coaching"><img data-v-f43bb09d=""
-                                                                  src="https://images.unsplash.com/photo-1497352305433-9b09be07364b?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
-                                                                  class="h-48 w-full object-cover"
-                                                                  alt="Coaching &amp; Mindset">
-            <div data-v-f43bb09d=""
-                 class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-            <div data-v-f43bb09d="" class="absolute bottom-3 left-3 text-white text-lg font-semibold">
-                Coaching &amp; Mindset
-            </div>
-        </a></div>
-    </div>
-</section>
-<section data-v-f43bb09d="" class="section">
-    <div data-v-f43bb09d="" class="container-page">
-        <div data-v-f43bb09d="" class="card p-6 md:p-10 flex flex-col md:flex-row items-center gap-8">
-            <div data-v-f43bb09d="" class="flex-1">
-                <div data-v-f43bb09d="" class="kicker mb-3">Gifting made easy</div>
-                <h3 data-v-f43bb09d="">Gift cards for any occasion</h3>
-                <p data-v-f43bb09d="" class="text-ink-600 mt-2 max-w-xl">Choose the amount, add a message,
-                    and we’ll email an instant e-gift card to you or your recipient to use on therapies,
-                    classes, events and workshops.</p>
-                <div data-v-f43bb09d="" class="mt-5 flex gap-3"><a data-v-f43bb09d="" href="/gift-cards"
-                                                                   class="btn-wow is-square btn-md btn-wow--cta"
-                                                                   data-loader-init="1">Send a gift
-                    card<span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a><a
-                    data-v-f43bb09d="" href="/help/gift-cards"
-                    class="btn-wow is-square btn-md btn-wow--outline" data-loader-init="1">How gifting works<span
-                    class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a></div>
-            </div>
-            <div data-v-f43bb09d="" class="flex-1 w-full">
-                <div data-v-f43bb09d="" class="rounded-2xl overflow-hidden border border-ink-200"><img
-                    data-v-f43bb09d=""
-                    src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
-                    alt="Gift Card" class="w-full h-64 object-cover"></div>
-            </div>
-        </div>
-    </div>
-</section>
+
+
+
+@include('home.sections.practitioner_chats_converstions')
+
+@include('home.sections.mindfultimes_guides_interviews')
+
+@include('home.sections.discover_category')
+
+@include('home.sections.gift_cards_occasion')
 
 @endsection
