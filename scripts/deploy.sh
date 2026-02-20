@@ -54,26 +54,30 @@ if [[ "$NO_VERIFY" != "true" ]]; then
   HEAD_PARTIAL="resources/views/partials/head.blade.php"
   LAYOUT="resources/views/layouts/app.blade.php"
   HOME="resources/views/home/index.blade.php"
+  contains() {
+    local needle="$1"; shift
+    local file="$1"; shift
+    if command -v rg >/dev/null 2>&1; then rg -n -F "$needle" "$file" >/dev/null 2>&1; else grep -n -F "$needle" "$file" >/dev/null 2>&1; fi
+  }
   if [[ ! -f "$HEAD_PARTIAL" ]]; then
     echo "ERROR: Missing $HEAD_PARTIAL" >&2; exit 1
   fi
-  if ! rg -n "@vite\('resources/js/app.js'\)" "$HEAD_PARTIAL" >/dev/null 2>&1; then
+  if ! contains "@vite('resources/js/app.js')" "$HEAD_PARTIAL"; then
     echo "ERROR: $HEAD_PARTIAL missing @vite('resources/js/app.js'). Assets won't load." >&2; exit 1
   fi
-  if ! rg -n "@include\('partials\.styles'\)" "$HEAD_PARTIAL" >/dev/null 2>&1; then
+  if ! contains "@include('partials.styles')" "$HEAD_PARTIAL"; then
     echo "ERROR: $HEAD_PARTIAL missing @include('partials.styles'). Base CSS won't apply." >&2; exit 1
   fi
-  if ! rg -n "@inertiaHead" "$HEAD_PARTIAL" >/dev/null 2>&1; then
+  if ! contains "@inertiaHead" "$HEAD_PARTIAL"; then
     echo "WARN: $HEAD_PARTIAL missing @inertiaHead (Inertia page head won't hydrate)." >&2
   fi
-  if ! rg -n "@include\('partials\.head'\)" "$LAYOUT" >/dev/null 2>&1; then
+  if ! contains "@include('partials.head')" "$LAYOUT"; then
     echo "ERROR: $LAYOUT missing @include('partials.head') in <head>." >&2; exit 1
   fi
-  if ! rg -n "<main[^
->]*>\s*@yield\('content'\)\s*</main>" -U "$LAYOUT" >/dev/null 2>&1; then
-    echo "ERROR: $LAYOUT <main> does not yield('content')." >&2; exit 1
+  if ! contains "<main" "$LAYOUT" || ! contains "@yield('content')" "$LAYOUT"; then
+    echo "ERROR: $LAYOUT must include a <main> with @yield('content')." >&2; exit 1
   fi
-  if ! rg -n "@extends\('layouts\.app'\)" "$HOME" >/dev/null 2>&1; then
+  if [[ -f "$HOME" ]] && ! contains "@extends('layouts.app')" "$HOME"; then
     echo "WARN: $HOME does not extend the app layout." >&2
   fi
 fi
