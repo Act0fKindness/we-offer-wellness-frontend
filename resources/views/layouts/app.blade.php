@@ -8,7 +8,6 @@
      data-v-app=""><!---->
     <div class="min-h-screen text-ink-800">
         @include('partials.header')
-        @yield('content')
         <main></main>
         <main class="">
             @yield('content')
