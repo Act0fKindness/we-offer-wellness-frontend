@@ -80,6 +80,9 @@
   var ctaLabel = cta ? cta.querySelector('.btn-label') : null;
   var price = 50;
   var group = 'solo';
+  var cache = Object.create(null);
+  var ssrHTML = cardsEl ? cardsEl.innerHTML : '';
+  var ssrHasCards = !!(cardsEl && cardsEl.querySelector('.wow-card'));
 
   function setActive(btn){
     var groupEl = btn.closest('.seg-group');
@@ -126,6 +129,7 @@
         + '</div>';
       cardsEl.appendChild(a);
     });
+    try { cache[String(price)] = items; } catch(e){}
   }
 
   function fetchAndRender(){
@@ -143,6 +147,11 @@
       price = parseInt(btn.getAttribute('data-price'), 10) || 50;
       setActive(btn);
       updateCta();
+      // If £50 and SSR exists, restore SSR markup for consistency
+      if(price === 50 && ssrHasCards){ cardsEl.innerHTML = ssrHTML; return; }
+      // Use cache if available
+      var cached = cache[String(price)];
+      if(Array.isArray(cached) && cached.length){ renderCards(cached); return; }
       fetchAndRender();
     });
   });
