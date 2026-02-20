@@ -1,3 +1,14 @@
+<div class="pointer-events-none fixed inset-0 -z-10"></div>
+<div class="utility-bar hidden md:block">
+    <div class="container-page">
+        <div class="utility-links">
+            <div class="utility-links__primary"><a href="/reset" style="display:none">Free 7-Day Reset</a><a href="/about">About We
+                Offer Wellness™</a><a href="/help">Help Centre</a><a href="/safety-and-contraindications">Safety
+                &amp; Contraindications</a></div>
+            <div class="utility-links__secondary"><a href="/for-business" style="display:none">For Business</a><a href="https://studio.weofferwellness.co.uk" style="display:none">Become a Practitioner</a></div>
+        </div>
+    </div>
+</div>
 <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b"
         style="border-bottom: 1px solid rgb(153, 153, 153);">
     <div class="container-page h-16 flex items-center justify-between">
@@ -133,3 +144,24 @@
         </div>
     </div>
 </header>
+<!-- Mobile menu (drawer) -->
+<div id="mobile-menu" class="mobile-menu" style="display:none">
+    <nav class="mobile-menu__nav">
+        <ul class="mobile-menu__list">
+            <li><a class="mobile-menu__link" href="/feel">By Need</a></li>
+            <li><a class="mobile-menu__link" href="/therapies">Therapies</a></li>
+            <li><a class="mobile-menu__link" href="/classes">Classes</a></li>
+            <li><a class="mobile-menu__link" href="/events-and-workshops">Events &amp; Workshops</a></li>
+            <li><a class="mobile-menu__link" href="/near-me">Online &amp; Near Me</a></li>
+            <li><a class="mobile-menu__link" href="/mindful-times">Mindful Times</a></li>
+        </ul>
+        <div class="mobile-menu__section">
+            <div class="mobile-menu__section-title">Help &amp; Info</div>
+            <ul class="mobile-menu__list">
+                <li><a class="mobile-menu__link" href="/about">About We Offer Wellness™</a></li>
+                <li><a class="mobile-menu__link" href="/help">Help Centre</a></li>
+                <li><a class="mobile-menu__link" href="/safety-and-contraindications">Safety &amp; Contraindications</a></li>
+            </ul>
+        </div>
+    </nav>
+</div>
