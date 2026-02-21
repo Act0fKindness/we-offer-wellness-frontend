@@ -18,6 +18,8 @@
   .wow-helper table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .wow-helper th, .wow-helper td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top }
   .wow-helper .pill { display:inline-flex; align-items:center; gap:.25rem; padding:.15rem .45rem; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:999px; margin:0 .25rem .25rem 0; font-size: 11px; color:#111827 }
+  .wow-helper tr.vh-row { cursor: pointer; }
+  .wow-helper tr.vh-row:hover { background: #f9fafb; }
   @media (max-width: 991px){ .wow-helper { top: 80px } }
 </style>
 
@@ -26,6 +28,7 @@
     <div class="head"><i class="bi bi-database-gear"></i> <strong style="font-size:13px;">Product Data Helper</strong></div>
     <div class="body">
       <div class="small text-muted">Product ID: {{ $dbg['id'] ?? '' }}</div>
+      <div class="small text-muted">Current price: <span id="vhPrice">—</span></div>
       @if(!empty($dbg['category']))
         <div class="small text-muted">Category: {{ $dbg['category']['name'] ?? '' }}</div>
       @endif
@@ -51,7 +54,14 @@
       @else
         <table>
           <thead>
-            <tr><th>ID</th><th>Options</th><th>Price</th><th>Compare</th></tr>
+            <tr>
+              <th>ID</th>
+              @foreach($opts as $o)
+                <th>{{ $o['name'] ?? 'Option' }}</th>
+              @endforeach
+              <th>Price</th>
+              <th>Compare</th>
+            </tr>
           </thead>
           <tbody>
           @foreach($vars as $v)
@@ -61,9 +71,11 @@
               $ops = $v['options'] ?? [];
               if (is_string($ops)) { $ops = [$ops]; }
             @endphp
-            <tr>
+            <tr class="vh-row" data-opts='@json($ops)'>
               <td>{{ $v['id'] ?? '' }}</td>
-              <td>{{ implode(' · ', array_filter(array_map('strval',$ops))) }}</td>
+              @foreach($opts as $idx => $o)
+                <td>{{ $ops[$idx] ?? '' }}</td>
+              @endforeach
               <td>{{ $fmt($vp) }}</td>
               <td>{{ $fmt($vc) }}</td>
             </tr>
@@ -83,5 +95,21 @@
   if(!root || !btn) return;
   function setOpen(open){ root.setAttribute('data-open', open ? '1':'0'); btn.setAttribute('aria-expanded', open?'true':'false'); try{ btn.querySelector('i').className = open ? 'bi bi-chevron-left' : 'bi bi-chevron-right'; }catch(e){} }
   btn.addEventListener('click', function(){ var o = root.getAttribute('data-open')==='1'; setOpen(!o); });
+  // Hook row click -> select variant via event
+  try{
+    root.querySelectorAll('tr.vh-row').forEach(function(row){
+      row.addEventListener('click', function(){
+        try{
+          var opts = JSON.parse(row.dataset.opts||'[]');
+          document.dispatchEvent(new CustomEvent('wow:selectVariant', { detail: { options: opts } }));
+        }catch(e){}
+      });
+    });
+  }catch(e){}
+  // Reflect Buy Box price in helper
+  try{
+    var priceSpan = document.getElementById('vhPrice');
+    document.addEventListener('wow:price', function(ev){ try{ var unit = ev?.detail?.unit; if(unit!=null){ priceSpan.textContent = '£'+Number(unit/100).toFixed(2); } }catch(e){} });
+  }catch(e){}
 })();
 </script>
