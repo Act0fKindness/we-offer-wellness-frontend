@@ -352,10 +352,20 @@ function buildOptionsInto(container){
 
 function syncOptionAria(optIdx){
   try{
+    var locIdx = (__locIdxCache != null) ? __locIdxCache : findLocationIndex();
     const selector = '.pills[data-opt-idx="'+String(optIdx)+'"] .pill';
     document.querySelectorAll(selector).forEach(function(p){
       const val = String(p.dataset.optValue||'');
-      p.setAttribute('aria-checked', val===String(state.selected[optIdx]||'') ? 'true' : 'false');
+      const cur = String(state.selected[optIdx]||'');
+      var match;
+      if (optIdx===locIdx) {
+        // Loose match for locations
+        var isOnline = strNorm(val)==='online' || strNorm(cur)==='online';
+        match = isOnline ? (strNorm(val)==='online' && strNorm(cur)==='online') : looseMatch(val, cur);
+      } else {
+        match = (strNorm(val)===strNorm(cur));
+      }
+      p.setAttribute('aria-checked', match ? 'true' : 'false');
     });
   }catch(e){}
 }
@@ -492,9 +502,21 @@ init();
 try {
   document.addEventListener('wow:selectVariant', function(ev){
     try {
-      var opts = ev?.detail?.options; if(!Array.isArray(opts) || !opts.length) return;
-      // Align selection by index
-      for (var i=0; i<opts.length; i++) { state.selected[i] = String(opts[i]||''); }
+      var from = ev?.detail?.options; if(!Array.isArray(from) || !from.length) return;
+      // Map provided options to existing values; for locations, use loose match to choose the exact value
+      for (var i=0; i<from.length; i++) {
+        var want = String(from[i]||'');
+        var values = (product.options[i] && product.options[i].values) ? product.options[i].values : [];
+        var chosen = values.find(function(v){
+          if (i===((__locIdxCache!=null)?__locIdxCache:findLocationIndex())) {
+            // Online must match exactly 'Online' (case-insensitive); otherwise loose
+            if (strNorm(want)==='online') return strNorm(v)==='online';
+            return looseMatch(v, want);
+          }
+          return strNorm(v)===strNorm(want);
+        }) || values[0] || want;
+        state.selected[i] = chosen;
+      }
       // Sync option rows UI
       for (var j=0; j<(product.options||[]).length; j++){ syncOptionAria(j); }
       // Sync format pills and update
