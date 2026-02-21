@@ -40,7 +40,7 @@
         <h6>Options</h6>
         @foreach($opts as $oi => $o)
           <div class="mb-1" data-vh-opt-group="{{ $oi }}">
-            <div class="small fw-semibold">{{ $o['name'] ?? 'Option' }}</div>
+            <div class="small fw-semibold">{{ (isset($o['name']) && preg_match('/person/i', $o['name'])) ? 'People' : ($o['name'] ?? 'Option') }}</div>
             <div class="mt-1">
               @foreach(($o['values'] ?? []) as $vi => $v)
                 @php $val = is_array($v) ? ($v['value'] ?? '') : (string)$v; @endphp
@@ -60,7 +60,7 @@
             <tr>
               <th>ID</th>
               @foreach($opts as $o)
-                <th>{{ $o['name'] ?? 'Option' }}</th>
+                <th>{{ (isset($o['name']) && preg_match('/person/i', $o['name'])) ? 'People' : ($o['name'] ?? 'Option') }}</th>
               @endforeach
               <th>Price</th>
               <th>Compare</th>

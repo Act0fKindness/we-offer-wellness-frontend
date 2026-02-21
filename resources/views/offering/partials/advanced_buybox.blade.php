@@ -324,11 +324,12 @@ const bookingModalEl=document.getElementById('bookingModal'),bookingModal=new bo
 const pillHoldBanner=document.getElementById('pillHoldBanner'),pillHoldCountdown=document.getElementById('pillHoldCountdown'),pillHourglass=pillHoldBanner.querySelector('i.bi-hourglass-split');
 function fmt(c){try{return new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP"}).format(c/100)}catch(e){return "£"+(c/100).toFixed(2)}}
 function renderStars(){stars.innerHTML="";const full=Math.round(product.rating);for(let i=1;i<=5;i++){const icon=document.createElement("i");icon.className=i<=full?"bi bi-star-fill text-success":"bi bi-star text-secondary";stars.appendChild(icon)}ratingText.textContent=`${product.rating.toFixed(1)} (${product.ratingCount})`;if(mStars){mStars.innerHTML=stars.innerHTML;mRatingText.textContent=ratingText.textContent}}
+function displayName(name){ try{ var s=String(name||''); if(/person/i.test(s)) return 'People'; }catch(e){} return name||'Option'; }
 function buildOptionsInto(container){
   container.innerHTML="";
   const locIdx = findLocationIndex();
   (product.options||[]).forEach((opt,optIdx)=>{
-    const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=opt.name; container.appendChild(label);
+    const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=displayName(opt.name); container.appendChild(label);
     const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
     (opt.values||[]).forEach(val=>{
       const txt = String(val||'');
