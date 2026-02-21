@@ -116,7 +116,26 @@
       var vid = ev?.detail?.variantId || null; var opts = ev?.detail?.options || [];
       // Highlight row
       root.querySelectorAll('tr.vh-row').forEach(function(tr){ tr.classList.remove('active'); });
-      root.querySelectorAll('tr.vh-row').forEach(function(tr){ if(String(tr.querySelector('td')?.textContent||'').trim()===String(vid||'')) tr.classList.add('active'); });
+      var found = false;
+      root.querySelectorAll('tr.vh-row').forEach(function(tr){ if(String(tr.querySelector('td')?.textContent||'').trim()===String(vid||'')) { tr.classList.add('active'); found=true; } });
+      // Fallback: match by options if id not found
+      if(!found && Array.isArray(opts) && opts.length){
+        var rows = root.querySelectorAll('tr.vh-row');
+        rows.forEach(function(tr){ tr.classList.remove('active'); });
+        rows.forEach(function(tr){
+          try{
+            var ro = JSON.parse(tr.dataset.opts||'[]');
+            var ok = true;
+            for (var i=0;i<opts.length;i++){
+              var want = String(opts[i]||''); var got = String(ro[i]||'');
+              var A = want.trim().toLowerCase(); var B = got.trim().toLowerCase();
+              if (A==='online' || B==='online') { if(!(A==='online' && B==='online')) { ok=false; break; } }
+              else { if(!(A && B && (A.includes(B) || B.includes(A)))) { ok=false; break; } }
+            }
+            if(ok){ tr.classList.add('active'); found=true; }
+          }catch(e){}
+        });
+      }
       // Highlight option pills (loose match for locations)
       var groups = root.querySelectorAll('[data-vh-opt-group]');
       function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,''); }
