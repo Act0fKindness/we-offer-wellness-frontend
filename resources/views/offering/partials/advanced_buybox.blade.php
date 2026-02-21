@@ -274,8 +274,31 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Exact placeholder behaviour (demo data) from provided snippet
-// For now we do not bind to real product; this is a static demo component.
+// Will be overridden with real product data if available from Blade.
 const product={rating:4.9,ratingCount:128,options:[{name:"Format",values:["In-person","Online"]},{name:"People",values:["1 Person","2 Persons","3+ Group"]}],variants:[{id:1,options:["In-person","1 Person"],price:35000,compare:0,available:true},{id:2,options:["In-person","2 Persons"],price:65000,compare:70000,available:true},{id:3,options:["In-person","3+ Group"],price:90000,compare:0,available:true},{id:4,options:["Online","1 Person"],price:32000,compare:0,available:true},{id:5,options:["Online","2 Persons"],price:60000,compare:65000,available:true},{id:6,options:["Online","3+ Group"],price:85000,compare:0,available:true}]};
+try{
+  const bbOptions = @json($product['options'] ?? []);
+  const bbVariants = @json($product['variants'] ?? []);
+  const bbRating = @json($product['rating'] ?? null);
+  const bbRatingCount = @json($product['review_count'] ?? null);
+  function toPennies(v){ if(v==null) return null; let n=Number(v); if(!isFinite(n)) return null; if(n<1000) return Math.round(n*100); return Math.round(n); }
+  if(Array.isArray(bbOptions) && bbOptions.length){
+    product.options = bbOptions.map(function(o){
+      const vals = Array.isArray(o.values) ? o.values.map(function(v){ return (v && typeof v==='object' && 'value' in v) ? (v.value||'') : String(v||'') }) : [];
+      return { name: o.name || 'Option', values: vals };
+    });
+  }
+  if(Array.isArray(bbVariants) && bbVariants.length){
+    product.variants = bbVariants.map(function(v){
+      const ops = Array.isArray(v.options) ? v.options : [];
+      const price = toPennies(v.price ?? null);
+      const compare = toPennies(v.compare ?? v.compare_at_price ?? null);
+      return { id: v.id || 0, options: ops, price: price || 0, compare: compare || 0, available: true };
+    });
+  }
+  if(bbRating!=null) product.rating = Number(bbRating)||0;
+  if(bbRatingCount!=null) product.ratingCount = Number(bbRatingCount)||0;
+}catch(e){}
 const HOLD_MINUTES=10;const bookings={};function dateKey(d){return d.toISOString().slice(0,10)}function ensureDay(d){const k=dateKey(d);if(!bookings[k])bookings[k]={booked:new Set(),reserved:{}};return bookings[k]}(function seed(){const day=new Date(Date.UTC(2025,9,7,0,0,0));const d=ensureDay(day);d.booked.add("16:28");const reservedStart=new Date(Date.UTC(2025,9,7,16,30));d.reserved["16:30"]={until:new Date(reservedStart.getTime()+HOLD_MINUTES*60000)}})();
 const state={mode:"evoucher",selected:product.options.map(o=>o.values[0]),qty:1,variant:null,groupCount:3,recur:{cadence:"none",length:1}};const priceEl=document.getElementById("price"),compareEl=document.getElementById("compare"),modeNote=document.getElementById("modeNote"),optionsWrap=document.getElementById("options"),addBtn=document.getElementById("addBtn"),buyNow=document.getElementById("buyNow"),qty=document.getElementById("qty"),dec=document.getElementById("dec"),inc=document.getElementById("inc"),toastEl=document.getElementById("addToast"),stars=document.getElementById("stars"),ratingText=document.getElementById("ratingText"),groupRange=document.getElementById("groupRange"),groupCount=document.getElementById("groupCount"),groupInc=document.getElementById("groupInc"),groupDec=document.getElementById("groupDec");
 const mPrice=document.getElementById('mPrice'),mStars=document.getElementById('mStars'),mRatingText=document.getElementById('mRatingText'),mobileAdd=document.getElementById('mobileAdd');
@@ -329,7 +352,14 @@ function updateSummary(){if(calendarState.selectedDate && calendarState.selected
 calPrev.addEventListener('click',()=>{calendarState.viewMonth--; if(calendarState.viewMonth<0){calendarState.viewMonth=11;calendarState.viewYear--} renderCalendar()});calNext.addEventListener('click',()=>{calendarState.viewMonth++; if(calendarState.viewMonth>11){calendarState.viewMonth=0;calendarState.viewYear++} renderCalendar()});mobileBack?.addEventListener('click',()=>{bookingModalContent.classList.remove('mobile-times')});
 confirmBooking.addEventListener('click',()=>{if(!(calendarState.selectedDate && calendarState.selectedTime)) return;preferredDateValue.value=calendarState.selectedDate.toISOString().slice(0,10);preferredTimeValue.value=calendarState.selectedTime;preferredTZValue.value=calendarState.tz;const ds=calendarState.selectedDate.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});bookingSelectionText.textContent=`${ds} • ${calendarState.selectedTime}`;bookingSelectionRow.style.display='inline-block';bookingModal.hide()});
 bookingModalEl.addEventListener('shown.bs.modal',()=>{bookingModalContent.classList.remove('mobile-times');if(!calDayNames.children.length){populateTimezones();}renderCalendar();renderSlots();updateSummary()});
-function updateMode(){modeNote.textContent="Instant email delivery"}
+function updateMode(){
+  try{
+    // If current selection includes 'Online' (case-insensitive), show Online; otherwise In-person
+    var sel = state.selected || [];
+    var online = sel.some(function(v){ return String(v||'').toLowerCase()==='online'; });
+    modeNote.textContent = online ? 'Online session' : 'In-person session';
+  }catch(e){ modeNote.textContent=''; }
+}
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
 function init(){renderStars();buildOptions();updateVariant();updateMode();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
 init();
