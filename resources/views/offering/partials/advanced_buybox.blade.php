@@ -386,8 +386,28 @@ function stepForFormat(format){const v1=variantFor(format,"1 Person");const v2=v
 function priceForGroup(format,n){const base=variantFor(format,"3+ Group");const step=stepForFormat(format);if(!base) return step*n;const extra=Math.max(0,n-3);return base.price + extra*step}
 function compareForGroup(format,n){const v1=variantFor(format,"1 Person");const v2=variantFor(format,"2 Persons");const base=variantFor(format,"3+ Group");let step=0;if(v1&&v2&&v2.compare&&v1.compare&&v2.compare>v1.compare) step=v2.compare-v1.compare;else if(base&&base.compare) step=Math.round(base.compare/3);const extra=Math.max(0,n-3);return (base&&base.compare?base.compare:0) + extra*step}
 function unitPriceWithMode(){let base=state.variant.price;if(isGroup()){const format=state.selected[0];const n=Math.min(10, Math.max(3, parseInt(state.groupCount||3,10)));base=priceForGroup(format,n)}return base}
-function totals(){const unit=unitPriceWithMode();const total=unit*state.qty;let cmp=0;if(isGroup()){const format=state.selected[0];const n=Math.min(10, Math.max(3, parseInt(state.groupCount||3,10)));cmp=compareForGroup(format,n)}else if(state.variant.compare&&state.variant.compare>state.variant.price){cmp=state.variant.compare}return {unit,total,cmp: cmp?cmp*state.qty:0}}
-function updatePriceUI(){const t=totals();priceEl.textContent=fmt(t.total);if(mPrice) mPrice.textContent=fmt(t.total);if(t.cmp && t.cmp>t.total){compareEl.textContent=fmt(t.cmp);compareEl.style.display="inline";}else{compareEl.textContent="";compareEl.style.display="none";}updateSheetSubtotal()}
+function totals(){
+  const unit=unitPriceWithMode();
+  const total=unit*state.qty;
+  let cmpUnit=0;
+  if(isGroup()){
+    const format=state.selected[0];
+    const n=Math.min(10, Math.max(3, parseInt(state.groupCount||3,10)));
+    cmpUnit=compareForGroup(format,n);
+  } else if(state.variant && state.variant.compare && state.variant.compare>state.variant.price){
+    cmpUnit=state.variant.compare;
+  }
+  return { unit, total, cmpUnit };
+}
+function updatePriceUI(){
+  const t=totals();
+  // Show unit price for current variant selection
+  priceEl.textContent=fmt(t.unit);
+  if(mPrice) mPrice.textContent=fmt(t.unit);
+  if(t.cmpUnit && t.cmpUnit>t.unit){ compareEl.textContent=fmt(t.cmpUnit); compareEl.style.display="inline"; }
+  else { compareEl.textContent=""; compareEl.style.display="none"; }
+  updateSheetSubtotal();
+}
 function updateSheetSubtotal(){if(!sheetSubtotal) return;const t=totals();sheetSubtotal.textContent=`Subtotal: ${fmt(t.total)}`}
 function updateVariant(){state.variant=findVariant();const show=isGroup();if(groupRange){if(show){groupRange.style.display="block";clampGroupCount();}else{groupRange.style.display="none";state.groupCount=3;if(groupCount) groupCount.value=3;}}addBtn.disabled=!state.variant || !state.variant.available;addBtn.textContent=(state.variant && state.variant.available)?"Add to basket":"Sold out";updatePriceUI()}
 function clampGroupCount(){let v=parseInt(groupCount.value||"3",10);if(isNaN(v)||v<3) v=3; if(v>10) v=10;groupCount.value=v; state.groupCount=v}
