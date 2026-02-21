@@ -71,6 +71,7 @@
 
       <div class="col-12 col-lg-5">
         @include('offering.partials.advanced_buybox')
+        @include('offering.partials.variant_helper')
 
         @if(!empty($p['reviews']))
           <div class="card p-4 mt-4">
@@ -91,4 +92,3 @@
 </section>
 
 @endsection
-
