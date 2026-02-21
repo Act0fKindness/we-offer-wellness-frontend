@@ -81,12 +81,6 @@
                 <div class="text-secondary small" id="ratingText"></div>
             </div>
 
-            <!-- Format control derived from Location(s) -->
-            <div id="bbFormatBlock" class="mb-2" style="display:none">
-                <div class="text-secondary small mb-1">Format</div>
-                <div class="pills mb-2" id="bbFormatPills"></div>
-            </div>
-
             <div id="options"></div>
 
             <div class="group-range mb-3" id="groupRange">
@@ -336,8 +330,6 @@ function buildOptionsInto(container){
   container.innerHTML="";
   const locIdx = findLocationIndex();
   (product.options||[]).forEach((opt,optIdx)=>{
-    // Skip rendering Location(s) options in the Buy Box; handled in the Locations section below
-    if (optIdx===locIdx) return;
     const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=displayName(opt.name); container.appendChild(label);
     const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
     (opt.values||[]).forEach(val=>{
@@ -510,7 +502,7 @@ confirmBooking.addEventListener('click',()=>{if(!(calendarState.selectedDate && 
 bookingModalEl.addEventListener('shown.bs.modal',()=>{bookingModalContent.classList.remove('mobile-times');if(!calDayNames.children.length){populateTimezones();}renderCalendar();renderSlots();updateSummary()});
 // (mode note removed)
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
-function init(){renderStars();buildOptions();buildFormatBlock();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
+function init(){renderStars();buildOptions();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
 init();
 
 // Listen for external variant selection (from Product Data Helper)
