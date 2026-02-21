@@ -391,7 +391,23 @@ function buildFormatBlock(){
   if(hasOnline){ var onBtn=makeBtn('Online', 'Online'); onBtn.addEventListener('click', function(){ state.selected[locIdx]='Online'; syncFormatUI(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(onBtn); }
   syncFormatUI(); block.style.display='block';
 }
-function findVariant(){let v=product.variants.find(v=>v.options.every((o,i)=>o===state.selected[i]));if(!v){v=product.variants.find(v=>v.available)||product.variants[0]}return v}
+function strNorm(s){ return String(s||'').trim().toLowerCase(); }
+function looseMatch(a,b){ var A=strNorm(a), B=strNorm(b); if(!A||!B) return A===B; return A.includes(B) || B.includes(A); }
+function equalsAtIndex(i, sel, got){
+  var locIdx = (__locIdxCache != null) ? __locIdxCache : findLocationIndex();
+  if (i===locIdx){
+    var s=strNorm(sel), g=strNorm(got);
+    if (s==='online' || g==='online') return s==='online' && g==='online';
+    return looseMatch(s,g);
+  }
+  return strNorm(sel)===strNorm(got);
+}
+function findVariant(){
+  var firstAvail = product.variants.find(function(v){ return v && v.available; }) || product.variants[0] || null;
+  if(!Array.isArray(product.variants) || !product.variants.length) return firstAvail;
+  var exact = product.variants.find(function(v){ var ops=v.options||[]; return (state.selected||[]).every(function(s, i){ return equalsAtIndex(i, s, ops[i]); }); });
+  return exact || firstAvail;
+}
 function isGroup(){return (state.selected[1]||"").toLowerCase().includes("3+")}
 function variantFor(format,people){return product.variants.find(v=>v.options[0]===format&&v.options[1]===people)}
 function stepForFormat(format){const v1=variantFor(format,"1 Person");const v2=variantFor(format,"2 Persons");if(v1&&v2) return Math.max(0, v2.price - v1.price);const vg=variantFor(format,"3+ Group");if(v2&&vg) return Math.max(0, vg.price - v2.price);return 25000}

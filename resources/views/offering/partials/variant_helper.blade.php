@@ -116,11 +116,14 @@
       var vid = ev?.detail?.variantId || null; var opts = ev?.detail?.options || [];
       // Highlight row
       root.querySelectorAll('tr.vh-row').forEach(function(tr){ tr.classList.remove('active'); });
-      if(vid!=null){ var row = root.querySelector('tr.vh-row td:first-child'); }
       root.querySelectorAll('tr.vh-row').forEach(function(tr){ if(String(tr.querySelector('td')?.textContent||'').trim()===String(vid||'')) tr.classList.add('active'); });
       // Highlight option pills
       var groups = root.querySelectorAll('[data-vh-opt-group]');
-      groups.forEach(function(g){ var idx = Number(g.getAttribute('data-vh-opt-group')||'-1'); if(idx<0) return; var cur = String(opts[idx]||''); g.querySelectorAll('.vh-opt').forEach(function(b){ b.classList.toggle('active', String(b.dataset.optVal||'')===cur); }); });
+      function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,''); }
+      groups.forEach(function(g){
+        var idx = Number(g.getAttribute('data-vh-opt-group')||'-1'); if(idx<0) return; var cur = String(opts[idx]||'');
+        g.querySelectorAll('.vh-opt').forEach(function(b){ b.classList.toggle('active', norm(b.dataset.optVal||'')===norm(cur)); });
+      });
     }catch(e){} });
   }catch(e){}
 
