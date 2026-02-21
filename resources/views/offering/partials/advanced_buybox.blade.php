@@ -61,6 +61,8 @@
 <div class="container-wrap p-3">
     <aside class="buybox" id="buybox">
         <div class="card p-3 p-md-4">
+            <div class="kicker mb-1">{{ ucfirst($product['type'] ?? 'Experience') }}</div>
+            <h1 class="h4 m-0">{{ $product['title'] ?? 'Offering' }}</h1>
             <div class="d-flex align-items-baseline gap-2 my-1 mt-0">
                 <div class="price" id="price">£0.00</div><div class="compare" id="compare"></div>
             </div>
@@ -70,9 +72,6 @@
                 <div class="stars" id="stars"></div>
                 <div class="text-secondary small" id="ratingText"></div>
             </div>
-
-            <!-- Derived Format chips (from Location(s) option) -->
-            <div id="bbFormat" class="chips mb-2" style="display:none"></div>
 
             <div id="options"></div>
 
@@ -313,27 +312,6 @@ function fmt(c){try{return new Intl.NumberFormat("en-GB",{style:"currency",curre
 function renderStars(){stars.innerHTML="";const full=Math.round(product.rating);for(let i=1;i<=5;i++){const icon=document.createElement("i");icon.className=i<=full?"bi bi-star-fill text-success":"bi bi-star text-secondary";stars.appendChild(icon)}ratingText.textContent=`${product.rating.toFixed(1)} (${product.ratingCount})`;if(mStars){mStars.innerHTML=stars.innerHTML;mRatingText.textContent=ratingText.textContent}}
 function buildOptionsInto(container){container.innerHTML="";product.options.forEach((opt,optIdx)=>{const label=document.createElement("div");label.className="text-secondary small mb-1";label.textContent=opt.name;container.appendChild(label);const row=document.createElement("div");row.className="pills mb-2";opt.values.forEach(val=>{const b=document.createElement("button");b.type="button";b.className="pill";b.setAttribute("role","radio");b.setAttribute("aria-checked",val===state.selected[optIdx]?"true":"false");b.textContent=val;b.addEventListener("click",()=>{state.selected[optIdx]=val;row.querySelectorAll(".pill").forEach(p=>p.setAttribute("aria-checked","false"));b.setAttribute("aria-checked","true");updateVariant();updateSheetSubtotal();if(container===sheetOptions){groupRangeSheet.style.display=isGroup()?"block":"none"}});row.appendChild(b)});container.appendChild(row)})}
 function buildOptions(){optionsWrap.innerHTML="";buildOptionsInto(optionsWrap)}
-function findLocationIndex(){
-  var idx=-1; try{ product.options.forEach(function(o,i){ var n=String(o.name||'').toLowerCase(); if(idx===-1 && n.includes('location')) idx=i; }); }catch(e){}
-  return idx;
-}
-function buildFormatChips(){
-  var wrap=document.getElementById('bbFormat'); if(!wrap) return; wrap.innerHTML='';
-  var locIdx=findLocationIndex(); if(locIdx<0) { wrap.style.display='none'; return; }
-  var vals = (product.options[locIdx]?.values||[]).map(function(v){ return String(v||''); });
-  var hasOnline = vals.some(function(v){ return v.toLowerCase()==='online'; });
-  var hasPhysical = vals.some(function(v){ return v && v.toLowerCase()!=='online'; });
-  if(!(hasOnline||hasPhysical)) { wrap.style.display='none'; return; }
-  function setActive(which){
-    wrap.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('active'); });
-    var btn = wrap.querySelector('[data-format="'+which+'"]'); if(btn) btn.classList.add('active');
-  }
-  if(hasOnline){ var b1=document.createElement('button'); b1.type='button'; b1.className='chip'; b1.dataset.format='online'; b1.textContent='Online'; b1.addEventListener('click', function(){ state.selected[locIdx] = 'Online'; updateVariant(); setActive('online'); }); wrap.appendChild(b1); }
-  if(hasPhysical){ var b2=document.createElement('button'); b2.type='button'; b2.className='chip'; b2.dataset.format='inperson'; b2.textContent='In-person'; b2.addEventListener('click', function(){ var firstPhys = vals.find(function(v){ return v && v.toLowerCase()!=='online' }) || vals[0] || ''; state.selected[locIdx] = firstPhys; updateVariant(); setActive('inperson'); }); wrap.appendChild(b2); }
-  // Initial active
-  var current = String(state.selected[locIdx]||''); var online = current.toLowerCase()==='online'; setActive(online?'online':'inperson');
-  wrap.style.display='flex';
-}
 function findVariant(){let v=product.variants.find(v=>v.options.every((o,i)=>o===state.selected[i]));if(!v){v=product.variants.find(v=>v.available)||product.variants[0]}return v}
 function isGroup(){return (state.selected[1]||"").toLowerCase().includes("3+")}
 function variantFor(format,people){return product.variants.find(v=>v.options[0]===format&&v.options[1]===people)}
@@ -385,6 +363,6 @@ function updateMode(){
   }catch(e){ modeNote.textContent=''; }
 }
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
-function init(){renderStars();buildOptions();buildFormatChips();updateVariant();updateMode();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
+function init(){renderStars();buildOptions();updateVariant();updateMode();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
 init();
 </script>
