@@ -562,6 +562,8 @@ try {
       syncOptionAria(locIdx);
       try{ syncFormatUI(); }catch(e){}
       updateVariant();
+      // Also emit wow:selected explicitly for downstream listeners
+      try{ document.dispatchEvent(new CustomEvent('wow:selected', { detail: { options: (state.selected||[]), variantId: state.variant ? state.variant.id : null } })); }catch(e){}
     }catch(e){}
   });
 } catch(e) {}
