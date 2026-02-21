@@ -422,7 +422,19 @@ function updatePriceUI(){
   try { document.dispatchEvent(new CustomEvent('wow:price', { detail: { unit: t.unit, compare: t.cmpUnit } })); } catch(e) {}
 }
 function updateSheetSubtotal(){if(!sheetSubtotal) return;const t=totals();sheetSubtotal.textContent=`Subtotal: ${fmt(t.total)}`}
-function updateVariant(){state.variant=findVariant();const show=isGroup();if(groupRange){if(show){groupRange.style.display="block";clampGroupCount();}else{groupRange.style.display="none";state.groupCount=3;if(groupCount) groupCount.value=3;}}addBtn.disabled=!state.variant || !state.variant.available;addBtn.textContent=(state.variant && state.variant.available)?"Add to basket":"Sold out";updatePriceUI()}
+function updateVariant(){
+  state.variant=findVariant();
+  const show=isGroup();
+  if(groupRange){
+    if(show){groupRange.style.display="block";clampGroupCount();}
+    else{groupRange.style.display="none";state.groupCount=3;if(groupCount) groupCount.value=3;}
+  }
+  addBtn.disabled=!state.variant || !state.variant.available;
+  addBtn.textContent=(state.variant && state.variant.available)?"Add to basket":"Sold out";
+  updatePriceUI();
+  // Notify helper of current selection + variant id
+  try{ document.dispatchEvent(new CustomEvent('wow:selected', { detail: { options: (state.selected||[]), variantId: state.variant ? state.variant.id : null } })); }catch(e){}
+}
 function clampGroupCount(){let v=parseInt(groupCount.value||"3",10);if(isNaN(v)||v<3) v=3; if(v>10) v=10;groupCount.value=v; state.groupCount=v}
 function stepGroup(delta){let v=parseInt(groupCount.value||"3",10); if(isNaN(v)) v=3;v=Math.min(10,Math.max(3,v+delta));groupCount.value=v; state.groupCount=v; updatePriceUI()}
 function clampGroupCountSheet(){let v=parseInt(groupCountSheet.value||"3",10);if(isNaN(v)||v<3) v=3; if(v>10) v=10;groupCountSheet.value=v; state.groupCount=v}
