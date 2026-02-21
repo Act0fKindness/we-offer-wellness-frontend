@@ -178,9 +178,23 @@
         var opts = ev?.detail?.options || [];
         if(!Array.isArray(opts) || !opts.length) return;
         var buttons = list.querySelectorAll('.loc-item'); if(!buttons.length) return;
-        // Find which option matches any location button best
+        // Try to pick the option that looks like a location (not numeric, not Online)
+        var locCandidate = null;
+        for (var i=0; i<opts.length; i++) {
+          var s = String(opts[i]||''); var n = norm(s);
+          if (n && n!=='online' && !/^\d+$/.test(n)) { locCandidate = s; break; }
+        }
+        // Score buttons by overlap with the candidate (or with any opt if not found)
         var bestBtn=null, bestScore=-1;
-        buttons.forEach(function(b){ var loc = b.dataset.loc||b.textContent||''; opts.forEach(function(o){ var sc = overlap(loc, o); if(sc>bestScore){ bestScore=sc; bestBtn=b; } }); });
+        buttons.forEach(function(b){
+          var loc = b.dataset.loc||b.textContent||'';
+          if (locCandidate) {
+            var sc = overlap(loc, locCandidate);
+            if (sc>bestScore) { bestScore=sc; bestBtn=b; }
+          } else {
+            opts.forEach(function(o){ var sc = overlap(loc, o); if(sc>bestScore){ bestScore=sc; bestBtn=b; } });
+          }
+        });
         if(bestBtn){ setActive(bestBtn); updateMap(bestBtn.dataset.loc||bestBtn.textContent||''); }
       } catch(e){}
     });
