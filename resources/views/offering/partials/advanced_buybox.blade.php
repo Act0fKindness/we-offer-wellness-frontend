@@ -1,6 +1,14 @@
 <style>
     .buybox{position:sticky;top:24px;max-width:420px;margin-left:auto;margin-right:0}
-    .buybox .card{background:#fff;backdrop-filter:saturate(1.2) blur(12px);-webkit-backdrop-filter:saturate(1.2) blur(12px);border:1px solid #ddd;border-radius:11px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+    .buybox .card {
+        background: #fff;
+        backdrop-filter: saturate(1.2) blur(12px);
+        -webkit-backdrop-filter: saturate(1.2) blur(12px);
+        border: 1px solid #ddd;
+        border-radius: 11px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, .1);
+        padding: 30px 25px 20px !important;
+    }
     .chips{display:flex;gap:.5rem;flex-wrap:nowrap;width:100%}
     .chip{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:1px solid rgba(0,0,0,.08);background:#fff;border-radius:16px;padding:.6rem .9rem;font-weight:600;flex:1 1 0}
     .chip.active{box-shadow:0 6px 14px rgba(16,185,129,.25);transform:translateY(-1px)}
