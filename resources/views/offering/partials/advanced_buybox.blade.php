@@ -432,6 +432,7 @@ function updateVariant(){
   addBtn.disabled=!state.variant || !state.variant.available;
   addBtn.textContent=(state.variant && state.variant.available)?"Add to basket":"Sold out";
   updatePriceUI();
+  try { syncFormatUI(); } catch(e) {}
   // Notify helper of current selection + variant id
   try{ document.dispatchEvent(new CustomEvent('wow:selected', { detail: { options: (state.selected||[]), variantId: state.variant ? state.variant.id : null } })); }catch(e){}
 }
