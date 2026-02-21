@@ -144,6 +144,10 @@
       btn.classList.add('active');
     }
     function isOnline(val){ return String(val||'').trim().toLowerCase()==='online'; }
+    function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9\s]+/g,''); }
+    function tokens(s){ return norm(s).split(/\s+/).filter(Boolean); }
+    function overlap(a,b){ var A=new Set(tokens(a)), B=new Set(tokens(b)); var c=0; A.forEach(t=>{ if(B.has(t)) c++; }); return c; }
+    function looseEq(a,b){ var A=norm(a), B=norm(b); if(!A||!B) return A===B; if(A.includes('online')||B.includes('online')) return A.includes('online') && B.includes('online'); if(A.includes(B)||B.includes(A)) return true; return overlap(a,b)>=2; }
     function updateMap(loc){
       if(!map) return;
       if(isOnline(loc)){
@@ -166,6 +170,19 @@
         var locVal = String(btn.dataset.loc||btn.textContent||'');
         document.dispatchEvent(new CustomEvent('wow:setLocation', { detail: { location: locVal } }));
       }catch(e){}
+    });
+
+    // Keep Locations list in sync when selection changes elsewhere
+    document.addEventListener('wow:selected', function(ev){
+      try {
+        var opts = ev?.detail?.options || [];
+        if(!Array.isArray(opts) || !opts.length) return;
+        var buttons = list.querySelectorAll('.loc-item'); if(!buttons.length) return;
+        // Find which option matches any location button best
+        var bestBtn=null, bestScore=-1;
+        buttons.forEach(function(b){ var loc = b.dataset.loc||b.textContent||''; opts.forEach(function(o){ var sc = overlap(loc, o); if(sc>bestScore){ bestScore=sc; bestBtn=b; } }); });
+        if(bestBtn){ setActive(bestBtn); updateMap(bestBtn.dataset.loc||bestBtn.textContent||''); }
+      } catch(e){}
     });
   }catch(e){}
 })();
