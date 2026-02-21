@@ -147,6 +147,20 @@
     }catch(e){} });
   }catch(e){}
 
+  // Initialise: set first row active and sync selection on load
+  try {
+    var first = root.querySelector('tbody tr.vh-row');
+    if (first) {
+      first.classList.add('active');
+      try {
+        var initOpts = JSON.parse(first.dataset.opts||'[]');
+        if (Array.isArray(initOpts) && initOpts.length) {
+          document.dispatchEvent(new CustomEvent('wow:selectVariant', { detail: { options: initOpts } }));
+        }
+      } catch(e) {}
+    }
+  } catch(e) {}
+
   // Allow clicking option pills to change selection
   try{
     root.querySelectorAll('.vh-opt').forEach(function(b){
