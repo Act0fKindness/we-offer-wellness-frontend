@@ -150,8 +150,10 @@
       }
       // Highlight option pills (loose match for locations)
       var groups = root.querySelectorAll('[data-vh-opt-group]');
-      function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,''); }
-      function loose(a,b){ var A=norm(a), B=norm(b); if(!A||!B) return A===B; if(A.includes('online')||B.includes('online')) return A.includes('online') && B.includes('online'); return A.includes(B) || B.includes(A); }
+      function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9\s]+/g,''); }
+      function tokens(s){ return norm(s).split(/\s+/).filter(Boolean); }
+      function overlap(a,b){ var A=new Set(tokens(a)), B=new Set(tokens(b)); var c=0; A.forEach(t=>{ if(B.has(t)) c++; }); return c; }
+      function loose(a,b){ var A=norm(a), B=norm(b); if(!A||!B) return A===B; if(A.includes('online')||B.includes('online')) return A.includes('online') && B.includes('online'); if(A.includes(B) || B.includes(A)) return true; return overlap(a,b) >= 2; }
       groups.forEach(function(g){
         var idx = Number(g.getAttribute('data-vh-opt-group')||'-1'); if(idx<0) return; var cur = String(opts[idx]||'');
         g.querySelectorAll('.vh-opt').forEach(function(b){ b.classList.toggle('active', loose(b.dataset.optVal||'', cur)); });

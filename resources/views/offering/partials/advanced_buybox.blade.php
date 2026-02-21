@@ -402,14 +402,19 @@ function buildFormatBlock(){
   syncFormatUI(); block.style.display='block';
 }
 function strNorm(s){ return String(s||'').trim().toLowerCase(); }
-function looseMatch(a,b){ var A=strNorm(a), B=strNorm(b); if(!A||!B) return A===B; return A.includes(B) || B.includes(A); }
+function tok(s){ return strNorm(s).replace(/[^a-z0-9\s]+/g,' ').split(/\s+/).filter(Boolean); }
+function overlap(a,b){ var A=new Set(tok(a)), B=new Set(tok(b)); var c=0; A.forEach(t=>{ if(B.has(t)) c++; }); return c; }
+function locationSimilar(a,b){
+  var A=strNorm(a), B=strNorm(b);
+  if(!A||!B) return A===B;
+  if(A==='online' || B==='online') return A==='online' && B==='online';
+  if(A.includes(B) || B.includes(A)) return true;
+  return overlap(a,b) >= 2 || (overlap(a,b)>=1 && (A.startsWith(B.split(' ')[0]) || B.startsWith(A.split(' ')[0])));
+}
+function looseMatch(a,b){ var A=strNorm(a), B=strNorm(b); if(!A||!B) return A===B; return A.includes(B) || B.includes(A) || locationSimilar(a,b); }
 function equalsAtIndex(i, sel, got){
   var locIdx = (__locIdxCache != null) ? __locIdxCache : findLocationIndex();
-  if (i===locIdx){
-    var s=strNorm(sel), g=strNorm(got);
-    if (s==='online' || g==='online') return s==='online' && g==='online';
-    return looseMatch(s,g);
-  }
+  if (i===locIdx){ return locationSimilar(sel, got); }
   return strNorm(sel)===strNorm(got);
 }
 function findVariant(){
@@ -507,14 +512,20 @@ try {
       for (var i=0; i<from.length; i++) {
         var want = String(from[i]||'');
         var values = (product.options[i] && product.options[i].values) ? product.options[i].values : [];
-        var chosen = values.find(function(v){
-          if (i===((__locIdxCache!=null)?__locIdxCache:findLocationIndex())) {
-            // Online must match exactly 'Online' (case-insensitive); otherwise loose
-            if (strNorm(want)==='online') return strNorm(v)==='online';
-            return looseMatch(v, want);
+        var locIdx = (__locIdxCache!=null)?__locIdxCache:findLocationIndex();
+        var chosen;
+        if (i===locIdx) {
+          if (strNorm(want)==='online') {
+            chosen = values.find(function(v){ return strNorm(v)==='online'; });
+          } else {
+            // pick closest by overlap
+            var best = null, bestScore = -1;
+            values.forEach(function(v){ var sc = overlap(v, want); if (sc>bestScore) { best=v; bestScore=sc; } });
+            chosen = best || values[0] || want;
           }
-          return strNorm(v)===strNorm(want);
-        }) || values[0] || want;
+        } else {
+          chosen = values.find(function(v){ return strNorm(v)===strNorm(want); }) || values[0] || want;
+        }
         state.selected[i] = chosen;
       }
       // Sync option rows UI
