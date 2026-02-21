@@ -140,8 +140,16 @@
     var map = document.getElementById('locMap');
     if(!list || !map) return;
     function setActive(btn){
-      list.querySelectorAll('.loc-item').forEach(function(b){ b.classList.remove('active'); });
+      list.querySelectorAll('.loc-item').forEach(function(b){
+        b.classList.remove('active');
+        b.classList.remove('btn-secondary');
+        b.classList.add('btn-outline-secondary');
+        b.setAttribute('aria-pressed','false');
+      });
       btn.classList.add('active');
+      btn.classList.remove('btn-outline-secondary');
+      btn.classList.add('btn-secondary');
+      btn.setAttribute('aria-pressed','true');
     }
     function isOnline(val){ return String(val||'').trim().toLowerCase()==='online'; }
     function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9\s]+/g,''); }
