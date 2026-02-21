@@ -66,11 +66,17 @@
             <div class="d-flex align-items-baseline gap-2 my-1 mt-0">
                 <div class="price" id="price">£0.00</div><div class="compare" id="compare"></div>
             </div>
-            
+
 
             <div class="rating mb-2">
                 <div class="stars" id="stars"></div>
                 <div class="text-secondary small" id="ratingText"></div>
+            </div>
+
+            <!-- Format control derived from Location(s) -->
+            <div id="bbFormatBlock" class="mb-2" style="display:none">
+                <div class="text-secondary small mb-1">Format</div>
+                <div class="pills mb-2" id="bbFormatPills"></div>
             </div>
 
             <div id="options"></div>
@@ -312,6 +318,24 @@ function fmt(c){try{return new Intl.NumberFormat("en-GB",{style:"currency",curre
 function renderStars(){stars.innerHTML="";const full=Math.round(product.rating);for(let i=1;i<=5;i++){const icon=document.createElement("i");icon.className=i<=full?"bi bi-star-fill text-success":"bi bi-star text-secondary";stars.appendChild(icon)}ratingText.textContent=`${product.rating.toFixed(1)} (${product.ratingCount})`;if(mStars){mStars.innerHTML=stars.innerHTML;mRatingText.textContent=ratingText.textContent}}
 function buildOptionsInto(container){container.innerHTML="";product.options.forEach((opt,optIdx)=>{const label=document.createElement("div");label.className="text-secondary small mb-1";label.textContent=opt.name;container.appendChild(label);const row=document.createElement("div");row.className="pills mb-2";opt.values.forEach(val=>{const b=document.createElement("button");b.type="button";b.className="pill";b.setAttribute("role","radio");b.setAttribute("aria-checked",val===state.selected[optIdx]?"true":"false");b.textContent=val;b.addEventListener("click",()=>{state.selected[optIdx]=val;row.querySelectorAll(".pill").forEach(p=>p.setAttribute("aria-checked","false"));b.setAttribute("aria-checked","true");updateVariant();updateSheetSubtotal();if(container===sheetOptions){groupRangeSheet.style.display=isGroup()?"block":"none"}});row.appendChild(b)});container.appendChild(row)})}
 function buildOptions(){optionsWrap.innerHTML="";buildOptionsInto(optionsWrap)}
+function findLocationIndex(){
+  var idx=-1; try{ (product.options||[]).forEach(function(o,i){ var n=String(o?.name||'').toLowerCase(); if(idx===-1 && (n.includes('location'))) idx=i; }); }catch(e){}
+  return idx;
+}
+function buildFormatBlock(){
+  var block=document.getElementById('bbFormatBlock'); var pills=document.getElementById('bbFormatPills');
+  if(!block||!pills) return; pills.innerHTML='';
+  var locIdx=findLocationIndex(); if(locIdx<0){ block.style.display='none'; return; }
+  var vals=(product.options[locIdx]?.values||[]).map(function(v){ return String(v||'') });
+  var hasOnline=vals.some(function(v){ return v.toLowerCase()==='online' });
+  var phys=vals.filter(function(v){ return v && v.toLowerCase()!=='online' });
+  var hasPhys=phys.length>0; if(!(hasOnline||hasPhys)){ block.style.display='none'; return; }
+  function makeBtn(label, dataVal){ var b=document.createElement('button'); b.type='button'; b.className='pill'; b.setAttribute('role','radio'); b.dataset.variantLocation=dataVal; b.textContent=label; b.setAttribute('aria-checked','false'); return b; }
+  if(hasPhys){ var inBtn=makeBtn('In-person', phys[0]); inBtn.addEventListener('click', function(){ state.selected[locIdx]=phys[0]; syncFormatAria(); updateVariant(); }); pills.appendChild(inBtn); }
+  if(hasOnline){ var onBtn=makeBtn('Online', 'Online'); onBtn.addEventListener('click', function(){ state.selected[locIdx]='Online'; syncFormatAria(); updateVariant(); }); pills.appendChild(onBtn); }
+  function syncFormatAria(){ var cur=String(state.selected[locIdx]||''); var online = cur.toLowerCase()==='online'; pills.querySelectorAll('.pill').forEach(function(p){ var isOnline = String(p.dataset.variantLocation||'').toLowerCase()==='online'; p.setAttribute('aria-checked', online? isOnline?'true':'false' : (!isOnline?'true':'false')); }); }
+  syncFormatAria(); block.style.display='block';
+}
 function findVariant(){let v=product.variants.find(v=>v.options.every((o,i)=>o===state.selected[i]));if(!v){v=product.variants.find(v=>v.available)||product.variants[0]}return v}
 function isGroup(){return (state.selected[1]||"").toLowerCase().includes("3+")}
 function variantFor(format,people){return product.variants.find(v=>v.options[0]===format&&v.options[1]===people)}
@@ -356,6 +380,6 @@ confirmBooking.addEventListener('click',()=>{if(!(calendarState.selectedDate && 
 bookingModalEl.addEventListener('shown.bs.modal',()=>{bookingModalContent.classList.remove('mobile-times');if(!calDayNames.children.length){populateTimezones();}renderCalendar();renderSlots();updateSummary()});
 // (mode note removed)
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
-function init(){renderStars();buildOptions();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
+function init(){renderStars();buildOptions();buildFormatBlock();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
 init();
 </script>
