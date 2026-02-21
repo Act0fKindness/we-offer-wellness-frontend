@@ -8,9 +8,10 @@
 
 <style>
   .wow-helper { position: fixed; top: 110px; left: 0; z-index: 1040; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-  .wow-helper .toggle { position: absolute; top: 8px; right: -28px; width: 28px; height: 48px; display: inline-flex; align-items: center; justify-content: center; background: #0f172a; color: #fff; border-radius: 0 8px 8px 0; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.25) }
+  .wow-helper .toggle { position: fixed; top: 118px; left: 0; width: 28px; height: 48px; display: inline-flex; align-items: center; justify-content: center; background: #0f172a; color: #fff; border-radius: 0 8px 8px 0; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.25); z-index: 1041 }
   .wow-helper .panel { width: 340px; max-height: calc(100vh - 140px); overflow: auto; background: #fff; border: 1px solid #e5e7eb; border-left: none; border-radius: 0 10px 10px 0; box-shadow: 0 6px 24px rgba(2,6,23,.2); transform: translateX(-100%); transition: transform .25s ease; }
   .wow-helper[data-open="1"] .panel { transform: translateX(0); }
+  .wow-helper[data-open="1"] .toggle { left: 340px; }
   .wow-helper .head { position: sticky; top: 0; background: #0f172a; color: #fff; padding: 10px 12px; border-radius: 0 10px 0 0; display:flex; align-items:center; gap:.5rem }
   .wow-helper .body { padding: 10px 12px; }
   .wow-helper h6 { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; margin: 12px 0 6px; color:#374151 }
