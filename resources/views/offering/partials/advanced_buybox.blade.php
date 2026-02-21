@@ -66,7 +66,7 @@
             <div class="d-flex align-items-baseline gap-2 my-1 mt-0">
                 <div class="price" id="price">£0.00</div><div class="compare" id="compare"></div>
             </div>
-            <div class="mode-note mb-2" id="modeNote"></div>
+            
 
             <div class="rating mb-2">
                 <div class="stars" id="stars"></div>
@@ -302,7 +302,7 @@ try{
   if(bbRatingCount!=null) product.ratingCount = Number(bbRatingCount)||0;
 }catch(e){}
 const HOLD_MINUTES=10;const bookings={};function dateKey(d){return d.toISOString().slice(0,10)}function ensureDay(d){const k=dateKey(d);if(!bookings[k])bookings[k]={booked:new Set(),reserved:{}};return bookings[k]}(function seed(){const day=new Date(Date.UTC(2025,9,7,0,0,0));const d=ensureDay(day);d.booked.add("16:28");const reservedStart=new Date(Date.UTC(2025,9,7,16,30));d.reserved["16:30"]={until:new Date(reservedStart.getTime()+HOLD_MINUTES*60000)}})();
-const state={mode:"evoucher",selected:product.options.map(o=>o.values[0]),qty:1,variant:null,groupCount:3,recur:{cadence:"none",length:1}};const priceEl=document.getElementById("price"),compareEl=document.getElementById("compare"),modeNote=document.getElementById("modeNote"),optionsWrap=document.getElementById("options"),addBtn=document.getElementById("addBtn"),buyNow=document.getElementById("buyNow"),qty=document.getElementById("qty"),dec=document.getElementById("dec"),inc=document.getElementById("inc"),toastEl=document.getElementById("addToast"),stars=document.getElementById("stars"),ratingText=document.getElementById("ratingText"),groupRange=document.getElementById("groupRange"),groupCount=document.getElementById("groupCount"),groupInc=document.getElementById("groupInc"),groupDec=document.getElementById("groupDec");
+const state={mode:"evoucher",selected:product.options.map(o=>o.values[0]),qty:1,variant:null,groupCount:3,recur:{cadence:"none",length:1}};const priceEl=document.getElementById("price"),compareEl=document.getElementById("compare"),optionsWrap=document.getElementById("options"),addBtn=document.getElementById("addBtn"),buyNow=document.getElementById("buyNow"),qty=document.getElementById("qty"),dec=document.getElementById("dec"),inc=document.getElementById("inc"),toastEl=document.getElementById("addToast"),stars=document.getElementById("stars"),ratingText=document.getElementById("ratingText"),groupRange=document.getElementById("groupRange"),groupCount=document.getElementById("groupCount"),groupInc=document.getElementById("groupInc"),groupDec=document.getElementById("groupDec");
 const mPrice=document.getElementById('mPrice'),mStars=document.getElementById('mStars'),mRatingText=document.getElementById('mRatingText'),mobileAdd=document.getElementById('mobileAdd');
 const configModalEl=document.getElementById('configModal'),configModal=new bootstrap.Modal(configModalEl),sheetOptions=document.getElementById('sheetOptions'),groupRangeSheet=document.getElementById('groupRangeSheet'),groupCountSheet=document.getElementById('groupCountSheet'),groupIncSheet=document.getElementById('groupIncSheet'),groupDecSheet=document.getElementById('groupDecSheet'),sheetBookLater=document.getElementById('sheetBookLater'),sheetBookNow=document.getElementById('sheetBookNow'),sheetConfirm=document.getElementById('sheetConfirm'),sheetSubtotal=document.getElementById('sheetSubtotal');
 const btnBookNow=document.getElementById('btnBookNow'),btnBookLater=document.getElementById('btnBookLater'),bookingChoice=document.getElementById('bookingChoice'),preferredDateValue=document.getElementById('preferredDateValue'),preferredTimeValue=document.getElementById('preferredTimeValue'),preferredTZValue=document.getElementById('preferredTZValue'),bookingSelectionRow=document.getElementById('bookingSelectionRow'),bookingSelectionText=document.getElementById('bookingSelectionText'),changeBooking=document.getElementById('changeBooking');
@@ -322,7 +322,7 @@ function unitPriceWithMode(){let base=state.variant.price;if(isGroup()){const fo
 function totals(){const unit=unitPriceWithMode();const total=unit*state.qty;let cmp=0;if(isGroup()){const format=state.selected[0];const n=Math.min(10, Math.max(3, parseInt(state.groupCount||3,10)));cmp=compareForGroup(format,n)}else if(state.variant.compare&&state.variant.compare>state.variant.price){cmp=state.variant.compare}return {unit,total,cmp: cmp?cmp*state.qty:0}}
 function updatePriceUI(){const t=totals();priceEl.textContent=fmt(t.total);if(mPrice) mPrice.textContent=fmt(t.total);if(t.cmp && t.cmp>t.total){compareEl.textContent=fmt(t.cmp);compareEl.style.display="inline";}else{compareEl.textContent="";compareEl.style.display="none";}updateSheetSubtotal()}
 function updateSheetSubtotal(){if(!sheetSubtotal) return;const t=totals();sheetSubtotal.textContent=`Subtotal: ${fmt(t.total)}`}
-function updateVariant(){state.variant=findVariant();const show=isGroup();if(groupRange){if(show){groupRange.style.display="block";clampGroupCount();}else{groupRange.style.display="none";state.groupCount=3;if(groupCount) groupCount.value=3;}}addBtn.disabled=!state.variant || !state.variant.available;addBtn.textContent=(state.variant && state.variant.available)?"Add to basket":"Sold out";updatePriceUI();try{var sel=state.selected||[];var online=sel.some(function(v){return String(v||'').toLowerCase()==='online'});modeNote.textContent = online ? 'Online session' : 'In-person session';}catch(e){}}
+function updateVariant(){state.variant=findVariant();const show=isGroup();if(groupRange){if(show){groupRange.style.display="block";clampGroupCount();}else{groupRange.style.display="none";state.groupCount=3;if(groupCount) groupCount.value=3;}}addBtn.disabled=!state.variant || !state.variant.available;addBtn.textContent=(state.variant && state.variant.available)?"Add to basket":"Sold out";updatePriceUI()}
 function clampGroupCount(){let v=parseInt(groupCount.value||"3",10);if(isNaN(v)||v<3) v=3; if(v>10) v=10;groupCount.value=v; state.groupCount=v}
 function stepGroup(delta){let v=parseInt(groupCount.value||"3",10); if(isNaN(v)) v=3;v=Math.min(10,Math.max(3,v+delta));groupCount.value=v; state.groupCount=v; updatePriceUI()}
 function clampGroupCountSheet(){let v=parseInt(groupCountSheet.value||"3",10);if(isNaN(v)||v<3) v=3; if(v>10) v=10;groupCountSheet.value=v; state.groupCount=v}
@@ -354,15 +354,8 @@ function updateSummary(){if(calendarState.selectedDate && calendarState.selected
 calPrev.addEventListener('click',()=>{calendarState.viewMonth--; if(calendarState.viewMonth<0){calendarState.viewMonth=11;calendarState.viewYear--} renderCalendar()});calNext.addEventListener('click',()=>{calendarState.viewMonth++; if(calendarState.viewMonth>11){calendarState.viewMonth=0;calendarState.viewYear++} renderCalendar()});mobileBack?.addEventListener('click',()=>{bookingModalContent.classList.remove('mobile-times')});
 confirmBooking.addEventListener('click',()=>{if(!(calendarState.selectedDate && calendarState.selectedTime)) return;preferredDateValue.value=calendarState.selectedDate.toISOString().slice(0,10);preferredTimeValue.value=calendarState.selectedTime;preferredTZValue.value=calendarState.tz;const ds=calendarState.selectedDate.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});bookingSelectionText.textContent=`${ds} • ${calendarState.selectedTime}`;bookingSelectionRow.style.display='inline-block';bookingModal.hide()});
 bookingModalEl.addEventListener('shown.bs.modal',()=>{bookingModalContent.classList.remove('mobile-times');if(!calDayNames.children.length){populateTimezones();}renderCalendar();renderSlots();updateSummary()});
-function updateMode(){
-  try{
-    // If current selection includes 'Online' (case-insensitive), show Online; otherwise In-person
-    var sel = state.selected || [];
-    var online = sel.some(function(v){ return String(v||'').toLowerCase()==='online'; });
-    modeNote.textContent = online ? 'Online session' : 'In-person session';
-  }catch(e){ modeNote.textContent=''; }
-}
+// (mode note removed)
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
-function init(){renderStars();buildOptions();updateVariant();updateMode();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
+function init(){renderStars();buildOptions();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
 init();
 </script>
