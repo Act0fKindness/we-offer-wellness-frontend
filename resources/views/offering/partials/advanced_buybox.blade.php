@@ -337,7 +337,7 @@ function buildOptionsInto(container){
       b.addEventListener("click",()=>{
         state.selected[optIdx]=txt;
         syncOptionAria(optIdx);
-        if (optIdx===locIdx) { try{ syncFormatAria(); }catch(e){} }
+        if (optIdx===locIdx) { try{ syncFormatUI(); }catch(e){} }
         updateVariant();
         updateSheetSubtotal();
         if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
@@ -365,6 +365,19 @@ function findLocationIndex(){
   return idx;
 }
 var __locIdxCache = null;
+function syncFormatUI(){
+  try{
+    var locIdx = (__locIdxCache != null) ? __locIdxCache : findLocationIndex();
+    if(locIdx == null || locIdx < 0) return;
+    var pills = document.getElementById('bbFormatPills'); if(!pills) return;
+    var cur = String(state.selected[locIdx]||'');
+    var online = cur.toLowerCase()==='online';
+    pills.querySelectorAll('.pill').forEach(function(p){
+      var isOnline = String(p.dataset.variantLocation||'').toLowerCase()==='online';
+      p.setAttribute('aria-checked', online ? (isOnline?'true':'false') : (!isOnline?'true':'false'));
+    });
+  }catch(e){}
+}
 function buildFormatBlock(){
   var block=document.getElementById('bbFormatBlock'); var pills=document.getElementById('bbFormatPills');
   if(!block||!pills) return; pills.innerHTML='';
@@ -374,10 +387,9 @@ function buildFormatBlock(){
   var phys=vals.filter(function(v){ return v && v.toLowerCase()!=='online' });
   var hasPhys=phys.length>0; if(!(hasOnline||hasPhys)){ block.style.display='none'; return; }
   function makeBtn(label, dataVal){ var b=document.createElement('button'); b.type='button'; b.className='pill'; b.setAttribute('role','radio'); b.dataset.variantLocation=dataVal; b.textContent=label; b.setAttribute('aria-checked','false'); return b; }
-  if(hasPhys){ var inBtn=makeBtn('In-person', phys[0]); inBtn.addEventListener('click', function(){ state.selected[locIdx]=phys[0]; syncFormatAria(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(inBtn); }
-  if(hasOnline){ var onBtn=makeBtn('Online', 'Online'); onBtn.addEventListener('click', function(){ state.selected[locIdx]='Online'; syncFormatAria(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(onBtn); }
-  function syncFormatAria(){ var cur=String(state.selected[locIdx]||''); var online = cur.toLowerCase()==='online'; pills.querySelectorAll('.pill').forEach(function(p){ var isOnline = String(p.dataset.variantLocation||'').toLowerCase()==='online'; p.setAttribute('aria-checked', online? (isOnline?'true':'false') : (!isOnline?'true':'false')); }); }
-  syncFormatAria(); block.style.display='block';
+  if(hasPhys){ var inBtn=makeBtn('In-person', phys[0]); inBtn.addEventListener('click', function(){ state.selected[locIdx]=phys[0]; syncFormatUI(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(inBtn); }
+  if(hasOnline){ var onBtn=makeBtn('Online', 'Online'); onBtn.addEventListener('click', function(){ state.selected[locIdx]='Online'; syncFormatUI(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(onBtn); }
+  syncFormatUI(); block.style.display='block';
 }
 function findVariant(){let v=product.variants.find(v=>v.options.every((o,i)=>o===state.selected[i]));if(!v){v=product.variants.find(v=>v.available)||product.variants[0]}return v}
 function isGroup(){return (state.selected[1]||"").toLowerCase().includes("3+")}
