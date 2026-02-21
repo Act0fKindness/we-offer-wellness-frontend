@@ -324,24 +324,59 @@ const bookingModalEl=document.getElementById('bookingModal'),bookingModal=new bo
 const pillHoldBanner=document.getElementById('pillHoldBanner'),pillHoldCountdown=document.getElementById('pillHoldCountdown'),pillHourglass=pillHoldBanner.querySelector('i.bi-hourglass-split');
 function fmt(c){try{return new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP"}).format(c/100)}catch(e){return "£"+(c/100).toFixed(2)}}
 function renderStars(){stars.innerHTML="";const full=Math.round(product.rating);for(let i=1;i<=5;i++){const icon=document.createElement("i");icon.className=i<=full?"bi bi-star-fill text-success":"bi bi-star text-secondary";stars.appendChild(icon)}ratingText.textContent=`${product.rating.toFixed(1)} (${product.ratingCount})`;if(mStars){mStars.innerHTML=stars.innerHTML;mRatingText.textContent=ratingText.textContent}}
-function buildOptionsInto(container){container.innerHTML="";product.options.forEach((opt,optIdx)=>{const label=document.createElement("div");label.className="text-secondary small mb-1";label.textContent=opt.name;container.appendChild(label);const row=document.createElement("div");row.className="pills mb-2";opt.values.forEach(val=>{const b=document.createElement("button");b.type="button";b.className="pill";b.setAttribute("role","radio");b.setAttribute("aria-checked",val===state.selected[optIdx]?"true":"false");b.textContent=val;b.addEventListener("click",()=>{state.selected[optIdx]=val;row.querySelectorAll(".pill").forEach(p=>p.setAttribute("aria-checked","false"));b.setAttribute("aria-checked","true");updateVariant();updateSheetSubtotal();if(container===sheetOptions){groupRangeSheet.style.display=isGroup()?"block":"none"}});row.appendChild(b)});container.appendChild(row)})}
+function buildOptionsInto(container){
+  container.innerHTML="";
+  const locIdx = findLocationIndex();
+  (product.options||[]).forEach((opt,optIdx)=>{
+    const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=opt.name; container.appendChild(label);
+    const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
+    (opt.values||[]).forEach(val=>{
+      const txt = String(val||'');
+      const b=document.createElement("button"); b.type="button"; b.className="pill"; b.setAttribute("role","radio"); b.dataset.optIdx=String(optIdx); b.dataset.optValue=txt;
+      b.setAttribute("aria-checked", txt===state.selected[optIdx] ? "true":"false"); b.textContent=txt;
+      b.addEventListener("click",()=>{
+        state.selected[optIdx]=txt;
+        syncOptionAria(optIdx);
+        if (optIdx===locIdx) { try{ syncFormatAria(); }catch(e){} }
+        updateVariant();
+        updateSheetSubtotal();
+        if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
+      });
+      row.appendChild(b)
+    });
+    container.appendChild(row)
+    // Ensure initial aria is correct
+    syncOptionAria(optIdx);
+  })
+}
+
+function syncOptionAria(optIdx){
+  try{
+    const selector = '.pills[data-opt-idx="'+String(optIdx)+'"] .pill';
+    document.querySelectorAll(selector).forEach(function(p){
+      const val = String(p.dataset.optValue||'');
+      p.setAttribute('aria-checked', val===String(state.selected[optIdx]||'') ? 'true' : 'false');
+    });
+  }catch(e){}
+}
 function buildOptions(){optionsWrap.innerHTML="";buildOptionsInto(optionsWrap)}
 function findLocationIndex(){
   var idx=-1; try{ (product.options||[]).forEach(function(o,i){ var n=String(o?.name||'').toLowerCase(); if(idx===-1 && (n.includes('location'))) idx=i; }); }catch(e){}
   return idx;
 }
+var __locIdxCache = null;
 function buildFormatBlock(){
   var block=document.getElementById('bbFormatBlock'); var pills=document.getElementById('bbFormatPills');
   if(!block||!pills) return; pills.innerHTML='';
-  var locIdx=findLocationIndex(); if(locIdx<0){ block.style.display='none'; return; }
-  var vals=(product.options[locIdx]?.values||[]).map(function(v){ return String(v||'') });
+  var locIdx=findLocationIndex(); __locIdxCache = locIdx; if(locIdx<0){ block.style.display='none'; return; }
+  var vals=((product.options[locIdx]||{}).values||[]).map(function(v){ return String(v||'') });
   var hasOnline=vals.some(function(v){ return v.toLowerCase()==='online' });
   var phys=vals.filter(function(v){ return v && v.toLowerCase()!=='online' });
   var hasPhys=phys.length>0; if(!(hasOnline||hasPhys)){ block.style.display='none'; return; }
   function makeBtn(label, dataVal){ var b=document.createElement('button'); b.type='button'; b.className='pill'; b.setAttribute('role','radio'); b.dataset.variantLocation=dataVal; b.textContent=label; b.setAttribute('aria-checked','false'); return b; }
-  if(hasPhys){ var inBtn=makeBtn('In-person', phys[0]); inBtn.addEventListener('click', function(){ state.selected[locIdx]=phys[0]; syncFormatAria(); updateVariant(); }); pills.appendChild(inBtn); }
-  if(hasOnline){ var onBtn=makeBtn('Online', 'Online'); onBtn.addEventListener('click', function(){ state.selected[locIdx]='Online'; syncFormatAria(); updateVariant(); }); pills.appendChild(onBtn); }
-  function syncFormatAria(){ var cur=String(state.selected[locIdx]||''); var online = cur.toLowerCase()==='online'; pills.querySelectorAll('.pill').forEach(function(p){ var isOnline = String(p.dataset.variantLocation||'').toLowerCase()==='online'; p.setAttribute('aria-checked', online? isOnline?'true':'false' : (!isOnline?'true':'false')); }); }
+  if(hasPhys){ var inBtn=makeBtn('In-person', phys[0]); inBtn.addEventListener('click', function(){ state.selected[locIdx]=phys[0]; syncFormatAria(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(inBtn); }
+  if(hasOnline){ var onBtn=makeBtn('Online', 'Online'); onBtn.addEventListener('click', function(){ state.selected[locIdx]='Online'; syncFormatAria(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(onBtn); }
+  function syncFormatAria(){ var cur=String(state.selected[locIdx]||''); var online = cur.toLowerCase()==='online'; pills.querySelectorAll('.pill').forEach(function(p){ var isOnline = String(p.dataset.variantLocation||'').toLowerCase()==='online'; p.setAttribute('aria-checked', online? (isOnline?'true':'false') : (!isOnline?'true':'false')); }); }
   syncFormatAria(); block.style.display='block';
 }
 function findVariant(){let v=product.variants.find(v=>v.options.every((o,i)=>o===state.selected[i]));if(!v){v=product.variants.find(v=>v.available)||product.variants[0]}return v}
