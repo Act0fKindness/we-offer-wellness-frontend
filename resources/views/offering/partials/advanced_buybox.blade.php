@@ -336,6 +336,8 @@ function buildOptionsInto(container){
   container.innerHTML="";
   const locIdx = findLocationIndex();
   (product.options||[]).forEach((opt,optIdx)=>{
+    // Skip rendering Location(s) options in the Buy Box; handled in the Locations section below
+    if (optIdx===locIdx) return;
     const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=displayName(opt.name); container.appendChild(label);
     const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
     (opt.values||[]).forEach(val=>{

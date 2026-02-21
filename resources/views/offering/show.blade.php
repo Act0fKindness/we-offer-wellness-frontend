@@ -19,6 +19,25 @@
   $contra = trim((string)($p['contraindications'] ?? ''));
   $variants = $p['variants'] ?? [];
   $options = $p['options'] ?? [];
+  // Extract Location(s) list from options
+  $locationValues = [];
+  foreach (($options ?? []) as $opt) {
+    $name = isset($opt['name']) ? strtolower($opt['name']) : '';
+    if (str_contains($name, 'location')) {
+      foreach (($opt['values'] ?? []) as $v) {
+        $val = is_array($v) ? ($v['value'] ?? '') : (string) $v;
+        $val = trim($val);
+        if ($val !== '') { $locationValues[] = $val; }
+      }
+    }
+  }
+  // Make unique while preserving order
+  $seen = [];
+  $locationsList = [];
+  foreach ($locationValues as $lv) {
+    $k = strtolower($lv);
+    if (!isset($seen[$k])) { $seen[$k] = true; $locationsList[] = $lv; }
+  }
 @endphp
 
 <section class="section">
@@ -41,8 +60,28 @@
 
         @if($body !== '')
         <div class="card p-4 mt-4">
-          <h3 class="h5">About this {{ strtolower($type) }}</h3>
+          <h3 class="h5">About this experiences</h3>
           <div class="prose" style="max-width: 70ch;">{!! $body !!}</div>
+        </div>
+        @endif
+
+        @if(!empty($locationsList))
+        <div class="card p-4 mt-4">
+          <h3 class="h5">Locations</h3>
+          <div class="row g-3 mt-1">
+            <div class="col-12 col-lg-5">
+              <div id="locList" class="d-grid gap-2">
+                @foreach($locationsList as $i => $loc)
+                  <button type="button" class="btn btn-outline-secondary text-start loc-item {{ $i===0 ? 'active' : '' }}" data-loc="{{ $loc }}">{{ $loc }}</button>
+                @endforeach
+              </div>
+            </div>
+            <div class="col-12 col-lg-7">
+              <div class="ratio ratio-4x3 rounded border overflow-hidden">
+                <iframe id="locMap" src="" style="border:0;width:100%;height:100%" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+              </div>
+            </div>
+          </div>
         </div>
         @endif
 
@@ -92,3 +131,43 @@
 </section>
 
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+  try{
+    var list = document.getElementById('locList');
+    var map = document.getElementById('locMap');
+    if(!list || !map) return;
+    function setActive(btn){
+      list.querySelectorAll('.loc-item').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+    }
+    function isOnline(val){ return String(val||'').trim().toLowerCase()==='online'; }
+    function updateMap(loc){
+      if(!map) return;
+      if(isOnline(loc)){
+        // Show a generic world map or message
+        map.src = 'https://www.google.com/maps?q=World&output=embed';
+      } else {
+        var q = encodeURIComponent(String(loc||''));
+        map.src = 'https://www.google.com/maps?q='+q+'&output=embed';
+      }
+    }
+    // Init
+    var first = list.querySelector('.loc-item');
+    if(first){ updateMap(first.dataset.loc||first.textContent||''); }
+    list.addEventListener('click', function(e){
+      var btn = e.target.closest('.loc-item'); if(!btn) return;
+      setActive(btn);
+      updateMap(btn.dataset.loc||btn.textContent||'');
+      // Also push selection to Buy Box via event so price/variant match if location affects variants
+      try{
+        var locVal = String(btn.dataset.loc||btn.textContent||'');
+        document.dispatchEvent(new CustomEvent('wow:setLocation', { detail: { location: locVal } }));
+      }catch(e){}
+    });
+  }catch(e){}
+})();
+</script>
+@endpush
