@@ -324,7 +324,14 @@ const bookingModalEl=document.getElementById('bookingModal'),bookingModal=new bo
 const pillHoldBanner=document.getElementById('pillHoldBanner'),pillHoldCountdown=document.getElementById('pillHoldCountdown'),pillHourglass=pillHoldBanner.querySelector('i.bi-hourglass-split');
 function fmt(c){try{return new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP"}).format(c/100)}catch(e){return "£"+(c/100).toFixed(2)}}
 function renderStars(){stars.innerHTML="";const full=Math.round(product.rating);for(let i=1;i<=5;i++){const icon=document.createElement("i");icon.className=i<=full?"bi bi-star-fill text-success":"bi bi-star text-secondary";stars.appendChild(icon)}ratingText.textContent=`${product.rating.toFixed(1)} (${product.ratingCount})`;if(mStars){mStars.innerHTML=stars.innerHTML;mRatingText.textContent=ratingText.textContent}}
-function displayName(name){ try{ var s=String(name||''); if(/person/i.test(s)) return 'People'; }catch(e){} return name||'Option'; }
+function displayName(name){
+  try {
+    var s = String(name||'');
+    if (/person/i.test(s)) return 'People';
+    if (/session/i.test(s)) return 'Pick Sessions';
+  } catch(e) {}
+  return name || 'Option';
+}
 function buildOptionsInto(container){
   container.innerHTML="";
   const locIdx = findLocationIndex();
@@ -535,6 +542,25 @@ try {
       try { syncFormatUI(); } catch(e) {}
       updateVariant();
     } catch(e) {}
+  });
+
+  // External location set: pick closest location option, update selection
+  document.addEventListener('wow:setLocation', function(ev){
+    try{
+      var locIdx = (__locIdxCache!=null)?__locIdxCache:findLocationIndex(); if(locIdx==null || locIdx<0) return;
+      var want = String(ev?.detail?.location||'');
+      var values = (product.options[locIdx] && product.options[locIdx].values) ? product.options[locIdx].values : [];
+      var choice;
+      if (strNorm(want)==='online') { choice = values.find(function(v){ return strNorm(v)==='online' }) || values[0] || want; }
+      else {
+        var best=null, bestScore=-1; values.forEach(function(v){ var sc=overlap(v,want); if(sc>bestScore){ best=v; bestScore=sc; } });
+        choice = best || values[0] || want;
+      }
+      state.selected[locIdx] = choice;
+      syncOptionAria(locIdx);
+      try{ syncFormatUI(); }catch(e){}
+      updateVariant();
+    }catch(e){}
   });
 } catch(e) {}
 </script>
