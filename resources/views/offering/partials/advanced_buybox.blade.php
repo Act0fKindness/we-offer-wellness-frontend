@@ -419,6 +419,7 @@ function updatePriceUI(){
   if(t.cmpUnit && t.cmpUnit>t.unit){ compareEl.textContent=fmt(t.cmpUnit); compareEl.style.display="inline"; }
   else { compareEl.textContent=""; compareEl.style.display="none"; }
   updateSheetSubtotal();
+  try { document.dispatchEvent(new CustomEvent('wow:price', { detail: { unit: t.unit, compare: t.cmpUnit } })); } catch(e) {}
 }
 function updateSheetSubtotal(){if(!sheetSubtotal) return;const t=totals();sheetSubtotal.textContent=`Subtotal: ${fmt(t.total)}`}
 function updateVariant(){state.variant=findVariant();const show=isGroup();if(groupRange){if(show){groupRange.style.display="block";clampGroupCount();}else{groupRange.style.display="none";state.groupCount=3;if(groupCount) groupCount.value=3;}}addBtn.disabled=!state.variant || !state.variant.available;addBtn.textContent=(state.variant && state.variant.available)?"Add to basket":"Sold out";updatePriceUI()}
@@ -457,4 +458,20 @@ bookingModalEl.addEventListener('shown.bs.modal',()=>{bookingModalContent.classL
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
 function init(){renderStars();buildOptions();buildFormatBlock();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
 init();
+
+// Listen for external variant selection (from Product Data Helper)
+try {
+  document.addEventListener('wow:selectVariant', function(ev){
+    try {
+      var opts = ev?.detail?.options; if(!Array.isArray(opts) || !opts.length) return;
+      // Align selection by index
+      for (var i=0; i<opts.length; i++) { state.selected[i] = String(opts[i]||''); }
+      // Sync option rows UI
+      for (var j=0; j<(product.options||[]).length; j++){ syncOptionAria(j); }
+      // Sync format pills and update
+      try { syncFormatUI(); } catch(e) {}
+      updateVariant();
+    } catch(e) {}
+  });
+} catch(e) {}
 </script>
