@@ -65,25 +65,7 @@
         </div>
         @endif
 
-        @if(!empty($locationsList))
-        <div class="card p-4 mt-4">
-          <h3 class="h5">Locations</h3>
-          <div class="row g-3 mt-1">
-            <div class="col-12 col-lg-5">
-              <div id="locList" class="d-grid gap-2">
-                @foreach($locationsList as $i => $loc)
-                  <button type="button" class="btn btn-outline-secondary text-start loc-item {{ $i===0 ? 'active' : '' }}" data-loc="{{ $loc }}">{{ $loc }}</button>
-                @endforeach
-              </div>
-            </div>
-            <div class="col-12 col-lg-7">
-              <div class="ratio ratio-4x3 rounded border overflow-hidden">
-                <iframe id="locMap" src="" style="border:0;width:100%;height:100%" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
-              </div>
-            </div>
-          </div>
-        </div>
-        @endif
+        
 
         @if($what !== '')
         <div class="card p-4 mt-4">
@@ -132,81 +114,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-(function(){
-  try{
-    var list = document.getElementById('locList');
-    var map = document.getElementById('locMap');
-    if(!list || !map) return;
-    function setActive(btn){
-      list.querySelectorAll('.loc-item').forEach(function(b){
-        b.classList.remove('active');
-        b.classList.remove('btn-secondary');
-        b.classList.add('btn-outline-secondary');
-        b.setAttribute('aria-pressed','false');
-      });
-      btn.classList.add('active');
-      btn.classList.remove('btn-outline-secondary');
-      btn.classList.add('btn-secondary');
-      btn.setAttribute('aria-pressed','true');
-    }
-    function isOnline(val){ return String(val||'').trim().toLowerCase()==='online'; }
-    function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9\s]+/g,''); }
-    function tokens(s){ return norm(s).split(/\s+/).filter(Boolean); }
-    function overlap(a,b){ var A=new Set(tokens(a)), B=new Set(tokens(b)); var c=0; A.forEach(t=>{ if(B.has(t)) c++; }); return c; }
-    function looseEq(a,b){ var A=norm(a), B=norm(b); if(!A||!B) return A===B; if(A.includes('online')||B.includes('online')) return A.includes('online') && B.includes('online'); if(A.includes(B)||B.includes(A)) return true; return overlap(a,b)>=2; }
-    function updateMap(loc){
-      if(!map) return;
-      if(isOnline(loc)){
-        // Show a generic world map or message
-        map.src = 'https://www.google.com/maps?q=World&output=embed';
-      } else {
-        var q = encodeURIComponent(String(loc||''));
-        map.src = 'https://www.google.com/maps?q='+q+'&output=embed';
-      }
-    }
-    // Init
-    var first = list.querySelector('.loc-item');
-    if(first){ updateMap(first.dataset.loc||first.textContent||''); }
-    list.addEventListener('click', function(e){
-      var btn = e.target.closest('.loc-item'); if(!btn) return;
-      setActive(btn);
-      updateMap(btn.dataset.loc||btn.textContent||'');
-      // Also push selection to Buy Box via event so price/variant match if location affects variants
-      try{
-        var locVal = String(btn.dataset.loc||btn.textContent||'');
-        document.dispatchEvent(new CustomEvent('wow:setLocation', { detail: { location: locVal } }));
-      }catch(e){}
-    });
-
-    // Keep Locations list in sync when selection changes elsewhere
-    document.addEventListener('wow:selected', function(ev){
-      try {
-        var opts = ev?.detail?.options || [];
-        if(!Array.isArray(opts) || !opts.length) return;
-        var buttons = list.querySelectorAll('.loc-item'); if(!buttons.length) return;
-        // Try to pick the option that looks like a location (not numeric, not Online)
-        var locCandidate = null;
-        for (var i=0; i<opts.length; i++) {
-          var s = String(opts[i]||''); var n = norm(s);
-          if (n && n!=='online' && !/^\d+$/.test(n)) { locCandidate = s; break; }
-        }
-        // Score buttons by overlap with the candidate (or with any opt if not found)
-        var bestBtn=null, bestScore=-1;
-        buttons.forEach(function(b){
-          var loc = b.dataset.loc||b.textContent||'';
-          if (locCandidate) {
-            var sc = overlap(loc, locCandidate);
-            if (sc>bestScore) { bestScore=sc; bestBtn=b; }
-          } else {
-            opts.forEach(function(o){ var sc = overlap(loc, o); if(sc>bestScore){ bestScore=sc; bestBtn=b; } });
-          }
-        });
-        if(bestBtn){ setActive(bestBtn); updateMap(bestBtn.dataset.loc||bestBtn.textContent||''); }
-      } catch(e){}
-    });
-  }catch(e){}
-})();
-</script>
 @endpush
