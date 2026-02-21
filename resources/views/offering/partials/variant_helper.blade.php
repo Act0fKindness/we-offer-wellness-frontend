@@ -30,6 +30,7 @@
     <div class="head"><i class="bi bi-database-gear"></i> <strong style="font-size:13px;">Product Data Helper</strong></div>
     <div class="body">
       <div class="small text-muted">Product ID: {{ $dbg['id'] ?? '' }}</div>
+      <div class="small text-muted">Variant ID: <span id="vhVariantId">—</span></div>
       <div class="small text-muted">Current price: <span id="vhPrice">—</span></div>
       @if(!empty($dbg['category']))
         <div class="small text-muted">Category: {{ $dbg['category']['name'] ?? '' }}</div>
@@ -102,6 +103,15 @@
     root.querySelectorAll('tr.vh-row').forEach(function(row){
       row.addEventListener('click', function(){
         try{
+          // Highlight this row immediately
+          root.querySelectorAll('tr.vh-row').forEach(function(tr){ tr.classList.remove('active'); });
+          row.classList.add('active');
+          // Update variant id and price immediately from row cells
+          var vidCell = row.querySelector('td');
+          var priceCell = row.querySelector('td:nth-last-child(2)');
+          try{ document.getElementById('vhVariantId').textContent = (vidCell?.textContent||'').trim(); }catch(e){}
+          try{ document.getElementById('vhPrice').textContent = (priceCell?.textContent||'').trim() || '—'; }catch(e){}
+          // Dispatch selection to Buy Box
           var opts = JSON.parse(row.dataset.opts||'[]');
           document.dispatchEvent(new CustomEvent('wow:selectVariant', { detail: { options: opts } }));
         }catch(e){}
@@ -111,9 +121,11 @@
   // Reflect Buy Box price in helper and selection highlighting
   try{
     var priceSpan = document.getElementById('vhPrice');
+    var variantSpan = document.getElementById('vhVariantId');
     document.addEventListener('wow:price', function(ev){ try{ var unit = ev?.detail?.unit; if(unit!=null){ priceSpan.textContent = '£'+Number(unit/100).toFixed(2); } }catch(e){} });
     document.addEventListener('wow:selected', function(ev){ try{
       var vid = ev?.detail?.variantId || null; var opts = ev?.detail?.options || [];
+      if (vid!=null) { try{ variantSpan.textContent = String(vid); }catch(e){} }
       // Highlight row
       root.querySelectorAll('tr.vh-row').forEach(function(tr){ tr.classList.remove('active'); });
       var found = false;
@@ -152,6 +164,12 @@
     var first = root.querySelector('tbody tr.vh-row');
     if (first) {
       first.classList.add('active');
+      try{
+        var vidCell = first.querySelector('td');
+        var priceCell = first.querySelector('td:nth-last-child(2)');
+        document.getElementById('vhVariantId').textContent = (vidCell?.textContent||'').trim();
+        document.getElementById('vhPrice').textContent = (priceCell?.textContent||'').trim() || '—';
+      }catch(e){}
       try {
         var initOpts = JSON.parse(first.dataset.opts||'[]');
         if (Array.isArray(initOpts) && initOpts.length) {
