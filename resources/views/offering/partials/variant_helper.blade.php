@@ -117,12 +117,13 @@
       // Highlight row
       root.querySelectorAll('tr.vh-row').forEach(function(tr){ tr.classList.remove('active'); });
       root.querySelectorAll('tr.vh-row').forEach(function(tr){ if(String(tr.querySelector('td')?.textContent||'').trim()===String(vid||'')) tr.classList.add('active'); });
-      // Highlight option pills
+      // Highlight option pills (loose match for locations)
       var groups = root.querySelectorAll('[data-vh-opt-group]');
       function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,''); }
+      function loose(a,b){ var A=norm(a), B=norm(b); if(!A||!B) return A===B; if(A.includes('online')||B.includes('online')) return A.includes('online') && B.includes('online'); return A.includes(B) || B.includes(A); }
       groups.forEach(function(g){
         var idx = Number(g.getAttribute('data-vh-opt-group')||'-1'); if(idx<0) return; var cur = String(opts[idx]||'');
-        g.querySelectorAll('.vh-opt').forEach(function(b){ b.classList.toggle('active', norm(b.dataset.optVal||'')===norm(cur)); });
+        g.querySelectorAll('.vh-opt').forEach(function(b){ b.classList.toggle('active', loose(b.dataset.optVal||'', cur)); });
       });
     }catch(e){} });
   }catch(e){}
