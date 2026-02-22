@@ -241,7 +241,17 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .wow-therapy-card-scope .meta .chip{ display:inline-flex; align-items:center; gap:4px; cursor:pointer; color: rgba(11,18,32,.72) }
+  .wow-therapy-card-scope .meta .chip{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    margin-left: -15px;
+    margin-top: -1px;
+    padding: 3px 5px;
+    cursor: pointer;
+    color: rgba(11,18,32,.72);
+  }
   .wow-therapy-card-scope .meta .chip:hover{ color: rgba(11,18,32,.92) }
   .wow-therapy-card-scope .meta .chip svg{ width: var(--metaIcon); height: var(--metaIcon) }
   /* Popover for (+N) overflow */
