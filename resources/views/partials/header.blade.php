@@ -163,8 +163,13 @@
   document.addEventListener('click', function(e){ if(e.target.closest('.js-cart-toggle')){ e.preventDefault(); toggle(); } else { outside(e); } });
   window.addEventListener('resize', position);
   updateBadge();
-  window.addEventListener('wow:add-to-cart', function(ev){ updateBadge(); if(pop&&pop.style.display!=='none'){ fetchMini(); } animateCart(ev?.detail); });
-  window.addEventListener('wow:open-cart', function(ev){ updateBadge(); open(); });
+  window.addEventListener('wow:add-to-cart', function(ev){
+    // update badge quickly, fetch mini if open, animate
+    setTimeout(updateBadge, 50);
+    if(pop&&pop.style.display!=='none'){ setTimeout(fetchMini, 90); }
+    animateCart(ev?.detail);
+  });
+  window.addEventListener('wow:open-cart', function(ev){ setTimeout(function(){ updateBadge(); open(); }, 90); });
   function animateCart(detail){
     try{
       btn.classList.add('cart-pulse'); setTimeout(function(){ btn.classList.remove('cart-pulse'); }, 600);
