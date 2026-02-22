@@ -26633,6 +26633,8 @@ document.addEventListener('DOMContentLoaded', function(){
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  /* Adjust kicker spacing site-wide */
+  .kicker{ margin-bottom: -4px !important; }
 </style>
 
 <meta name="description"
