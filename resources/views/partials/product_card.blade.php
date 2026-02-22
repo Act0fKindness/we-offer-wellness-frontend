@@ -65,6 +65,32 @@
         }
     };
 
+    // Improved: robust shortening with street/postcode/country handling
+    $shortLocation2 = function($address){
+        try {
+            $raw = trim((string)$address);
+            if ($raw === '') return $raw;
+            $countryRx  = '/\b(United Kingdom|UK|England|Scotland|Wales|Northern Ireland)\b/i';
+            $postcodeRx = '/\b[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}\b/i';
+            $streetRx   = '/\b(road|rd|street|st|avenue|ave|lane|ln|drive|dr|way|close|cl|place|pl|boulevard|blvd|court|ct|crescent|cresc|terrace|terr|grove|grv)\b/i';
+
+            $tokens = array_map('trim', explode(',', $raw));
+            $tokens = array_values(array_filter($tokens, function($t) use($countryRx){ return $t !== '' && !preg_match($countryRx, $t); }));
+            $nonStreet = array_values(array_filter($tokens, function($t) use($streetRx,$postcodeRx){
+                if (preg_match($postcodeRx, $t)) return false;
+                return !preg_match($streetRx, $t);
+            }));
+            if (count($nonStreet) >= 2) {
+                $place = $nonStreet[0];
+                $city  = $nonStreet[count($nonStreet)-1];
+                return strcasecmp($place,$city) === 0 ? $city : ($place . ', ' . $city);
+            }
+            if (count($nonStreet) === 1) return $nonStreet[0];
+            foreach ($tokens as $t) { if ($t !== '') return $t; }
+            return $raw;
+        } catch (\Throwable $e) { return (string)$address; }
+    };
+
     // Additional fields for exact card details
     $provider = $product->vendor_name
         ?? (is_object($product->vendor ?? null) ? ($product->vendor->vendor_name ?? null) : null)
@@ -81,7 +107,7 @@
     $durationLabel = $product->duration ?? null;
     $locationLabel = ($isOnline && count($physical)===0)
         ? 'Online'
-        : (count($physical) ? $shortLocation($physical[0] ?? '') : null);
+        : (count($physical) ? $shortLocation2($physical[0] ?? '') : null);
     $nextLabel = $product->next_label ?? $product->next ?? null;
     $benefitText = $product->benefit ?? ($product->summary ?? null);
     $fomoText = $product->fomo_text ?? null;
