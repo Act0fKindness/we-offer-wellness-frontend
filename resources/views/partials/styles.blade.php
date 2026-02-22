@@ -23162,7 +23162,7 @@
         border-color: color-mix(in srgb, var(--aux-ice) 35%, white);
     }
 
-    .kicker { display: inline-flex; align-items: center; padding: 0 0 10px; font-size: 13px; margin-bottom: 5px; background: none; font-weight: 600; border: none; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-700); width: -moz-fit-content !important; width: fit-content !important; max-width: 100%; flex: none !important; }
+    .kicker { display: inline-flex; align-items: center; padding: 0px; font-size: 13px; margin-bottom: 0; background: none; font-weight: 600; border: none; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-700); width: -moz-fit-content !important; width: fit-content !important; max-width: 100%; flex: none !important; }
     .kicker::after { content: none !important; display: none !important; }
 
     .kicker-brand {

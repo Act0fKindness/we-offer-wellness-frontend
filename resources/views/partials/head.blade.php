@@ -23182,9 +23182,9 @@ a:hover {
 .kicker {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.2rem;
+    padding: 0px;
     font-size: 13px;
-    margin-bottom: 5px;
+    margin-bottom: 0;
     background: none;
     font-weight: 600;
     border: none;
