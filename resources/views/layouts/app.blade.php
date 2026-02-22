@@ -181,9 +181,10 @@
       });
       // Keep open when hovering panel; close on leaving header+panel area
       var closeTimer;
-      function scheduleClose(){ clearTimeout(closeTimer); closeTimer = setTimeout(hideMenu, 120); }
+      function scheduleClose(){ clearTimeout(closeTimer); closeTimer = setTimeout(hideMenu, 400); }
       function cancelClose(){ clearTimeout(closeTimer); }
       headerEl.addEventListener('mouseleave', scheduleClose);
+      headerEl.addEventListener('mouseenter', cancelClose);
       panel.addEventListener('mouseenter', cancelClose);
       panel.addEventListener('mouseleave', scheduleClose);
       document.addEventListener('keydown', function(e){ if(e.key==='Escape') hideMenu() });
