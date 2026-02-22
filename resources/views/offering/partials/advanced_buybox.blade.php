@@ -349,14 +349,26 @@ function displayName(name){
   return name || 'Option';
 }
 // ===== Sessions dropdown helpers =====
-function availableValuesForOption(optIdx){
+function availableValuesForOption(optIdx, opts){
   try{
-    const seen = new Set(); const out = [];
-    (product.variants||[]).forEach(v=>{
-      const val = String((v.options||[])[optIdx]||'');
-      if(val && !seen.has(val)) { seen.add(val); out.push(val); }
-    });
-    return out;
+    const options = opts || {}; const contextAware = !!options.contextAware;
+    const declared = ((product.options?.[optIdx]?.values)||[]).map(v=>String(v||''));
+    let pool = (product.variants||[]);
+    if (contextAware){
+      pool = pool.filter(v => {
+        const ops = v.options||[];
+        for (let j=0; j<(product.options||[]).length; j++){
+          if (j===optIdx) continue;
+          const sel = String(state.selected[j]||'');
+          const got = String(ops[j]||'');
+          if (!equalsAtIndex(j, sel, got)) return false;
+        }
+        return true;
+      });
+      if (!pool.length) pool = (product.variants||[]);
+    }
+    const allowed = new Set(); pool.forEach(v=>{ const val=String((v.options||[])[optIdx]||''); if(val) allowed.add(val); });
+    return declared.filter(v => allowed.has(String(v)));
   }catch(e){ return (product.options?.[optIdx]?.values)||[] }
 }
 function parseSessions(val){
@@ -404,8 +416,8 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
   const popHold = document.createElement('div'); popHold.className='sd-pop';
   const pop = document.createElement('div'); pop.className='sd-popover'; pop.style.display='none'; pop.setAttribute('role','listbox');
 
-  // Build options grouped by sessions count (preserve option order, limit to 3)
-  const valuesAll = availableValuesForOption(optIdx);
+  // Build options grouped by sessions count (context-aware, preserve order, limit to 3)
+  const valuesAll = availableValuesForOption(optIdx, { contextAware: true });
   const __seenCounts = new Set();
   const uniqCounts = [];
   valuesAll.forEach(v=>{ const n = parseSessions(v); if(n && !__seenCounts.has(n)){ __seenCounts.add(n); if(uniqCounts.length<3) uniqCounts.push(n); } });
@@ -470,6 +482,7 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
   function keyHandler(e){ if(e.key==='Escape') closePop(); }
 
   function updateTrigger(){
+    const valuesAll = availableValuesForOption(optIdx, { contextAware: true });
     const cur = String(state.selected[optIdx]||'');
     let n = parseSessions(cur);
     // If current selection isn't among available, reset to first
@@ -515,7 +528,7 @@ function buildOptionsInto(container){
     } else {
       const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=displayName(opt.name); container.appendChild(label);
       const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
-      const vals = availableValuesForOption(optIdx);
+      const vals = availableValuesForOption(optIdx, { contextAware: false });
       // If current selection is not available, set to first available
       if(vals.length && !vals.includes(String(state.selected[optIdx]||''))){ state.selected[optIdx] = String(vals[0]); }
       vals.forEach(val=>{
@@ -527,9 +540,10 @@ function buildOptionsInto(container){
           syncOptionAria(optIdx);
           if (optIdx===locIdx) { try{ syncFormatUI(); }catch(e){} }
           updateVariant();
-          updateSheetSubtotal();
-          if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
-        });
+        updateSheetSubtotal();
+        try{ setTimeout(()=>buildOptions(),0); }catch(e){}
+        if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
+      });
         row.appendChild(b)
       });
       container.appendChild(row)
