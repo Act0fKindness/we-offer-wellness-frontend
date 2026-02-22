@@ -37,7 +37,13 @@
         ?? $product->practitioner_name
         ?? $product->provider
         ?? null;
-    if ($provider) { $provider = str_replace('_', ' ', $provider); }
+    if ($provider) {
+        $provider = str_replace('_', ' ', $provider);
+        // Title-case provider: first letter of each word uppercase
+        $providerFormatted = $ucWords($toLower($provider));
+    } else {
+        $providerFormatted = null;
+    }
     $durationLabel = $product->duration ?? null;
     $locationLabel = ($isOnline && count($physical)===0) ? 'Online' : (count($physical) ? ($physical[0] ?? null) : null);
     $nextLabel = $product->next_label ?? $product->next ?? null;
@@ -109,7 +115,7 @@
       <div class="content">
         <div class="content-top">
           <h2 class="title">{{ $titleFormatted }}</h2>
-          @if($provider)<p class="provider">with {{ $provider }}</p>@endif
+          @if($providerFormatted)<p class="provider">with {{ $providerFormatted }}</p>@endif
           @if($reviewCount)
             <div class="rating-row"><span>({{ $reviewCount }})</span></div>
           @endif
