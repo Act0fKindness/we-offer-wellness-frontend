@@ -66,6 +66,8 @@
 
   @include('offering.partials.sections.availability', ['availability' => $availability ?? ''])
   @include('offering.partials.sections.how_it_works', ['how' => $how ?? ''])
+
+  @include('offering.partials.sections.you_may_also_like')
 </div>
 
 <script>
