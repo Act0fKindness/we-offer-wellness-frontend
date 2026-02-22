@@ -52,43 +52,15 @@
           </div>
         @endif
 
-        @if($summary !== '')
-        <div class="card p-4 mt-4">
-          <h3 class="h5">Summary</h3>
-          <div class="prose" style="max-width: 70ch;">{!! nl2br(e($summary)) !!}</div>
-        </div>
-        @endif
-
-        @if($body !== '')
-        <div class="card p-4 mt-4">
-          <h3 class="h5">About this experiences</h3>
-          <div class="prose" style="max-width: 70ch;">{!! $body !!}</div>
-        </div>
-        @endif
-
-        
-
-        @if($what !== '')
-        <div class="card p-4 mt-4">
-          <h3 class="h6 m-0">What to expect</h3>
-          <div class="mt-2 text-ink-700">{!! nl2br(e($what)) !!}</div>
-        </div>
-        @endif
-
-        @if($included !== '')
-        <div class="card p-4 mt-4">
-          <h3 class="h6 m-0">What’s included</h3>
-          <div class="mt-2 text-ink-700">{!! nl2br(e($included)) !!}</div>
-        </div>
-        @endif
-
-        @if($safety !== '' || $contra !== '')
-        <div class="card p-4 mt-4">
-          <h3 class="h6 m-0">Safety & contraindications</h3>
-          @if($safety!=='')<div class="mt-2 text-ink-700">{!! nl2br(e($safety)) !!}</div>@endif
-          @if($contra!=='')<div class="mt-2 text-ink-700">{!! nl2br(e($contra)) !!}</div>@endif
-        </div>
-        @endif
+        @include('offering.partials.details_accordion', [
+          'summary' => $summary,
+          'body' => $body,
+          'what' => $what,
+          'included' => $included,
+          'safety' => $safety,
+          'contra' => $contra,
+          'locationsList' => $locationsList,
+        ])
       </div>
 
       <div class="col-12 col-lg-4">
