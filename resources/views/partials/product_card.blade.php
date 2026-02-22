@@ -280,8 +280,8 @@
     font-size: var(--btnFont);
     font-weight: 400;
     border: 1px solid rgba(16,24,40,.22);
-    background: #549483 !important;
-    color: #fff;
+    background: #fff !important;
+    color: rgba(11,18,32,.82);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -295,9 +295,9 @@
   }
   .wow-therapy-card-scope .btn:hover,
   .wow-therapy-card-scope .btn:focus{
-    background: #000000 !important;
-    color: #fff;
-    border-color: rgba(0,0,0,.40);
+    background: #f7f7f7 !important;
+    color: rgba(11,18,32,.90);
+    border-color: rgba(0,0,0,.18);
   }
   @media (max-width: 768px){ .wow-therapy-card-scope .therapy-card{ border-radius:20px; width:300px } }
   /* Override: use provided SVG path for star masks (base and outline) */
