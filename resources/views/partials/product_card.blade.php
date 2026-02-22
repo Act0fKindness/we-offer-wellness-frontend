@@ -149,7 +149,19 @@
           <h2 class="title">{{ $titleFormatted }}</h2>
           @if($providerFormatted)<p class="provider">with {{ $providerFormatted }}</p>@endif
           @if($reviewCount)
-            <div class="rating-row"><span>({{ $reviewCount }})</span></div>
+            <div class="rating-row" aria-label="Rating {{ $rating ? number_format($rating,1) : '0.0' }} out of 5 from {{ $reviewCount }} reviews">
+              <span class="stars" aria-hidden="true">
+                @php $full = (int) floor((float)($rating ?? 0)); @endphp
+                @for($i=1; $i<=5; $i++)
+                  @if($i <= $full)
+                    <span class="star" style="color:#f5c84b;"></span>
+                  @else
+                    <span class="star star--empty"></span>
+                  @endif
+                @endfor
+              </span>
+              <span>({{ $reviewCount }})</span>
+            </div>
           @endif
           <div class="meta">
             @if($durationLabel)<span class="item">{{ $durationLabel }}</span>@endif
