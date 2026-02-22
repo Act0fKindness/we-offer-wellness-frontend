@@ -25877,7 +25877,7 @@ This stylesheet scopes variables to .wow-card to avoid global conflicts. */
     --ok-ink: #065f46;
     --danger-bg: #fff1f2;
     --danger-br: #fecdd3;
-    --radius: 16px;
+    --radius: 4px;
     --shadow: 0 12px 28px rgba(11, 19, 35, .06);
     --shadow-lg: 0 18px 44px rgba(11, 19, 35, .10);
     --card-h: 540px; /* default height; can be overridden by size variants */

@@ -40,7 +40,18 @@
   }
 @endphp
 
-<section class="section">
+<section class="section product-page">
+  <style>
+    /* Force Manrope for all headings/titles on product page */
+    .product-page h1,
+    .product-page h2,
+    .product-page h3,
+    .product-page .wow-section-title,
+    .product-page .wow-acc-title,
+    .product-page .wow-title {
+      font-family: 'Manrope', var(--bs-font-sans-serif) !important;
+    }
+  </style>
   <div class="container-page">
     <div class="row g-4">
       <div class="col-12 col-lg-8">
