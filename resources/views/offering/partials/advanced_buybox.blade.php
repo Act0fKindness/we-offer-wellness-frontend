@@ -91,12 +91,10 @@
 <div class="container-wrap p-3">
     <aside class="buybox" id="buybox">
         <div class="card p-3 p-md-4">
-            <div class="kicker mb-1">{{ ucfirst($product['type'] ?? 'Experience') }}</div>
-            <h1 class="h4 m-0">{{ $product['title'] ?? 'Offering' }}</h1>
+            
             <div class="d-flex align-items-baseline gap-2 my-1 mt-0">
                 <div class="price" id="price">£0.00</div><div class="compare" id="compare"></div>
             </div>
-
 
             <div class="rating mb-2">
                 <div class="stars" id="stars"></div>

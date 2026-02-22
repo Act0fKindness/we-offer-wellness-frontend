@@ -44,6 +44,10 @@
   <div class="container-page">
     <div class="row g-4">
       <div class="col-12 col-lg-8">
+        <div class="mb-3">
+          <div class="kicker mb-1">{{ ucfirst($type ?? 'Experience') }}</div>
+          <h1 class="h4 m-0">{{ $title ?? 'Offering' }}</h1>
+        </div>
         @if(!empty($images))
           @include('offering.partials.gallery', ['images' => $images, 'title' => $title])
         @else
