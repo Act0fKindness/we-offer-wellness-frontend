@@ -110,7 +110,39 @@
 
       <div class="media">
         <img src="{{ $image }}" alt="{{ $title }}" loading="lazy" />
-      </div>
+</div>
+
+@once
+  <script>
+  (function(){
+    function addToLocalCart(item){
+      try{
+        var key='wow_cart_v1';
+        var raw=localStorage.getItem(key);
+        var obj; try{ obj=raw?JSON.parse(raw):null }catch(e){ obj=null }
+        if(!obj||!Array.isArray(obj.items)) obj={items:[]};
+        var id=String(item.id||''); if(!id) return;
+        var existing=obj.items.find(function(it){ return String(it.id)===id });
+        if(existing){ existing.qty=(Number(existing.qty)||1)+1; }
+        else {
+          obj.items.push({ id:id, title:item.title||'', price:Number(item.price)||0, image:item.image||null, url:item.url||('#/products/'+id), qty:1, meta:{} });
+        }
+        localStorage.setItem(key, JSON.stringify(obj));
+      }catch(e){}
+    }
+    function handleClick(e){
+      var btn = e.target.closest('.js-add-to-cart'); if(!btn) return;
+      e.preventDefault(); e.stopPropagation();
+      var item={ id: btn.dataset.id, title: btn.dataset.title, price: btn.dataset.price, image: btn.dataset.image, url: btn.dataset.url };
+      addToLocalCart(item);
+      try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: item.id } })); }catch(e){}
+      // Optional tiny feedback
+      try{ btn.textContent='Added'; setTimeout(function(){ btn.textContent='Add to cart'; }, 1200) }catch(e){}
+    }
+    document.addEventListener('click', handleClick);
+  })();
+  </script>
+@endonce
 
       <div class="content">
         <div class="content-top">
@@ -138,7 +170,13 @@
             </div>
           @endif
           <div class="actions">
-            <span class="btn">Add to cart</span>
+            <button type="button" class="btn js-add-to-cart"
+              data-id="{{ $product->id }}"
+              data-title="{{ e($titleFormatted) }}"
+              data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
+              data-image="{{ $image }}"
+              data-url="{{ $url }}"
+            >Add to cart</button>
             <span class="btn btn--primary">Book now</span>
           </div>
         </div>
