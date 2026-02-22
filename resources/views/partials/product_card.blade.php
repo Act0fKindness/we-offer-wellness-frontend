@@ -222,7 +222,16 @@
   .wow-therapy-card-scope .star::after{ content:""; position:absolute; inset:0; background:#333; pointer-events:none; -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%20stroke-linecap%3D%27round%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%20stroke-linecap%3D%27round%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat }
   .wow-therapy-card-scope .meta{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; margin-bottom:8px; color: rgba(11,18,32,.62); font-size: var(--meta); font-weight:400 }
   .wow-therapy-card-scope .meta .item{ display:flex; align-items:center; gap:6px; white-space:nowrap }
-  .wow-therapy-card-scope .meta .label{ display:inline-block; max-width:140px; overflow:hidden; text-overflow:ellipsis }
+  .wow-therapy-card-scope .meta .label{
+    display: inline-block;
+    max-width: 140px;
+    letter-spacing: normal;
+    margin-left: 0px;
+    padding-left: 0px;
+    text-transform: capitalize;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .wow-therapy-card-scope .meta .chip{ display:inline-flex; align-items:center; gap:4px; cursor:pointer; color: rgba(11,18,32,.72) }
   .wow-therapy-card-scope .meta .chip:hover{ color: rgba(11,18,32,.92) }
   .wow-therapy-card-scope .meta .chip svg{ width: var(--metaIcon); height: var(--metaIcon) }
