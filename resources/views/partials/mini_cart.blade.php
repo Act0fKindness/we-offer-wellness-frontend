@@ -1,6 +1,6 @@
 @php
-  $cart = session('cart', ['items'=>[]]);
-  $items = $cart['items'] ?? [];
+  // Unified cart storage: cart.items
+  $items = session('cart.items', []);
   $count = array_sum(array_map(fn($it)=> (int)($it['qty'] ?? 0), $items));
   $total = 0.0;
   foreach ($items as $it) {

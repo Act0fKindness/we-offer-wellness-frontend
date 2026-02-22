@@ -151,7 +151,9 @@
   var btn = document.querySelector('.js-cart-toggle');
   var pop = document.getElementById('mini-cart-popover');
   function fetchMini(){ if(!pop) return; fetch('/api/cart/mini', { headers:{ 'Accept':'text/html' }, credentials:'same-origin' }).then(r=>r.text()).then(html=>{ pop.innerHTML = html; bindRemove(); }).catch(()=>{ pop.innerHTML = '<div class="p-3 text-muted">Cart unavailable</div>'; }); }
-  function toggle(){ if(!pop) return; var vis = pop.style.display !== 'none'; if(vis){ pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); } else { fetchMini(); pop.style.display='block'; btn?.setAttribute('aria-expanded','true'); position(); }}
+  function open(){ if(!pop) return; fetchMini(); pop.style.display='block'; btn?.setAttribute('aria-expanded','true'); position(); }
+  function close(){ if(!pop) return; pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); }
+  function toggle(){ if(!pop) return; var vis = pop.style.display !== 'none'; if(vis){ close(); } else { open(); }}
   function position(){ try{ var rect = btn.getBoundingClientRect(); pop.style.position='absolute'; pop.style.top = (btn.offsetTop + btn.offsetHeight + 8)+'px'; pop.style.right = '0'; }catch(e){} }
   function outside(e){ if(!pop) return; if(pop.contains(e.target) || btn.contains(e.target)) return; pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); }
   function bindRemove(){ document.querySelectorAll('[data-remove]').forEach(function(el){ el.addEventListener('click', function(){ var id=el.getAttribute('data-remove'); post('/api/cart/remove', { id:id }).then(function(){ fetchMini(); updateBadge(); }); }); }); }
@@ -161,14 +163,30 @@
   document.addEventListener('click', function(e){ if(e.target.closest('.js-cart-toggle')){ e.preventDefault(); toggle(); } else { outside(e); } });
   window.addEventListener('resize', position);
   updateBadge();
-  window.addEventListener('wow:add-to-cart', function(){ updateBadge(); if(pop&&pop.style.display!=='none'){ fetchMini(); } animateCart(); });
-  function animateCart(){ try{ btn.classList.add('cart-pulse'); setTimeout(function(){ btn.classList.remove('cart-pulse'); }, 600); }catch(e){} }
+  window.addEventListener('wow:add-to-cart', function(ev){ updateBadge(); if(pop&&pop.style.display!=='none'){ fetchMini(); } animateCart(ev?.detail); });
+  window.addEventListener('wow:open-cart', function(ev){ updateBadge(); open(); });
+  function animateCart(detail){
+    try{
+      btn.classList.add('cart-pulse'); setTimeout(function(){ btn.classList.remove('cart-pulse'); }, 600);
+      var imgUrl = detail?.image; if(!imgUrl) return;
+      var ghost = document.createElement('div'); ghost.className='cart-fly'; ghost.style.backgroundImage='url('+imgUrl+')';
+      document.body.appendChild(ghost);
+      var rectBtn = btn.getBoundingClientRect();
+      var start = { x: window.innerWidth/2, y: window.innerHeight/2 };
+      try{ var src = document.querySelector('.therapy-card img, .wow-media img'); if(src){ var r = src.getBoundingClientRect(); start = { x:r.left + r.width/2, y:r.top + r.height/2 }; } }catch(_){ }
+      ghost.style.left = start.x+'px'; ghost.style.top = start.y+'px';
+      // Trigger to cart position
+      requestAnimationFrame(function(){ ghost.style.transform = 'translate('+(rectBtn.left - start.x + 12)+'px,'+(rectBtn.top - start.y + 12)+'px) scale(.2)'; ghost.style.opacity='0'; });
+      setTimeout(function(){ ghost.remove(); }, 700);
+    }catch(e){}
+  }
 })();
 </script>
 <style>
 .mini-cart-popover{ position:absolute; right:0; top:100%; margin-top:8px; z-index:1000 }
 .js-cart-toggle.cart-pulse{ animation: cartPulse .6s ease }
 @keyframes cartPulse{ 0%{ transform: scale(1)} 30%{ transform: scale(1.12)} 100%{ transform: scale(1)} }
+.cart-fly{ position: fixed; left:0; top:0; width:56px; height:56px; background:#eee center/cover no-repeat; border-radius:10px; box-shadow:0 10px 24px rgba(2,8,23,.20); pointer-events:none; transition: transform .66s cubic-bezier(.2,.9,.2,1), opacity .66s ease; z-index:1100 }
 </style>
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">

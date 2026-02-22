@@ -373,8 +373,10 @@
       e.preventDefault(); e.stopPropagation();
       var btn = addBtn || buyBtn;
       var id = btn.dataset.id;
+      var img = btn.dataset.image;
       post('/api/cart/add', { id: id, qty: 1 }).then(function(){
-        try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: id } })); }catch(e){}
+        try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: id, image: img } })); }catch(e){}
+        try{ window.dispatchEvent(new CustomEvent('wow:open-cart', { detail:{ id: id } })); }catch(e){}
         if(buyBtn){ window.location.assign('/cart'); return; }
         try{ btn.textContent='Added'; setTimeout(function(){ btn.textContent='Add to cart'; }, 1200) }catch(e){}
       }).catch(function(){ try{ btn.textContent='Try again'; setTimeout(function(){ btn.textContent= addBtn? 'Add to cart':'Book now'; }, 1200) }catch(e){} });
