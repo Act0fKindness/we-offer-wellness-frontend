@@ -94,6 +94,24 @@
   function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
   function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest','X-XSRF-TOKEN':token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
   function money(n){ try{ return '£'+Number(n).toFixed(2) }catch(_){ return '£0.00' } }
+  // Client cart util (same as header, subset)
+  var CartClient = (function(){ try{ return window.CartClient || (function(){ var key='wow_cart'; function load(){ try{ var raw=localStorage.getItem(key)||decodeURIComponent(document.cookie.split('; ').find(r=>r.startsWith(key+'='))?.split('=')[1]||''); return raw?JSON.parse(raw):{} }catch(_){ return {} } } function list(){ var bag=load(), out=[]; Object.keys(bag).forEach(function(k){ out.push(bag[k]) }); return out } function syncServer(){ var bag=load(); Object.keys(bag).forEach(function(k){ var it=bag[k]; post('/api/cart/add', { id: it.id, qty: it.qty||1 }); }); } return { load:load, list:list, syncServer:syncServer }; })(); }catch(_){ return { load:function(){return{}}, list:function(){return[]}, syncServer:function(){} } } })();
+  // If no rows rendered but client cart has items, bootstrap UI and sync
+  try{
+    if(!document.querySelector('.cart-row')){
+      var items = CartClient.list();
+      if(items.length){
+        var body = document.querySelector('.cart-body');
+        var head = document.querySelector('.cart-head');
+        if(body && head){
+          var html='';
+          items.forEach(function(it){ var unit=Number(it.price||0); var qty=Number(it.qty||1); html += '<div class="cart-row" data-id="'+it.id+'" data-unit="'+unit.toFixed(2)+'">' + '<div class="cart-item">' + '<a class="cart-img" href="'+(it.url||'#')+'">'+(it.image?('<img src="'+it.image+'" alt="">'):'')+'</a>' + '<div class="cart-info">' + '<a class="title" href="'+(it.url||'#')+'">'+(it.title||'Item')+'</a>' + '<div class="meta">Unit: £'+unit.toFixed(2)+'</div>' + '<button class="cart-remove mt-1" type="button" data-remove="'+it.id+'" aria-label="Remove">Remove</button>' + '</div></div>' + '<div class="cart-qty"><div class="qty">' + '<button type="button" class="btn btn-sm js-qdec" aria-label="Decrease">−</button>' + '<input type="number" class="qty-input" min="1" value="'+qty+'" />' + '<button type="button" class="btn btn-sm js-qinc" aria-label="Increase">+</button>' + '</div></div>' + '<div class="cart-amt">£'+(unit*qty).toFixed(2)+'</div>' + '</div>'; });
+          body.innerHTML = html;
+          CartClient.syncServer();
+        }
+      }
+    }
+  }catch(_){ }
   function recalc(){
     var rows = document.querySelectorAll('.cart-row'); var sub=0; rows.forEach(function(row){ var unit = parseFloat(row.getAttribute('data-unit')||'0'); var qty = parseInt(row.querySelector('.qty-input')?.value||'1',10)||1; sub += unit*qty; var amt=row.querySelector('.cart-amt'); if(amt) amt.textContent = money(unit*qty); });
     document.getElementById('sum-subtotal')?.replaceChildren(document.createTextNode(money(sub)));

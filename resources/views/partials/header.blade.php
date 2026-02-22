@@ -148,6 +148,21 @@
         </header>
 <script>
 (function(){
+  // Lightweight client cart for instant UX + persistence
+  var CartClient = (function(){
+    var key = 'wow_cart';
+    function load(){ try{ var raw = localStorage.getItem(key) || decodeURIComponent(document.cookie.split('; ').find(r=>r.startsWith(key+'='))?.split('=')[1]||''); var obj = raw? JSON.parse(raw):{}; return typeof obj==='object' && obj ? obj : {}; }catch(_){ return {} } }
+    function save(obj){ try{ localStorage.setItem(key, JSON.stringify(obj)); var expires = new Date(Date.now()+30*24*60*60*1000).toUTCString(); document.cookie = key+'='+encodeURIComponent(JSON.stringify(obj))+'; Path=/; SameSite=Lax; Expires='+expires; }catch(_){ } }
+    function count(obj){ var n=0; Object.values(obj||{}).forEach(function(it){ n += Number(it.qty||0) }); return n }
+    function total(obj){ var t=0; Object.values(obj||{}).forEach(function(it){ t += (Number(it.price||0)) * Number(it.qty||1) }); return t }
+    function add(item){ var bag=load(); var id=String(item.id); if(!id) return bag; var ex=bag[id]||{id:id,qty:0}; bag[id] = { id:id, title:item.title||ex.title||'', price:Number(item.price)||0, image:item.image||ex.image||'', url:item.url||ex.url||'#', qty: Number(ex.qty||0)+1 }; save(bag); return bag }
+    function upd(id, qty){ var bag=load(); id=String(id); if(!bag[id]) return bag; if(qty<=0){ delete bag[id] } else { bag[id].qty = qty } save(bag); return bag }
+    function rem(id){ var bag=load(); id=String(id); if(bag[id]) delete bag[id]; save(bag); return bag }
+    function renderMini(el){ if(!el) return; var bag=load(); var ids=Object.keys(bag); if(!ids.length){ el.innerHTML = '<div class="mini-cart"><div class="mini-cart__empty">Your cart is empty.</div></div>'; return; } var html=['<div class="mini-cart"><div class="mini-cart__items">']; ids.forEach(function(id){ var it=bag[id]; html.push('<div class="mini-cart__row" data-id="'+id+'"><a class="mini-cart__img" href="'+(it.url||'#')+'">'+(it.image?('<img src="'+it.image+'" alt="">'):'')+'</a><div class="mini-cart__info"><a class="mini-cart__title" href="'+(it.url||'#')+'">'+(it.title||'Item')+'</a><div class="mini-cart__meta">Qty '+(it.qty||1)+' • £'+Number(it.price||0).toFixed(2)+'</div></div><button class="mini-cart__remove" type="button" data-remove="'+id+'" aria-label="Remove">×</button></div>'); }); html.push('</div>'); var tot=total(bag); html.push('<div class="mini-cart__foot"><div class="mini-cart__total"><span>Total</span><strong>£'+tot.toFixed(2)+'</strong></div><div class="mini-cart__actions"><a class="btn-wow btn-wow--outline btn-sm" href="/cart">View cart</a><a class="btn-wow btn-wow--cta btn-sm" href="/cart#checkout">Checkout</a></div></div></div>'); el.innerHTML = html.join('') }
+    function syncAdd(id){ try{ fetch('/api/cart/add', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ id:id, qty:1 }), credentials:'same-origin' }).catch(function(){}); }catch(_){ } }
+    return { load:load, save:save, count:count, total:total, add:add, upd:upd, rem:rem, renderMini:renderMini, syncAdd:syncAdd };
+  })();
+
   var btn = document.querySelector('.js-cart-toggle');
   var pop = document.getElementById('mini-cart-popover');
   function hasCookieCart(){ try{ var c=document.cookie.split('; ').find(r=>r.startsWith('wow_cart=')); return !!(c && decodeURIComponent(c.split('=')[1]||'').length>2); }catch(_){ return false } }
@@ -157,20 +172,20 @@
   function toggle(){ if(!pop) return; var vis = pop.style.display !== 'none'; if(vis){ close(); } else { open(); }}
   function position(){ try{ var rect = btn.getBoundingClientRect(); pop.style.position='absolute'; pop.style.top = (btn.offsetTop + btn.offsetHeight + 8)+'px'; pop.style.right = '0'; }catch(e){} }
   function outside(e){ if(!pop) return; if(pop.contains(e.target) || btn.contains(e.target)) return; pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); }
-  function bindRemove(){ document.querySelectorAll('[data-remove]').forEach(function(el){ el.addEventListener('click', function(){ var id=el.getAttribute('data-remove'); post('/api/cart/remove', { id:id }).then(function(){ fetchMini(); updateBadge(); }); }); }); }
+  function bindRemove(){ document.querySelectorAll('[data-remove]').forEach(function(el){ el.addEventListener('click', function(){ var id=el.getAttribute('data-remove'); CartClient.rem(id); updateBadge(); if(pop) CartClient.renderMini(pop); post('/api/cart/remove', { id:id }).then(function(){ fetchMini(); updateBadge(); }); }); }); }
   function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
   function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-XSRF-TOKEN': token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
-  function updateBadge(){ fetch('/api/cart/count', { credentials:'same-origin' }).then(r=>r.json()).then(function(j){ var b=document.querySelector('.cart-badge'); if(b){ b.textContent = String(j.count||0); b.style.display = (j.count||0)>0 ? 'inline-block' : 'none'; } }); }
+  function updateBadge(){ try{ var localCount = CartClient.count(CartClient.load()); var b=document.querySelector('.cart-badge'); if(b){ b.textContent = String(localCount); b.style.display = (localCount>0)?'inline-block':'none'; } }catch(_){ } fetch('/api/cart/count', { credentials:'same-origin' }).then(r=>r.json()).then(function(j){ var b=document.querySelector('.cart-badge'); if(b){ b.textContent = String(j.count||0); b.style.display = (j.count||0)>0 ? 'inline-block' : 'none'; } }).catch(function(){}); }
   document.addEventListener('click', function(e){ if(e.target.closest('.js-cart-toggle')){ e.preventDefault(); toggle(); } else { outside(e); } });
   window.addEventListener('resize', position);
   updateBadge();
   window.addEventListener('wow:add-to-cart', function(ev){
     // update badge quickly, fetch mini if open, animate
     setTimeout(updateBadge, 50);
-    if(pop&&pop.style.display!=='none'){ setTimeout(function(){ fetchMini(true); }, 150); }
+    if(pop&&pop.style.display!=='none'){ setTimeout(function(){ CartClient.renderMini(pop); fetchMini(true); }, 120); }
     animateCart(ev?.detail);
   });
-  window.addEventListener('wow:open-cart', function(ev){ setTimeout(function(){ updateBadge(); open(); fetchMini(true); }, 160); });
+  window.addEventListener('wow:open-cart', function(ev){ setTimeout(function(){ updateBadge(); if(pop){ CartClient.renderMini(pop); } open(); fetchMini(true); }, 160); });
   function animateCart(detail){
     try{
       btn.classList.add('cart-pulse'); setTimeout(function(){ btn.classList.remove('cart-pulse'); }, 600);
