@@ -173,7 +173,7 @@
 
             <div class="d-grid gap-2 mb-2" id="ctaWrap">
                 <button class="btn btn-basket btn-lg" id="addBtn">Add to basket</button>
-                <button class="btn btn-main btn-lg" id="buyNow">Buy now</button>
+                <button class="btn btn-main btn-lg" id="buyNow">Book now</button>
             </div>
 
             <div class="meta mb-3 mt-2">
