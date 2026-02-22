@@ -417,7 +417,8 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
   const pop = document.createElement('div'); pop.className='sd-popover'; pop.style.display='none'; pop.setAttribute('role','listbox');
 
   // Build options grouped by sessions count (context-aware, preserve order, limit to 3)
-  const valuesAll = availableValuesForOption(optIdx, { contextAware: true });
+  function currentValues(){ return availableValuesForOption(optIdx, { contextAware: true }); }
+  let valuesAll = currentValues();
 
   function computeBestContext(){
     const map = new Map();
@@ -471,6 +472,8 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
 
   function renderPopover(){
     pop.innerHTML='';
+    // Re-evaluate values at open time in case context changed
+    valuesAll = currentValues();
     const best = computeBestContext();
     valuesAll.forEach(val=>{
       const { total, unit } = priceInfoForVal(val);
@@ -485,9 +488,9 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
       const chk = document.createElement('span'); chk.className='sd-check'; chk.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
       right.appendChild(chk);
       row.appendChild(left); row.appendChild(right);
-      row.addEventListener('click',()=>{ selectValue(val); closePop(); });
+      row.addEventListener('click',(e)=>{ e.preventDefault(); e.stopPropagation(); selectValue(val); closePop(); });
       row.addEventListener('keydown',(e)=>{
-        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectValue(val); closePop(); }
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); e.stopPropagation(); selectValue(val); closePop(); }
         if(e.key==='ArrowDown'){ e.preventDefault(); const nx = row.nextElementSibling && row.nextElementSibling.classList.contains('sd-option') ? row.nextElementSibling : pop.querySelector('.sd-option'); nx && nx.focus && nx.focus(); }
         if(e.key==='ArrowUp'){ e.preventDefault(); const pv = row.previousElementSibling && row.previousElementSibling.classList.contains('sd-option') ? row.previousElementSibling : pop.querySelector('.sd-option:last-of-type'); pv && pv.focus && pv.focus(); }
         if(e.key==='Escape'){ e.preventDefault(); closePop(); trig.focus(); }
@@ -511,7 +514,7 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
   function keyHandler(e){ if(e.key==='Escape') closePop(); }
 
   function updateTrigger(){
-    const valuesAll = availableValuesForOption(optIdx, { contextAware: true });
+    valuesAll = currentValues();
     const cur = String(state.selected[optIdx]||'');
     let n = parseSessions(cur);
     // If current selection isn't among available, reset to first
@@ -520,10 +523,10 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
     if(!validVals.includes(cur)){
       const fallback = validVals[0] || '';
       state.selected[optIdx] = fallback;
-      n = parseSessions(fallback) || uniqCounts[0] || 1;
+      n = parseSessions(fallback) || 1;
       changed = true;
     } else {
-      n = n || (uniqCounts[0] || 1);
+      n = n || 1;
     }
     left.innerHTML = '';
     const label = document.createElement('span'); label.textContent = (/^\d+$/.test(cur.trim()) && n ? `${n} Sessions` : cur);
