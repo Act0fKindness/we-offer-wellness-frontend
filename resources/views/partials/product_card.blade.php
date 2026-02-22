@@ -25,33 +25,6 @@
     $rating = isset($product->reviews_avg_rating) ? round((float)$product->reviews_avg_rating, 1) : null;
     $reviewCount = (int) ($product->reviews_count ?? 0);
 
-    $locations = $product->getLocations();
-    // Normalize list and derive availability flags
-    $hasOnline = in_array('Online', $locations, true);
-    $isOnline = $hasOnline; // Back-compat with existing variable naming
-    $physical = array_values(array_filter($locations, fn($l) => $l !== 'Online'));
-    // Build short unique labels for physical locations
-    $physicalShort = [];
-    $seenShort = [];
-    foreach ($physical as $locRaw) {
-        $short = $shortLocation2($locRaw);
-        $key = mb_strtolower($short ?? '');
-        if ($short && !isset($seenShort[$key])) { $seenShort[$key] = true; $physicalShort[] = $short; }
-    }
-    // Determine preferred/primary location if provided via context
-    $preferredLocation = $preferredLocation ?? ($currentLocation ?? (request()->get('location') ?? null));
-    $primary = null;
-    if ($preferredLocation) {
-        $prefKey = mb_strtolower($shortLocation2($preferredLocation));
-        foreach ($physicalShort as $ps) {
-            if (mb_strtolower($ps) === $prefKey) { $primary = $ps; break; }
-        }
-    }
-    if ($primary === null) { $primary = $physicalShort[0] ?? null; }
-    $remainingCount = max(0, count($physicalShort) - ($primary ? 1 : 0));
-    $mode = $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null);
-    $locBadge = $mode ?: ($category ?: null);
-
     // Helper: shorten physical address to "Place, City" (or just City)
     $shortLocation = function($address){
         try {
@@ -111,6 +84,34 @@
             return $raw;
         } catch (\Throwable $e) { return (string)$address; }
     };
+
+    $locations = $product->getLocations();
+    // Normalize list and derive availability flags
+    $hasOnline = in_array('Online', $locations, true);
+    $isOnline = $hasOnline; // Back-compat with existing variable naming
+    $physical = array_values(array_filter($locations, fn($l) => $l !== 'Online'));
+    // Build short unique labels for physical locations
+    $physicalShort = [];
+    $seenShort = [];
+    foreach ($physical as $locRaw) {
+        $short = $shortLocation2($locRaw);
+        $key = mb_strtolower($short ?? '');
+        if ($short && !isset($seenShort[$key])) { $seenShort[$key] = true; $physicalShort[] = $short; }
+    }
+    // Determine preferred/primary location if provided via context
+    $preferredLocation = $preferredLocation ?? ($currentLocation ?? (request()->get('location') ?? null));
+    $primary = null;
+    if ($preferredLocation) {
+        $prefKey = mb_strtolower($shortLocation2($preferredLocation));
+        foreach ($physicalShort as $ps) {
+            if (mb_strtolower($ps) === $prefKey) { $primary = $ps; break; }
+        }
+    }
+    if ($primary === null) { $primary = $physicalShort[0] ?? null; }
+    $remainingCount = max(0, count($physicalShort) - ($primary ? 1 : 0));
+    $mode = $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null);
+    $locBadge = $mode ?: ($category ?: null);
+
 
     // Additional fields for exact card details
     $provider = $product->vendor_name
