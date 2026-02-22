@@ -152,7 +152,7 @@
           }catch(e){}
         });
       }
-      // Highlight option pills (loose match for locations)
+      // Highlight option pills: strict match for non-location, loose only for location
       var groups = root.querySelectorAll('[data-vh-opt-group]');
       function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9\s]+/g,''); }
       function tokens(s){ return norm(s).split(/\s+/).filter(Boolean); }
@@ -164,9 +164,15 @@
         if(A.includes(B) || B.includes(A)) return true;
         return overlap(a,b) >= 1;
       }
+      var locIdx = (__locIdxCache!=null)?__locIdxCache:findLocationIndex();
       groups.forEach(function(g){
         var idx = Number(g.getAttribute('data-vh-opt-group')||'-1'); if(idx<0) return; var cur = String(opts[idx]||'');
-        g.querySelectorAll('.vh-opt').forEach(function(b){ b.classList.toggle('active', loose(b.dataset.optVal||'', cur)); });
+        var isLoc = (idx === locIdx);
+        g.querySelectorAll('.vh-opt').forEach(function(b){
+          var val = String(b.dataset.optVal||'');
+          var active = isLoc ? loose(val, cur) : (norm(val) === norm(cur));
+          b.classList.toggle('active', active);
+        });
       });
     }catch(e){} });
   }catch(e){}
