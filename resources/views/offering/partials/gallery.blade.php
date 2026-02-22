@@ -43,7 +43,7 @@
 
     #wowGallery .viewport{ overflow:hidden; border-radius:22px; }
     #wowGallery .track{ display:flex; width:100%; transition: transform 420ms cubic-bezier(.2,.9,.2,1); will-change: transform; }
-    #wowGallery .page{ flex: 0 0 100%; padding: 18px; }
+    #wowGallery .page{ flex: 0 0 100%; padding: 18px 0px; }
 
     /* Mosaic layout */
     #wowGallery .mosaic{ display:grid; grid-template-columns: 1.7fr 1fr; gap: var(--gap); align-items:stretch; }
@@ -86,7 +86,7 @@
 
     /* Responsive */
     @media (max-width: 860px){
-      #wowGallery .page{ padding:14px; }
+      #wowGallery .page{ padding:14px 0px; }
       #wowGallery .mosaic{ grid-template-columns:1fr; }
       #wowGallery .tile--big{ min-height:240px; }
       #wowGallery .rightGrid{ min-height:240px; }
