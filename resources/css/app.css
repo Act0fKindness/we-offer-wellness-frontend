@@ -197,7 +197,7 @@ a:hover { text-decoration: none; }
 .chip-indigo{ background: linear-gradient(180deg, color-mix(in srgb, var(--aux-indigo) 15%, white),color-mix(in srgb, var(--aux-indigo) 28%, white)); color: #2b3e87; border-color: color-mix(in srgb, var(--aux-indigo) 35%, white); }
 .chip-ice   { background: linear-gradient(180deg, color-mix(in srgb, var(--aux-ice) 15%, white),   color-mix(in srgb, var(--aux-ice) 28%, white)); color: #406b71; border-color: color-mix(in srgb, var(--aux-ice) 35%, white); }
 
-.kicker { display: inline-flex; align-items: center; padding: 0.25rem 0.2rem; font-size: 13px; margin-bottom: 5px; background: none; font-weight: 600; border: none; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-700); width: -moz-fit-content !important; width: fit-content !important; max-width: 100%; flex: none !important; }
+.kicker { display: inline-flex; align-items: center; padding: 0 0 10px; font-size: 13px; margin-bottom: 5px; background: none; font-weight: 600; border: none; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-700); width: -moz-fit-content !important; width: fit-content !important; max-width: 100%; flex: none !important; }
 .kicker::after { content: none !important; display: none !important; }
 .kicker-brand { background: linear-gradient(180deg, color-mix(in srgb, var(--brand-50) 85%, white), color-mix(in srgb, var(--brand-100) 85%, white)); color: var(--brand-800); border-color: var(--brand-200); }
 .kicker-cta { background: linear-gradient(180deg, color-mix(in srgb, var(--accent-50) 85%, white), color-mix(in srgb, var(--accent-100) 85%, white)); color: var(--accent-800); border-color: var(--accent-200); }
