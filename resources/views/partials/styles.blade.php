@@ -23834,6 +23834,17 @@
         background: rgba(17, 24, 39, .06)
     }
 
+    /* Invisible hover bridge from nav link to mega panel */
+    header .nav-item > a::before{
+        content:"";
+        position:absolute;
+        left:0;
+        right:0;
+        bottom:-16px;
+        height:18px;
+        background: transparent;
+    }
+
     header .nav-item > a::after {
         content: "";
         position: absolute;
