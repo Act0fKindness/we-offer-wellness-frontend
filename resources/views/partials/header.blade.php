@@ -149,9 +149,29 @@
 <script>
 (function(){
   // Lightweight client cart for instant UX + persistence
-  var CartClient = (function(){
+  window.CartClient = (function(){
     var key = 'wow_cart';
-    function load(){ try{ var raw = localStorage.getItem(key) || decodeURIComponent(document.cookie.split('; ').find(r=>r.startsWith(key+'='))?.split('=')[1]||''); var obj = raw? JSON.parse(raw):{}; return typeof obj==='object' && obj ? obj : {}; }catch(_){ return {} } }
+    var legacy = 'wow_cart_v1';
+    function parse(raw){ try{ return raw? JSON.parse(raw):{} }catch(_){ return {} } }
+    function load(){
+      try{
+        var raw = localStorage.getItem(key) || decodeURIComponent(document.cookie.split('; ').find(r=>r.startsWith(key+'='))?.split('=')[1]||'');
+        var obj = parse(raw);
+        // Merge legacy key if present (array format: {items:[]})
+        var legacyRaw = localStorage.getItem(legacy);
+        var legacyObj = parse(legacyRaw);
+        if(legacyObj && Array.isArray(legacyObj.items)){
+          obj = obj && typeof obj==='object' ? obj : {};
+          (obj.items? obj.items : (obj.items=[]));
+          legacyObj.items.forEach(function(it){
+            var id=String(it.id||''); if(!id) return; var existing=(obj.items||[]).find(function(x){return String(x.id)===id});
+            if(existing){ existing.qty = (Number(existing.qty)||0) + (Number(it.qty)||1); }
+            else { (obj.items||[]).push(it); }
+          });
+        }
+        return obj || {};
+      }catch(_){ return {} }
+    }
     function save(obj){ try{ localStorage.setItem(key, JSON.stringify(obj)); var expires = new Date(Date.now()+30*24*60*60*1000).toUTCString(); document.cookie = key+'='+encodeURIComponent(JSON.stringify(obj))+'; Path=/; SameSite=Lax; Expires='+expires; }catch(_){ } }
     function count(obj){ var n=0; Object.values(obj||{}).forEach(function(it){ n += Number(it.qty||0) }); return n }
     function total(obj){ var t=0; Object.values(obj||{}).forEach(function(it){ t += (Number(it.price||0)) * Number(it.qty||1) }); return t }
@@ -167,7 +187,7 @@
   var pop = document.getElementById('mini-cart-popover');
   function hasCookieCart(){ try{ var c=document.cookie.split('; ').find(r=>r.startsWith('wow_cart=')); return !!(c && decodeURIComponent(c.split('=')[1]||'').length>2); }catch(_){ return false } }
   function fetchMini(retry){ if(!pop) return; var url='/api/cart/mini?t='+Date.now(); fetch(url, { headers:{ 'Accept':'text/html', 'Cache-Control':'no-cache' }, credentials:'same-origin' }).then(r=>r.text()).then(html=>{ pop.innerHTML = html; bindRemove(); if(retry && /mini-cart__empty/.test(html) && hasCookieCart()){ setTimeout(function(){ fetchMini(false); }, 220); } }).catch(()=>{ pop.innerHTML = '<div class="p-3 text-muted">Cart unavailable</div>'; }); }
-  function open(){ if(!pop) return; fetchMini(); pop.style.display='block'; btn?.setAttribute('aria-expanded','true'); position(); }
+  function open(){ if(!pop) return; try{ window.CartClient.renderMini(pop); }catch(_){}; fetchMini(); pop.style.display='block'; btn?.setAttribute('aria-expanded','true'); position(); }
   function close(){ if(!pop) return; pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); }
   function toggle(){ if(!pop) return; var vis = pop.style.display !== 'none'; if(vis){ close(); } else { open(); }}
   function position(){ try{ var rect = btn.getBoundingClientRect(); pop.style.position='absolute'; pop.style.top = (btn.offsetTop + btn.offsetHeight + 8)+'px'; pop.style.right = '0'; }catch(e){} }

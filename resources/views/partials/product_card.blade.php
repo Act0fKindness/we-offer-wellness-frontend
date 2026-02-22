@@ -376,6 +376,7 @@
       var img = btn.dataset.image;
       // Client-first add for immediate UX
       try{ (function(){ var itm={ id:id, title: btn.dataset.title, price: Number(btn.dataset.price)||0, image: img, url: btn.dataset.url }; if(window.CartClient){ window.CartClient.add(itm); } })(); }catch(_){ }
+      try{ if(!buyBtn){ setTimeout(function(){ window.dispatchEvent(new CustomEvent('wow:open-cart', { detail:{ id: id } })); }, 60); } }catch(_){ }
       post('/api/cart/add', { id: id, qty: 1 }).then(function(resp){
         try{ if(typeof resp?.count === 'number'){ var b=document.querySelector('.cart-badge'); if(b){ b.textContent=String(resp.count); b.style.display = (resp.count>0)?'inline-block':'none'; } } }catch(_){ }
         try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: id, image: img } })); }catch(e){}
