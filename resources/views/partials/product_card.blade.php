@@ -206,15 +206,15 @@
           <h2 class="title">{{ $titleFormatted }}</h2>
           @if($providerFormatted)<p class="provider">with {{ $providerFormatted }}</p>@endif
           <div class="rating-row" aria-label="Rating 4.8 out of 5 from 231 reviews">
-            <span class="stars" aria-hidden="true">
-              <span class="star" style="color:#f5c84b;"></span>
-              <span class="star" style="color:#f5c84b;"></span>
-              <span class="star" style="color:#f5c84b;"></span>
-              <span class="star" style="color:#f5c84b;"></span>
-              <span class="star star--empty"></span>
-            </span>
-            <span>(231)</span>
-          </div>
+              <span class="stars" aria-hidden="true">
+                <span class="star" style="color:#f5c84b;"></span>
+                <span class="star" style="color:#f5c84b;"></span>
+                <span class="star" style="color:#f5c84b;"></span>
+                <span class="star" style="color:#f5c84b;"></span>
+                <span class="star star--empty"></span>
+              </span>
+              <span>(231)</span>
+            </div>
           <div class="meta">
             @if($durationLabel)<span class="item">{{ $durationLabel }}</span>@endif
             @if($locationLabel)<span class="item">{{ $locationLabel }}</span>@endif

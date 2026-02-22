@@ -76,6 +76,17 @@
     if(n >= 1000) n = n / 100; // treat as pennies only for large values
     return n;
   }
+  function buildStarsHTML(r){
+    var full = Math.floor(Number(r)||0);
+    var out = '';
+    for(var i=1;i<=5;i++){
+      out += (i<=full)
+        ? '<span class="star" style="color:#f5c84b;"></span>'
+        : '<span class="star star--empty"></span>';
+    }
+    return out;
+  }
+
   function render(items){
     if(hasSSR) return;
     if(!Array.isArray(items) || items.length===0){ list.innerHTML = '<div class="text-muted">No gifts found under £50 right now. <a class="link-wow" href="/gifts">Browse all gifts</a>.</div>'; return; }
@@ -101,7 +112,12 @@
         '<div class="wow-body">' +
           '<div class="wow-type text-muted">' + esc(it.type || 'Experience') + '</div>' +
           '<div class="wow-title">' + esc(it.title) + '</div>' +
-          (it.rating ? ('<div class="rating-text">★ ' + Number(it.rating).toFixed(1) + (it.review_count ? ' <small class="text-muted">(' + it.review_count + ')</small>' : '') + '</div>') : '') +
+          (it.rating ? (
+            '<div class="rating-row" aria-label="Rating ' + Number(it.rating).toFixed(1) + ' out of 5' + (it.review_count? (' from ' + it.review_count + ' reviews') : '') + '">' +
+              '<span class="stars" aria-hidden="true">' + buildStarsHTML(it.rating) + '</span>' +
+              (it.review_count ? ('<span>(' + it.review_count + ')</span>') : '') +
+            '</div>'
+          ) : '') +
         '</div>' +
         '<div class="wow-bottom">' +
           (priceMin != null ? ('<div class="price">£' + Number(priceMin).toFixed(2) + ' <small>from</small></div>') : '') +
