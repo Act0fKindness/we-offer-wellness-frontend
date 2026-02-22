@@ -239,13 +239,15 @@
   .wow-therapy-card-scope .meta .chip svg{ width: var(--metaIcon); height: var(--metaIcon) }
   /* Popover for (+N) overflow */
   .wow-therapy-card-scope .loc-overflow{ position:relative; }
-  .wow-therapy-card-scope .loc-popover{ position:absolute; top:100%; left:0; margin-top:6px; width:240px; max-width:80vw; background:#fff; border:1px solid rgba(16,24,40,.12); box-shadow:0 10px 30px rgba(16,24,40,.12); border-radius:6px; padding:10px; z-index:20; display:none }
+  .wow-therapy-card-scope .loc-popover{ position:absolute; top:100%; left:0; margin-top:6px; width:240px; max-width:80vw; background:#fff; border:1px solid rgba(16,24,40,.12); box-shadow:0 10px 30px rgba(16,24,40,.12); border-radius:6px; padding:10px; z-index:60; display:none }
   .wow-therapy-card-scope .loc-popover h4{ margin:0 0 8px; font-size:12px; font-weight:700; color:#0b1220 }
   .wow-therapy-card-scope .loc-popover .list{ display:flex; flex-wrap:wrap; gap:6px }
   .wow-therapy-card-scope .loc-popover .pill{ border:1px solid rgba(16,24,40,.14); border-radius:999px; padding:4px 8px; font-size:12px; color:#0b1220; display:inline-flex; align-items:center; gap:4px }
   .wow-therapy-card-scope .loc-popover .link{ display:block; margin-top:8px; font-size:12px; color:#1f3a77; text-decoration:underline }
   /* Show popover on hover/focus for desktop */
   @media (hover:hover){ .wow-therapy-card-scope .loc-overflow:hover .loc-popover, .wow-therapy-card-scope .loc-overflow:focus-within .loc-popover{ display:block } }
+  /* Ensure popover can overflow the content area */
+  .wow-therapy-card-scope .content-top{ overflow: visible }
   .wow-therapy-card-scope .content-bottom{ flex:0 0 auto; margin-top:auto; padding:15px; border-top:1px solid rgba(16,24,40,.10); background:#fff }
   .wow-therapy-card-scope .fomo{ margin:0 0 8px; font-size: var(--fomo); font-weight:600; color: rgba(11,18,32,.84); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
   .wow-therapy-card-scope .price{ display:flex; align-items:baseline; gap:8px; margin:0 0 12px }
@@ -402,7 +404,7 @@
               @endif
               @if($remainingCount > 0)
                 <span class="item loc-overflow">
-                  <span class="chip" role="link" tabindex="0" data-href="{{ $url }}#locations" aria-haspopup="dialog" aria-expanded="false">(+{{ $remainingCount }})</span>
+                  <span class="chip" role="link" tabindex="0" data-href="{{ $url }}#locations" aria-haspopup="dialog" aria-expanded="false">+{{ $remainingCount }}</span>
                   <div class="loc-popover" role="dialog" aria-label="Available locations">
                     <h4>Available locations</h4>
                     <div class="list">
