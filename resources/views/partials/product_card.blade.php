@@ -113,7 +113,7 @@
             @if($locationLabel)<span class="item">{{ $locationLabel }}</span>@endif
             @if($nextLabel)<span class="item">Next: {{ $nextLabel }}</span>@endif
           </div>
-          @if($benefitText)<div class="benefit">{{ $benefitText }}</div>@endif
+          
         </div>
         <div class="content-bottom">
           @if($fomoText)<p class="fomo">{{ $fomoText }}</p>@endif
