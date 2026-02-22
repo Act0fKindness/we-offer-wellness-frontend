@@ -374,10 +374,11 @@
       var btn = addBtn || buyBtn;
       var id = btn.dataset.id;
       var img = btn.dataset.image;
-      post('/api/cart/add', { id: id, qty: 1 }).then(function(){
+      post('/api/cart/add', { id: id, qty: 1 }).then(function(resp){
+        try{ if(typeof resp?.count === 'number'){ var b=document.querySelector('.cart-badge'); if(b){ b.textContent=String(resp.count); b.style.display = (resp.count>0)?'inline-block':'none'; } } }catch(_){ }
         try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: id, image: img } })); }catch(e){}
-        // Slight delay to ensure Set-Cookie from add is applied before fetching mini-cart
-        try{ setTimeout(function(){ window.dispatchEvent(new CustomEvent('wow:open-cart', { detail:{ id: id } })); }, 80); }catch(e){}
+        // Delay open to allow Set-Cookie to apply and avoid cache races
+        try{ setTimeout(function(){ window.dispatchEvent(new CustomEvent('wow:open-cart', { detail:{ id: id } })); }, 160); }catch(e){}
         if(buyBtn){ window.location.assign('/cart'); return; }
         try{ btn.textContent='Added'; setTimeout(function(){ btn.textContent='Add to cart'; }, 1200) }catch(e){}
       }).catch(function(){ try{ btn.textContent='Try again'; setTimeout(function(){ btn.textContent= addBtn? 'Add to cart':'Book now'; }, 1200) }catch(e){} });

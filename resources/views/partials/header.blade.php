@@ -150,7 +150,8 @@
 (function(){
   var btn = document.querySelector('.js-cart-toggle');
   var pop = document.getElementById('mini-cart-popover');
-  function fetchMini(){ if(!pop) return; var url='/api/cart/mini?t='+Date.now(); fetch(url, { headers:{ 'Accept':'text/html', 'Cache-Control':'no-cache' }, credentials:'same-origin' }).then(r=>r.text()).then(html=>{ pop.innerHTML = html; bindRemove(); }).catch(()=>{ pop.innerHTML = '<div class="p-3 text-muted">Cart unavailable</div>'; }); }
+  function hasCookieCart(){ try{ var c=document.cookie.split('; ').find(r=>r.startsWith('wow_cart=')); return !!(c && decodeURIComponent(c.split('=')[1]||'').length>2); }catch(_){ return false } }
+  function fetchMini(retry){ if(!pop) return; var url='/api/cart/mini?t='+Date.now(); fetch(url, { headers:{ 'Accept':'text/html', 'Cache-Control':'no-cache' }, credentials:'same-origin' }).then(r=>r.text()).then(html=>{ pop.innerHTML = html; bindRemove(); if(retry && /mini-cart__empty/.test(html) && hasCookieCart()){ setTimeout(function(){ fetchMini(false); }, 220); } }).catch(()=>{ pop.innerHTML = '<div class="p-3 text-muted">Cart unavailable</div>'; }); }
   function open(){ if(!pop) return; fetchMini(); pop.style.display='block'; btn?.setAttribute('aria-expanded','true'); position(); }
   function close(){ if(!pop) return; pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); }
   function toggle(){ if(!pop) return; var vis = pop.style.display !== 'none'; if(vis){ close(); } else { open(); }}
@@ -166,10 +167,10 @@
   window.addEventListener('wow:add-to-cart', function(ev){
     // update badge quickly, fetch mini if open, animate
     setTimeout(updateBadge, 50);
-    if(pop&&pop.style.display!=='none'){ setTimeout(fetchMini, 90); }
+    if(pop&&pop.style.display!=='none'){ setTimeout(function(){ fetchMini(true); }, 150); }
     animateCart(ev?.detail);
   });
-  window.addEventListener('wow:open-cart', function(ev){ setTimeout(function(){ updateBadge(); open(); }, 90); });
+  window.addEventListener('wow:open-cart', function(ev){ setTimeout(function(){ updateBadge(); open(); fetchMini(true); }, 160); });
   function animateCart(detail){
     try{
       btn.classList.add('cart-pulse'); setTimeout(function(){ btn.classList.remove('cart-pulse'); }, 600);

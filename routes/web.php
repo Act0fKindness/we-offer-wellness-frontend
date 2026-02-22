@@ -586,7 +586,8 @@ Route::post('/api/cart/add', function (Request $request) {
     else { $items[$key] = ['id'=>$id, 'title'=>$p->title, 'price'=>$price, 'qty'=>$qty, 'image'=>$image, 'url'=>$url]; }
     session(['cart.items' => $items]);
     $cookie = cookie('wow_cart', json_encode($items), 60*24*30); // 30 days
-    return response()->json(['ok'=>true])->withCookie($cookie);
+    $count = array_sum(array_map(fn($it)=> (int)($it['qty'] ?? 0), $items));
+    return response()->json(['ok'=>true,'count'=>$count])->withCookie($cookie);
 });
 Route::post('/api/cart/remove', function (Request $request) {
     $id = (string) $request->input('id'); $items = session('cart.items', []); unset($items[$id]); session(['cart.items'=>$items]);
