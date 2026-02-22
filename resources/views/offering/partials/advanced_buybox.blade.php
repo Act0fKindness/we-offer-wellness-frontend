@@ -769,6 +769,8 @@ try {
       // Sync format pills and update
       try { syncFormatUI(); } catch(e) {}
       updateVariant();
+      // Rebuild options so Sessions dropdown reflects external change
+      try { buildOptions(); } catch(e) {}
     } catch(e) {}
   });
 
