@@ -34,84 +34,18 @@
   .wow-loc-item{ display:flex; align-items:center; gap:8px; font-weight:700; padding:6px 8px; border-radius:10px; border:1px solid var(--ink-200) }
 </style>
 
-@if($sum !== '')
-  <h3 class="wow-section-title">Summary</h3>
-  <div class="wow-about" id="wowSummary">
-    <div class="wow-paragraph wow-clamp" data-lines="3">{!! nl2br(e($sum)) !!}</div>
-    <a href="#" class="wow-readmore" data-wow-readmore data-target="#wowSummary">Read More</a>
-  </div>
-@endif
+@include('offering.partials.sections.summary', ['summary' => $sum])
 
-@if($about !== '')
-  <h3 class="wow-section-title mt-3">About this experience</h3>
-  <div class="wow-about" id="wowAbout">
-    <div class="wow-paragraph wow-clamp" data-lines="3">{!! $about !!}</div>
-    <a href="#" class="wow-readmore" data-wow-readmore data-target="#wowAbout">Read More</a>
-  </div>
-@endif
+@include('offering.partials.sections.about', ['body' => $about])
 
 <div class="wow-acc mt-3">
-  @if($includedHtml !== '')
-    <div class="wow-acc-item">
-      <button class="wow-acc-header" type="button" data-bs-toggle="collapse" data-bs-target="#wowIncluded" aria-expanded="true" aria-controls="wowIncluded">
-        <div class="wow-acc-left"><h4 class="wow-acc-title m-0">What's Included</h4></div>
-        <div class="wow-acc-icon" data-icon-for="#wowIncluded">−</div>
-      </button>
-      <div id="wowIncluded" class="collapse show">
-        <div class="wow-acc-body">
-          <div class="wow-paragraph">{!! nl2br(e($includedHtml)) !!}</div>
-        </div>
-      </div>
-    </div>
-  @endif
+  @include('offering.partials.sections.included', ['included' => $includedHtml])
 
-  @if($whatExp !== '')
-    <div class="wow-acc-item">
-      <button class="wow-acc-header" type="button" data-bs-toggle="collapse" data-bs-target="#wowOnTheDay" aria-expanded="true" aria-controls="wowOnTheDay">
-        <div class="wow-acc-left"><h4 class="wow-acc-title m-0">What happens on the day?</h4></div>
-        <div class="wow-acc-icon" data-icon-for="#wowOnTheDay">−</div>
-      </button>
-      <div id="wowOnTheDay" class="collapse show">
-        <div class="wow-acc-body" id="wowOnDayBlock">
-          <div class="wow-paragraph wow-clamp" data-lines="3">{!! nl2br(e($whatExp)) !!}</div>
-          <a href="#" class="wow-readmore" data-wow-readmore data-target="#wowOnDayBlock">Read More</a>
-        </div>
-      </div>
-    </div>
-  @endif
+  @include('offering.partials.sections.what_on_day', ['what' => $whatExp])
 
-  @if($safetyTxt !== '' || $contraTxt !== '')
-    <div class="wow-acc-item">
-      <button class="wow-acc-header" type="button" data-bs-toggle="collapse" data-bs-target="#wowGuidelines" aria-expanded="false" aria-controls="wowGuidelines">
-        <div class="wow-acc-left"><h4 class="wow-acc-title m-0">Participant guidelines</h4></div>
-        <div class="wow-acc-icon" data-icon-for="#wowGuidelines">+</div>
-      </button>
-      <div id="wowGuidelines" class="collapse">
-        <div class="wow-acc-body">
-          @if($safetyTxt!=='')<div class="wow-paragraph">{!! nl2br(e($safetyTxt)) !!}</div>@endif
-          @if($contraTxt!=='')<div class="wow-paragraph">{!! nl2br(e($contraTxt)) !!}</div>@endif
-        </div>
-      </div>
-    </div>
-  @endif
+  @include('offering.partials.sections.guidelines', ['safety' => $safetyTxt, 'contra' => $contraTxt])
 
-  @if(!empty($locs))
-    <div class="wow-acc-item">
-      <button class="wow-acc-header" type="button" data-bs-toggle="collapse" data-bs-target="#wowLocation" aria-expanded="false" aria-controls="wowLocation">
-        <div class="wow-acc-left"><h4 class="wow-acc-title m-0">Location(s)</h4></div>
-        <div class="wow-acc-icon" data-icon-for="#wowLocation">+</div>
-      </button>
-      <div id="wowLocation" class="collapse">
-        <div class="wow-acc-body">
-          <ul class="wow-loc-list">
-            @foreach($locs as $l)
-              <li class="wow-loc-item">{{ $l }}</li>
-            @endforeach
-          </ul>
-        </div>
-      </div>
-    </div>
-  @endif
+  @include('offering.partials.sections.locations', ['locationsList' => $locs])
 </div>
 
 <script>
@@ -129,4 +63,3 @@
     });
   })();
 </script>
-
