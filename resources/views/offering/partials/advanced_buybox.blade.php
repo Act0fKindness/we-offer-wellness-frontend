@@ -418,46 +418,76 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
 
   // Build options grouped by sessions count (context-aware, preserve order, limit to 3)
   const valuesAll = availableValuesForOption(optIdx, { contextAware: true });
-  const __seenCounts = new Set();
-  const uniqCounts = [];
-  valuesAll.forEach(v=>{ const n = parseSessions(v); if(n && !__seenCounts.has(n)){ __seenCounts.add(n); if(uniqCounts.length<3) uniqCounts.push(n); } });
-  const best = computeBestValue(product.variants, optIdx);
 
-  function labelForCount(n){ return `${n} Sessions`; }
-  function priceInfoForCount(n){
-    // Use global best total for this count (min across all variants with that count)
+  function computeBestContext(){
+    const map = new Map();
+    (product.variants||[]).forEach(v=>{
+      const ops = v.options||[];
+      // ensure other selections match context
+      for (let j=0; j<(product.options||[]).length; j++){
+        if (j===optIdx) continue;
+        const sel = String(state.selected[j]||'');
+        const got = String(ops[j]||'');
+        if (!equalsAtIndex(j, sel, got)) return;
+      }
+      const val = String(ops[optIdx]||'');
+      const n = parseSessions(val) || 1;
+      const price = Number(v.price)||0;
+      const cur = map.get(n);
+      if (cur==null || price < cur) map.set(n, price);
+    });
+    let best = { n:null, unit:Infinity, total:Infinity };
+    map.forEach((total, n)=>{
+      const unit = total / n;
+      if (unit < best.unit || (unit===best.unit && (n > best.n || (n===best.n && total < best.total)))){
+        best = { n, unit, total };
+      }
+    });
+    return best.n ? best : null;
+  }
+
+  function labelForVal(val){
+    const raw = String(val||'').trim();
+    const n = parseSessions(raw);
+    return (/^\d+$/.test(raw) && n) ? `${n} Sessions` : raw;
+  }
+  function priceInfoForVal(val){
+    const n = parseSessions(val) || 1;
     let total = Infinity;
     (product.variants||[]).forEach(v=>{
-      const vv = (v.options||[])[optIdx];
-      if(parseSessions(vv)===n){ total = Math.min(total, Number(v.price)||0); }
+      const ops = v.options||[];
+      if (String(ops[optIdx]||'') !== String(val)) return;
+      for (let j=0; j<(product.options||[]).length; j++){
+        if (j===optIdx) continue;
+        const sel = String(state.selected[j]||'');
+        const got = String(ops[j]||'');
+        if (!equalsAtIndex(j, sel, got)) return;
+      }
+      total = Math.min(total, Number(v.price)||0);
     });
     if(!isFinite(total)) total = 0;
-    const unit = n ? (total/n) : 0;
-    return { total, unit };
-  }
-  function optionValueForCount(n){
-    // Pick the first available option value whose parsed sessions equals n
-    const vals = valuesAll;
-    return vals.find(v => parseSessions(v)===n) || String(n);
+    return { total, unit: total/(n||1) };
   }
 
   function renderPopover(){
     pop.innerHTML='';
-    uniqCounts.forEach(n=>{
-      const { total, unit } = priceInfoForCount(n);
-      const row = document.createElement('div'); row.className='sd-option'; row.setAttribute('role','option'); row.tabIndex=0; row.dataset.sessions=String(n);
+    const best = computeBestContext();
+    valuesAll.forEach(val=>{
+      const { total, unit } = priceInfoForVal(val);
+      const n = parseSessions(val) || 1;
+      const row = document.createElement('div'); row.className='sd-option'; row.setAttribute('role','option'); row.tabIndex=0; row.dataset.sessions=String(n); row.dataset.value=String(val);
       const left = document.createElement('div'); left.className='sd-left';
-      const ttl = document.createElement('div'); ttl.className='sd-title'; ttl.textContent = labelForCount(n);
+      const ttl = document.createElement('div'); ttl.className='sd-title'; ttl.textContent = labelForVal(val);
       const sub = document.createElement('div'); sub.className='sd-sub'; sub.textContent = `${fmt(total)} total • ${fmt(unit)} / session`;
       left.appendChild(ttl); left.appendChild(sub);
       const right = document.createElement('div'); right.className='sd-right';
-      if (best && best.n === n){ const badge=document.createElement('span'); badge.className='sd-badge'; badge.textContent='Best value'; right.appendChild(badge); }
+      if (best && best.n === n && total === best.total){ const badge=document.createElement('span'); badge.className='sd-badge'; badge.textContent='Best value'; right.appendChild(badge); }
       const chk = document.createElement('span'); chk.className='sd-check'; chk.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
       right.appendChild(chk);
       row.appendChild(left); row.appendChild(right);
-      row.addEventListener('click',()=>{ selectCount(n); closePop(); });
+      row.addEventListener('click',()=>{ selectValue(val); closePop(); });
       row.addEventListener('keydown',(e)=>{
-        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectCount(n); closePop(); }
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectValue(val); closePop(); }
         if(e.key==='ArrowDown'){ e.preventDefault(); const nx = row.nextElementSibling && row.nextElementSibling.classList.contains('sd-option') ? row.nextElementSibling : pop.querySelector('.sd-option'); nx && nx.focus && nx.focus(); }
         if(e.key==='ArrowUp'){ e.preventDefault(); const pv = row.previousElementSibling && row.previousElementSibling.classList.contains('sd-option') ? row.previousElementSibling : pop.querySelector('.sd-option:last-of-type'); pv && pv.focus && pv.focus(); }
         if(e.key==='Escape'){ e.preventDefault(); closePop(); trig.focus(); }
@@ -465,10 +495,9 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
       pop.appendChild(row);
     });
     // Mark active
-    const curN = parseSessions(state.selected[optIdx]);
+    const curVal = String(state.selected[optIdx]||'');
     pop.querySelectorAll('.sd-option').forEach(el=>{
-      const n = parseInt(el.dataset.sessions,10);
-      if (n === curN) el.classList.add('active');
+      if (String(el.dataset.value||'') === curVal) el.classList.add('active');
     });
   }
 
@@ -497,16 +526,15 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
       n = n || (uniqCounts[0] || 1);
     }
     left.innerHTML = '';
-    const label = document.createElement('span'); label.textContent = `${n} Sessions`;
+    const label = document.createElement('span'); label.textContent = (/^\d+$/.test(cur.trim()) && n ? `${n} Sessions` : cur);
     left.appendChild(label);
-    if (best && best.n === n){ const b = document.createElement('span'); b.className='sd-badge'; b.textContent='Best value'; left.appendChild(b); }
+    const bc = computeBestContext(); if (bc && bc.n === (n||1)){ const b = document.createElement('span'); b.className='sd-badge'; b.textContent='Best value'; left.appendChild(b); }
     if (changed) {
       try { updateVariant(); updateSheetSubtotal(); } catch(e){}
     }
   }
-  function selectCount(n){
-    const val = optionValueForCount(n);
-    state.selected[optIdx] = val;
+  function selectValue(val){
+    state.selected[optIdx] = String(val);
     updateTrigger();
     syncOptionAria(optIdx);
     if (optIdx===findLocationIndex()) { try{ syncFormatUI(); }catch(e){} }
