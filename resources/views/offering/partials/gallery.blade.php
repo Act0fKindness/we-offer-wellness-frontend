@@ -129,7 +129,15 @@
     #wowGallery .modal__nav--next{ right:14px; }
     #wowGallery .modal__nav svg{ width:18px; height:18px; stroke-width:2.4; }
     #wowGallery .modal__bar{ margin-top:14px; display:grid; grid-template-columns:1fr; gap:10px; }
-    #wowGallery .modal__productTitle{ color: rgba(255,255,255,.92); font-weight:700; font-size:16px; line-height:1.3; text-align:center; text-shadow: 0 1px 0 rgba(0,0,0,.22); }
+    #wowGallery .modal__productTitle{
+      color: rgba(255,255,255,.92);
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 1.3;
+      text-align: center;
+      text-shadow: 0 1px 0 rgba(0,0,0,.22);
+      font-family: 'Manrope', var(--bs-font-sans-serif);
+    }
 
     @media (prefers-reduced-motion: reduce){
       #wowGallery .track, #wowGallery .tile img, #wowGallery .arrow, #wowGallery .arrow svg, #wowGallery .modal__close, #wowGallery .modal__nav{ transition:none !important; }
