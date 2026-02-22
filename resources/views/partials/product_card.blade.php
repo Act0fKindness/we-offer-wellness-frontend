@@ -149,7 +149,14 @@
   .wow-therapy-card-scope .badge{ height: var(--badgeH); display:inline-flex; align-items:center; gap:4px; padding:0 var(--badgePx); border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size: var(--badgeFont); line-height:1; white-space:nowrap; flex:0 0 auto }
   .wow-therapy-card-scope .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
   .wow-therapy-card-scope .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
-  .wow-therapy-card-scope .badge svg{ width: var(--badgeIcon); height: var(--badgeIcon) }
+  .wow-therapy-card-scope .badge svg{
+    color: #d59d4c;
+    width: 18px;
+    height: 18px;
+    margin-right: 0 !important;
+    margin-bottom: 4px;
+    transform: translateY(1px);
+  }
   .wow-therapy-card-scope .save{ width: var(--save); height: var(--save); border-radius: var(--saveR); border:1px solid rgba(16,24,40,.20); background:#fff; display:grid; place-items:center; cursor:pointer; box-shadow:0 10px 22px rgba(16,24,40,.08); transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease; flex:0 0 auto }
   .wow-therapy-card-scope .save:hover{ transform: translateY(-1px); box-shadow:0 14px 28px rgba(16,24,40,.12) }
   .wow-therapy-card-scope .save:active{ transform: translateY(0) scale(.99) }
@@ -289,7 +296,7 @@
         <div class="card-top-left">
           <div class="badges">
             <span class="badge badge--warm">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" style="color:#d59d4c; width:14px; height:14px; margin-right:6px; transform: translateY(1px);">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.122 17.645a7.185 7.185 0 0 1-2.656 2.495 7.06 7.06 0 0 1-3.52.853 6.617 6.617 0 0 1-3.306-.718 6.73 6.73 0 0 1-2.54-2.266c-2.672-4.57.287-8.846.887-9.668A4.448 4.448 0 0 0 8.07 6.31 4.49 4.49 0 0 0 7.997 4c1.284.965 6.43 3.258 5.525 10.631 1.496-1.136 2.7-3.046 2.846-6.216 1.43 1.061 3.985 5.462 1.754 9.23Z"/>
               </svg>
               Filling Fast
