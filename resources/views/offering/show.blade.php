@@ -43,7 +43,7 @@
 <section class="section">
   <div class="container-page">
     <div class="row g-4">
-      <div class="col-12 col-lg-7">
+      <div class="col-12 col-lg-8">
         @if(!empty($images))
           @include('offering.partials.gallery', ['images' => $images, 'title' => $title])
         @else
@@ -84,7 +84,7 @@
         @endif
       </div>
 
-      <div class="col-12 col-lg-5">
+      <div class="col-12 col-lg-4">
         @include('offering.partials.advanced_buybox')
         @include('offering.partials.variant_helper')
 
