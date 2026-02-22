@@ -366,39 +366,8 @@
     }
     function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
     function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-XSRF-TOKEN': token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
-    function handleClick(e){
-      var addBtn = e.target.closest('.js-add-to-cart');
-      var buyBtn = e.target.closest('.js-buy-now');
-      if(!addBtn && !buyBtn) return;
-      e.preventDefault(); e.stopPropagation();
-      var btn = addBtn || buyBtn;
-      var id = btn.dataset.id;
-      var img = btn.dataset.image;
-      // Client-first add for immediate UX (write to both new and legacy formats)
-      try{ (function(){
-        var itm={ id:id, title: btn.dataset.title, price: Number(btn.dataset.price)||0, image: img, url: btn.dataset.url };
-        if(window.CartClient){ window.CartClient.add(itm); }
-        try{ addToLocalCart({ id:id, title: itm.title, price: itm.price, image: itm.image, url: itm.url }); }catch(_){ }
-      })(); }catch(_){ }
-      try{ if(!buyBtn){ setTimeout(function(){ window.dispatchEvent(new CustomEvent('wow:open-cart', { detail:{ id: id } })); }, 60); } }catch(_){ }
-      post('/api/cart/add', { id: id, qty: 1 }).then(function(resp){
-        try{ if(typeof resp?.count === 'number'){ var b=document.querySelector('.cart-badge'); if(b){ b.textContent=String(resp.count); b.style.display = (resp.count>0)?'inline-block':'none'; } } }catch(_){ }
-        try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: id, image: img } })); }catch(e){}
-        if(buyBtn){
-          // Create Stripe Checkout Session and redirect
-          try{
-            setTimeout(function(){
-              post('/checkout', {}).then(function(r){ if(r && r.url){ window.location.assign(r.url); } else { window.location.assign('/cart'); } }).catch(function(){ window.location.assign('/cart'); });
-            }, 100);
-          }catch(_){ window.location.assign('/cart'); }
-          return;
-        }
-        // Delay open to allow Set-Cookie to apply and avoid cache races
-        try{ setTimeout(function(){ window.dispatchEvent(new CustomEvent('wow:open-cart', { detail:{ id: id } })); }, 160); }catch(e){}
-        try{ btn.textContent='Added'; setTimeout(function(){ btn.textContent='Add to cart'; }, 1200) }catch(e){}
-      }).catch(function(){ try{ btn.textContent='Try again'; setTimeout(function(){ btn.textContent= addBtn? 'Add to cart':'Book now'; }, 1200) }catch(e){} });
-    }
-    document.addEventListener('click', handleClick);
+    function handleClick(e){ /* disabled */ }
+    // document.addEventListener('click', handleClick);
   })();
   </script>
 @endonce

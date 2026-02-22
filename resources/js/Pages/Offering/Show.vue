@@ -49,7 +49,7 @@ async function addToCart(detail){
   const variantKey = detail?.variantId ? `v${detail.variantId}` : (detail?.selected ? `sel:${detail.selected.join('|')}` : 'base')
   const itemId = `${p.id}:${variantKey}`
   cart.add({ id: itemId, title: p.title, price: unitPrice, image: p.image, url: window.location.pathname, qty: qtyVal, meta })
-  try { window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail: { id: p.id } })) } catch {}
+  /* disabled analytics event */
   setTimeout(() => adding.value = false, 250)
 }
 

@@ -43,12 +43,7 @@ const liked = ref(false)
 const sharing = ref(false)
 const cart = useCart()
 
-function addToCart(e){
-  const p = props.product || {}
-  const item = { id: p.id || props.title, title: p.title || props.title, price: p.price || 0, image: props.image, url: p.url || props.ctaHref, qty: 1 }
-  cart.add(item)
-  try { const btn = e?.currentTarget; if (btn) { btn.classList.add('btn-press'); setTimeout(()=>btn.classList.remove('btn-press'), 160) } ; window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail: { id: item.id } })) } catch {}
-}
+function addToCart(e){ /* disabled */ }
 async function share(){
   const url = props.product?.url || props.ctaHref || window.location.href
   try { await navigator.clipboard.writeText(url); sharing.value = true; setTimeout(()=>sharing.value=false, 900) } catch { alert('Link: ' + url) }
@@ -129,7 +124,7 @@ async function share(){
         </div>
         <div class="event-actions">
           <SquareButton as="a" :href="ctaHref" variant="cta" size="md">{{ ctaLabel }}</SquareButton>
-          <SquareButton type="button" variant="outline" size="md" class="btn-icon is-square d-inline-flex align-items-center" @click="addToCart" aria-label="Add to cart">
+          <SquareButton type="button" variant="outline" size="md" class="btn-icon is-square d-inline-flex align-items-center" aria-label="Add to cart">
             <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h1.5L8 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm.75-3H7.5M11 7H6.312M17 4v6m-3-3h6"/>
             </svg>

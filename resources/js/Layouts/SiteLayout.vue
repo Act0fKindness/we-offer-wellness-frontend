@@ -271,7 +271,7 @@ onMounted(() => {
     bump.value = false
     requestAnimationFrame(() => { bump.value = true; setTimeout(() => bump.value = false, 350) })
   }
-  window.addEventListener('wow:add-to-cart', onAdd)
+  // window.addEventListener('wow:add-to-cart', onAdd)
   document.addEventListener('keydown', onKeydown)
   document.addEventListener('click', onDocClick, true)
   ;(async () => {
