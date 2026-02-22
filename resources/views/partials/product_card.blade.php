@@ -118,7 +118,7 @@
 @once
   <style>
   /* Scoped EXACT card styles (prefixed with .wow-therapy-card-scope to avoid global bleed) */
-  .wow-therapy-card-scope{ --bg:#f4f5f7; --card:#fff; --shadow:0 18px 55px rgba(16,24,40,.10); --text:#0b1220; --muted:rgba(11,18,32,.62); --wowGreen:#1f7a4a; --wowGreenDark:#17643d; --badgeWarmBg:#ffe7c2; --badgeWarmText:#6b4b12; --badgeCoolBg:#dfe9ff; --badgeCoolText:#1f3a77; --container:1280px; --gap:16px; --radius:7px; --borderW:2px; --imgH:150px; --padTop:15px; --padX:15px; --padContentX:15px; --padContentY:15px; --badgeH:32px; --badgePx:10px; --badgeFont:12px; --badgeIcon:18px; --save:34px; --saveR:3px; --saveIcon:18px; --title:22px; --fomo: 12px; --provider:13px; --rating:13px; --star:18px; --meta:12px; --metaIcon:14px; --benefit:12px; --fomo:12px; --from:13px; --priceNow:22px; --was:13px; --btnH:38px; --btnR:4px; --btnFont:16px; --cardH:580px; }
+  .wow-therapy-card-scope{ --bg:#f4f5f7; --card:#fff; --shadow:0 18px 55px rgba(16,24,40,.10); --text:#0b1220; --muted:rgba(11,18,32,.62); --wowGreen:#1f7a4a; --wowGreenDark:#17643d; --badgeWarmBg:#ffe7c2; --badgeWarmText:#6b4b12; --badgeCoolBg:#dfe9ff; --badgeCoolText:#1f3a77; --container:1280px; --gap:16px; --radius:7px; --borderW:2px; --imgH:150px; --padTop:15px; --padX:15px; --padContentX:15px; --padContentY:15px; --badgeH:32px; --badgePx:10px; --badgeFont:12px; --badgeIcon:18px; --save:34px; --saveR:3px; --saveIcon:18px; --title:22px; --fomo: 12px; --provider:13px; --rating:13px; --star:18px; --meta:12px; --metaIcon:14px; --benefit:12px; --fomo:12px; --from:13px; --priceNow:22px; --was:13px; --btnH:38px; --btnR:4px; --btnFont:16px; --cardH:580px; --cta-bg: linear-gradient(180deg, var(--wowGreen), var(--wowGreenDark)); }
   .wow-therapy-card-scope .therapy-card{ background: var(--card); border: var(--borderW) solid rgba(16,24,40,.18); border-radius: var(--radius); box-shadow: var(--shadow); overflow:hidden; position:relative; min-width:0; height: var(--cardH); display:flex; flex-direction:column }
   .wow-therapy-card-scope .card-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding: var(--padTop) var(--padX) 10px; background:#fff; flex:0 0 auto }
   .wow-therapy-card-scope .card-top-left{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:10px; overflow:hidden }
@@ -207,7 +207,7 @@
   .wow-therapy-card-scope .price .was{ font-size: var(--was); font-weight:400; color: rgba(11,18,32,.75) }
   .wow-therapy-card-scope .actions{ display:grid; grid-template-columns: 1fr 1.15fr; gap:10px }
   .wow-therapy-card-scope .btn{ height: var(--btnH); border-radius: var(--btnR); font-size: var(--btnFont); font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff; color: rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 10px 22px rgba(16,24,40,.08) }
-  .wow-therapy-card-scope .btn--primary{ background: linear-gradient(180deg, var(--wowGreen), var(--wowGreenDark)); border-color: rgba(0,0,0,.10); color:#fff }
+  .wow-therapy-card-scope .btn--primary{ border-color: rgba(0,0,0,.10); color:#fff; background: var(--cta-bg) }
   @media (max-width: 768px){ .wow-therapy-card-scope .therapy-card{ border-radius:20px; width:300px } }
   /* Override: use provided SVG path for star masks (base and outline) */
   .wow-therapy-card-scope .star,
