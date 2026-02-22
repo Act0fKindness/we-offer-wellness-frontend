@@ -153,6 +153,16 @@
     var key = 'wow_cart';
     var legacy = 'wow_cart_v1';
     function parse(raw){ try{ return raw? JSON.parse(raw):{} }catch(_){ return {} } }
+    function toBag(obj){
+      // Convert {items:[...]} or plain object to bag {id: item}
+      var bag = {};
+      if(obj && Array.isArray(obj.items)){
+        obj.items.forEach(function(it){ var id=String(it.id||''); if(!id) return; bag[id] = { id:id, title:it.title||'', price:Number(it.price||0), image:it.image||'', url:it.url||'#', qty:Number(it.qty||1) }; });
+      } else if (obj && typeof obj==='object') {
+        Object.keys(obj).forEach(function(k){ var it=obj[k]; if(it && (it.id||k)){ var id=String(it.id||k); bag[id] = { id:id, title:it.title||'', price:Number(it.price||0), image:it.image||'', url:it.url||'#', qty:Number(it.qty||1) }; } });
+      }
+      return bag;
+    }
     function load(){
       try{
         var raw = localStorage.getItem(key) || decodeURIComponent(document.cookie.split('; ').find(r=>r.startsWith(key+'='))?.split('=')[1]||'');
@@ -160,19 +170,13 @@
         // Merge legacy key if present (array format: {items:[]})
         var legacyRaw = localStorage.getItem(legacy);
         var legacyObj = parse(legacyRaw);
-        if(legacyObj && Array.isArray(legacyObj.items)){
-          obj = obj && typeof obj==='object' ? obj : {};
-          (obj.items? obj.items : (obj.items=[]));
-          legacyObj.items.forEach(function(it){
-            var id=String(it.id||''); if(!id) return; var existing=(obj.items||[]).find(function(x){return String(x.id)===id});
-            if(existing){ existing.qty = (Number(existing.qty)||0) + (Number(it.qty)||1); }
-            else { (obj.items||[]).push(it); }
-          });
-        }
-        return obj || {};
+        var bag = toBag(obj);
+        var legacyBag = toBag(legacyObj);
+        Object.keys(legacyBag).forEach(function(id){ if(bag[id]){ bag[id].qty += Number(legacyBag[id].qty||1); } else { bag[id]=legacyBag[id]; } });
+        return bag || {};
       }catch(_){ return {} }
     }
-    function save(obj){ try{ localStorage.setItem(key, JSON.stringify(obj)); var expires = new Date(Date.now()+30*24*60*60*1000).toUTCString(); document.cookie = key+'='+encodeURIComponent(JSON.stringify(obj))+'; Path=/; SameSite=Lax; Expires='+expires; }catch(_){ } }
+    function save(obj){ try{ var json = JSON.stringify(obj||{}); localStorage.setItem(key, json); var expires = new Date(Date.now()+30*24*60*60*1000).toUTCString(); document.cookie = key+'='+encodeURIComponent(json)+'; Path=/; SameSite=Lax; Expires='+expires; }catch(_){ } }
     function count(obj){ var n=0; Object.values(obj||{}).forEach(function(it){ n += Number(it.qty||0) }); return n }
     function total(obj){ var t=0; Object.values(obj||{}).forEach(function(it){ t += (Number(it.price||0)) * Number(it.qty||1) }); return t }
     function add(item){ var bag=load(); var id=String(item.id); if(!id) return bag; var ex=bag[id]||{id:id,qty:0}; bag[id] = { id:id, title:item.title||ex.title||'', price:Number(item.price)||0, image:item.image||ex.image||'', url:item.url||ex.url||'#', qty: Number(ex.qty||0)+1 }; save(bag); return bag }
@@ -215,7 +219,7 @@
       var rectBtn = btn.getBoundingClientRect();
       var start = { x: window.innerWidth/2, y: window.innerHeight/2 };
       try{ var src = document.querySelector('.therapy-card img, .wow-media img'); if(src){ var r = src.getBoundingClientRect(); start = { x:r.left + r.width/2, y:r.top + r.height/2 }; } }catch(_){ }
-      ghost.style.left = start.x+'px'; ghost.style.top = start.y+'px';
+      ghost.style.left = start.x+'px'; ghost.style.top = start.y+'px'; ghost.style.transform='scale(.2)'; ghost.style.opacity='0.9';
       // Trigger to cart position
       requestAnimationFrame(function(){ ghost.style.transform = 'translate('+(rectBtn.left - start.x + 12)+'px,'+(rectBtn.top - start.y + 12)+'px) scale(.2)'; ghost.style.opacity='0'; });
       setTimeout(function(){ ghost.remove(); }, 700);
@@ -227,7 +231,7 @@
 .mini-cart-popover{ position:absolute; right:0; top:100%; margin-top:8px; z-index:1000 }
 .js-cart-toggle.cart-pulse{ animation: cartPulse .6s ease }
 @keyframes cartPulse{ 0%{ transform: scale(1)} 30%{ transform: scale(1.12)} 100%{ transform: scale(1)} }
-.cart-fly{ position: fixed; left:0; top:0; width:56px; height:56px; background:#eee center/cover no-repeat; border-radius:10px; box-shadow:0 10px 24px rgba(2,8,23,.20); pointer-events:none; transition: transform .66s cubic-bezier(.2,.9,.2,1), opacity .66s ease; z-index:1100 }
+.cart-fly{ position: fixed; left:0; top:0; width:40px; height:40px; background:#eee center/cover no-repeat; border-radius:10px; box-shadow:0 10px 24px rgba(2,8,23,.20); pointer-events:none; transition: transform .5s cubic-bezier(.2,.9,.2,1), opacity .5s ease; z-index:1100; will-change: transform, opacity }
 </style>
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">
