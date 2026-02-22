@@ -31,6 +31,13 @@
   .wow-included li{ display:flex; gap:12px; align-items:flex-start; font-size:15px; line-height:1.6; color:var(--wow-text) }
   .wow-included .thumb{ width:18px; height:18px; margin-top:3px; flex:0 0 auto; stroke:var(--wow-text); opacity:.9 }
   .wow-guidelines{ margin:0; padding-left:18px; color:#0f172a; line-height:1.8; list-style-type:circle; font-size:15px }
+  /* Icon feature row */
+  .wow-features{ margin:18px 0 18px; padding:6px 0 2px }
+  .wow-feature{ text-align:center; padding:8px 6px }
+  .wow-icon-circle{ width:68px; height:68px; border-radius:999px; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; border:1px solid var(--wow-soft-2); background:#fff; box-shadow:0 10px 24px rgba(16,24,40,.06) }
+  .wow-icon-circle svg{ width:28px; height:28px; stroke:var(--wow-accent) }
+  .wow-feature b{ display:block; font-size:13px; font-weight:800; line-height:1.1 }
+  .wow-feature span{ display:block; font-size:13px; font-weight:800; line-height:1.1 }
   .wow-loc-meta{ display:flex; align-items:center; gap:10px; color:var(--wow-text); font-weight:800; margin:8px 0 12px }
   .wow-loc-meta svg{ width:18px; height:18px; stroke:var(--wow-text); opacity:.85 }
   .wow-loc-panel{ border-radius:var(--wow-radius-lg); overflow:hidden; background:#fff; border:1px solid var(--wow-soft-2); box-shadow:0 16px 40px rgba(16,24,40,.06) }
@@ -45,6 +52,8 @@
 @include('offering.partials.sections.summary', ['summary' => $sum])
 
 @include('offering.partials.sections.about', ['body' => $about])
+
+@include('offering.partials.sections.features', ['locationsList' => $locs])
 
 <div class="wow-acc mt-3">
   @include('offering.partials.sections.included', ['included' => $includedHtml])
