@@ -530,6 +530,12 @@ Route::view('/404', 'app');
 
 // Cart page
 Route::get('/cart', function () {
+    // Restore cart from cookie if session empty
+    $items = session('cart.items', []);
+    if (empty($items)) {
+        $cookie = request()->cookie('wow_cart');
+        if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { session(['cart.items' => $restored]); } }
+    }
     return view('cart.index');
 });
 
@@ -540,8 +546,27 @@ Route::post('/api/cart/promo', function (Request $request) {
     return response()->json(['ok' => true, 'code' => $code]);
 });
 // Cart session store
-Route::get('/api/cart/count', function(){ $items = session('cart.items', []); $count = array_sum(array_map(fn($it)=> (int)($it['qty'] ?? 0), $items)); return response()->json(['count'=>$count]); });
-Route::get('/api/cart/mini', function(){ return response(view('partials.mini_cart')->render(), 200)->header('Content-Type','text/html'); });
+Route::get('/api/cart/count', function(){
+    $items = session('cart.items', []);
+    if (empty($items)) {
+        $cookie = request()->cookie('wow_cart');
+        if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { $items = $restored; session(['cart.items' => $items]); } }
+    }
+    $count = array_sum(array_map(fn($it)=> (int)($it['qty'] ?? 0), $items));
+    return response()->json(['count'=>$count])->header('Cache-Control','no-store, no-cache, must-revalidate')->header('Pragma','no-cache')->header('Vary','Cookie');
+});
+Route::get('/api/cart/mini', function(){
+    $items = session('cart.items', []);
+    if (empty($items)) {
+        $cookie = request()->cookie('wow_cart');
+        if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { session(['cart.items' => $restored]); } }
+    }
+    return response(view('partials.mini_cart')->render(), 200)
+        ->header('Content-Type','text/html')
+        ->header('Cache-Control','no-store, no-cache, must-revalidate')
+        ->header('Pragma','no-cache')
+        ->header('Vary','Cookie');
+});
 Route::post('/api/cart/add', function (Request $request) {
     $id = (int) $request->input('id'); $qty = max(1, (int)$request->input('qty', 1));
     if ($id <= 0) return response()->json(['ok'=>false,'error'=>'invalid'], 400);
@@ -560,16 +585,21 @@ Route::post('/api/cart/add', function (Request $request) {
     if(isset($items[$key])){ $items[$key]['qty'] = (int)($items[$key]['qty'] ?? 1) + $qty; }
     else { $items[$key] = ['id'=>$id, 'title'=>$p->title, 'price'=>$price, 'qty'=>$qty, 'image'=>$image, 'url'=>$url]; }
     session(['cart.items' => $items]);
-    return response()->json(['ok'=>true]);
+    $cookie = cookie('wow_cart', json_encode($items), 60*24*30); // 30 days
+    return response()->json(['ok'=>true])->withCookie($cookie);
 });
 Route::post('/api/cart/remove', function (Request $request) {
-    $id = (string) $request->input('id'); $items = session('cart.items', []); unset($items[$id]); session(['cart.items'=>$items]); return response()->json(['ok'=>true]);
+    $id = (string) $request->input('id'); $items = session('cart.items', []); unset($items[$id]); session(['cart.items'=>$items]);
+    $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
+    return response()->json(['ok'=>true])->withCookie($cookie);
 });
 Route::post('/api/cart/update', function (Request $request) {
     $id = (string)$request->input('id'); $qty = max(0,(int)$request->input('qty',1));
     $items = session('cart.items', []); if(!isset($items[$id])) return response()->json(['ok'=>false],404);
     if($qty===0){ unset($items[$id]); } else { $items[$id]['qty']=$qty; }
-    session(['cart.items'=>$items]); return response()->json(['ok'=>true]);
+    session(['cart.items'=>$items]);
+    $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
+    return response()->json(['ok'=>true])->withCookie($cookie);
 });
 // V3 subscriber opt-in API (CSRF-protected; same-domain)
 Route::post('/api/v3-subscribers', [V3SubscriberController::class, 'store'])->name('api.v3-subscribers.store');

@@ -150,7 +150,7 @@
 (function(){
   var btn = document.querySelector('.js-cart-toggle');
   var pop = document.getElementById('mini-cart-popover');
-  function fetchMini(){ if(!pop) return; fetch('/api/cart/mini', { headers:{ 'Accept':'text/html' }, credentials:'same-origin' }).then(r=>r.text()).then(html=>{ pop.innerHTML = html; bindRemove(); }).catch(()=>{ pop.innerHTML = '<div class="p-3 text-muted">Cart unavailable</div>'; }); }
+  function fetchMini(){ if(!pop) return; var url='/api/cart/mini?t='+Date.now(); fetch(url, { headers:{ 'Accept':'text/html', 'Cache-Control':'no-cache' }, credentials:'same-origin' }).then(r=>r.text()).then(html=>{ pop.innerHTML = html; bindRemove(); }).catch(()=>{ pop.innerHTML = '<div class="p-3 text-muted">Cart unavailable</div>'; }); }
   function open(){ if(!pop) return; fetchMini(); pop.style.display='block'; btn?.setAttribute('aria-expanded','true'); position(); }
   function close(){ if(!pop) return; pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); }
   function toggle(){ if(!pop) return; var vis = pop.style.display !== 'none'; if(vis){ close(); } else { open(); }}
