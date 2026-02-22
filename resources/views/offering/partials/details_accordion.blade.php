@@ -31,6 +31,7 @@
   .wow-included li{ display:flex; gap:12px; align-items:flex-start; font-size:15px; line-height:1.6; color:var(--wow-text) }
   .wow-included .thumb{ width:18px; height:18px; margin-top:3px; flex:0 0 auto; stroke:var(--wow-text); opacity:.9 }
   .wow-guidelines{ margin:0; padding-left:18px; color:#0f172a; line-height:1.8; list-style-type:circle; font-size:15px }
+  .wow-badge-note{ display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; background:#eef7f2; color:#185a44; border:1px solid #c7e5d9 }
   /* Icon feature row */
   .wow-features{ margin:18px 0 18px; padding:6px 0 2px }
   .wow-feature{ text-align:center; padding:8px 6px }
