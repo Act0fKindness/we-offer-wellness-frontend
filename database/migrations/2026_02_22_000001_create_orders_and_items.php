@@ -6,35 +6,41 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        Schema::create('orders', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('email')->nullable();
-            $table->string('currency', 3)->default('gbp');
-            $table->unsignedBigInteger('amount_total')->default(0); // pence
-            $table->enum('status', ['pending','paid','cancelled','failed','refunded'])->default('pending');
-            $table->string('stripe_session_id')->nullable()->index();
-            $table->string('stripe_payment_intent_id')->nullable()->index();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('orders')) {
+            Schema::create('orders', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+                $table->string('email')->nullable();
+                $table->string('currency', 3)->default('gbp');
+                $table->unsignedBigInteger('amount_total')->default(0); // pence
+                $table->enum('status', ['pending','paid','cancelled','failed','refunded'])->default('pending');
+                $table->string('stripe_session_id')->nullable()->index();
+                $table->string('stripe_payment_intent_id')->nullable()->index();
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('order_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
-            $table->string('name');
-            $table->string('sku')->nullable();
-            $table->unsignedBigInteger('unit_amount'); // pence
-            $table->unsignedInteger('quantity');
-            $table->json('meta')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('order_items')) {
+            Schema::create('order_items', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
+                $table->string('name');
+                $table->string('sku')->nullable();
+                $table->unsignedBigInteger('unit_amount'); // pence
+                $table->unsignedInteger('quantity');
+                $table->json('meta')->nullable();
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('stripe_webhook_events', function (Blueprint $table) {
-            $table->id();
-            $table->string('event_id')->unique();
-            $table->string('type')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('stripe_webhook_events')) {
+            Schema::create('stripe_webhook_events', function (Blueprint $table) {
+                $table->id();
+                $table->string('event_id')->unique();
+                $table->string('type')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void {
@@ -43,4 +49,3 @@ return new class extends Migration {
         Schema::dropIfExists('orders');
     }
 };
-
