@@ -131,59 +131,23 @@
     return out;
   }
 
-  function renderCards(items){
+  function renderCardsHTML(html){
     if(!cardsEl) return;
-    if(!Array.isArray(items) || items.length===0){
+    if(typeof html !== 'string' || html.trim()===''){
       cardsEl.innerHTML = '<div class="text-muted">No options found. <a class="link-wow" href="' + cta.href + '">See all</a>.</div>';
       return;
     }
-    cardsEl.innerHTML = '';
-    items.forEach(function(it){
-      var a = document.createElement('a');
-      a.href = it.url || '#';
-      a.className = 'wow-card md';
-      var priceMin = normalizePrice(it.price_min);
-      if(priceMin != null && priceMin > 50 && price === 50) return; // keep under £50 when that tab is selected
-      a.innerHTML =
-        '<div class="wow-media">'
-          + '<img src="' + esc(it.image) + '" alt="' + esc(it.title) + '" loading="lazy">'
-        + '</div>'
-        + '<div class="wow-body">'
-          + '<div class="wow-type text-muted">' + esc(it.type || 'Experience') + '</div>'
-          + '<div class="wow-title">' + esc(it.title) + '</div>'
-          + (it.rating ? (
-              '<div class="rating-row" aria-label="Rating ' + Number(it.rating).toFixed(1) + ' out of 5' + (it.review_count? (' from ' + it.review_count + ' reviews') : '') + '">' +
-                '<span class="stars" aria-hidden="true">' + buildStarsHTML(it.rating) + '</span>' +
-                (it.review_count ? ('<span>(' + it.review_count + ')</span>') : '') +
-              '</div>'
-            ) : '')
-        + '</div>'
-        + '<div class="wow-bottom">'
-          + (priceMin != null ? ('<div class="price">£' + Number(priceMin).toFixed(2) + ' <small>from</small></div>') : '')
-          + '<div class="actions"><span class="link-wow">View</span></div>'
-        + '</div>';
-      cardsEl.appendChild(a);
-    });
-    try { cache[String(price)] = items; } catch(e){}
+    cardsEl.innerHTML = html;
+    try { cache[String(price)] = html; } catch(e){}
   }
 
   function fetchAndRender(){
     if(!cardsEl) return;
     cardsEl.innerHTML = '<div class="text-muted">Loading…</div>';
-    var url = '/api/products?mode=online&price_max=' + encodeURIComponent(price) + '&limit=12&sort=popular';
+    var url = '/api/product-cards?mode=online&price_max=' + encodeURIComponent(price) + '&limit=12&sort=popular';
     if(DEBUG) try{ console.log('Comfort fetch:', url); }catch(e){}
-    fetch(url, { headers: { 'Accept': 'application/json' }}).then(function(r){ return r.json(); }).then(function(items){
-      if(DEBUG){
-        try{
-          console.groupCollapsed('Comfort resp', price);
-          console.table((Array.isArray(items)?items:[]).map(function(x){
-            var n = normalizePrice(x.price_min ?? x.price);
-            return { id:x.id, title:x.title, price:x.price, price_min:x.price_min, norm:n, url:x.url };
-          }));
-          console.groupEnd();
-        }catch(e){}
-      }
-      renderCards(items);
+    fetch(url, { headers: { 'Accept': 'text/html' }}).then(function(r){ return r.text(); }).then(function(html){
+      renderCardsHTML(html);
     }).catch(function(){ cardsEl.innerHTML = '<div class="text-muted">Could not load options. Try again.</div>'; });
   }
 
@@ -201,7 +165,7 @@
       }
       // Use cache if available
       var cached = cache[String(price)];
-      if(Array.isArray(cached) && cached.length){ renderCards(cached); return; }
+      if(typeof cached === 'string' && cached){ renderCardsHTML(cached); return; }
       fetchAndRender();
     });
   });

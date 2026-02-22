@@ -239,6 +239,54 @@ require __DIR__.'/auth.php';
 
 // Lightweight JSON endpoints for frontend
 Route::get('/api/products', [ProductController::class, 'index']);
+// HTML fragments: render product cards via Blade for dynamic sections (e.g., comfort rail)
+Route::get('/api/product-cards', function (Request $request) {
+    $limit = (int) $request->integer('limit', 12);
+    $limit = max(1, min($limit, 24));
+    $pm = (float) $request->input('price_max', 50);
+    $mode = strtolower((string) $request->input('mode', 'online'));
+
+    $q = \App\Models\Product::query()
+        ->withCount('reviews')
+        ->withAvg('reviews', 'rating')
+        ->withMin('variants', 'price')
+        ->with(['media','options.values','category'])
+        ->where(function($w){
+            $w->whereHas('status', function($qs){ $qs->whereIn('status', ['live','approved']); })
+              ->orWhereNull('product_status_id');
+        });
+
+    if ($mode === 'online') {
+        $q->whereHas('options', function ($oq) {
+            $oq->where('meta_name', 'locations')
+               ->whereHas('values', function ($vq) { $vq->whereRaw("LOWER(value) = 'online'"); });
+        });
+    } elseif ($mode === 'in-person') {
+        $q->whereHas('options', function ($oq) {
+            $oq->where('meta_name', 'locations')
+               ->whereHas('values', function ($vq) { $vq->whereRaw("LOWER(value) <> 'online'"); });
+        });
+    }
+
+    // Price ceiling (unit-aware)
+    $q->where(function($qq) use ($pm){
+        $qq->where(function($qp) use ($pm){ $qp->where('price','<',1000)->where('price','<=',$pm); })
+           ->orWhere(function($qp) use ($pm){ $qp->where('price','>=',1000)->where('price','<=',$pm*100); })
+           ->orWhereHas('variants', function($qv) use ($pm){
+               $qv->where(function($qq2) use ($pm){ $qq2->where('price','<',1000)->where('price','<=',$pm); })
+                  ->orWhere(function($qq2) use ($pm){ $qq2->where('price','>=',1000)->where('price','<=',$pm*100); });
+           });
+    });
+
+    $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
+      ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+      ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+
+    $items = $q->limit($limit)->get();
+    $html = '';
+    foreach ($items as $p) { $html .= view('partials.product_card', ['product' => $p])->render(); }
+    return response($html, 200)->header('Content-Type', 'text/html');
+});
 Route::get('/api/articles', [ArticleController::class, 'index']);
 Route::get('/api/catalog', [CatalogController::class, 'index']);
 Route::get('/api/product-types', [ProductTypeController::class, 'index']);
