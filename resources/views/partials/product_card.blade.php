@@ -26,8 +26,29 @@
     $reviewCount = (int) ($product->reviews_count ?? 0);
 
     $locations = $product->getLocations();
-    $isOnline = in_array('Online', $locations, true);
+    // Normalize list and derive availability flags
+    $hasOnline = in_array('Online', $locations, true);
+    $isOnline = $hasOnline; // Back-compat with existing variable naming
     $physical = array_values(array_filter($locations, fn($l) => $l !== 'Online'));
+    // Build short unique labels for physical locations
+    $physicalShort = [];
+    $seenShort = [];
+    foreach ($physical as $locRaw) {
+        $short = $shortLocation2($locRaw);
+        $key = mb_strtolower($short ?? '');
+        if ($short && !isset($seenShort[$key])) { $seenShort[$key] = true; $physicalShort[] = $short; }
+    }
+    // Determine preferred/primary location if provided via context
+    $preferredLocation = $preferredLocation ?? ($currentLocation ?? (request()->get('location') ?? null));
+    $primary = null;
+    if ($preferredLocation) {
+        $prefKey = mb_strtolower($shortLocation2($preferredLocation));
+        foreach ($physicalShort as $ps) {
+            if (mb_strtolower($ps) === $prefKey) { $primary = $ps; break; }
+        }
+    }
+    if ($primary === null) { $primary = $physicalShort[0] ?? null; }
+    $remainingCount = max(0, count($physicalShort) - ($primary ? 1 : 0));
     $mode = $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null);
     $locBadge = $mode ?: ($category ?: null);
 
@@ -105,9 +126,10 @@
         $providerFormatted = null;
     }
     $durationLabel = $product->duration ?? null;
+    // Back-compat single label (used elsewhere) – first choice or Online-only
     $locationLabel = ($isOnline && count($physical)===0)
         ? 'Online'
-        : (count($physical) ? $shortLocation2($physical[0] ?? '') : null);
+        : ($primary ?: null);
     $nextLabel = $product->next_label ?? $product->next ?? null;
     $benefitText = $product->benefit ?? ($product->summary ?? null);
     $fomoText = $product->fomo_text ?? null;
@@ -199,6 +221,19 @@
   .wow-therapy-card-scope .star::after{ content:""; position:absolute; inset:0; background:#333; pointer-events:none; -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%20stroke-linecap%3D%27round%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%20stroke-linecap%3D%27round%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat }
   .wow-therapy-card-scope .meta{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; margin-bottom:8px; color: rgba(11,18,32,.62); font-size: var(--meta); font-weight:400 }
   .wow-therapy-card-scope .meta .item{ display:flex; align-items:center; gap:6px; white-space:nowrap }
+  .wow-therapy-card-scope .meta .label{ display:inline-block; max-width:140px; overflow:hidden; text-overflow:ellipsis }
+  .wow-therapy-card-scope .meta .chip{ display:inline-flex; align-items:center; gap:4px; cursor:pointer; color: rgba(11,18,32,.72) }
+  .wow-therapy-card-scope .meta .chip:hover{ color: rgba(11,18,32,.92) }
+  .wow-therapy-card-scope .meta .chip svg{ width: var(--metaIcon); height: var(--metaIcon) }
+  /* Popover for (+N) overflow */
+  .wow-therapy-card-scope .loc-overflow{ position:relative; }
+  .wow-therapy-card-scope .loc-popover{ position:absolute; top:100%; left:0; margin-top:6px; width:240px; max-width:80vw; background:#fff; border:1px solid rgba(16,24,40,.12); box-shadow:0 10px 30px rgba(16,24,40,.12); border-radius:6px; padding:10px; z-index:20; display:none }
+  .wow-therapy-card-scope .loc-popover h4{ margin:0 0 8px; font-size:12px; font-weight:700; color:#0b1220 }
+  .wow-therapy-card-scope .loc-popover .list{ display:flex; flex-wrap:wrap; gap:6px }
+  .wow-therapy-card-scope .loc-popover .pill{ border:1px solid rgba(16,24,40,.14); border-radius:999px; padding:4px 8px; font-size:12px; color:#0b1220; display:inline-flex; align-items:center; gap:4px }
+  .wow-therapy-card-scope .loc-popover .link{ display:block; margin-top:8px; font-size:12px; color:#1f3a77; text-decoration:underline }
+  /* Show popover on hover/focus for desktop */
+  @media (hover:hover){ .wow-therapy-card-scope .loc-overflow:hover .loc-popover, .wow-therapy-card-scope .loc-overflow:focus-within .loc-popover{ display:block } }
   .wow-therapy-card-scope .content-bottom{ flex:0 0 auto; margin-top:auto; padding:15px; border-top:1px solid rgba(16,24,40,.10); background:#fff }
   .wow-therapy-card-scope .fomo{ margin:0 0 8px; font-size: var(--fomo); font-weight:600; color: rgba(11,18,32,.84); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
   .wow-therapy-card-scope .price{ display:flex; align-items:baseline; gap:8px; margin:0 0 12px }
@@ -300,23 +335,62 @@
             @if($durationLabel)
               <span class="item">{{ $durationLabel }}</span>
             @endif
-            @if($locationLabel)
+
+            {{-- Location tokens: max two tokens + overflow --}}
+            @if($hasOnline && $primary === null)
+              {{-- A) Online only --}}
               <span class="item">
-                @if($isOnline && count($physical)===0)
-                  <!-- Globe icon for Online -->
-                  <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                  </svg>
-                @else
-                  <!-- Pin icon for physical locations -->
-                  <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.8 13.938h-.011a7 7 0 1 0-11.464.144h-.016l.14.171c.1.127.2.251.3.371L12 21l5.13-6.248c.194-.209.374-.429.54-.659l.13-.155Z"/>
-                  </svg>
-                @endif
-                {{ $locationLabel }}
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                <span class="label">Online</span>
               </span>
+            @elseif(!$hasOnline && $primary && $remainingCount === 0)
+              {{-- B) One in-person location only --}}
+              <span class="item">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.8 13.938h-.011a7 7 0 1 0-11.464.144h-.016l.14.171c.1.127.2.251.3.371L12 21l5.13-6.248c.194-.209.374-.429.54-.659l.13-.155Z"/></svg>
+                <span class="label">{{ $primary }}</span>
+              </span>
+            @else
+              {{-- C, D, E: combinations with Online and/or many locations --}}
+              @if($hasOnline)
+                <span class="item">
+                  <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                  <span class="label">Online</span>
+                </span>
+              @endif
+              @if($primary)
+                <span class="item">
+                  <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.8 13.938h-.011a7 7 0 1 0-11.464.144h-.016l.14.171c.1.127.2.251.3.371L12 21l5.13-6.248c.194-.209.374-.429.54-.659l.13-.155Z"/></svg>
+                  <span class="label">{{ $primary }}</span>
+                </span>
+              @endif
+              @if($remainingCount > 0)
+                <span class="item loc-overflow">
+                  <a class="chip" href="{{ $url }}#locations" aria-haspopup="dialog" aria-expanded="false">(+{{ $remainingCount }})</a>
+                  <div class="loc-popover" role="dialog" aria-label="Available locations">
+                    <h4>Available locations</h4>
+                    <div class="list">
+                      @if($hasOnline)
+                        <span class="pill">
+                          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                          Online
+                        </span>
+                      @endif
+                      @php $shown = 0; @endphp
+                      @foreach($physicalShort as $ps)
+                        @continue(mb_strtolower($ps) === mb_strtolower($primary))
+                        @php if ($shown++ >= 6) break; @endphp
+                        <span class="pill">
+                          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.8 13.938h-.011a7 7 0 1 0-11.464.144h-.016l.14.171c.1.127.2.251.3.371L12 21l5.13-6.248c.194-.209.374-.429.54-.659l.13-.155Z"/></svg>
+                          {{ $ps }}
+                        </span>
+                      @endforeach
+                    </div>
+                    <a class="link" href="{{ $url }}#locations">View all locations</a>
+                  </div>
+                </span>
+              @endif
             @endif
+
             @if($nextLabel)
               <span class="item">Next: {{ $nextLabel }}</span>
             @endif
