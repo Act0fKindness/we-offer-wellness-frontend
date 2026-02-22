@@ -23182,9 +23182,9 @@ a:hover {
 .kicker {
     display: inline-flex;
     align-items: center;
-    padding: 0px;
+    padding: 0px !important;
     font-size: 13px;
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
     background: none;
     font-weight: 600;
     border: none;
@@ -26689,9 +26689,9 @@ document.addEventListener('DOMContentLoaded', function(){
   .kicker{
     display: inline-flex;
     align-items: center;
-    padding: 0 0 10px;
+    padding: 0px !important;
     font-size: 13px;
-    margin-bottom: 5px;
+    margin-bottom: 0 !important;
     background: none;
     font-weight: 600;
     border: none;
