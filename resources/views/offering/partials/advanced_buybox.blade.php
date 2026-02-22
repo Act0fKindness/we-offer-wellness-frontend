@@ -103,6 +103,12 @@
                 <div class="text-secondary small" id="ratingText"></div>
             </div>
 
+            <!-- Format block (In-person / Online) -->
+            <div id="bbFormatBlock" class="mb-2" style="display:none">
+                <div class="text-secondary small mb-1">Format</div>
+                <div id="bbFormatPills" class="pills" role="radiogroup" aria-label="Format"></div>
+            </div>
+
             <div id="options"></div>
 
             <div class="group-range mb-3" id="groupRange">
@@ -739,7 +745,7 @@ confirmBooking.addEventListener('click',()=>{if(!(calendarState.selectedDate && 
 bookingModalEl.addEventListener('shown.bs.modal',()=>{bookingModalContent.classList.remove('mobile-times');if(!calDayNames.children.length){populateTimezones();}renderCalendar();renderSlots();updateSummary()});
 // (mode note removed)
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
-function init(){renderStars();buildOptions();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
+function init(){renderStars();buildFormatBlock();buildOptions();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
 init();
 
 // Listen for external variant selection (from Product Data Helper)
