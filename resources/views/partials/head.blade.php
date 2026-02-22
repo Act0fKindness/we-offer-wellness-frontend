@@ -26497,7 +26497,7 @@ body, button, .btn, input, select, textarea { font-family: 'Manrope', var(--bs-f
 /* Section headings (homepage/landing/product section blocks) */
 .wow-section-title, .section-title, .home-section-title, .landing-section-title { font-family: 'Playfair Display', Georgia, serif; }
 /* Use Playfair for H2 page titles (e.g., section titles like the example) */
-h2 { font-family: 'Playfair Display', Georgia, serif; }
+h2 { font-family: 'Playfair Display', Georgia, serif; font-weight: 500; }
 /* Parenthetical text in titles uses Manrope */
 .paren-manrope {
   font-size: 20px;
