@@ -57,7 +57,7 @@
     /* Sessions dropdown */
     .sessions-dd{margin:10px 0}
     .sd-label{font-size:.9rem;color:#6b7280;margin-bottom:6px}
-    .sd-trigger{display:flex;align-items:center;justify-content:space-between;width:100%;height:46px;border:1px solid #e5e7eb;background:#fff;border-radius:12px;padding:.5rem .75rem;cursor:pointer}
+    .sd-trigger{display:flex;align-items:center;justify-content:space-between;width:100%;height:46px;border:1px solid #549483;background:#fff;border-radius:12px;border-color:#549483;box-shadow:0 6px 16px rgba(0,0,0,.15);padding:.5rem .75rem;cursor:pointer}
     .sd-trigger:focus{outline:2px solid #549483}
     .sd-trigger .sd-val{display:flex;align-items:center;gap:.4rem;font-weight:600;color:#0f172a}
     .sd-badge{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;padding:.15rem .5rem;font-size:.75rem;background:#e8f4f1;color:#2b675b;border:1px solid #c7e5d9}
