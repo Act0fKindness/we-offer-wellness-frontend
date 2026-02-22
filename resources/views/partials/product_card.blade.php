@@ -26,6 +26,16 @@
     $physical = array_values(array_filter($locations, fn($l) => $l !== 'Online'));
     $mode = $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null);
     $locBadge = $mode ?: ($category ?: null);
+
+    // Additional fields for exact card details
+    $provider = $product->vendor ?? $product->practitioner_name ?? null;
+    $durationLabel = $product->duration ?? null;
+    $locationLabel = ($isOnline && count($physical)===0) ? 'Online' : (count($physical) ? ($physical[0] ?? null) : null);
+    $nextLabel = $product->next_label ?? $product->next ?? null;
+    $benefitText = $product->benefit ?? ($product->summary ?? null);
+    $fomoText = $product->fomo_text ?? null;
+    $compareMin = $product->variants_min_compare ?? ($product->compare_at_price ?? null);
+    if (is_numeric($compareMin) && $compareMin > 1000 && $compareMin % 100 === 0) { $compareMin = $compareMin / 100; }
 @endphp
 
 @once
@@ -74,12 +84,8 @@
       <header class="card-top">
         <div class="card-top-left">
           <div class="badges">
-            @if($rating && $reviewCount)
-              <span class="badge badge--cool">Top Rated</span>
-            @endif
-            @if($locBadge)
-              <span class="badge badge--warm">{{ $locBadge }}</span>
-            @endif
+            <span class="badge badge--warm">Filling Fast</span>
+            <span class="badge badge--cool">Top Rated</span>
           </div>
         </div>
         <button class="save" type="button" aria-label="Save" aria-pressed="false" title="Save">
@@ -94,17 +100,30 @@
       <div class="content">
         <div class="content-top">
           <h2 class="title">{{ $title }}</h2>
-          @if(!empty($category))<p class="provider">{{ $category }}</p>@endif
-          @if($rating)
-            <div class="rating-row">★ {{ number_format($rating,1) }} @if($reviewCount) <span>({{ $reviewCount }})</span>@endif</div>
+          @if($provider)<p class="provider">with {{ $provider }}</p>@endif
+          @if($reviewCount)
+            <div class="rating-row"><span>({{ $reviewCount }})</span></div>
           @endif
+          <div class="meta">
+            @if($durationLabel)<span class="item">{{ $durationLabel }}</span>@endif
+            @if($locationLabel)<span class="item">{{ $locationLabel }}</span>@endif
+            @if($nextLabel)<span class="item">Next: {{ $nextLabel }}</span>@endif
+          </div>
+          @if($benefitText)<div class="benefit">{{ $benefitText }}</div>@endif
         </div>
         <div class="content-bottom">
+          @if($fomoText)<p class="fomo">{{ $fomoText }}</p>@endif
           @if($priceMin)
-            <div class="price"><span class="from">From</span><span class="now">£{{ number_format((float)$priceMin, 2) }}</span></div>
+            <div class="price">
+              <span class="from">From</span>
+              <span class="now">£{{ number_format((float)$priceMin, 2) }}</span>
+              @if($compareMin && $compareMin > $priceMin)
+                <span class="was">(was £{{ number_format((float)$compareMin, 2) }})</span>
+              @endif
+            </div>
           @endif
           <div class="actions">
-            <span class="btn">View</span>
+            <span class="btn">Add to cart</span>
             <span class="btn btn--primary">Book now</span>
           </div>
         </div>
