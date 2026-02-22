@@ -52,6 +52,13 @@
           </div>
         @endif
 
+        @if($summary !== '')
+        <div class="card p-4 mt-4">
+          <h3 class="h5">Summary</h3>
+          <div class="prose" style="max-width: 70ch;">{!! nl2br(e($summary)) !!}</div>
+        </div>
+        @endif
+
         @if($body !== '')
         <div class="card p-4 mt-4">
           <h3 class="h5">About this experiences</h3>
