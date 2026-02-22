@@ -349,6 +349,16 @@ function displayName(name){
   return name || 'Option';
 }
 // ===== Sessions dropdown helpers =====
+function availableValuesForOption(optIdx){
+  try{
+    const seen = new Set(); const out = [];
+    (product.variants||[]).forEach(v=>{
+      const val = String((v.options||[])[optIdx]||'');
+      if(val && !seen.has(val)) { seen.add(val); out.push(val); }
+    });
+    return out;
+  }catch(e){ return (product.options?.[optIdx]?.values)||[] }
+}
 function parseSessions(val){
   try{
     const m = String(val||'').match(/(\d+)/);
@@ -395,8 +405,8 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
   const pop = document.createElement('div'); pop.className='sd-popover'; pop.style.display='none'; pop.setAttribute('role','listbox');
 
   // Build options grouped by sessions count
-  const values = (opt.values||[]).map(v=>String(v||''));
-  const uniqCounts = Array.from(new Set(values.map(parseSessions).filter(Boolean))).sort((a,b)=>a-b);
+  const valuesAll = availableValuesForOption(optIdx);
+  const uniqCounts = Array.from(new Set(valuesAll.map(parseSessions).filter(Boolean))).sort((a,b)=>a-b);
   const best = computeBestValue(product.variants, optIdx);
 
   function labelForCount(n){ return `${n} Sessions`; }
@@ -412,8 +422,9 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
     return { total, unit };
   }
   function optionValueForCount(n){
-    // Pick the first option value whose parsed sessions equals n
-    return values.find(v => parseSessions(v)===n) || String(n);
+    // Pick the first available option value whose parsed sessions equals n
+    const vals = valuesAll;
+    return vals.find(v => parseSessions(v)===n) || String(n);
   }
 
   function renderPopover(){
@@ -462,7 +473,16 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
 
   function updateTrigger(){
     const cur = String(state.selected[optIdx]||'');
-    const n = parseSessions(cur) || uniqCounts[0] || 1;
+    let n = parseSessions(cur);
+    // If current selection isn't among available, reset to first
+    const validVals = valuesAll;
+    if(!validVals.includes(cur)){
+      const fallback = validVals[0] || '';
+      state.selected[optIdx] = fallback;
+      n = parseSessions(fallback) || uniqCounts[0] || 1;
+    } else {
+      n = n || (uniqCounts[0] || 1);
+    }
     left.innerHTML = '';
     const label = document.createElement('span'); label.textContent = `${n} Sessions`;
     left.appendChild(label);
@@ -497,7 +517,10 @@ function buildOptionsInto(container){
     } else {
       const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=displayName(opt.name); container.appendChild(label);
       const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
-      (opt.values||[]).forEach(val=>{
+      const vals = availableValuesForOption(optIdx);
+      // If current selection is not available, set to first available
+      if(vals.length && !vals.includes(String(state.selected[optIdx]||''))){ state.selected[optIdx] = String(vals[0]); }
+      vals.forEach(val=>{
         const txt = String(val||'');
         const b=document.createElement("button"); b.type="button"; b.className="pill"; b.setAttribute("role","radio"); b.dataset.optIdx=String(optIdx); b.dataset.optValue=txt;
         b.setAttribute("aria-checked", txt===state.selected[optIdx] ? "true":"false"); b.textContent=txt;
