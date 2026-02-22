@@ -210,16 +210,11 @@
     animateCart(ev?.detail);
   });
   window.addEventListener('wow:open-cart', function(ev){ setTimeout(function(){ updateBadge(); if(pop){ CartClient.renderMini(pop); } open(); fetchMini(true); }, 160); });
-  function animateCart(detail){
-    // Keep this subtle and 100% safe — no background-image ghosts
-    try{ btn.classList.add('cart-pulse'); setTimeout(function(){ btn.classList.remove('cart-pulse'); }, 400); }catch(_){ }
-  }
+  function animateCart(detail){ /* animations disabled per request */ }
 })();
 </script>
 <style>
 .mini-cart-popover{ position:absolute; right:0; top:100%; margin-top:8px; z-index:1000 }
-.js-cart-toggle.cart-pulse{ animation: cartPulse .6s ease }
-@keyframes cartPulse{ 0%{ transform: scale(1)} 30%{ transform: scale(1.12)} 100%{ transform: scale(1)} }
 /* Removed image-based fly animation to prevent rare layout glitches */
 </style>
         <!-- Mobile menu (drawer) -->
