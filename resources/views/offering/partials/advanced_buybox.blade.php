@@ -568,6 +568,7 @@ function buildOptionsInto(container){
     } else {
       const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=displayName(opt.name); container.appendChild(label);
       const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
+      if (optIdx===locIdx){ row.classList.add(container===sheetOptions ? 'sheet-location-row' : 'bb-location-row'); }
       const vals = availableValuesForOption(optIdx, { contextAware: false });
       // If current selection is not available, set to first available
       if(vals.length && !vals.includes(String(state.selected[optIdx]||''))){ state.selected[optIdx] = String(vals[0]); }
@@ -580,10 +581,10 @@ function buildOptionsInto(container){
           syncOptionAria(optIdx);
           if (optIdx===locIdx) { try{ syncFormatUI(); }catch(e){} }
           updateVariant();
-        updateSheetSubtotal();
-        try{ setTimeout(()=>buildOptions(),0); }catch(e){}
-        if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
-      });
+          updateSheetSubtotal();
+          try{ setTimeout(()=>buildOptions(),0); }catch(e){}
+          if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
+        });
         row.appendChild(b)
       });
       container.appendChild(row)
@@ -629,6 +630,11 @@ function syncFormatUI(){
       var isOnline = String(p.dataset.variantLocation||'').toLowerCase()==='online';
       p.setAttribute('aria-checked', online ? (isOnline?'true':'false') : (!isOnline?'true':'false'));
     });
+    // Hide location option rows when Online is selected; show when In-person
+    try{
+      document.querySelectorAll('.bb-location-row').forEach(function(el){ el.style.display = online ? 'none' : ''; });
+      document.querySelectorAll('.sheet-location-row').forEach(function(el){ el.style.display = online ? 'none' : ''; });
+    } catch(e){}
   }catch(e){}
 }
 function buildFormatBlock(){
