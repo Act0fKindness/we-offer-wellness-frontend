@@ -31,6 +31,40 @@
     $mode = $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null);
     $locBadge = $mode ?: ($category ?: null);
 
+    // Helper: shorten physical address to "Place, City" (or just City)
+    $shortLocation = function($address){
+        try {
+            $s = trim((string)$address);
+            if ($s === '') return $s;
+            // Remove country labels
+            $s = preg_replace('/\b(United Kingdom|UK|England|Scotland|Wales|Northern Ireland)\b/i', '', $s);
+            // Remove UK postcodes (e.g., SE24 0PA)
+            $s = preg_replace('/\b[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}\b/i', '', $s);
+            // Collapse whitespace
+            $s = preg_replace('/\s+/', ' ', $s);
+            // Split by comma and trim
+            $parts = array_values(array_filter(array_map('trim', explode(',', $s)), fn($p) => $p !== ''));
+            if (count($parts) >= 2) {
+                $place = $parts[0];
+                $city = null;
+                // pick last non-street-like segment as city
+                for ($i = count($parts) - 1; $i >= 1; $i--) {
+                    $p = $parts[$i];
+                    if (!preg_match('/\b(rd|road|street|st|avenue|ave|lane|ln|drive|dr|way|close|cl|place|pl|boulevard|blvd)\b/i', $p)) {
+                        $city = $p; break;
+                    }
+                }
+                if ($city === null) { $city = end($parts); }
+                if (strcasecmp($place, $city) === 0) return $city;
+                return trim($place . ', ' . $city);
+            }
+            if (count($parts) === 1) return $parts[0];
+            return $s;
+        } catch (\Throwable $e) {
+            return (string)$address;
+        }
+    };
+
     // Additional fields for exact card details
     $provider = $product->vendor_name
         ?? (is_object($product->vendor ?? null) ? ($product->vendor->vendor_name ?? null) : null)
@@ -45,7 +79,9 @@
         $providerFormatted = null;
     }
     $durationLabel = $product->duration ?? null;
-    $locationLabel = ($isOnline && count($physical)===0) ? 'Online' : (count($physical) ? ($physical[0] ?? null) : null);
+    $locationLabel = ($isOnline && count($physical)===0)
+        ? 'Online'
+        : (count($physical) ? $shortLocation($physical[0] ?? '') : null);
     $nextLabel = $product->next_label ?? $product->next ?? null;
     $benefitText = $product->benefit ?? ($product->summary ?? null);
     $fomoText = $product->fomo_text ?? null;
