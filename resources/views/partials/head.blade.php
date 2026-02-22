@@ -26499,7 +26499,17 @@ body, button, .btn, input, select, textarea { font-family: 'Manrope', var(--bs-f
 /* Use Playfair for H2 page titles (e.g., section titles like the example) */
 h2 { font-family: 'Playfair Display', Georgia, serif; }
 /* Parenthetical text in titles uses Manrope */
-.paren-manrope { font-family: 'Manrope', var(--bs-font-sans-serif) !important; font-weight: inherit; }
+.paren-manrope {
+  font-size: 20px;
+  font-family: 'Manrope', var(--bs-font-sans-serif) !important;
+  font-weight: inherit;
+}
+@media (max-width: 860px){
+  .paren-manrope { font-size: 18px; }
+}
+@media (max-width: 520px){
+  .paren-manrope { font-size: 16px; }
+}
 </style>
 <script>
 // Wrap parenthetical parts of titles in a span with Manrope font
