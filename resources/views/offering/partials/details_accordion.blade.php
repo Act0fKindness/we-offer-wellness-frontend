@@ -15,7 +15,7 @@
   .wow-acc-header{ width:100%; background:transparent; border:0; padding:14px 0; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer }
   .wow-acc-left{ display:flex; align-items:flex-start; gap:10px; min-width:0 }
   .wow-acc-left:before{ content:""; width:4px; height:22px; border-radius:999px; background:var(--wow-accent); margin-top:3px; flex:0 0 auto }
-  .wow-acc-title{ font-size:20px; font-weight:900; margin:0; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .wow-acc-title{ font-size:20px; font-weight:400; margin:0; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
   .wow-acc-icon{ width:38px; height:38px; border-radius:999px; display:flex; align-items:center; justify-content:center; color:var(--wow-accent); font-size:20px }
   .wow-acc-body{ padding:0 0 14px 14px }
   .wow-section-title{ display:flex; align-items:flex-start; gap:10px; font-size:22px; font-weight:400; margin:0 0 10px }
