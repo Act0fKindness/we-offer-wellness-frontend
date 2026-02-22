@@ -26498,7 +26498,34 @@ body, button, .btn, input, select, textarea { font-family: 'Manrope', var(--bs-f
 .wow-section-title, .section-title, .home-section-title, .landing-section-title { font-family: 'Playfair Display', Georgia, serif; }
 /* Use Playfair for H2 page titles (e.g., section titles like the example) */
 h2 { font-family: 'Playfair Display', Georgia, serif; }
+/* Parenthetical text in titles uses Manrope */
+.paren-manrope { font-family: 'Manrope', var(--bs-font-sans-serif) !important; font-weight: inherit; }
 </style>
+<script>
+// Wrap parenthetical parts of titles in a span with Manrope font
+document.addEventListener('DOMContentLoaded', function(){
+  try {
+    var selectors = [
+      'h1','h2','h3',
+      '.wow-title',
+      '.section-title','.home-section-title','.landing-section-title','.wow-section-title'
+    ];
+    var nodes = document.querySelectorAll(selectors.join(','));
+    nodes.forEach(function(el){
+      try {
+        if (!el) return;
+        var html = String(el.innerHTML || '');
+        if (html.indexOf('paren-manrope') !== -1) return; // already processed
+        // Replace (...) with <span class="paren-manrope">(...)</span>
+        var replaced = html.replace(/\(([^()]+)\)/g, function(_, inner){
+          return '<span class="paren-manrope">(' + inner + ')</span>';
+        });
+        if (replaced !== html) el.innerHTML = replaced;
+      } catch(_) {}
+    });
+  } catch(_) {}
+});
+</script>
 <link rel="modulepreload" as="script" crossorigin="" href="/build/assets/Home-PUJfnV1T.js">
 <link rel="modulepreload" as="script" crossorigin="" href="/build/assets/SiteLayout-DKnyduE5.js">
 <link rel="modulepreload" as="script" crossorigin="" href="/build/assets/_plugin-vue_export-helper-1tPrXgE0.js">
