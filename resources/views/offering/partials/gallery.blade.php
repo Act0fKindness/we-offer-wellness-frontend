@@ -162,8 +162,7 @@
         gallery.dataset.arrows = pageCount > 1 ? "on" : "off";
 
         pages.forEach((set) => {
-          const filled = [...set];
-          while (filled.length < 4 && filled.length > 0) filled.push(filled[filled.length - 1]);
+          if (!set || set.length === 0) return;
 
           const page = document.createElement("div");
           page.className = "page";
@@ -171,14 +170,14 @@
           const mosaic = document.createElement("div");
           mosaic.className = "mosaic";
 
-          if (filled[0]) mosaic.appendChild(tile(filled[0], "tile--big"));
+          if (set[0]) mosaic.appendChild(tile(set[0], "tile--big"));
 
           const right = document.createElement("div");
           right.className = "rightGrid";
 
-          if (filled[1]) right.appendChild(tile(filled[1], "tile--r1"));
-          if (filled[2]) right.appendChild(tile(filled[2], "tile--r2"));
-          if (filled[3]) right.appendChild(tile(filled[3], "tile--tall"));
+          if (set[1]) right.appendChild(tile(set[1], "tile--r1"));
+          if (set[2]) right.appendChild(tile(set[2], "tile--r2"));
+          if (set[3]) right.appendChild(tile(set[3], "tile--tall"));
 
           mosaic.appendChild(right);
           page.appendChild(mosaic);
@@ -284,4 +283,3 @@
     })();
   </script>
 </section>
-
