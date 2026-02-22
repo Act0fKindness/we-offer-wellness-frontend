@@ -103,9 +103,15 @@
     /* ===== Modal (scoped to gallery) ===== */
     #wowGallery .modal{ position: fixed; inset: 0; display: none; z-index: 3000; }
     #wowGallery .modal[aria-hidden="false"]{ display:block; }
-    #wowGallery .modal__overlay{ position:absolute; inset:0; background: rgba(0,0,0,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index:0; }
+    #wowGallery .modal__overlay{ position:absolute; inset:0; background: rgba(0,0,0,.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index:0; }
     #wowGallery .modal__top{ position:absolute; top: 18px; left: 0; right: 0; display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; padding:0 18px; z-index:1; }
-    #wowGallery .modal__count{ justify-self:center; color: rgba(255,255,255,.72); font-weight:700; letter-spacing:.06em; font-size:12px; }
+    #wowGallery .modal__count{
+      justify-self:center; color: rgba(255,255,255,.85); font-weight:700; letter-spacing:.08em; font-size:13px;
+      /* Digital number font stack with sensible fallbacks */
+      font-family: "DS-Digital","Digital-7","DSEG7Classic","Segment7Standard","Seven Segment", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 1px 0 rgba(0,0,0,.35);
+    }
     #wowGallery .modal__close{ pointer-events:auto; justify-self:end; width:38px; height:38px; border-radius:999px; border:0; background: rgba(255,255,255,.92); color: rgba(11,18,32,.85); display:grid; place-items:center; cursor:pointer; box-shadow: 0 12px 26px rgba(0,0,0,.22); transition: transform 180ms ease, filter 180ms ease; z-index:2; }
     #wowGallery .modal__close:hover{ transform: scale(1.06); filter: brightness(1.02); }
     #wowGallery .modal__close:active{ transform: scale(.98); }
