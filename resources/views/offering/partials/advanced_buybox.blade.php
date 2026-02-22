@@ -644,7 +644,9 @@ function buildFormatBlock(){
   var vals=((product.options[locIdx]||{}).values||[]).map(function(v){ return String(v||'') });
   var hasOnline=vals.some(function(v){ return v.toLowerCase()==='online' });
   var phys=vals.filter(function(v){ return v && v.toLowerCase()!=='online' });
-  var hasPhys=phys.length>0; if(!(hasOnline||hasPhys)){ block.style.display='none'; return; }
+  var hasPhys=phys.length>0;
+  // Show Format only if there is at least one non-Online (in-person) value
+  if(!hasPhys){ block.style.display='none'; return; }
   function makeBtn(label, dataVal){ var b=document.createElement('button'); b.type='button'; b.className='pill'; b.setAttribute('role','radio'); b.dataset.variantLocation=dataVal; b.textContent=label; b.setAttribute('aria-checked','false'); return b; }
   if(hasPhys){ var inBtn=makeBtn('In-person', phys[0]); inBtn.addEventListener('click', function(){ state.selected[locIdx]=phys[0]; syncFormatUI(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(inBtn); }
   if(hasOnline){ var onBtn=makeBtn('Online', 'Online'); onBtn.addEventListener('click', function(){ state.selected[locIdx]='Online'; syncFormatUI(); syncOptionAria(locIdx); updateVariant(); }); pills.appendChild(onBtn); }
