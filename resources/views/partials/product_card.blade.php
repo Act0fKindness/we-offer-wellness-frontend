@@ -227,7 +227,9 @@
     max-width: 140px;
     letter-spacing: normal;
     margin-left: 0px;
+    font-size: 12px;
     padding-left: 0px;
+    font-weight: normal;
     text-transform: capitalize;
     overflow: hidden;
     text-overflow: ellipsis;
