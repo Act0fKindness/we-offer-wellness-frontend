@@ -770,6 +770,15 @@ onBeforeUnmount(() => {
   --brand-accent:#2c6bed;
   --accent-600:#e3572f;
 }
+.wow-ultra .seg-label,
+.wow-ultra .seg input,
+.wow-ultra .where-editor,
+.wow-ultra .summary,
+.wow-ultra .pane,
+.wow-ultra .pane .section-title,
+.wow-ultra .listy,
+.wow-ultra .item,
+.wow-ultra .item .title{ font-family: 'Manrope', var(--bs-font-sans-serif) !important; }
 
 .wow-ultra .bar{
   background:#fff;
