@@ -159,7 +159,7 @@
 
         </div>
         <div class="content-bottom">
-          @if($fomoText)<p class="fomo">{{ $fomoText }}</p>@endif
+          <p class="fomo">Filling fast — only 2 slots left this week</p>
           @if($priceMin)
             <div class="price">
               <span class="from">From</span>
