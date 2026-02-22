@@ -101,7 +101,7 @@
       #wowGallery .arrow--right{ right:10px; }
     }
     /* ===== Modal (scoped to gallery) ===== */
-    #wowGallery .modal{ position: fixed; inset: 0; display: none; z-index: 1000; }
+    #wowGallery .modal{ position: fixed; inset: 0; display: none; z-index: 3000; }
     #wowGallery .modal[aria-hidden="false"]{ display:block; }
     #wowGallery .modal__overlay{ position:absolute; inset:0; background: rgba(0,0,0,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index:0; }
     #wowGallery .modal__top{ position:absolute; top: 18px; left: 0; right: 0; display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; padding:0 18px; z-index:1; }
@@ -128,6 +128,10 @@
     @media (prefers-reduced-motion: reduce){
       #wowGallery .track, #wowGallery .tile img, #wowGallery .arrow, #wowGallery .arrow svg, #wowGallery .modal__close, #wowGallery .modal__nav{ transition:none !important; }
     }
+
+    /* While modal is open, prevent helper panel from intercepting clicks */
+    .wow-modal-open .wow-helper{ pointer-events: none !important; }
+    .wow-modal-open .wow-helper .toggle{ pointer-events: none !important; }
   </style>
 
   <button class="arrow arrow--left" id="prevBtn" type="button" aria-label="Previous images">
@@ -370,13 +374,13 @@
         lastFocusEl = document.activeElement;
         modalIndex = Math.max(0, Math.min(images.length - 1, (index ?? 0)));
         modal.setAttribute('aria-hidden','false');
-        try{ document.body.style.overflow = 'hidden'; }catch{}
+        try{ document.body.style.overflow = 'hidden'; document.body.classList.add('wow-modal-open'); }catch{}
         renderModal();
         try{ modalClose.focus({preventScroll:true}); }catch{}
       }
       function closeModal(){
         modal.setAttribute('aria-hidden','true');
-        try{ document.body.style.overflow = ''; }catch{}
+        try{ document.body.style.overflow = ''; document.body.classList.remove('wow-modal-open'); }catch{}
         modalImg.src = '';
         if(lastFocusEl && typeof lastFocusEl.focus === 'function') try{ lastFocusEl.focus(); }catch{}
       }
