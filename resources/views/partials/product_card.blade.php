@@ -62,7 +62,7 @@
   .wow-therapy-card-scope .media img{ width:100%; height:100%; object-fit:cover; display:block; border-radius:2px }
   .wow-therapy-card-scope .content{ padding: var(--padContentY) var(--padContentX); flex:1 1 auto; display:flex; flex-direction:column; min-height:0 }
   .wow-therapy-card-scope .content-top{ flex:1 1 auto; min-height:0; overflow:hidden }
-  .wow-therapy-card-scope .title{ margin:0 0 6px; font-size: var(--title); font-weight:400 !important; line-height:1.12; margin-top:10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family: 'Manrope', var(--bs-font-sans-serif) !important }
+  .wow-therapy-card-scope .title{ margin:0 0 6px; font-size: var(--title); font-weight:400 !important; line-height:1.12; margin-top:10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family: 'Manrope', var(--bs-font-sans-serif) !important; text-transform: capitalize }
   .wow-therapy-card-scope .provider{ margin:0 0 8px; color: var(--muted); font-size: var(--provider); font-weight:400 }
   .wow-therapy-card-scope .rating-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; color: rgba(11,18,32,.80); font-weight:400; font-size: var(--rating) }
   .wow-therapy-card-scope .stars{ display:inline-flex; align-items:center; gap:3px; transform: translateY(1px) }
