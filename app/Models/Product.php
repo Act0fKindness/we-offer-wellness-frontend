@@ -116,9 +116,20 @@ class Product extends Model
      *
      * @return string
      */
-    public function getSummaryAttribute()
+    public function getSummaryAttribute(?string $value): ?string
     {
-        $cleanedText = strip_tags(html_entity_decode($this->body_html));
+        if (filled($value)) {
+            return $value;
+        }
+
+        $source = $this->description ?? $this->body_html ?? '';
+        $decoded = html_entity_decode($source, ENT_QUOTES | ENT_HTML5);
+        $cleanedText = trim(preg_replace('/\s+/', ' ', strip_tags($decoded) ?? ''));
+
+        if ($cleanedText === '') {
+            return null;
+        }
+
         return Str::limit(Str::words($cleanedText, 30, ''), 150, '...');
     }
 

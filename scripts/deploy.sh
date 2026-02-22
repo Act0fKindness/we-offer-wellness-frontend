@@ -54,7 +54,7 @@ if [[ "$NO_VERIFY" != "true" ]]; then
   echo "==> Verifying Blade layout/partials integrity"
   HEAD_PARTIAL="resources/views/partials/head.blade.php"
   LAYOUT="resources/views/layouts/app.blade.php"
-  HOME="resources/views/home/index.blade.php"
+  HOME_VIEW="resources/views/home/index.blade.php"
   contains() {
     local needle="$1"; shift
     local file="$1"; shift
@@ -67,11 +67,17 @@ if [[ "$NO_VERIFY" != "true" ]]; then
     die_or_warn "Missing $HEAD_PARTIAL"
   fi
 
-  # accept multiple Vite forms and quoting (loop to avoid complex quoting bugs)
+  # accept multiple Vite forms and quoting (heredoc avoids escaping quotes)
   has_vite="false"
-  for pat in "@vite('resources/js/app.js')" '@vite("resources/js/app.js")' "@vite(['resources/js/app.js'])" '@vite(["resources/js/app.js"])'; do
+  while IFS= read -r pat; do
+    [[ -z "$pat" ]] && continue
     if contains "$pat" "$HEAD_PARTIAL"; then has_vite="true"; break; fi
-  done
+  done <<'EOF'
+@vite('resources/js/app.js')
+@vite("resources/js/app.js")
+@vite(['resources/js/app.js'])
+@vite(["resources/js/app.js"])
+EOF
   if [[ "$has_vite" != "true" ]]; then
     die_or_warn "$HEAD_PARTIAL missing a @vite call for resources/js/app.js. Assets may not load."
   fi
@@ -88,8 +94,8 @@ if [[ "$NO_VERIFY" != "true" ]]; then
   if ! contains "<main" "$LAYOUT" || ! contains "@yield('content')" "$LAYOUT"; then
     die_or_warn "$LAYOUT should include a <main> with @yield('content')."
   fi
-  if [[ -f "$HOME" ]] && ! contains "@extends('layouts.app')" "$HOME"; then
-    echo "WARN: $HOME does not extend the app layout." >&2
+  if [[ -f "$HOME_VIEW" ]] && ! contains "@extends('layouts.app')" "$HOME_VIEW"; then
+    echo "WARN: $HOME_VIEW does not extend the app layout." >&2
   fi
 fi
 

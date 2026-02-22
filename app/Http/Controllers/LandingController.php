@@ -800,50 +800,77 @@ class LandingController extends Controller
             $allEmpty = true;
             foreach ($variantsArr as $vv) { if (!empty($vv['options'])) { $allEmpty = false; break; } }
             if ($allEmpty && is_array($optionsArr) && count($optionsArr)) {
-                $peopleIdx = null; $sessionsIdx = null; $locIdx = null;
-                foreach ($optionsArr as $i => $opt) {
-                    $nm = strtolower(trim((string)($opt['meta_name'] ?? $opt['name'] ?? '')));
-                    if ($peopleIdx === null && str_contains($nm, 'person')) $peopleIdx = $i;
-                    if ($sessionsIdx === null && str_contains($nm, 'session')) $sessionsIdx = $i;
-                    if ($locIdx === null && str_contains($nm, 'location')) $locIdx = $i;
-                }
-                if ($sessionsIdx !== null) {
-                    $sessionVals = $optionsArr[$sessionsIdx]['values'] ?? [];
-                    // Parse labels to a numeric score in minutes
-                    $score = function($label) {
-                        $s = strtolower(trim((string)$label));
-                        if (preg_match('/(\d+(?:\.\d+)?)\s*(hour|hr|hours|hrs)/', $s, $m)) { return (float)$m[1] * 60; }
-                        if (preg_match('/(\d+(?:\.\d+)?)\s*(min|mins|minute|minutes)/', $s, $m)) { return (float)$m[1]; }
-                        if (preg_match('/\d+/', $s, $m)) { return (float)$m[0]; }
-                        return 0.0;
-                    };
-                    $pairs = [];
-                    foreach ($sessionVals as $lbl) { $pairs[] = ['label' => $lbl, 'n' => $score($lbl)]; }
-                    usort($pairs, function($a, $b){ return $a['n'] <=> $b['n']; });
-                    $sortedSession = array_map(fn($p) => $p['label'], $pairs);
-
-                    // Sort variants by numeric price ascending
-                    $sortedVariants = $variantsArr;
-                    usort($sortedVariants, function($a, $b){ return (float)$a['price'] <=> (float)$b['price']; });
-
-                    // Prepare default labels for people and location (first values if available)
-                    $peopleLabel = ($peopleIdx !== null && isset($optionsArr[$peopleIdx]['values'][0])) ? (string)$optionsArr[$peopleIdx]['values'][0] : '';
-                    $locLabel = ($locIdx !== null && isset($optionsArr[$locIdx]['values'][0])) ? (string)$optionsArr[$locIdx]['values'][0] : '';
-                    $optCount = count($optionsArr);
-
-                    // Map by index
-                    $mapped = [];
-                    foreach ($sortedVariants as $i => $sv) {
-                        $sessionLabel = (string)($sortedSession[$i] ?? ($sessionVals[$i] ?? ''));
-                        $optList = array_fill(0, $optCount, '');
-                        if ($peopleIdx !== null) $optList[$peopleIdx] = $peopleLabel;
-                        if ($sessionsIdx !== null) $optList[$sessionsIdx] = $sessionLabel;
-                        if ($locIdx !== null) $optList[$locIdx] = $locLabel;
-                        $sv['options'] = $optList;
-                        $mapped[$sv['id']] = $sv;
+                // Attempt a full cartesian combination from option values first
+                $combos = [[]];
+                foreach ($optionsArr as $idx => $opt) {
+                    $vals = $opt['values'] ?? [];
+                    if (empty($vals)) {
+                        foreach ($combos as &$combo) { $combo[$idx] = ''; }
+                        unset($combo);
+                        continue;
                     }
-                    // Rebuild in original order with mapped options
-                    foreach ($variantsArr as $k => $vv) { if (isset($mapped[$vv['id']])) { $variantsArr[$k] = $mapped[$vv['id']]; } }
+                    $expanded = [];
+                    foreach ($combos as $combo) {
+                        foreach ($vals as $val) {
+                            $next = $combo;
+                            $next[$idx] = (string)$val;
+                            $expanded[] = $next;
+                        }
+                    }
+                    $combos = $expanded;
+                    if (count($combos) > 300) { $combos = []; break; }
+                }
+
+                if (count($combos) > 0 && count($combos) === count($variantsArr)) {
+                    foreach ($variantsArr as $k => $vv) {
+                        $variantsArr[$k]['options'] = array_values($combos[$k] ?? []);
+                    }
+                } else {
+                    $peopleIdx = null; $sessionsIdx = null; $locIdx = null;
+                    foreach ($optionsArr as $i => $opt) {
+                        $nm = strtolower(trim((string)($opt['meta_name'] ?? $opt['name'] ?? '')));
+                        if ($peopleIdx === null && str_contains($nm, 'person')) $peopleIdx = $i;
+                        if ($sessionsIdx === null && str_contains($nm, 'session')) $sessionsIdx = $i;
+                        if ($locIdx === null && str_contains($nm, 'location')) $locIdx = $i;
+                    }
+                    if ($sessionsIdx !== null) {
+                        $sessionVals = $optionsArr[$sessionsIdx]['values'] ?? [];
+                        // Parse labels to a numeric score in minutes
+                        $score = function($label) {
+                            $s = strtolower(trim((string)$label));
+                            if (preg_match('/(\d+(?:\.\d+)?)\s*(hour|hr|hours|hrs)/', $s, $m)) { return (float)$m[1] * 60; }
+                            if (preg_match('/(\d+(?:\.\d+)?)\s*(min|mins|minute|minutes)/', $s, $m)) { return (float)$m[1]; }
+                            if (preg_match('/\d+/', $s, $m)) { return (float)$m[0]; }
+                            return 0.0;
+                        };
+                        $pairs = [];
+                        foreach ($sessionVals as $lbl) { $pairs[] = ['label' => $lbl, 'n' => $score($lbl)]; }
+                        usort($pairs, function($a, $b){ return $a['n'] <=> $b['n']; });
+                        $sortedSession = array_map(fn($p) => $p['label'], $pairs);
+
+                        // Sort variants by numeric price ascending
+                        $sortedVariants = $variantsArr;
+                        usort($sortedVariants, function($a, $b){ return (float)$a['price'] <=> (float)$b['price']; });
+
+                        // Prepare default labels for people and location (first values if available)
+                        $peopleLabel = ($peopleIdx !== null && isset($optionsArr[$peopleIdx]['values'][0])) ? (string)$optionsArr[$peopleIdx]['values'][0] : '';
+                        $locLabel = ($locIdx !== null && isset($optionsArr[$locIdx]['values'][0])) ? (string)$optionsArr[$locIdx]['values'][0] : '';
+                        $optCount = count($optionsArr);
+
+                        // Map by index
+                        $mapped = [];
+                        foreach ($sortedVariants as $i => $sv) {
+                            $sessionLabel = (string)($sortedSession[$i] ?? ($sessionVals[$i] ?? ''));
+                            $optList = array_fill(0, $optCount, '');
+                            if ($peopleIdx !== null) $optList[$peopleIdx] = $peopleLabel;
+                            if ($sessionsIdx !== null) $optList[$sessionsIdx] = $sessionLabel;
+                            if ($locIdx !== null) $optList[$locIdx] = $locLabel;
+                            $sv['options'] = $optList;
+                            $mapped[$sv['id']] = $sv;
+                        }
+                        // Rebuild in original order with mapped options
+                        foreach ($variantsArr as $k => $vv) { if (isset($mapped[$vv['id']])) { $variantsArr[$k] = $mapped[$vv['id']]; } }
+                    }
                 }
             }
         } catch (\Throwable $e) { /* swallow fallback errors */ }
