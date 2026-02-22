@@ -26,6 +26,15 @@
     .trust .cell{display:flex;align-items:center;gap:.6rem;border:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.8);border-radius:12px;padding:.75rem}
     .mode-note{font-size:.85rem;color:#6b7280}
     .rating{display:flex;align-items:center;gap:.4rem}
+    /* Stars styling (independent of external icon sets) */
+    .stars{display:inline-flex;align-items:center;gap:3px;transform:translateY(1px)}
+    .star{width:18px;height:18px;display:inline-block;position:relative;background:currentColor;
+      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
+              mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat}
+    .star::after{content:"";position:absolute;inset:0;background:#333;pointer-events:none;
+      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
+              mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat}
+    .star--empty{color:transparent}
     .btn-main{background:#549483;color:#fff;border:none}
     .btn-basket{background:#f1f3f5;color:#111827;border:1px solid #d0d5dd}
     .group-range{display:none}
@@ -343,7 +352,21 @@ const btnBookNow=document.getElementById('btnBookNow'),btnBookLater=document.get
 const bookingModalEl=document.getElementById('bookingModal'),bookingModal=new bootstrap.Modal(bookingModalEl),bookingModalContent=document.getElementById('bookingModalContent'),calMonthLabel=document.getElementById('calMonthLabel'),calDayNames=document.getElementById('calDayNames'),calGrid=document.getElementById('calGrid'),calPrev=document.getElementById('calPrev'),calNext=document.getElementById('calNext'),slotList=document.getElementById('slotList'),bookingSummary=document.getElementById('bookingSummary'),confirmBooking=document.getElementById('confirmBooking'),tzCurrent=document.getElementById('tzCurrent'),tzSelect=document.getElementById('tzSelect'),modalHint=document.getElementById('modalHint'),mobileBack=document.getElementById('mobileBack'),holdTimer=document.getElementById('holdTimer'),holdCountdown=document.getElementById('holdCountdown');
 const pillHoldBanner=document.getElementById('pillHoldBanner'),pillHoldCountdown=document.getElementById('pillHoldCountdown'),pillHourglass=pillHoldBanner.querySelector('i.bi-hourglass-split');
 function fmt(c){try{return new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP"}).format(c/100)}catch(e){return "£"+(c/100).toFixed(2)}}
-function renderStars(){stars.innerHTML="";const full=Math.round(product.rating);for(let i=1;i<=5;i++){const icon=document.createElement("i");icon.className=i<=full?"bi bi-star-fill text-success":"bi bi-star text-secondary";stars.appendChild(icon)}ratingText.textContent=`${product.rating.toFixed(1)} (${product.ratingCount})`;if(mStars){mStars.innerHTML=stars.innerHTML;mRatingText.textContent=ratingText.textContent}}
+function buildStarsHTML(r){
+  const full=Math.floor(Number(r)||0);
+  let out='';
+  for(let i=1;i<=5;i++){
+    out += (i<=full)
+      ? '<span class="star" style="color:#f5c84b;"></span>'
+      : '<span class="star star--empty"></span>';
+  }
+  return '<span class="stars" aria-hidden="true">'+out+'</span>';
+}
+function renderStars(){
+  stars.innerHTML = buildStarsHTML(product.rating);
+  ratingText.textContent = `${(Number(product.rating)||0).toFixed(1)} (${Number(product.ratingCount)||0})`;
+  if(mStars){ mStars.innerHTML = stars.innerHTML; mRatingText.textContent = ratingText.textContent; }
+}
 function displayName(name){
   try {
     var s = String(name||'');
