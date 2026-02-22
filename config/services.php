@@ -18,6 +18,12 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY', 'pk_test_xxx'),
+        'secret' => env('STRIPE_SECRET', 'sk_test_xxx'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET', ''),
+    ],
+
     'resend' => [
         'key' => env('RESEND_KEY'),
     ],

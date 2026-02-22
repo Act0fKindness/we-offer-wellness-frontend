@@ -17,6 +17,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Review;
 use App\Http\Controllers\Api\V3SubscriberController;
+use App\Http\Controllers\CheckoutController;
 
 Route::get('/', function () {
     // Fetch a few curated product slices for the home page
@@ -538,6 +539,11 @@ Route::get('/cart', function () {
     }
     return view('cart.index');
 });
+
+// Checkout routes
+Route::post('/checkout', [CheckoutController::class, 'create']);
+Route::get('/checkout/success', [CheckoutController::class, 'success']);
+Route::get('/checkout/cancel', [CheckoutController::class, 'cancel']);
 
 // Cart code persistence in session
 Route::post('/api/cart/promo', function (Request $request) {
