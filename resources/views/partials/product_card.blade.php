@@ -366,26 +366,9 @@
     }
     function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
     function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-XSRF-TOKEN': token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
-    function handleClick(e){
-      var addBtn = e.target.closest('.js-add-to-cart');
-      var buyBtn = e.target.closest('.js-buy-now');
-      if(!addBtn && !buyBtn) return;
-      e.preventDefault(); e.stopPropagation();
-      var btn = addBtn || buyBtn;
-      var id = btn.dataset.id;
-      var img = btn.dataset.image;
-      // Client-first add for immediate UX
-      try{ (function(){ var itm={ id:id, title: btn.dataset.title, price: Number(btn.dataset.price)||0, image: img, url: btn.dataset.url }; if(window.CartClient){ window.CartClient.add(itm); } })(); }catch(_){ }
-      post('/api/cart/add', { id: id, qty: 1 }).then(function(resp){
-        try{ if(typeof resp?.count === 'number'){ var b=document.querySelector('.cart-badge'); if(b){ b.textContent=String(resp.count); b.style.display = (resp.count>0)?'inline-block':'none'; } } }catch(_){ }
-        try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: id, image: img } })); }catch(e){}
-        // Delay open to allow Set-Cookie to apply and avoid cache races
-        try{ setTimeout(function(){ window.dispatchEvent(new CustomEvent('wow:open-cart', { detail:{ id: id } })); }, 160); }catch(e){}
-        if(buyBtn){ window.location.assign('/cart'); return; }
-        try{ btn.textContent='Added'; setTimeout(function(){ btn.textContent='Add to cart'; }, 1200) }catch(e){}
-      }).catch(function(){ try{ btn.textContent='Try again'; setTimeout(function(){ btn.textContent= addBtn? 'Add to cart':'Book now'; }, 1200) }catch(e){} });
-    }
-    document.addEventListener('click', handleClick);
+    // Disable add-to-cart and buy-now interactions (no-op)
+    function handleClick(e){ return; }
+    // document.addEventListener('click', handleClick);
   })();
   </script>
 @endonce
