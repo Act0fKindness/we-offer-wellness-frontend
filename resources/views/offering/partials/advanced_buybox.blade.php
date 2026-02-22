@@ -404,9 +404,11 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
   const popHold = document.createElement('div'); popHold.className='sd-pop';
   const pop = document.createElement('div'); pop.className='sd-popover'; pop.style.display='none'; pop.setAttribute('role','listbox');
 
-  // Build options grouped by sessions count
+  // Build options grouped by sessions count (preserve option order, limit to 3)
   const valuesAll = availableValuesForOption(optIdx);
-  const uniqCounts = Array.from(new Set(valuesAll.map(parseSessions).filter(Boolean))).sort((a,b)=>a-b);
+  const __seenCounts = new Set();
+  const uniqCounts = [];
+  valuesAll.forEach(v=>{ const n = parseSessions(v); if(n && !__seenCounts.has(n)){ __seenCounts.add(n); if(uniqCounts.length<3) uniqCounts.push(n); } });
   const best = computeBestValue(product.variants, optIdx);
 
   function labelForCount(n){ return `${n} Sessions`; }
@@ -450,12 +452,8 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
       });
       pop.appendChild(row);
     });
-    // Sticky footer showing current selection
-    const selBar = document.createElement('div'); selBar.className='sd-footer';
-    const curN = parseSessions(state.selected[optIdx]);
-    selBar.innerHTML = `<div class="fw-semibold">${labelForCount(curN||uniqCounts[0]||1)} ${best && best.n===curN?'<span class="sd-badge ms-2">Best value</span>':''}</div><div class="sd-check" style="display:inline-flex;background:#fff;color:#2b675b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>`;
-    pop.appendChild(selBar);
     // Mark active
+    const curN = parseSessions(state.selected[optIdx]);
     pop.querySelectorAll('.sd-option').forEach(el=>{
       const n = parseInt(el.dataset.sessions,10);
       if (n === curN) el.classList.add('active');
