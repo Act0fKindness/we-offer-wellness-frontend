@@ -13,6 +13,10 @@
 
     $image = $product->getFirstImageUrl();
     $title = $product->title ?? 'Untitled';
+    // Title case: first letter of each word uppercase, rest lowercase
+    $toLower = function($s){ return function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s); };
+    $ucWords = function($s){ return function_exists('mb_convert_case') ? mb_convert_case($s, MB_CASE_TITLE, 'UTF-8') : ucwords($s); };
+    $titleFormatted = $ucWords($toLower($title));
     $type = $product->product_type ?: 'Experience';
     $category = $product->category?->name;
     $priceMin = $product->variants_min_price ?? ($product->price ?? null);
@@ -103,7 +107,7 @@
 
       <div class="content">
         <div class="content-top">
-          <h2 class="title">{{ $title }}</h2>
+          <h2 class="title">{{ $titleFormatted }}</h2>
           @if($provider)<p class="provider">with {{ $provider }}</p>@endif
           @if($reviewCount)
             <div class="rating-row"><span>({{ $reviewCount }})</span></div>
