@@ -26377,6 +26377,7 @@
         --card-h: 530px;
         width: 309px;
         max-width: 309px;
+        box-shadow:none;
     }
 
     .wow-card.md .wow-body {
@@ -26463,7 +26464,7 @@
         max-width: none;
     }
 
-    
+
 
 
         #nprogress {
@@ -26533,5 +26534,5 @@
                 transform: rotate(360deg);
             }
         }
-    
+
 
