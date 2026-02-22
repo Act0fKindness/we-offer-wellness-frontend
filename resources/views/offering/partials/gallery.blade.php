@@ -47,7 +47,7 @@
 
     /* Mosaic layout */
     #wowGallery .mosaic{ display:grid; grid-template-columns: 1.7fr 1fr; gap: var(--gap); align-items:stretch; }
-    #wowGallery .tile{ position:relative; border-radius: var(--radius); overflow:hidden; border:1px solid var(--border); background:#f2f4f7; min-height:140px; }
+    #wowGallery .tile{ position:relative; border-radius: var(--radius); overflow:hidden; border:1px solid var(--border); background:#f2f4f7; min-height:140px; cursor:pointer; }
     #wowGallery .tile img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scale(1); transition: transform 420ms ease; }
     #wowGallery .tile:hover img{ transform: scale(1.03); }
     #wowGallery .tile--big{ min-height: 320px; }
@@ -100,8 +100,33 @@
       #wowGallery .arrow--left{ left:10px; }
       #wowGallery .arrow--right{ right:10px; }
     }
+    /* ===== Modal (scoped to gallery) ===== */
+    #wowGallery .modal{ position: fixed; inset: 0; display: none; z-index: 1000; }
+    #wowGallery .modal[aria-hidden="false"]{ display:block; }
+    #wowGallery .modal__overlay{ position:absolute; inset:0; background: rgba(0,0,0,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    #wowGallery .modal__top{ position:absolute; top: 18px; left: 0; right: 0; display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; padding:0 18px; pointer-events:none; }
+    #wowGallery .modal__count{ justify-self:center; color: rgba(255,255,255,.72); font-weight:700; letter-spacing:.06em; font-size:12px; }
+    #wowGallery .modal__close{ pointer-events:auto; justify-self:end; width:38px; height:38px; border-radius:999px; border:0; background: rgba(255,255,255,.92); color: rgba(11,18,32,.85); display:grid; place-items:center; cursor:pointer; box-shadow: 0 12px 26px rgba(0,0,0,.22); transition: transform 180ms ease, filter 180ms ease; }
+    #wowGallery .modal__close:hover{ transform: scale(1.06); filter: brightness(1.02); }
+    #wowGallery .modal__close:active{ transform: scale(.98); }
+    #wowGallery .modal__close:focus-visible{ outline:0; box-shadow: 0 12px 26px rgba(0,0,0,.22), 0 0 0 4px rgba(255,255,255,.22); }
+    #wowGallery .modal__stage{ position:absolute; inset:0; display:grid; place-items:center; padding:72px 18px 96px; }
+    #wowGallery .modal__figure{ width: min(980px, 92vw); }
+    #wowGallery .modal__imageWrap{ position:relative; border-radius:18px; overflow:hidden; box-shadow: 0 24px 70px rgba(0,0,0,.35); background: rgba(255,255,255,.04); }
+    #wowGallery .modal__img{ display:block; width:100%; height: min(520px, 62vh); object-fit:cover; border-radius:18px; background: rgba(255,255,255,.04); }
+    #wowGallery .modal__nav{ position:absolute; top:50%; transform: translateY(-50%); width:44px; height:44px; border-radius:999px; border:0; background: rgba(255,255,255,.92); color: rgba(0,0,0,.78); display:grid; place-items:center; cursor:pointer; box-shadow: 0 16px 40px rgba(0,0,0,.22); transition: transform 180ms ease, filter 180ms ease, opacity 180ms ease; }
+    #wowGallery .modal__nav:hover{ transform: translateY(-50%) scale(1.06); filter: brightness(1.02); }
+    #wowGallery .modal__nav:active{ transform: translateY(-50%) scale(.98); }
+    #wowGallery .modal__nav:focus-visible{ outline:0; box-shadow: 0 16px 40px rgba(0,0,0,.22), 0 0 0 4px rgba(255,255,255,.22); }
+    #wowGallery .modal__nav[disabled]{ opacity:0; pointer-events:none; }
+    #wowGallery .modal__nav--prev{ left:14px; }
+    #wowGallery .modal__nav--next{ right:14px; }
+    #wowGallery .modal__nav svg{ width:18px; height:18px; stroke-width:2.4; }
+    #wowGallery .modal__bar{ margin-top:14px; display:grid; grid-template-columns:1fr; gap:10px; }
+    #wowGallery .modal__productTitle{ color: rgba(255,255,255,.92); font-weight:700; font-size:16px; line-height:1.3; text-align:center; text-shadow: 0 1px 0 rgba(0,0,0,.22); }
+
     @media (prefers-reduced-motion: reduce){
-      #wowGallery .track, #wowGallery .tile img, #wowGallery .arrow, #wowGallery .arrow svg{ transition:none !important; }
+      #wowGallery .track, #wowGallery .tile img, #wowGallery .arrow, #wowGallery .arrow svg, #wowGallery .modal__close, #wowGallery .modal__nav{ transition:none !important; }
     }
   </style>
 
@@ -120,6 +145,40 @@
       <path d="M9.5 5.5L15.5 12l-6 6.5"/>
     </svg>
   </button>
+
+  <!-- Modal viewer (scoped under #wowGallery) -->
+  <div class="modal" id="imgModal" aria-hidden="true" aria-label="Image viewer" role="dialog">
+    <div class="modal__overlay" id="modalOverlay"></div>
+    <div class="modal__top">
+      <div></div>
+      <div class="modal__count" id="modalCount">01 / 01</div>
+      <button class="modal__close" id="modalClose" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal__stage" role="document">
+      <div class="modal__figure">
+        <div class="modal__imageWrap">
+          <button class="modal__nav modal__nav--prev" id="modalPrev" type="button" aria-label="Previous image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 5.5L8.5 12l6 6.5"/>
+            </svg>
+          </button>
+          <img class="modal__img" id="modalImg" alt="" src="" />
+          <button class="modal__nav modal__nav--next" id="modalNext" type="button" aria-label="Next image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9.5 5.5L15.5 12l-6 6.5"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal__bar">
+          <div class="modal__productTitle" id="modalTitle"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     (function(){
@@ -142,14 +201,21 @@
         return out;
       }
 
-      function tile(url, className){
+      function tile(url, className, absoluteIndex){
         const div = document.createElement("div");
         div.className = `tile ${className || ""}`.trim();
+        div.tabIndex = 0;
+        div.setAttribute('role','button');
+        div.setAttribute('aria-label','Open image');
+        div.dataset.index = String(absoluteIndex ?? 0);
         const img = document.createElement("img");
         img.loading = "lazy";
         img.alt = altText || "";
         img.src = url;
         div.appendChild(img);
+        const open = () => openModal(absoluteIndex || 0);
+        div.addEventListener('click', open);
+        div.addEventListener('keydown', (e) => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); open(); } });
         return div;
       }
 
@@ -161,7 +227,7 @@
 
         gallery.dataset.arrows = pageCount > 1 ? "on" : "off";
 
-        pages.forEach((set) => {
+        pages.forEach((set, pageIdx) => {
           if (!set || set.length === 0) return;
 
           const page = document.createElement("div");
@@ -170,14 +236,15 @@
           const mosaic = document.createElement("div");
           mosaic.className = "mosaic";
 
-          if (set[0]) mosaic.appendChild(tile(set[0], "tile--big"));
+          const base = pageIdx * 4;
+          if (set[0]) mosaic.appendChild(tile(set[0], "tile--big", base + 0));
 
           const right = document.createElement("div");
           right.className = "rightGrid";
 
-          if (set[1]) right.appendChild(tile(set[1], "tile--r1"));
-          if (set[2]) right.appendChild(tile(set[2], "tile--r2"));
-          if (set[3]) right.appendChild(tile(set[3], "tile--tall"));
+          if (set[1]) right.appendChild(tile(set[1], "tile--r1", base + 1));
+          if (set[2]) right.appendChild(tile(set[2], "tile--r2", base + 2));
+          if (set[3]) right.appendChild(tile(set[3], "tile--tall", base + 3));
 
           mosaic.appendChild(right);
           page.appendChild(mosaic);
@@ -278,8 +345,59 @@
         }, 1500);
       }
 
-      if (images.length > 0) build();
-      else gallery.style.display = 'none';
+      /* ===== Modal logic ===== */
+      const modal = document.getElementById('imgModal');
+      const modalOverlay = document.getElementById('modalOverlay');
+      const modalClose = document.getElementById('modalClose');
+      const modalPrev = document.getElementById('modalPrev');
+      const modalNext = document.getElementById('modalNext');
+      const modalImg = document.getElementById('modalImg');
+      const modalCount = document.getElementById('modalCount');
+      const modalTitle = document.getElementById('modalTitle');
+      let modalIndex = 0;
+      let lastFocusEl = null;
+
+      function pad2(n){ return String(n).padStart(2,'0'); }
+      function renderModal(){
+        modalImg.src = images[modalIndex] || '';
+        modalCount.textContent = pad2(modalIndex+1) + ' / ' + pad2(images.length);
+        modalTitle.textContent = altText || '';
+        modalPrev.toggleAttribute('disabled', modalIndex === 0);
+        modalNext.toggleAttribute('disabled', modalIndex === images.length - 1);
+      }
+      function openModal(index){
+        if(!images.length) return;
+        lastFocusEl = document.activeElement;
+        modalIndex = Math.max(0, Math.min(images.length - 1, index||0));
+        modal.setAttribute('aria-hidden','false');
+        try{ document.body.style.overflow = 'hidden'; }catch{}
+        renderModal();
+        try{ modalClose.focus({preventScroll:true}); }catch{}
+      }
+      function closeModal(){
+        modal.setAttribute('aria-hidden','true');
+        try{ document.body.style.overflow = ''; }catch{}
+        modalImg.src = '';
+        if(lastFocusEl && typeof lastFocusEl.focus === 'function') try{ lastFocusEl.focus(); }catch{}
+      }
+      function modalNextImg(){ if(modalIndex < images.length - 1){ modalIndex++; renderModal(); } }
+      function modalPrevImg(){ if(modalIndex > 0){ modalIndex--; renderModal(); } }
+
+      if(modal){
+        modalClose?.addEventListener('click', closeModal);
+        modalOverlay?.addEventListener('click', closeModal);
+        modalNext?.addEventListener('click', modalNextImg);
+        modalPrev?.addEventListener('click', modalPrevImg);
+        window.addEventListener('keydown', function(e){
+          if(modal.getAttribute('aria-hidden') === 'true') return;
+          if(e.key === 'Escape') closeModal();
+          if(e.key === 'ArrowRight') modalNextImg();
+          if(e.key === 'ArrowLeft') modalPrevImg();
+        });
+        modalImg?.addEventListener('click', function(){ if(modalIndex < images.length - 1) modalNextImg(); });
+      }
+
+      if (images.length > 0) build(); else gallery.style.display = 'none';
     })();
   </script>
 </section>
