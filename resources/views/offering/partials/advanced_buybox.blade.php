@@ -127,7 +127,7 @@
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <i class="bi bi-calendar-event"></i>
                     <div class="fw-semibold">Availability</div>
-                    <span class="badge rounded-pill ms-auto badge-note">Select a date or decide later</span>
+                    <span class="badge rounded-pill ms-auto badge-note">Select a date</span>
                 </div>
 
                 <div class="d-flex gap-2 mb-2" role="group" aria-label="Availability choice">
@@ -237,7 +237,7 @@
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-calendar-event"></i>
                         <div class="fw-semibold">Availability</div>
-                        <span class="badge rounded-pill ms-auto badge-note">Select a date or decide later</span>
+                    <span class="badge rounded-pill ms-auto badge-note">Select a date</span>
                     </div>
                     <div class="d-flex gap-2" role="group" aria-label="Availability choice (sheet)">
                         <button type="button" class="btn btn-outline-success" id="sheetBookNow">
