@@ -6,4 +6,3 @@
     <a href="#" class="wow-readmore" data-wow-readmore data-target="#wowAbout">Read More</a>
   </div>
 @endif
-
