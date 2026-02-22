@@ -51,13 +51,14 @@
     .product-page .wow-title {
       font-family: 'Manrope', var(--bs-font-sans-serif) !important;
     }
+    .product-page h1 { font-weight: 600 !important; }
   </style>
   <div class="container-page">
     <div class="row g-4">
       <div class="col-12 col-lg-8">
         <div class="mb-3">
           <div class="kicker mb-1">{{ ucfirst($type ?? 'Experience') }}</div>
-          <h1 class="h4 m-0">{{ $title ?? 'Offering' }}</h1>
+          <h1 class="h2 m-0">{{ $title ?? 'Offering' }}</h1>
         </div>
         @if(!empty($images))
           @include('offering.partials.gallery', ['images' => $images, 'title' => $title])
