@@ -45,6 +45,28 @@
     .slot.reserved{border-color:#f59e0b;background:#fffbe6;cursor:not-allowed;opacity:.9}
     .tz-pill{border:1px solid #e5e7eb;border-radius:12px;padding:.35rem .6rem;background:#fff}
     .calendar-side{border-left:1px solid #f0f2f4}
+    /* Sessions dropdown */
+    .sessions-dd{margin:10px 0}
+    .sd-label{font-size:.9rem;color:#6b7280;margin-bottom:6px}
+    .sd-trigger{display:flex;align-items:center;justify-content:space-between;width:100%;height:46px;border:1px solid #e5e7eb;background:#fff;border-radius:12px;padding:.5rem .75rem;cursor:pointer}
+    .sd-trigger:focus{outline:2px solid #549483}
+    .sd-trigger .sd-val{display:flex;align-items:center;gap:.4rem;font-weight:600;color:#0f172a}
+    .sd-badge{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;padding:.15rem .5rem;font-size:.75rem;background:#e8f4f1;color:#2b675b;border:1px solid #c7e5d9}
+    .sd-pop{position:relative}
+    .sd-popover{position:absolute;z-index:1050;left:0;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 18px 40px rgba(2,8,23,.08);max-height:320px;overflow:auto;padding:6px}
+    .sd-option{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;border-radius:10px;padding:10px 12px;cursor:pointer}
+    .sd-option:hover{background:#f5f7f9}
+    .sd-option .sd-left{display:flex;flex-direction:column}
+    .sd-option .sd-title{font-weight:700;color:#0f172a}
+    .sd-option .sd-sub{font-size:.85rem;color:#667085}
+    .sd-right{display:flex;align-items:center;gap:6px}
+    .sd-check{width:22px;height:22px;border-radius:999px;background:#e8f4f1;color:#2b675b;display:none;align-items:center;justify-content:center}
+    .sd-check svg{width:14px;height:14px}
+    .sd-option.active{background:#2b675b}
+    .sd-option.active .sd-title,.sd-option.active .sd-sub{color:#fff}
+    .sd-option.active .sd-badge{background:#fff;color:#2b675b;border-color:#fff}
+    .sd-option.active .sd-check{display:inline-flex;background:#fff;color:#2b675b}
+    .sd-footer{position:sticky;bottom:0;background:#2b675b;border-radius:10px;padding:8px 12px;margin-top:6px;display:flex;align-items:center;justify-content:space-between;color:#fff}
     @media (max-width: 991px){
         .buybox{display:none !important}
         #mobileBar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;position:fixed;left:0;right:0;bottom:0;z-index:1030;background:#fff;border-top:1px solid #e5e7eb;padding:.6rem .9rem;box-shadow:0 -6px 14px rgba(0,0,0,.06)}
@@ -326,29 +348,173 @@ function displayName(name){
   } catch(e) {}
   return name || 'Option';
 }
+// ===== Sessions dropdown helpers =====
+function parseSessions(val){
+  try{
+    const m = String(val||'').match(/(\d+)/);
+    return m ? parseInt(m[1],10) : null;
+  }catch(e){ return null }
+}
+function sessionsSummaryForValue(val, minTotal){
+  const n = parseSessions(val) || 1;
+  const unit = Math.round((minTotal||0)/n);
+  return { n, unit };
+}
+function computeBestValue(variants, optIdx){
+  // Build map sessionsCount -> min total price among all variants
+  const map = new Map();
+  (variants||[]).forEach(v=>{
+    const val = (v.options||[])[optIdx];
+    const n = parseSessions(val);
+    if(!n || !v.price) return;
+    const cur = map.get(n);
+    const price = Number(v.price)||0;
+    if(cur==null || price < cur) map.set(n, price);
+  });
+  // Find best by lowest unit price with tie-breakers
+  let best = { n:null, unit:Infinity, total:Infinity };
+  map.forEach((total, n)=>{
+    const unit = total / n;
+    if (unit < best.unit || (unit === best.unit && (n > best.n || (n === best.n && total < best.total)))){
+      best = { n, unit, total };
+    }
+  });
+  return best.n ? best : null;
+}
+function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = {}){
+  const root = document.createElement('div'); root.className = 'sessions-dd';
+  const label = document.createElement('div'); label.className = 'sd-label'; label.textContent = 'Pick sessions'; root.appendChild(label);
+
+  const trig = document.createElement('button'); trig.type='button'; trig.className='sd-trigger'; trig.setAttribute('aria-haspopup','listbox'); trig.setAttribute('aria-expanded','false');
+  const left = document.createElement('div'); left.className='sd-val';
+  const chev = document.createElement('span'); chev.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+  trig.appendChild(left); trig.appendChild(chev);
+  root.appendChild(trig);
+
+  const popHold = document.createElement('div'); popHold.className='sd-pop';
+  const pop = document.createElement('div'); pop.className='sd-popover'; pop.style.display='none'; pop.setAttribute('role','listbox');
+
+  // Build options grouped by sessions count
+  const values = (opt.values||[]).map(v=>String(v||''));
+  const uniqCounts = Array.from(new Set(values.map(parseSessions).filter(Boolean))).sort((a,b)=>a-b);
+  const best = computeBestValue(product.variants, optIdx);
+
+  function labelForCount(n){ return `${n} Sessions`; }
+  function priceInfoForCount(n){
+    // Use global best total for this count (min across all variants with that count)
+    let total = Infinity;
+    (product.variants||[]).forEach(v=>{
+      const vv = (v.options||[])[optIdx];
+      if(parseSessions(vv)===n){ total = Math.min(total, Number(v.price)||0); }
+    });
+    if(!isFinite(total)) total = 0;
+    const unit = n ? (total/n) : 0;
+    return { total, unit };
+  }
+  function optionValueForCount(n){
+    // Pick the first option value whose parsed sessions equals n
+    return values.find(v => parseSessions(v)===n) || String(n);
+  }
+
+  function renderPopover(){
+    pop.innerHTML='';
+    uniqCounts.forEach(n=>{
+      const { total, unit } = priceInfoForCount(n);
+      const row = document.createElement('div'); row.className='sd-option'; row.setAttribute('role','option'); row.tabIndex=0; row.dataset.sessions=String(n);
+      const left = document.createElement('div'); left.className='sd-left';
+      const ttl = document.createElement('div'); ttl.className='sd-title'; ttl.textContent = labelForCount(n);
+      const sub = document.createElement('div'); sub.className='sd-sub'; sub.textContent = `${fmt(total)} total • ${fmt(unit)} / session`;
+      left.appendChild(ttl); left.appendChild(sub);
+      const right = document.createElement('div'); right.className='sd-right';
+      if (best && best.n === n){ const badge=document.createElement('span'); badge.className='sd-badge'; badge.textContent='Best value'; right.appendChild(badge); }
+      const chk = document.createElement('span'); chk.className='sd-check'; chk.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+      right.appendChild(chk);
+      row.appendChild(left); row.appendChild(right);
+      row.addEventListener('click',()=>{ selectCount(n); closePop(); });
+      row.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectCount(n); closePop(); }
+        if(e.key==='ArrowDown'){ e.preventDefault(); const nx = row.nextElementSibling && row.nextElementSibling.classList.contains('sd-option') ? row.nextElementSibling : pop.querySelector('.sd-option'); nx && nx.focus && nx.focus(); }
+        if(e.key==='ArrowUp'){ e.preventDefault(); const pv = row.previousElementSibling && row.previousElementSibling.classList.contains('sd-option') ? row.previousElementSibling : pop.querySelector('.sd-option:last-of-type'); pv && pv.focus && pv.focus(); }
+        if(e.key==='Escape'){ e.preventDefault(); closePop(); trig.focus(); }
+      });
+      pop.appendChild(row);
+    });
+    // Sticky footer showing current selection
+    const selBar = document.createElement('div'); selBar.className='sd-footer';
+    const curN = parseSessions(state.selected[optIdx]);
+    selBar.innerHTML = `<div class="fw-semibold">${labelForCount(curN||uniqCounts[0]||1)} ${best && best.n===curN?'<span class="sd-badge ms-2">Best value</span>':''}</div><div class="sd-check" style="display:inline-flex;background:#fff;color:#2b675b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>`;
+    pop.appendChild(selBar);
+    // Mark active
+    pop.querySelectorAll('.sd-option').forEach(el=>{
+      const n = parseInt(el.dataset.sessions,10);
+      if (n === curN) el.classList.add('active');
+    });
+  }
+
+  function openPop(){ pop.style.display='block'; trig.setAttribute('aria-expanded','true'); renderPopover(); setTimeout(()=>{ outsideBind(true); },0); }
+  function closePop(){ pop.style.display='none'; trig.setAttribute('aria-expanded','false'); outsideBind(false); }
+  function outsideBind(on){
+    if(on){ document.addEventListener('click', outsideHandler); document.addEventListener('keydown', keyHandler); }
+    else { document.removeEventListener('click', outsideHandler); document.removeEventListener('keydown', keyHandler); }
+  }
+  function outsideHandler(e){ if(!root.contains(e.target)) closePop(); }
+  function keyHandler(e){ if(e.key==='Escape') closePop(); }
+
+  function updateTrigger(){
+    const cur = String(state.selected[optIdx]||'');
+    const n = parseSessions(cur) || uniqCounts[0] || 1;
+    left.innerHTML = '';
+    const label = document.createElement('span'); label.textContent = `${n} Sessions`;
+    left.appendChild(label);
+    if (best && best.n === n){ const b = document.createElement('span'); b.className='sd-badge'; b.textContent='Best value'; left.appendChild(b); }
+  }
+  function selectCount(n){
+    const val = optionValueForCount(n);
+    state.selected[optIdx] = val;
+    updateTrigger();
+    syncOptionAria(optIdx);
+    if (optIdx===findLocationIndex()) { try{ syncFormatUI(); }catch(e){} }
+    updateVariant();
+    updateSheetSubtotal();
+    if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
+  }
+
+  trig.addEventListener('click', ()=>{ const open = trig.getAttribute('aria-expanded')==='true'; open ? closePop() : openPop(); });
+  trig.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); const open = trig.getAttribute('aria-expanded')==='true'; open ? closePop() : openPop(); } if(e.key==='ArrowDown'){ e.preventDefault(); openPop(); const first=pop.querySelector('.sd-option'); first && first.focus && first.focus(); }});
+
+  popHold.appendChild(pop);
+  root.appendChild(popHold);
+  container.appendChild(root);
+  updateTrigger();
+}
 function buildOptionsInto(container){
   container.innerHTML="";
   const locIdx = findLocationIndex();
   (product.options||[]).forEach((opt,optIdx)=>{
-    const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=displayName(opt.name); container.appendChild(label);
-    const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
-    (opt.values||[]).forEach(val=>{
-      const txt = String(val||'');
-      const b=document.createElement("button"); b.type="button"; b.className="pill"; b.setAttribute("role","radio"); b.dataset.optIdx=String(optIdx); b.dataset.optValue=txt;
-      b.setAttribute("aria-checked", txt===state.selected[optIdx] ? "true":"false"); b.textContent=txt;
-      b.addEventListener("click",()=>{
-        state.selected[optIdx]=txt;
-        syncOptionAria(optIdx);
-        if (optIdx===locIdx) { try{ syncFormatUI(); }catch(e){} }
-        updateVariant();
-        updateSheetSubtotal();
-        if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
+    const isSessions = /session/i.test(String(opt?.name||''));
+    if (isSessions){
+      buildSessionsDropdown(container, optIdx, opt, { contextAware: false });
+    } else {
+      const label=document.createElement("div"); label.className="text-secondary small mb-1"; label.textContent=displayName(opt.name); container.appendChild(label);
+      const row=document.createElement("div"); row.className="pills mb-2"; row.setAttribute('data-opt-idx', String(optIdx));
+      (opt.values||[]).forEach(val=>{
+        const txt = String(val||'');
+        const b=document.createElement("button"); b.type="button"; b.className="pill"; b.setAttribute("role","radio"); b.dataset.optIdx=String(optIdx); b.dataset.optValue=txt;
+        b.setAttribute("aria-checked", txt===state.selected[optIdx] ? "true":"false"); b.textContent=txt;
+        b.addEventListener("click",()=>{
+          state.selected[optIdx]=txt;
+          syncOptionAria(optIdx);
+          if (optIdx===locIdx) { try{ syncFormatUI(); }catch(e){} }
+          updateVariant();
+          updateSheetSubtotal();
+          if(container===sheetOptions){ groupRangeSheet.style.display=isGroup()?"block":"none" }
+        });
+        row.appendChild(b)
       });
-      row.appendChild(b)
-    });
-    container.appendChild(row)
-    // Ensure initial aria is correct
-    syncOptionAria(optIdx);
+      container.appendChild(row)
+      // Ensure initial aria is correct
+      syncOptionAria(optIdx);
+    }
   })
 }
 
