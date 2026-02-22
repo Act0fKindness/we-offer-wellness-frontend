@@ -44,19 +44,13 @@
   <div class="container-page">
     <div class="row g-4">
       <div class="col-12 col-lg-7">
-        <div class="card p-2">
-          @if(!empty($images))
-            <div class="d-flex gap-2 flex-wrap">
-              @foreach ($images as $img)
-                <div class="flex-shrink-0" style="width: 160px; height: 120px; overflow: hidden; border-radius: 10px; border:1px solid var(--ink-200)">
-                  <img src="{{ $img }}" alt="{{ $title }}" style="width:100%;height:100%;object-fit:cover">
-                </div>
-              @endforeach
-            </div>
-          @else
+        @if(!empty($images))
+          @include('offering.partials.gallery', ['images' => $images, 'title' => $title])
+        @else
+          <div class="card p-2">
             <div class="ratio ratio-16x9 bg-ink-100 rounded"></div>
-          @endif
-        </div>
+          </div>
+        @endif
 
         @if($body !== '')
         <div class="card p-4 mt-4">
