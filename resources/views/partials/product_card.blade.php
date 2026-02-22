@@ -329,6 +329,31 @@
   </script>
 @endonce
 
+@once
+  <script>
+    // Delegate link-like behavior for elements inside the card to avoid nested <a>
+    (function(){
+      function go(href){ try{ window.location.assign(href); }catch(e){ window.location.href = href; } }
+      document.addEventListener('click', function(e){
+        var el = e.target.closest('[data-href][role="link"]');
+        if(!el) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var href = el.getAttribute('data-href');
+        if(href) go(href);
+      });
+      document.addEventListener('keydown', function(e){
+        if(e.key !== 'Enter' && e.key !== ' ') return;
+        var el = e.target.closest('[data-href][role="link"]');
+        if(!el) return;
+        e.preventDefault();
+        var href = el.getAttribute('data-href');
+        if(href) go(href);
+      });
+    })();
+  </script>
+@endonce
+
       <div class="content">
         <div class="content-top">
           <h2 class="title">{{ $titleFormatted }}</h2>
@@ -377,7 +402,7 @@
               @endif
               @if($remainingCount > 0)
                 <span class="item loc-overflow">
-                  <a class="chip" href="{{ $url }}#locations" aria-haspopup="dialog" aria-expanded="false">(+{{ $remainingCount }})</a>
+                  <span class="chip" role="link" tabindex="0" data-href="{{ $url }}#locations" aria-haspopup="dialog" aria-expanded="false">(+{{ $remainingCount }})</span>
                   <div class="loc-popover" role="dialog" aria-label="Available locations">
                     <h4>Available locations</h4>
                     <div class="list">
@@ -397,7 +422,7 @@
                         </span>
                       @endforeach
                     </div>
-                    <a class="link" href="{{ $url }}#locations">View all locations</a>
+                    <span class="link" role="link" tabindex="0" data-href="{{ $url }}#locations">View all locations</span>
                   </div>
                 </span>
               @endif
