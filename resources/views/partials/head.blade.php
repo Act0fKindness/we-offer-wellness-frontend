@@ -26496,6 +26496,8 @@ This stylesheet scopes variables to .wow-card to avoid global conflicts. */
 body, button, .btn, input, select, textarea { font-family: 'Manrope', var(--bs-font-sans-serif); }
 /* Section headings (homepage/landing/product section blocks) */
 .wow-section-title, .section-title, .home-section-title, .landing-section-title { font-family: 'Playfair Display', Georgia, serif; }
+/* Use Playfair for H2 page titles (e.g., section titles like the example) */
+h2 { font-family: 'Playfair Display', Georgia, serif; }
 </style>
 <link rel="modulepreload" as="script" crossorigin="" href="/build/assets/Home-PUJfnV1T.js">
 <link rel="modulepreload" as="script" crossorigin="" href="/build/assets/SiteLayout-DKnyduE5.js">
