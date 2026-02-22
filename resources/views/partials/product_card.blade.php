@@ -238,8 +238,10 @@
   .wow-therapy-card-scope .meta .chip:hover{ color: rgba(11,18,32,.92) }
   .wow-therapy-card-scope .meta .chip svg{ width: var(--metaIcon); height: var(--metaIcon) }
   /* Popover for (+N) overflow */
-  .wow-therapy-card-scope .loc-overflow{ position:relative; padding-bottom: 8px; }
-  .wow-therapy-card-scope .loc-popover{ position:absolute; top: calc(100% + 6px); left:0; width:240px; max-width:80vw; background:#fff; border:1px solid rgba(16,24,40,.12); box-shadow:0 10px 30px rgba(16,24,40,.12); border-radius:6px; padding:10px; z-index:60; display:none }
+  .wow-therapy-card-scope .loc-overflow{ position:relative; }
+  /* Invisible hover bridge so moving from chip to popover doesn't close it */
+  .wow-therapy-card-scope .loc-overflow::before{ content:""; position:absolute; left:-8px; right:-8px; top:100%; height:10px; }
+  .wow-therapy-card-scope .loc-popover{ position:absolute; top: calc(100% + 2px); left:0; width:240px; max-width:80vw; background:#fff; border:1px solid rgba(16,24,40,.12); box-shadow:0 10px 30px rgba(16,24,40,.12); border-radius:6px; padding:10px; z-index:60; display:none }
   .wow-therapy-card-scope .loc-popover h4{ margin:0 0 8px; font-size:12px; font-weight:700; color:#0b1220 }
   .wow-therapy-card-scope .loc-popover .list{ display:flex; flex-wrap:wrap; gap:6px }
   .wow-therapy-card-scope .loc-popover .pill{ border:1px solid rgba(16,24,40,.14); border-radius:999px; padding:4px 8px; font-size:12px; color:#0b1220; display:inline-flex; align-items:center; gap:4px }
