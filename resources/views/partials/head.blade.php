@@ -25863,7 +25863,7 @@ This stylesheet scopes variables to .wow-card to avoid global conflicts. */
     --chip: #f1f5f9;
     --chip-ink: #0f172a;
     --accent: var(--brand-600, #4a8878);
-    --star: #f59e0b;
+    --star: 18px;
     --danger: #ef4444;
     --ok: #16a34a;
     --ok-ink: #065f46;
