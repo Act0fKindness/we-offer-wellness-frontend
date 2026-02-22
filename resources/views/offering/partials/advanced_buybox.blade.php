@@ -487,10 +487,12 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
     let n = parseSessions(cur);
     // If current selection isn't among available, reset to first
     const validVals = valuesAll;
+    let changed = false;
     if(!validVals.includes(cur)){
       const fallback = validVals[0] || '';
       state.selected[optIdx] = fallback;
       n = parseSessions(fallback) || uniqCounts[0] || 1;
+      changed = true;
     } else {
       n = n || (uniqCounts[0] || 1);
     }
@@ -498,6 +500,9 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
     const label = document.createElement('span'); label.textContent = `${n} Sessions`;
     left.appendChild(label);
     if (best && best.n === n){ const b = document.createElement('span'); b.className='sd-badge'; b.textContent='Best value'; left.appendChild(b); }
+    if (changed) {
+      try { updateVariant(); updateSheetSubtotal(); } catch(e){}
+    }
   }
   function selectCount(n){
     const val = optionValueForCount(n);
