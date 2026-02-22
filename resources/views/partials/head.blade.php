@@ -23182,30 +23182,22 @@ a:hover {
 .kicker {
     display: inline-flex;
     align-items: center;
-    border-radius: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    font-size: 11px;
+    padding: 0.25rem 0.2rem;
+    font-size: 13px;
+    margin-bottom: 5px;
+    background: none;
     font-weight: 600;
+    border: none;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    background: linear-gradient(180deg, var(--ink-50), var(--ink-100));
     color: var(--ink-700);
-    border: 1px solid var(--ink-200);
     width: -moz-fit-content !important;
     width: fit-content !important;
     max-width: 100%;
     flex: none !important;
 }
 
-.kicker::after {
-    content: "";
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    margin-left: .5rem;
-    background: color-mix(in srgb, var(--brand-500) 70%, white);
-}
+.kicker::after { content: none !important; display: none !important; }
 
 .kicker-brand {
     background: linear-gradient(180deg, color-mix(in srgb, var(--brand-50) 85%, white), color-mix(in srgb, var(--brand-100) 85%, white));

@@ -37,6 +37,7 @@
         ?? $product->practitioner_name
         ?? $product->provider
         ?? null;
+    if ($provider) { $provider = str_replace('_', ' ', $provider); }
     $durationLabel = $product->duration ?? null;
     $locationLabel = ($isOnline && count($physical)===0) ? 'Online' : (count($physical) ? ($physical[0] ?? null) : null);
     $nextLabel = $product->next_label ?? $product->next ?? null;
