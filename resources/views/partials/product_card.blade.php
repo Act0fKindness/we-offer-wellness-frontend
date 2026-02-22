@@ -55,7 +55,7 @@
 @media (max-width: 768px){ .wowx-card{ border-radius:20px; width:300px } }
 </style>
 
-<a href="{{ $url }}" class="wowx-card">
+<a href="{{ $url }}" class="wow-card md wowx-card">
   <div class="wowx-top">
     <div class="wowx-badges">
       @if($locBadge)
