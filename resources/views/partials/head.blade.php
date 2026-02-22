@@ -23798,12 +23798,15 @@ a:hover {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--ink-700);
+    background: linear-gradient(rgb(31, 122, 74), rgb(23, 100, 61));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
     width: -moz-fit-content !important;
     width: fit-content !important;
     max-width: 100%;
 }
-.menu-col .mega-kicker { color: var(--ink-700) }
 
 .menu-link {
     display: block;
