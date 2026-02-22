@@ -103,14 +103,14 @@
     /* ===== Modal (scoped to gallery) ===== */
     #wowGallery .modal{ position: fixed; inset: 0; display: none; z-index: 1000; }
     #wowGallery .modal[aria-hidden="false"]{ display:block; }
-    #wowGallery .modal__overlay{ position:absolute; inset:0; background: rgba(0,0,0,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-    #wowGallery .modal__top{ position:absolute; top: 18px; left: 0; right: 0; display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; padding:0 18px; pointer-events:none; }
+    #wowGallery .modal__overlay{ position:absolute; inset:0; background: rgba(0,0,0,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index:0; }
+    #wowGallery .modal__top{ position:absolute; top: 18px; left: 0; right: 0; display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; padding:0 18px; pointer-events:none; z-index:1; }
     #wowGallery .modal__count{ justify-self:center; color: rgba(255,255,255,.72); font-weight:700; letter-spacing:.06em; font-size:12px; }
     #wowGallery .modal__close{ pointer-events:auto; justify-self:end; width:38px; height:38px; border-radius:999px; border:0; background: rgba(255,255,255,.92); color: rgba(11,18,32,.85); display:grid; place-items:center; cursor:pointer; box-shadow: 0 12px 26px rgba(0,0,0,.22); transition: transform 180ms ease, filter 180ms ease; }
     #wowGallery .modal__close:hover{ transform: scale(1.06); filter: brightness(1.02); }
     #wowGallery .modal__close:active{ transform: scale(.98); }
     #wowGallery .modal__close:focus-visible{ outline:0; box-shadow: 0 12px 26px rgba(0,0,0,.22), 0 0 0 4px rgba(255,255,255,.22); }
-    #wowGallery .modal__stage{ position:absolute; inset:0; display:grid; place-items:center; padding:72px 18px 96px; }
+    #wowGallery .modal__stage{ position:absolute; inset:0; display:grid; place-items:center; padding:72px 18px 96px; z-index:1; }
     #wowGallery .modal__figure{ width: min(980px, 92vw); }
     #wowGallery .modal__imageWrap{ position:relative; border-radius:18px; overflow:hidden; box-shadow: 0 24px 70px rgba(0,0,0,.35); background: rgba(255,255,255,.04); }
     #wowGallery .modal__img{ display:block; width:100%; height: min(520px, 62vh); object-fit:cover; border-radius:18px; background: rgba(255,255,255,.04); }
@@ -346,14 +346,14 @@
       }
 
       /* ===== Modal logic ===== */
-      const modal = document.getElementById('imgModal');
-      const modalOverlay = document.getElementById('modalOverlay');
-      const modalClose = document.getElementById('modalClose');
-      const modalPrev = document.getElementById('modalPrev');
-      const modalNext = document.getElementById('modalNext');
-      const modalImg = document.getElementById('modalImg');
-      const modalCount = document.getElementById('modalCount');
-      const modalTitle = document.getElementById('modalTitle');
+      const modal = gallery.querySelector('#imgModal');
+      const modalOverlay = gallery.querySelector('#modalOverlay');
+      const modalClose = gallery.querySelector('#modalClose');
+      const modalPrev = gallery.querySelector('#modalPrev');
+      const modalNext = gallery.querySelector('#modalNext');
+      const modalImg = gallery.querySelector('#modalImg');
+      const modalCount = gallery.querySelector('#modalCount');
+      const modalTitle = gallery.querySelector('#modalTitle');
       let modalIndex = 0;
       let lastFocusEl = null;
 
@@ -368,7 +368,7 @@
       function openModal(index){
         if(!images.length) return;
         lastFocusEl = document.activeElement;
-        modalIndex = Math.max(0, Math.min(images.length - 1, index||0));
+        modalIndex = Math.max(0, Math.min(images.length - 1, (index ?? 0)));
         modal.setAttribute('aria-hidden','false');
         try{ document.body.style.overflow = 'hidden'; }catch{}
         renderModal();
@@ -386,6 +386,7 @@
       if(modal){
         modalClose?.addEventListener('click', closeModal);
         modalOverlay?.addEventListener('click', closeModal);
+        modalClose?.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); closeModal(); } });
         modalNext?.addEventListener('click', modalNextImg);
         modalPrev?.addEventListener('click', modalPrevImg);
         window.addEventListener('keydown', function(e){
