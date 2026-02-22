@@ -4,77 +4,152 @@
 <section class="section">
   <div class="container-page">
     <div class="kicker">Your cart</div>
-    <h1 class="mb-3">Review and checkout</h1>
+    <h1 class="mb-1">Review and checkout</h1>
+    <p class="text-ink-600 mt-0 mb-4">Secure, safe and flexible — you can reschedule when needed.</p>
     @php
       $items = session('cart.items', []);
-      $total = 0.0;
-      foreach ($items as $it) { $p=(float)($it['price']??0); if($p>=1000) $p=$p/100; $total += $p * (int)($it['qty']??1); }
+      $subtotal = 0.0;
+      foreach ($items as $it) { $p=(float)($it['price']??0); if($p>=1000) $p=$p/100; $subtotal += $p * (int)($it['qty']??1); }
+      $discount = 0.0; // apply on promo code server-side later
+      $total = max(0, $subtotal - $discount);
     @endphp
     @if(empty($items))
-      <div class="card p-6 text-ink-700">Your cart is empty. <a class="link-wow" href="/search">Browse listings</a>.</div>
+      <div class="card p-8 text-ink-700 text-center">
+        <div class="mb-2" style="font-size:3rem;line-height:1">🛒</div>
+        <h3 class="m-0">Your cart is empty</h3>
+        <p class="text-ink-600 mt-1">Find something you’ll love.</p>
+        <div class="mt-3">
+          <a class="btn-wow btn-wow--cta" href="/search">Browse listings</a>
+        </div>
+      </div>
     @else
       <div class="cart-grid">
-        <div class="cart-main card p-4">
+        <div class="cart-main card p-0">
+          <div class="cart-head">
+            <div>Item</div>
+            <div>Qty</div>
+            <div>Price</div>
+          </div>
+          <div class="cart-body">
           @foreach($items as $id => $it)
-            @php $price = (float)($it['price'] ?? 0); if($price>=1000) $price=$price/100; @endphp
-            <div class="cart-row" data-id="{{ $id }}">
-              <a class="cart-img" href="{{ $it['url'] ?? '#' }}">@if(!empty($it['image']))<img src="{{ $it['image'] }}" alt="{{ $it['title'] ?? '' }}" />@endif</a>
-              <div class="cart-info">
-                <a class="title" href="{{ $it['url'] ?? '#' }}">{{ $it['title'] ?? 'Item' }}</a>
-                <div class="meta">Unit: £{{ number_format($price,2) }}</div>
+            @php $price = (float)($it['price'] ?? 0); if($price>=1000) $price=$price/100; $qty=(int)($it['qty']??1); @endphp
+            <div class="cart-row" data-id="{{ $id }}" data-unit="{{ number_format($price,2,'.','') }}">
+              <div class="cart-item">
+                <a class="cart-img" href="{{ $it['url'] ?? '#' }}">@if(!empty($it['image']))<img src="{{ $it['image'] }}" alt="{{ $it['title'] ?? '' }}" />@endif</a>
+                <div class="cart-info">
+                  <a class="title" href="{{ $it['url'] ?? '#' }}">{{ $it['title'] ?? 'Item' }}</a>
+                  <div class="meta">Unit: £{{ number_format($price,2) }}</div>
+                  <button class="cart-remove mt-1" type="button" data-remove="{{ $id }}" aria-label="Remove">Remove</button>
+                </div>
+              </div>
+              <div class="cart-qty">
                 <div class="qty">
                   <button type="button" class="btn btn-sm js-qdec" aria-label="Decrease">−</button>
-                  <input type="number" class="qty-input" min="1" value="{{ (int)($it['qty'] ?? 1) }}" />
+                  <input type="number" class="qty-input" min="1" value="{{ $qty }}" />
                   <button type="button" class="btn btn-sm js-qinc" aria-label="Increase">+</button>
                 </div>
               </div>
-              <div class="cart-amt">£{{ number_format($price * (int)($it['qty'] ?? 1), 2) }}</div>
-              <button class="cart-remove" type="button" data-remove="{{ $id }}" aria-label="Remove">Remove</button>
+              <div class="cart-amt">£{{ number_format($price * $qty, 2) }}</div>
             </div>
           @endforeach
+          </div>
+          <div class="cart-foot">
+            <a href="/search" class="link-wow">Continue shopping</a>
+          </div>
         </div>
-        <aside class="cart-side card p-4" id="checkout">
-          <div class="total-row"><span>Total</span><strong>£{{ number_format($total, 2) }}</strong></div>
-          <button class="btn-wow btn-wow--cta w-100">Proceed to checkout</button>
-          <p class="text-ink-600 mt-2 mb-0" style="font-size:.9rem">We’ll confirm details before payment.</p>
+
+        <aside class="cart-side card p-0" id="checkout">
+          <div class="sum-head">Order summary</div>
+          <div class="sum-body">
+            <div class="sum-row"><span>Subtotal</span><strong id="sum-subtotal">£{{ number_format($subtotal, 2) }}</strong></div>
+            <div class="sum-row"><span>Discounts</span><strong id="sum-discount">-£{{ number_format($discount, 2) }}</strong></div>
+            <div class="sum-row muted"><span>Taxes</span><span>Included where applicable</span></div>
+
+            <div class="sum-sep"></div>
+            <div class="sum-row total"><span>Total</span><strong id="sum-total">£{{ number_format($total, 2) }}</strong></div>
+
+            <div class="promo">
+              <label for="promo-code">Promo code</label>
+              <div class="promo-inline">
+                <input id="promo-code" type="text" placeholder="Enter code" value="{{ session('cart_promo_code') }}" />
+                <button type="button" class="btn-wow btn-wow--outline btn-sm" id="apply-promo">Apply</button>
+              </div>
+              <div id="promo-msg" class="promo-msg"></div>
+            </div>
+
+            <button class="btn-wow btn-wow--cta w-100" id="checkoutBtn">Proceed to checkout</button>
+            <div class="trust-hints">
+              <div class="hint"><span class="dot"></span>Secure checkout</div>
+              <div class="hint"><span class="dot"></span>Free reschedule window</div>
+            </div>
+          </div>
         </aside>
       </div>
     @endif
   </div>
-</section>
+  </section>
 
 <script>
 (function(){
   function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
   function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest','X-XSRF-TOKEN':token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
+  function money(n){ try{ return '£'+Number(n).toFixed(2) }catch(_){ return '£0.00' } }
+  function recalc(){
+    var rows = document.querySelectorAll('.cart-row'); var sub=0; rows.forEach(function(row){ var unit = parseFloat(row.getAttribute('data-unit')||'0'); var qty = parseInt(row.querySelector('.qty-input')?.value||'1',10)||1; sub += unit*qty; var amt=row.querySelector('.cart-amt'); if(amt) amt.textContent = money(unit*qty); });
+    document.getElementById('sum-subtotal')?.replaceChildren(document.createTextNode(money(sub)));
+    var disc = document.getElementById('sum-discount'); var dValText = disc?.textContent?.replace('£','').replace('-','')||'0'; var dVal = parseFloat(dValText)||0; var tot = Math.max(0, sub - dVal); document.getElementById('sum-total')?.replaceChildren(document.createTextNode(money(tot)));
+  }
   document.addEventListener('click', function(e){
-    var row = e.target.closest('.cart-row'); if(!row) return;
-    var id = row.getAttribute('data-id');
-    if(e.target.matches('[data-remove]')){
-      post('/api/cart/remove', { id:id }).then(()=>{ window.location.reload(); });
+    var row = e.target.closest('.cart-row');
+    if(row && (e.target.classList.contains('js-qdec') || e.target.classList.contains('js-qinc'))){
+      var id = row.getAttribute('data-id'); var inp = row.querySelector('.qty-input'); var v = parseInt(inp.value||'1',10); v = isFinite(v)?v:1; v += (e.target.classList.contains('js-qinc')?1:-1); if(v<1) v=1; inp.value = v; recalc(); post('/api/cart/update', { id:id, qty:v }); return;
     }
-    if(e.target.classList.contains('js-qdec') || e.target.classList.contains('js-qinc')){
-      var inp = row.querySelector('.qty-input'); var v = parseInt(inp.value||'1',10); v = isFinite(v)?v:1; v += (e.target.classList.contains('js-qinc')?1:-1); if(v<1) v=1; inp.value = v; post('/api/cart/update', { id:id, qty:v }).then(()=>{ window.location.reload(); });
+    if(e.target.matches('[data-remove]')){
+      var id = e.target.getAttribute('data-remove'); post('/api/cart/remove', { id:id }).then(function(){ var r=document.querySelector('.cart-row[data-id="'+id+'"]'); if(r){ r.remove(); recalc(); if(!document.querySelector('.cart-row')){ window.location.reload(); } } }); return;
     }
   });
+  document.getElementById('apply-promo')?.addEventListener('click', function(){
+    var code = (document.getElementById('promo-code')?.value||'').trim(); var msg=document.getElementById('promo-msg');
+    post('/api/cart/promo', { code: code }).then(function(){ msg.textContent = code? ('Code \''+code+'\' applied') : 'Code cleared'; msg.className='promo-msg ok'; }).catch(function(){ msg.textContent='Could not apply code'; msg.className='promo-msg err'; });
+  });
+  // Initial calc
+  recalc();
 })();
 </script>
 
 <style>
 .cart-grid{ display:grid; grid-template-columns: 1fr; gap:16px }
-@media (min-width: 992px){ .cart-grid{ grid-template-columns: 2fr 1fr } }
-.cart-row{ display:grid; grid-template-columns:80px 1fr auto auto; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid #e5e7eb }
+@media (min-width: 1024px){ .cart-grid{ grid-template-columns: 1.6fr 1fr } }
+.cart-head{ display:grid; grid-template-columns: 1fr 140px 120px; gap:10px; padding:14px 16px; border-bottom:1px solid #e5e7eb; background:linear-gradient(180deg,#fff,#f9fafb) }
+.cart-body{ display:block }
+.cart-row{ display:grid; grid-template-columns: 1fr 140px 120px; gap:10px; align-items:center; padding:14px 16px; border-bottom:1px solid #f1f5f9 }
 .cart-row:last-child{ border-bottom:0 }
-.cart-img{ display:block; width:80px; height:80px; border-radius:10px; overflow:hidden; border:1px solid #e5e7eb; background:#fafafa }
+.cart-item{ display:flex; align-items:center; gap:12px }
+.cart-img{ display:block; width:72px; height:72px; border-radius:12px; overflow:hidden; border:1px solid #e5e7eb; background:#fafafa }
 .cart-img img{ width:100%; height:100%; object-fit:cover; display:block }
 .cart-info .title{ font-weight:700; color:#0b1323; text-decoration:none }
-.cart-info .meta{ color:#64748b }
-.qty{ display:inline-grid; grid-template-columns: 32px 54px 32px; align-items:center; gap:6px; margin-top:6px }
-.qty-input{ width:54px; height:32px; text-align:center; border:1px solid #e2e8f0; border-radius:6px }
-.cart-amt{ font-weight:700; color:#0b1323 }
-.cart-remove{ background:none; border:0; color:#ef4444; cursor:pointer }
-.cart-side .total-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:1.1rem }
+.cart-info .meta{ color:#64748b; font-size:.9rem }
+.cart-remove{ background:none; border:0; color:#ef4444; cursor:pointer; padding:0 }
+.cart-qty{ display:flex; align-items:center; justify-content:center }
+.qty{ display:inline-grid; grid-template-columns: 34px 56px 34px; align-items:center; gap:6px }
+.qty-input{ width:56px; height:36px; text-align:center; border:1px solid #e2e8f0; border-radius:8px }
+.cart-amt{ font-weight:800; color:#0b1323; text-align:right }
+.cart-foot{ padding:12px 16px; background:#fff }
+
+.cart-side .sum-head{ padding:14px 16px; border-bottom:1px solid #e5e7eb; background:linear-gradient(180deg,#fff,#f9fafb); font-weight:700 }
+.cart-side .sum-body{ padding:14px 16px }
+.sum-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0 }
+.sum-row.muted{ color:#64748b; font-size:.9rem }
+.sum-row.total strong{ font-size:1.25rem }
+.sum-sep{ height:1px; background:#e5e7eb; margin:8px 0 }
+.promo{ margin-top:8px }
+.promo-inline{ display:flex; gap:8px; margin-top:6px }
+.promo-inline input{ flex:1; height:38px; border:1px solid #e2e8f0; border-radius:8px; padding:0 10px }
+.promo-msg{ margin-top:6px; font-size:.9rem; color:#64748b }
+.promo-msg.ok{ color:#166534 }
+.promo-msg.err{ color:#b91c1c }
+.trust-hints{ display:flex; align-items:center; gap:10px; margin-top:10px; color:#64748b; font-size:.9rem }
+.trust-hints .dot{ width:6px; height:6px; background:#549483; border-radius:999px; display:inline-block; margin-right:6px }
 .w-100{ width:100% }
 </style>
 @endsection
-
