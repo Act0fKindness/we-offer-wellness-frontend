@@ -52,6 +52,18 @@
       font-family: 'Manrope', var(--bs-font-sans-serif) !important;
     }
     .product-page h1 { font-weight: 600 !important; }
+
+    /* FOMO text styling within content-bottom */
+    .content-bottom .fomo {
+      margin: 0 0 8px;
+      font-size: var(--fomo);
+      font-weight: 600;
+      color: rgba(11, 18, 32, .84);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
   </style>
   <div class="container-page">
     <div class="row g-4">

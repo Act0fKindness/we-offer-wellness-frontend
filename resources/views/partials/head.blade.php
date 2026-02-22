@@ -26611,6 +26611,30 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     }
 </style>
+
+<!-- Quick override: ensure therapy card media + fomo render consistently -->
+<style>
+  .wow-therapy-card-scope .media img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border:1px solid #eee;
+    display:block;
+    border-radius:2px;
+  }
+  .wow-therapy-card-scope .content-bottom .fomo,
+  .content-bottom .fomo{
+    margin: 0 0 8px;
+    font-size: var(--fomo, 12px);
+    font-weight: 600;
+    color: rgba(11, 18, 32, .84);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
+
 <meta name="description"
       content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
       inertia="">
