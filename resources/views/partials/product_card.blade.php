@@ -364,14 +364,20 @@
         localStorage.setItem(key, JSON.stringify(obj));
       }catch(e){}
     }
+    function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
+    function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-XSRF-TOKEN': token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
     function handleClick(e){
-      var btn = e.target.closest('.js-add-to-cart'); if(!btn) return;
+      var addBtn = e.target.closest('.js-add-to-cart');
+      var buyBtn = e.target.closest('.js-buy-now');
+      if(!addBtn && !buyBtn) return;
       e.preventDefault(); e.stopPropagation();
-      var item={ id: btn.dataset.id, title: btn.dataset.title, price: btn.dataset.price, image: btn.dataset.image, url: btn.dataset.url };
-      addToLocalCart(item);
-      try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: item.id } })); }catch(e){}
-      // Optional tiny feedback
-      try{ btn.textContent='Added'; setTimeout(function(){ btn.textContent='Add to cart'; }, 1200) }catch(e){}
+      var btn = addBtn || buyBtn;
+      var id = btn.dataset.id;
+      post('/api/cart/add', { id: id, qty: 1 }).then(function(){
+        try{ window.dispatchEvent(new CustomEvent('wow:add-to-cart', { detail:{ id: id } })); }catch(e){}
+        if(buyBtn){ window.location.assign('/cart'); return; }
+        try{ btn.textContent='Added'; setTimeout(function(){ btn.textContent='Add to cart'; }, 1200) }catch(e){}
+      }).catch(function(){ try{ btn.textContent='Try again'; setTimeout(function(){ btn.textContent= addBtn? 'Add to cart':'Book now'; }, 1200) }catch(e){} });
     }
     document.addEventListener('click', handleClick);
   })();
@@ -502,7 +508,7 @@
               data-image="{{ $image }}"
               data-url="{{ $url }}"
             >Add to cart</button>
-            <span class="btn btn--primary">Book now</span>
+            <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}">Book now</span>
           </div>
         </div>
       </div>
