@@ -67,7 +67,7 @@
                     <!-- By Need -->
                     <div data-menu="need" class="grid md:grid-cols-3 gap-6">
                         <div class="menu-col">
-                            <div class="kicker mb-2">How are you feeling?</div>
+                            <div class="mega-kicker mb-2">How are you feeling?</div>
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/feel/stress-and-anxiety">Stress &amp; anxiety</a></li>
                                 <li><a class="menu-link" href="/feel/sleep-issues">Trouble sleeping</a></li>
@@ -77,7 +77,7 @@
                             </ul>
                         </div>
                         <div class="menu-col">
-                            <div class="kicker mb-2">What do you want?</div>
+                            <div class="mega-kicker mb-2">What do you want?</div>
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/feel/mens-health">Men’s health</a></li>
                                 <li><a class="menu-link" href="/feel/digestive-health">Digestive &amp; gut health</a></li>
@@ -87,7 +87,7 @@
                             </ul>
                         </div>
                         <div class="menu-col">
-                            <div class="kicker mb-2">Help me choose</div>
+                            <div class="mega-kicker mb-2">Help me choose</div>
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/help/which-therapy">Match me to a therapy (quiz)</a></li>
                                 <li><a class="menu-link" href="/therapies?tag=gentle-beginner">Gentle &amp; beginner‑friendly options</a></li>
@@ -98,7 +98,7 @@
                     <!-- Therapies -->
                     <div data-menu="therapies" class="grid md:grid-cols-3 gap-6">
                         <div class="menu-col">
-                            <div class="kicker mb-2">Popular therapies</div>
+                            <div class="mega-kicker mb-2">Popular therapies</div>
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/therapy/massage">Massage therapy</a></li>
                                 <li><a class="menu-link" href="/therapy/reiki">Reiki</a></li>
@@ -111,7 +111,7 @@
                         </div>
 
                         <div class="menu-col">
-                            <div class="kicker mb-2">Guides</div>
+                            <div class="mega-kicker mb-2">Guides</div>
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
                                 <li><a class="menu-link" href="/help">Help centre</a></li>
@@ -121,21 +121,21 @@
                     <!-- Events & Workshops -->
                     <div data-menu="events" class="grid md:grid-cols-3 gap-6">
                         <div class="menu-col">
-                            <div class="kicker mb-2">Highlights</div>
+                            <div class="mega-kicker mb-2">Highlights</div>
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/events-and-workshops">Upcoming events &amp; workshops</a></li>
                                 <li><a class="menu-link" href="/classes">Classes</a></li>
                             </ul>
                         </div>
                         <div class="menu-col">
-                            <div class="kicker mb-2">Explore</div>
+                            <div class="mega-kicker mb-2">Explore</div>
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/near-me">Online &amp; near me</a></li>
                                 <li><a class="menu-link" href="/help">Help centre</a></li>
                             </ul>
                         </div>
                         <div class="menu-col">
-                            <div class="kicker mb-2">Guides</div>
+                            <div class="mega-kicker mb-2">Guides</div>
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
                             </ul>

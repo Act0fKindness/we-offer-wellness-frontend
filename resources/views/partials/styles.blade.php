@@ -23750,9 +23750,24 @@
         border-radius: 12px
     }
 
-    .menu-col .kicker {
-        color: var(--ink-700)
+    .menu-col .kicker { color: var(--ink-700) }
+
+    /* Mega menu kicker (separate from global .kicker) */
+    .mega-kicker {
+        display: inline-flex;
+        align-items: center;
+        padding: 0px !important;
+        margin-bottom: 6px !important;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--ink-700);
+        width: -moz-fit-content !important;
+        width: fit-content !important;
+        max-width: 100%;
     }
+    .menu-col .mega-kicker { color: var(--ink-700) }
 
     .menu-link {
         display: block;
