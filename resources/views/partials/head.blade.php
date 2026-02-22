@@ -26514,7 +26514,9 @@ h2 { font-family: 'Playfair Display', Georgia, serif; font-weight: 500; }
 .paren-manrope {
   font-size: 20px;
   font-family: 'Manrope', var(--bs-font-sans-serif) !important;
-  font-weight: inherit;
+  font-weight: 400;
+  position: relative;
+  top: -5px;
 }
 @media (max-width: 860px){
   .paren-manrope { font-size: 18px; }
