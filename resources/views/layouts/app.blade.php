@@ -183,10 +183,19 @@
       var closeTimer;
       function scheduleClose(){ clearTimeout(closeTimer); closeTimer = setTimeout(hideMenu, 400); }
       function cancelClose(){ clearTimeout(closeTimer); }
-      headerEl.addEventListener('mouseleave', scheduleClose);
+      // Only close when leaving BOTH header and panel areas
+      headerEl.addEventListener('mouseleave', function(e){
+        try { if (panel.contains(e.relatedTarget)) return; } catch(_) {}
+        scheduleClose();
+      });
       headerEl.addEventListener('mouseenter', cancelClose);
       panel.addEventListener('mouseenter', cancelClose);
-      panel.addEventListener('mouseleave', scheduleClose);
+      panel.addEventListener('mouseleave', function(e){
+        try { if (headerEl.contains(e.relatedTarget)) return; } catch(_) {}
+        scheduleClose();
+      });
+      // Defensive: keep open on any movement within panel
+      panel.addEventListener('mousemove', cancelClose);
       document.addEventListener('keydown', function(e){ if(e.key==='Escape') hideMenu() });
     }
   } catch {}
