@@ -131,11 +131,11 @@
                 </div>
 
                 <div class="d-flex gap-2 mb-2" role="group" aria-label="Availability choice">
-                    <button type="button" class="btn btn-outline-secondary active" id="btnBookLater">
-                        <i class="bi bi-clock-history me-1"></i>Decide later
-                    </button>
                     <button type="button" class="btn btn-outline-success" id="btnBookNow">
-                        <i class="bi bi-check2-circle me-1"></i>Select date
+                        <i class="bi bi-check2-circle me-1"></i>Pick now
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary active" id="btnBookLater">
+                        <i class="bi bi-clock-history me-1"></i>Pick later
                     </button>
                 </div>
 
@@ -240,11 +240,11 @@
                         <span class="badge rounded-pill ms-auto badge-note">Select a date or decide later</span>
                     </div>
                     <div class="d-flex gap-2" role="group" aria-label="Availability choice (sheet)">
-                        <button type="button" class="btn btn-outline-secondary active" id="sheetBookLater">
-                            <i class="bi bi-clock-history me-1"></i>Decide later
-                        </button>
                         <button type="button" class="btn btn-outline-success" id="sheetBookNow">
-                            <i class="bi bi-check2-circle me-1"></i>Select date
+                            <i class="bi bi-check2-circle me-1"></i>Pick now
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary active" id="sheetBookLater">
+                            <i class="bi bi-clock-history me-1"></i>Pick later
                         </button>
                     </div>
                     <div class="small text-secondary mt-2" id="sheetBookingNote">Choose now or decide later — your order is still secured.</div>
