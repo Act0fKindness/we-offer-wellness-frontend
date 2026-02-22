@@ -104,7 +104,7 @@
     #wowGallery .modal{ position: fixed; inset: 0; display: none; z-index: 1000; }
     #wowGallery .modal[aria-hidden="false"]{ display:block; }
     #wowGallery .modal__overlay{ position:absolute; inset:0; background: rgba(0,0,0,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index:0; }
-    #wowGallery .modal__top{ position:absolute; top: 18px; left: 0; right: 0; display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; padding:0 18px; pointer-events:none; z-index:1; }
+    #wowGallery .modal__top{ position:absolute; top: 18px; left: 0; right: 0; display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; padding:0 18px; z-index:1; }
     #wowGallery .modal__count{ justify-self:center; color: rgba(255,255,255,.72); font-weight:700; letter-spacing:.06em; font-size:12px; }
     #wowGallery .modal__close{ pointer-events:auto; justify-self:end; width:38px; height:38px; border-radius:999px; border:0; background: rgba(255,255,255,.92); color: rgba(11,18,32,.85); display:grid; place-items:center; cursor:pointer; box-shadow: 0 12px 26px rgba(0,0,0,.22); transition: transform 180ms ease, filter 180ms ease; }
     #wowGallery .modal__close:hover{ transform: scale(1.06); filter: brightness(1.02); }
