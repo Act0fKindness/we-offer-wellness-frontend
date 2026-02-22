@@ -213,7 +213,7 @@
         img.alt = altText || "";
         img.src = url;
         div.appendChild(img);
-        const open = () => openModal(absoluteIndex || 0);
+        const open = () => openModal(absoluteIndex ?? 0);
         div.addEventListener('click', open);
         div.addEventListener('keydown', (e) => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); open(); } });
         return div;
