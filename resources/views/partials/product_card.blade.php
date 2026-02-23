@@ -409,7 +409,7 @@
                 <span class="star" style="color:#f5c84b;"></span>
                 <span class="star star--empty"></span>
               </span>
-              <span>(231)</span>
+              <span></span>
             </div>
           <div class="meta">
             @if($durationLabel)
@@ -478,7 +478,7 @@
 
         </div>
         <div class="content-bottom">
-          <p class="fomo">Filling fast — only 2 slots left this week</p>
+          <p class="fomo">Click to find out more information</p>
           @if($priceMin)
             <div class="price">
               <span class="from">From</span>

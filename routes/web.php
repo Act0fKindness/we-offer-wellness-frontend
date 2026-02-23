@@ -19,6 +19,7 @@ use App\Models\Review;
 use App\Http\Controllers\Api\V3SubscriberController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SafetyContraindicationsController;
+use App\Http\Controllers\HelpCentreController;
 
 Route::get('/', function () {
     // Fetch a few curated product slices for the home page
@@ -777,6 +778,9 @@ Route::get('/cookies', function(){
 
 Route::get('/safety-and-contraindications', [SafetyContraindicationsController::class, 'index'])
     ->name('safety-and-contraindications');
+
+Route::get('/help', [HelpCentreController::class, 'index'])
+    ->name('help');
 
 // Dynamic CMS-like pages stored in shared DB (from Backend admin)
 Route::fallback([\App\Http\Controllers\PageController::class, 'show']);
