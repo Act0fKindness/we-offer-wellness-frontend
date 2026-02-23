@@ -60,7 +60,7 @@ We review profiles for clarity and alignment with our wellness guidelines and ma
             <div class="max-w-3xl">
                 <h2 class="text-xl md:text-2xl font-semibold tracking-tight">Frequently asked questions</h2>
 
-                <div class="mt-5 space-y-3">
+                <div class="mt-5 space-y-3 mb-4">
                     @foreach($faqs as $i => $item)
                         <details class="group rounded-2xl border border-ink-200/60 bg-white shadow-sm overflow-hidden">
                             <summary class="cursor-pointer list-none px-5 py-4 md:px-6 md:py-5 flex items-start gap-3">
