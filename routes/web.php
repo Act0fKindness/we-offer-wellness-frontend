@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\V3SubscriberController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SafetyContraindicationsController;
 use App\Http\Controllers\HelpCentreController;
+use App\Http\Controllers\AboutController;
 
 Route::get('/', function () {
     // Fetch a few curated product slices for the home page
@@ -781,6 +782,9 @@ Route::get('/safety-and-contraindications', [SafetyContraindicationsController::
 
 Route::get('/help', [HelpCentreController::class, 'index'])
     ->name('help');
+
+Route::get('/about', [AboutController::class, 'index'])
+    ->name('about');
 
 // Dynamic CMS-like pages stored in shared DB (from Backend admin)
 Route::fallback([\App\Http\Controllers\PageController::class, 'show']);
