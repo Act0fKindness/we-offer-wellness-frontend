@@ -26747,4 +26747,4 @@ document.addEventListener('DOMContentLoaded', function(){
       content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
       inertia="">
 <meta property="og:url" content="" inertia="">
-<title inertia="">Holistic Therapy That Works | We Offer Wellness®</title>
+<title inertia="">Holistic Therapies That Work | We Offer Wellness®</title>
