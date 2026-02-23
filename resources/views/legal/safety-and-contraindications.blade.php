@@ -1,5 +1,5 @@
 {{-- resources/views/legal/safety-and-contraindications.blade.php --}}
-@extends('layouts.app-v3')
+@extends('layouts.app')
 
 @php
     $pageTitle = $title ?? 'Safety & Contraindications';
