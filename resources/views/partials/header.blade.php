@@ -3,7 +3,7 @@
             <div class="container-page">
                 <div class="utility-links">
                     <div class="utility-links__primary"><a href="/reset" style="display:none">Free 7-Day Reset</a><a href="/about">About We
-                        Offer Wellness™</a><a href="/help">Help Centre</a><a href="/safety-and-contraindications">Safety
+                        Offer Wellness®</a><a href="/help">Help Centre</a><a href="/safety-and-contraindications">Safety
                         &amp; Contraindications</a></div>
                     <div class="utility-links__secondary"><a href="/for-business" style="display:none">For Business</a><a href="https://studio.weofferwellness.co.uk" style="display:none">Become a Practitioner</a></div>
                 </div>
@@ -261,7 +261,7 @@
                 <div class="mobile-menu__section">
                     <div class="mobile-menu__section-title">Help &amp; Info</div>
                     <ul class="mobile-menu__list">
-                        <li><a class="mobile-menu__link" href="/about">About We Offer Wellness™</a></li>
+                        <li><a class="mobile-menu__link" href="/about">About We Offer Wellness®</a></li>
                         <li><a class="mobile-menu__link" href="/help">Help Centre</a></li>
                         <li><a class="mobile-menu__link" href="/safety-and-contraindications">Safety &amp; Contraindications</a></li>
                     </ul>

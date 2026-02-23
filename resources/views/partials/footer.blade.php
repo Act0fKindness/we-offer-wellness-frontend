@@ -31,7 +31,7 @@
                 </div>
                 <p class="tagline">Safe, trusted therapies and wellness services that help you feel better —
                     today.</p>
-                <p class="about-snippet">We Offer Wellness™ connects you with trusted holistic therapies and
+                <p class="about-snippet">We Offer Wellness® connects you with trusted holistic therapies and
                     gentle classes to support your mind, body and spirit — from the comfort of home or in-person
                     with verified practitioners.</p></div>
             <div class="subscribe-col">

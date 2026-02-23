@@ -100,7 +100,7 @@
 <div class="container-wrap p-3">
     <aside class="buybox" id="buybox">
         <div class="card p-3 p-md-4">
-            
+
             <div class="d-flex align-items-baseline gap-2 my-1 mt-0">
                 <div class="price" id="price">£0.00</div><div class="compare" id="compare"></div>
             </div>
@@ -272,7 +272,7 @@
             <div class="modal-header">
                 <div>
                     <div class="text-muted small">Select a Date & Time</div>
-                    <h5 class="modal-title" id="bookingModalLabel">Discovery Call — We Offer Wellness™</h5>
+                    <h5 class="modal-title" id="bookingModalLabel">Discovery Call — We Offer Wellness®</h5>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>

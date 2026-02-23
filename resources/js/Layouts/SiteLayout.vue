@@ -66,7 +66,7 @@ const link = (label, href, opts = {}) => ({ label, href, ...opts })
 
 const utilityPrimaryLinks = [
   link('Free 7-Day Reset', '/reset'),
-  link('About We Offer Wellness™', '/about'),
+  link('About We Offer Wellness®', '/about'),
   link('Help Centre', '/help'),
   link('Safety & Contraindications', '/safety-and-contraindications'),
 ]
@@ -575,7 +575,7 @@ function openV3NotifyModal(event){
           <div class="brand-col">
             <img src="https://cdn.shopify.com/s/files/1/0820/3947/2469/files/wow-logo-white_b5bc0fc0-ae06-4aa2-af86-f7a42ff78107.png?v=1757430233" alt="We Offer Wellness" class="logo" />
             <p class="tagline">Safe, trusted therapies and wellness services that help you feel better — today.</p>
-            <p class="about-snippet">We Offer Wellness™ connects you with trusted holistic therapies and gentle classes to support your mind, body and spirit — from the comfort of home or in-person with verified practitioners.</p>
+            <p class="about-snippet">We Offer Wellness® connects you with trusted holistic therapies and gentle classes to support your mind, body and spirit — from the comfort of home or in-person with verified practitioners.</p>
           </div>
         <div class="subscribe-col">
             <div class="subscribe-card">
@@ -670,7 +670,7 @@ function openV3NotifyModal(event){
     </footer>
   </div>
   <LocationGate v-if="!isV3Mode" />
-  
+
 </template>
 
 <style>
