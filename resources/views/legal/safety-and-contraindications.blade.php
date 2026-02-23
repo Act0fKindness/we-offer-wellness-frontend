@@ -3,13 +3,13 @@
 
 @php
     $pageTitle = $title ?? 'Safety & Contraindications';
-    $pageDescription = $metaDescription ?? 'Safety guidance and contraindications for wellness experiences on We Offer Wellness™.';
+    $pageDescription = $metaDescription ?? 'Safety guidance and contraindications for wellness experiences on We Offer Wellness®.';
     $pageCanonical = $canonical ?? url('/safety-and-contraindications');
 
     $faqs = [
         [
             'q' => 'How do you vet your wellness providers?',
-            'a' => 'Practitioners on We Offer Wellness™ are independent professionals. When they join, they confirm that they hold appropriate qualifications, experience and (where required) professional insurance for the services they offer.
+            'a' => 'Practitioners on We Offer Wellness® are independent professionals. When they join, they confirm that they hold appropriate qualifications, experience and (where required) professional insurance for the services they offer.
 We review profiles for clarity and alignment with our wellness guidelines and may remove providers who do not meet our standards or where we have concerns about safety or professionalism.',
         ],
         [
@@ -47,7 +47,7 @@ We review profiles for clarity and alignment with our wellness guidelines and ma
 
             <div class="mt-5 space-y-4 text-ink-700 leading-relaxed">
                 <p>
-                    At We Offer Wellness™, your safety and enjoyment of the offering you purchase is paramount.
+                    At We Offer Wellness®, your safety and enjoyment of the offering you purchase is paramount.
                 </p>
                 <p>
                     You should discuss any medical conditions with your chosen practitioner if you have any concerns as to suitability and be guided by their experience and expertise.
