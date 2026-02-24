@@ -1,3 +1,9 @@
+<style>
+    button.md\:hidden.inline-flex.items-center.justify-center.p-2.rounded-md.text-ink-700.hover\:bg-ink-100 {
+        border-radius: 40px !important;
+    }
+    </style>
+
 <div class="pointer-events-none fixed inset-0 -z-10"></div>
         <div class="utility-bar hidden md:block">
             <div class="container-page">
