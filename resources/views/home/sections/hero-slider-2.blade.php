@@ -257,6 +257,14 @@
     .ourvibe-box.box-1{ bottom: 220px; }
     .ourvibe-box.box-2{ bottom: 118px; }
   }
+
+  a.ourvibe-buy {
+      font-family: "Gloria Hallelujah", cursive;
+      background: none;
+      color: #000;
+      font-size: 20px;
+      box-shadow: none;
+  }
 </style>
 
 <section data-v-f43bb09d="" class="whero whero--s2">
