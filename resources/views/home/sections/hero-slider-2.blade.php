@@ -1,6 +1,10 @@
 {{-- resources/views/home/sections/hero-slider-2.blade.php --}}
 {{-- Slide 2 = OUR VIBE poster-style hero (background image, top-centre logo, centre image, bottom-centre text/buttons) --}}
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap" rel="stylesheet">
+
 <style>
   /* Scoped to slide 2 only */
   .whero.whero--s2{
@@ -185,7 +189,6 @@
   /* BOTTOM (text + buttons bottom centre) */
 .ourvibe-bottom {
     text-align: center;
-    font-family: "Brush Script MT", "Segoe Script", "Comic Sans MS", cursive;
     font-size: clamp(18px, 1.9vw, 30px);
     color: rgba(11, 15, 25, .92);
     text-shadow: 0 10px 22px rgba(0, 0, 0, .10);
@@ -195,7 +198,9 @@
     margin: auto;
     position: relative;
     z-index: 2;
+  font-family: "Gloria Hallelujah", cursive;
 }
+
 
   .ourvibe-actions{
     margin-top: 40px;
