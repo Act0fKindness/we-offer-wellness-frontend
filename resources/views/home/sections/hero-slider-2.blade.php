@@ -263,7 +263,7 @@
       font-family: "Gloria Hallelujah", cursive;
       background: none;
       color: #000;
-      font-size: 20px;
+      font-size: 30px;
       box-shadow: none;
   }
 </style>
