@@ -126,22 +126,22 @@
     opacity: .95;
   }
 
-  .ourvibe-loc-badge{
-    display:inline-block;
+.ourvibe-loc-badge {
+    display: inline-block;
     margin-top: 14px;
     padding: 10px 14px;
     border-radius: 14px;
-    background: rgba(20,18,30,.88);
-    border: 4px solid rgba(20,18,30,.95);
-    color: #ffe55c;
+    background: none;
+    border: none;
+    color: #000000;
     font-weight: 1000;
     text-transform: uppercase;
     letter-spacing: .06em;
     line-height: 1.05;
     font-size: clamp(16px, 1.8vw, 26px);
-    text-shadow: 0 2px 0 rgba(0,0,0,.25);
-    box-shadow: 0 18px 45px rgba(0,0,0,.22);
-  }
+    text-shadow: none;
+    box-shadow: none;
+}
 
   .ourvibe-date{
     margin-top: clamp(18px, 3.2vw, 30px);
@@ -231,6 +231,7 @@
     justify-content:center;
     gap: 12px;
     flex-wrap:wrap;
+    font-family: 'Manrope';
   }
 
   .ourvibe-buy{
@@ -242,6 +243,7 @@
     border-radius: 999px;
     background: #0b0f19;
     color: #fff;
+    font-size: 12px;
     text-decoration:none;
     font-weight: 900;
     letter-spacing: .04em;
@@ -392,7 +394,7 @@
           </div>
 
           <div class="ourvibe-script">
-            <img height="80" style="height: 90px; margin: 20px 0px 40px 20px;" src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/cd90de68-645b-48c0-b54c-6c40c0592df8.png" />
+            <img height="80" style="height: 90px; margin: 20px 0px 10px 20px;" src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/cd90de68-645b-48c0-b54c-6c40c0592df8.png" />
           </div>
 
           <div class="ourvibe-loc-badge">
