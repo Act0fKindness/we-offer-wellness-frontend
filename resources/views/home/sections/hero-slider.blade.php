@@ -82,6 +82,25 @@
   @media (prefers-reduced-motion: reduce){
     .wow-hero-slide{ transition: none !important; }
   }
+
+  /* Slide 2 look */
+  .whero--s2 .whero-radial--s2{
+    /* example: cooler / brighter */
+    filter: hue-rotate(18deg) saturate(1.15);
+    opacity: .85;
+  }
+  .whero--s2 .whero-eyebrow--s2{ letter-spacing: .02em; }
+  .whero--s2 .whero-title--s2{ max-width: 18ch; }
+  .whero--s2 .whero-sub--s2{ max-width: 62ch; }
+
+  /* Slide 3 look */
+  .whero--s3 .whero-radial--s3{
+    /* example: warmer / bolder */
+    filter: hue-rotate(-12deg) saturate(1.25);
+    opacity: .9;
+  }
+  .whero--s3 .whero-title--s3{ max-width: 20ch; }
+  .whero--s3 .whero-subline--s3{ opacity: .95; }
 </style>
 @endpush
 
