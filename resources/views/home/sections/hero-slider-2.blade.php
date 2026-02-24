@@ -168,7 +168,7 @@
 
   .ourvibe-sticker{
     position:absolute;
-    top: 30px;
+    top: -30px;
     right: 0;
     width: clamp(120px, 12vw, 170px);
     height: clamp(120px, 12vw, 170px);
