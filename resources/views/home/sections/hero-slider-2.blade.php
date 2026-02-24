@@ -220,7 +220,7 @@
     border-radius: 999px;
     background: #0b0f19;
     color: #fff;
-    font-size: 12px;
+    font-size: 30px;
     text-decoration:none;
     font-weight: 900;
     letter-spacing: .04em;
