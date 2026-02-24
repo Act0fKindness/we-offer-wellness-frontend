@@ -50,7 +50,7 @@
                         <div class="nav-item"><a class="link-wow--nav" data-mega-menu="therapies" ex="0" href="/therapies">Therapies</a>
                         </div>
                         <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/classes">Classes</a></div>
-                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events-and-workshops">Events
+                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events-workshops">Events
                             &amp; Workshops</a></div>
                         <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/near-me">Online &amp; Near
                             Me</a></div>
@@ -155,7 +155,7 @@
                         <div class="menu-col">
                             <div class="mega-kicker mb-2">Highlights</div>
                             <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/events-and-workshops">Upcoming events &amp; workshops</a></li>
+                                <li><a class="menu-link" href="/events-workshops">Upcoming events &amp; workshops</a></li>
                                 <li><a class="menu-link" href="/classes">Classes</a></li>
                             </ul>
                         </div>
@@ -254,7 +254,7 @@
                     <li><a class="mobile-menu__link" href="/needs">By Need</a></li>
                     <li><a class="mobile-menu__link" href="/therapies">Therapies</a></li>
                     <li><a class="mobile-menu__link" href="/classes">Classes</a></li>
-                    <li><a class="mobile-menu__link" href="/events-and-workshops">Events &amp; Workshops</a></li>
+                    <li><a class="mobile-menu__link" href="/events-workshops">Events &amp; Workshops</a></li>
                     <li><a class="mobile-menu__link" href="/near-me">Online &amp; Near Me</a></li>
                     <li><a class="mobile-menu__link" href="/mindful-times">Mindful Times</a></li>
                 </ul>

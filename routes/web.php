@@ -40,8 +40,8 @@ Route::get('/therapies/{slug}', [TherapiesController::class, 'show'])
     ->name('therapies.show');
 
 /** Events & Workshops */
-Route::get('/events', [EventsController::class, 'index'])->name('events.index');
-Route::get('/events/{slug}', [EventsController::class, 'show'])
+Route::get('/events-workshops', [EventsController::class, 'index'])->name('events.index');
+Route::get('/events-workshops/{slug}', [EventsController::class, 'show'])
     ->where('slug', '[A-Za-z0-9\-]+')
     ->name('events.show');
 
