@@ -2,7 +2,7 @@
 
 @section('content')
 
-@include('home.sections.hero')
+@include('home.sections.hero-slider')
 
 @include('home.sections.mindful_times_ribbon')
 
