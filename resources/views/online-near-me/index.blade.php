@@ -1,3 +1,4 @@
+{{-- resources/views/online-near-me/index.blade.php --}}
 @extends('layouts.app')
 
 @push('head')
@@ -12,7 +13,7 @@
   <div class="container-page">
     <div class="mb-4">
       <div class="kicker">Browse</div>
-      <h1>Online & Near Me</h1>
+      <h1>Online &amp; Near Me</h1>
       <p class="text-ink-600 mt-2" style="max-width:70ch;">
         Pick your path: join from anywhere, or find something close by.
       </p>
@@ -20,7 +21,7 @@
 
     <div class="grid md:grid-cols-2 gap-4">
       {{-- Online --}}
-      <a href="{{ route('online.index') }}" class="wow-card md is-fluid" style="text-decoration:none;">
+      <a href="{{ url('/online') }}" class="wow-card md is-fluid" style="text-decoration:none;">
         <div class="wow-body">
           <div class="wow-type text-muted">Option</div>
           <div class="wow-title">Online</div>
@@ -34,7 +35,7 @@
       </a>
 
       {{-- Near Me --}}
-      <a href="{{ route('nearMe') }}" class="wow-card md is-fluid" style="text-decoration:none;">
+      <a href="{{ url('/near-me') }}" class="wow-card md is-fluid" style="text-decoration:none;">
         <div class="wow-body">
           <div class="wow-type text-muted">Option</div>
           <div class="wow-title">Near Me</div>
