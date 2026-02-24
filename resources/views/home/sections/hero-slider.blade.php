@@ -1,6 +1,5 @@
 {{-- resources/views/home/sections/hero-slider.blade.php --}}
 
-@push('head')
   {{-- Swiper CSS --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
@@ -124,7 +123,6 @@
       .wow-hero-btn{ width:40px; height:40px; }
     }
   </style>
-@endpush
 
 {{-- Keep your sticky bar OUTSIDE the slider (so IDs stay unique and not duplicated) --}}
 <div data-v-f43bb09d="" class="hidden lg:block fixed left-0 right-0 z-30 transition-all"
@@ -304,7 +302,6 @@
   </div>
 </div>
 
-@push('scripts')
   {{-- Swiper JS --}}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
@@ -346,4 +343,3 @@
       });
     });
   </script>
-@endpush
