@@ -46,7 +46,7 @@
                     </span>
                 </a>
                     <nav class="hidden md:flex items-center gap-1">
-                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="need" tabindex="0" href="/need">By Need</a></div>
+                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="need" tabindex="0" href="/needs">By Need</a></div>
                         <div class="nav-item"><a class="link-wow--nav" data-mega-menu="therapies" ex="0" href="/therapies">Therapies</a>
                         </div>
                         <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/classes">Classes</a></div>
@@ -101,21 +101,21 @@
                         <div class="menu-col">
                             <div class="mega-kicker mb-2">How are you feeling?</div>
                             <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/need/stress-and-anxiety">Stress &amp; anxiety</a></li>
-                                <li><a class="menu-link" href="/need/sleep-issues">Trouble sleeping</a></li>
-                                <li><a class="menu-link" href="/need/low-mood-burnout">Low mood &amp; burnout</a></li>
-                                <li><a class="menu-link" href="/need/overwhelm">Overwhelmed &amp; frazzled</a></li>
-                                <li><a class="menu-link" href="/need/worry">Worry &amp; racing thoughts</a></li>
+                                <li><a class="menu-link" href="/needs/stress-and-anxiety">Stress &amp; anxiety</a></li>
+                                <li><a class="menu-link" href="/needs/sleep-issues">Trouble sleeping</a></li>
+                                <li><a class="menu-link" href="/needs/low-mood-burnout">Low mood &amp; burnout</a></li>
+                                <li><a class="menu-link" href="/needs/overwhelm">Overwhelmed &amp; frazzled</a></li>
+                                <li><a class="menu-link" href="/needs/worry">Worry &amp; racing thoughts</a></li>
                             </ul>
                         </div>
                         <div class="menu-col">
                             <div class="mega-kicker mb-2">What do you want?</div>
                             <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/need/mens-health">Men’s health</a></li>
-                                <li><a class="menu-link" href="/need/digestive-health">Digestive &amp; gut health</a></li>
-                                <li><a class="menu-link" href="/need/fertility-pregnancy">Fertility &amp; pregnancy</a></li>
-                                <li><a class="menu-link" href="/need/pain-relief">Pain relief &amp; tension</a></li>
-                                <li><a class="menu-link" href="/need/trauma-and-nervous-system">Nervous system &amp; trauma support</a></li>
+                                <li><a class="menu-link" href="/needs/mens-health">Men’s health</a></li>
+                                <li><a class="menu-link" href="/needs/digestive-health">Digestive &amp; gut health</a></li>
+                                <li><a class="menu-link" href="/needs/fertility-pregnancy">Fertility &amp; pregnancy</a></li>
+                                <li><a class="menu-link" href="/needs/pain-relief">Pain relief &amp; tension</a></li>
+                                <li><a class="menu-link" href="/needs/trauma-and-nervous-system">Nervous system &amp; trauma support</a></li>
                             </ul>
                         </div>
                         <div class="menu-col">
@@ -123,7 +123,7 @@
                             <ul class="list-unstyled m-0 p-0">
                                 <li><a class="menu-link" href="/help/which-therapy">Match me to a therapy (quiz)</a></li>
                                 <li><a class="menu-link" href="/therapies?tag=gentle-beginner">Gentle &amp; beginner‑friendly options</a></li>
-                                <li><a class="menu-link" href="/need">View all needs</a></li>
+                                <li><a class="menu-link" href="/needs">View all needs</a></li>
                             </ul>
                         </div>
                     </div>
@@ -251,7 +251,7 @@
         <div id="mobile-menu" class="mobile-menu" style="display:none">
             <nav class="mobile-menu__nav">
                 <ul class="mobile-menu__list">
-                    <li><a class="mobile-menu__link" href="/need">By Need</a></li>
+                    <li><a class="mobile-menu__link" href="/needs">By Need</a></li>
                     <li><a class="mobile-menu__link" href="/therapies">Therapies</a></li>
                     <li><a class="mobile-menu__link" href="/classes">Classes</a></li>
                     <li><a class="mobile-menu__link" href="/events-and-workshops">Events &amp; Workshops</a></li>
