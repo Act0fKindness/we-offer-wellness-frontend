@@ -6,7 +6,6 @@
   <style>
     /* Keep your existing whero styling intact. This only styles the slider wrapper + controls. */
     .wow-hero-swiper { position: relative; }
-    .wow-hero-swiper .swiper-slide { height: auto; } /* important so content defines height */
 
     .wow-hero-nav{
       position:absolute;
