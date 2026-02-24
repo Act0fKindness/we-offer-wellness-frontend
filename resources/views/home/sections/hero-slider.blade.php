@@ -284,6 +284,9 @@
 <div class="swiper wow-hero-swiper" data-hero-swiper>
   <div class="swiper-wrapper">
     <div class="swiper-slide">
+      @include('home.sections.hero-slider-2')
+    </div>
+    <div class="swiper-slide">
       @include('home.sections.hero-slider-1')
     </div>
   </div>
