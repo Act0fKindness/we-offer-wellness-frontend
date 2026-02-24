@@ -302,6 +302,9 @@
               <svg id="OUR_VIBE_LOGO_Image" data-name="OUR VIBE LOGO Image" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 522.87 129.08">
                 <defs>
                   <style>
+                      #OUR_VIBE_LOGO_Image {
+                        height: 300px;
+                      }
                     .cls-1 {
                       fill: #43b54a;
                     }
