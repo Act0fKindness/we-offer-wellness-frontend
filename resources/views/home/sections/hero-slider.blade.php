@@ -122,6 +122,10 @@
       .wow-hero-nav{ bottom: 12px; }
       .wow-hero-btn{ width:40px; height:40px; }
     }
+
+    @media (max-width: 991.98px){
+      .browser-window{ display:none !important; }
+    }
   </style>
 
 {{-- Keep your sticky bar OUTSIDE the slider (so IDs stay unique and not duplicated) --}}

@@ -28,7 +28,7 @@
                         class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></button>
                 </form>
             </div>
-            <div data-v-f43bb09d="" class="browser-window col-12 col-lg-5">
+            <div data-v-f43bb09d="" class="browser-window col-12 col-lg-5 d-none d-lg-block">
                 <div data-v-f43bb09d="" class="whero-stack">
                     <div data-v-f43bb09d="" class="whero-panel">
                         <div data-v-f43bb09d="" class="whero-browser-frame">
