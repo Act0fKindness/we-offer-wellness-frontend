@@ -80,8 +80,7 @@
   .ourvibe-mid img{
     display:block;
     height: auto;
-    max-width: min(820px, 92vw);
-    max-height: 58vh;
+    max-height: 35vh;
     filter: drop-shadow(0 24px 60px rgba(0,0,0,.20));
   }
 
