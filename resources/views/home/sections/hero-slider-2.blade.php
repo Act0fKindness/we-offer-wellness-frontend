@@ -93,7 +93,7 @@
     filter: drop-shadow(0 18px 40px rgba(0,0,0,.22));
   }
   /* stack on top of each other with slight offset for depth */
-  .glow-signs .glow-sign--1{ top: 50px; }
+  .glow-signs .glow-sign--1{ top: 40px; }
   .glow-signs .glow-sign--2{ top: -100px; left: 10px; opacity: .98; }
 
   /* Hide glow signs on tablet/mobile */
@@ -183,20 +183,22 @@
   }
 
   /* BOTTOM (text + buttons bottom centre) */
-  .ourvibe-bottom{
+.ourvibe-bottom {
     text-align: center;
     font-family: "Brush Script MT", "Segoe Script", "Comic Sans MS", cursive;
     font-size: clamp(18px, 1.9vw, 30px);
-    color: rgba(11,15,25,.92);
-    text-shadow: 0 10px 22px rgba(0,0,0,.10);
+    color: rgba(11, 15, 25, .92);
+    text-shadow: 0 10px 22px rgba(0, 0, 0, .10);
     line-height: 1.15;
     padding-bottom: 6px;
+    max-width: 500px;
+    margin: auto;
     position: relative;
     z-index: 2;
-  }
+}
 
   .ourvibe-actions{
-    margin-top: 10px;
+    margin-top: 40px;
     display:flex;
     justify-content:center;
     gap: 12px;
@@ -316,11 +318,7 @@
 
         <div class="ourvibe-actions">
           <a class="ourvibe-buy" href="https://link.weofferwellness.co.uk/ourvibe">
-            Buy Now <i class="bi bi-arrow-right"></i>
-          </a>
-
-          <a class="ourvibe-link" href="https://link.weofferwellness.co.uk/ourvibe">
-            link.weofferwellness.co.uk/ourvibe
+            Book Ticket on Eventbrite <i class="bi bi-arrow-right"></i>
           </a>
         </div>
       </div>
