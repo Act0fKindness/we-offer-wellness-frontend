@@ -119,7 +119,7 @@
   .ourvibe-mid img{
     display:block;
     height: auto;
-    max-height: 450px;
+    max-height: 350px;
     max-width: min(820px, 92vw);
     filter: drop-shadow(0 24px 60px rgba(0,0,0,.20));
   }
@@ -190,7 +190,7 @@
   /* BOTTOM (text + buttons bottom centre) */
 .ourvibe-bottom {
     text-align: center;
-    font-size: clamp(18px, 1.9vw, 30px);
+    font-size: clamp(18px, 1.9vw, 20px);
     color: rgba(11, 15, 25, .92);
     text-shadow: 0 10px 22px rgba(0, 0, 0, .10);
     line-height: 1.15;
