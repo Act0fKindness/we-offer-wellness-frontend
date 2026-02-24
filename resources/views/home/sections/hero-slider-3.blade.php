@@ -5,7 +5,7 @@
     <div data-v-f43bb09d="" class="row align-items-center g-5">
       <div data-v-f43bb09d="" class="col-12 col-lg-7">
         <span data-v-f43bb09d="" class="whero-eyebrow whero-eyebrow--s3">Events &amp; workshops</span>
-        <h1 data-v-f43bb09d="" class="whero-title whero-title--s3">Make your weekend feel like recovery, not chores</h1>
+        <h1 data-v-f43bb09d="" class="whero-title--s3">Make your weekend feel like recovery, not chores</h1>
 
         <p data-v-f43bb09d="" class="whero-sub mt-3 whero-sub--s3">
           Workshops, classes and events designed to reset your nervous system — without the fluff.

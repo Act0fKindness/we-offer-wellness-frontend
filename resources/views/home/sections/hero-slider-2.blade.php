@@ -5,7 +5,7 @@
     <div data-v-f43bb09d="" class="row align-items-center g-5">
       <div data-v-f43bb09d="" class="col-12 col-lg-7">
         <span data-v-f43bb09d="" class="whero-eyebrow whero-eyebrow--s2">Online &amp; near you</span>
-        <h1 data-v-f43bb09d="" class="whero-title whero-title--s2">Join from anywhere — or find something close by</h1>
+        <h1 data-v-f43bb09d="" class="whero-title--s2">Join from anywhere — or find something close by</h1>
 
         <p data-v-f43bb09d="" class="whero-sub mt-3 whero-sub--s2">
           Whether you want a live online session tonight, or something local this weekend, you’re covered.
