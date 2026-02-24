@@ -335,7 +335,7 @@
       </div>
 
       {{-- BOTTOM: text + buttons centred --}}
-      <div class="ourvibe-bottom" style="font-size:20px;">
+      <div class="ourvibe-bottom" style="font-size:25px;">
         Workshops · Sound Healing · Qigong · Yoga · Meditation · Gong Baths · Kirtan ·
         Tuning Forks · Drumming
 
