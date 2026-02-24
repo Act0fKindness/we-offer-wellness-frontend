@@ -114,7 +114,7 @@
       opacity: .93;
     }
 
-..swiper-wrapper {
+.swiper-wrapper {
     height: auto !important;
 }
 
