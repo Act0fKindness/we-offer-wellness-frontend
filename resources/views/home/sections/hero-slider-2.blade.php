@@ -225,6 +225,7 @@
     font-weight: 900;
     letter-spacing: .04em;
     box-shadow: 0 18px 40px rgba(0,0,0,.22);
+    text-decoration: underline;
   }
   .ourvibe-buy:hover{ opacity:.92; }
 
