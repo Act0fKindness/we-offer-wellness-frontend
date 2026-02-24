@@ -327,13 +327,13 @@
       <div class="ourvibe-mid">
         <img
           src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/3c759f8e-fa97-43eb-bed0-41652086adf9.png"
-          alt="OUR VIBE — Sound Healing & Meditation Festival"
+          alt="OUR VIBE — Sound Healing & Meditation Festival" style="max-height: 300px;"
           loading="eager"
         >
       </div>
 
       {{-- BOTTOM: text + buttons centred --}}
-      <div class="ourvibe-bottom">
+      <div class="ourvibe-bottom" style="font-size:20px;">
         Workshops · Sound Healing · Qigong · Yoga · Meditation · Gong Baths · Kirtan ·
         Tuning Forks · Drumming
 
