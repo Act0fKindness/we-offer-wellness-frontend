@@ -21,6 +21,39 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SafetyContraindicationsController;
 use App\Http\Controllers\HelpCentreController;
 use App\Http\Controllers\AboutController;
+use App\Http\Controllers\Public\NeedsController;
+use App\Http\Controllers\Public\TherapiesController;
+use App\Http\Controllers\Public\EventsController;
+use App\Http\Controllers\Public\OnlineController;
+use App\Http\Controllers\Public\LocationsController;
+
+/** By Need */
+Route::get('/needs', [NeedsController::class, 'index'])->name('needs.index');
+Route::get('/needs/{slug}', [NeedsController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('needs.show');
+
+/** Therapies */
+Route::get('/therapies', [TherapiesController::class, 'index'])->name('therapies.index');
+Route::get('/therapies/{slug}', [TherapiesController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('therapies.show');
+
+/** Events & Workshops */
+Route::get('/events', [EventsController::class, 'index'])->name('events.index');
+Route::get('/events/{slug}', [EventsController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('events.show');
+
+/** Online */
+Route::get('/online', [OnlineController::class, 'index'])->name('online.index');
+
+/** Locations + Near Me */
+Route::get('/locations', [LocationsController::class, 'index'])->name('locations.index');
+Route::get('/locations/{slug}', [LocationsController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('locations.show');
+Route::get('/near-me', [LocationsController::class, 'nearMe'])->name('nearMe');
 
 Route::get('/', function () {
     // Fetch a few curated product slices for the home page
