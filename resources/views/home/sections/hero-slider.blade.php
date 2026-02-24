@@ -237,15 +237,15 @@
 <div class="wow-hero-slider" data-hero-slider aria-roledescription="carousel" aria-label="Homepage hero">
 
   <div class="wow-hero-slide is-active" data-hero-slide aria-hidden="false">
-    @include('home.partials.hero-slider-1')
+    @include('home.sections.partials.hero-slider-1')
   </div>
 
   <div class="wow-hero-slide" data-hero-slide aria-hidden="true">
-    @include('home.partials.hero-slider-2')
+    @include('home.sections.partials.hero-slider-2')
   </div>
 
   <div class="wow-hero-slide" data-hero-slide aria-hidden="true">
-    @include('home.partials.hero-slider-3')
+    @include('home.sections.partials.hero-slider-3')
   </div>
 
   {{-- Nav --}}
