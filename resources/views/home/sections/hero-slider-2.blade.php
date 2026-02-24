@@ -173,7 +173,7 @@
   class="whero whero--s2"
   style="--hero-bg: url('https://testing.studio.weofferwellness.co.uk/storage/uploads/images/127a52bb-264f-4246-8e1d-52fda86ecddb.jpg');"
 >
-  <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
+  <div data-v-f43bb09d="" aria-hidden="true"></div>
 
   <div data-v-f43bb09d="" class="container whero-pad">
     <div data-v-f43bb09d="" class="row align-items-center g-5">
