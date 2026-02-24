@@ -8,6 +8,10 @@
     .wow-hero-swiper { position: relative; }
     .wow-hero-swiper .swiper-slide { height: auto; } /* important so content defines height */
 
+    #OUR_VIBE_LOGO_Image {
+        height: 75px;
+    }
+
     .wow-hero-nav{
       position:absolute;
       left:0; right:0;
