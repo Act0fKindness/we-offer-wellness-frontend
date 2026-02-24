@@ -93,8 +93,8 @@
     filter: drop-shadow(0 18px 40px rgba(0,0,0,.22));
   }
   /* stack on top of each other with slight offset for depth */
-  .glow-signs .glow-sign--1{ top: 0; }
-  .glow-signs .glow-sign--2{ top: 26px; left: 10px; opacity: .98; }
+  .glow-signs .glow-sign--1{ top: 50px; }
+  .glow-signs .glow-sign--2{ top: -100px; left: 10px; opacity: .98; }
 
   /* Hide glow signs on tablet/mobile */
   @media (max-width: 991px){
