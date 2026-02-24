@@ -21,11 +21,11 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SafetyContraindicationsController;
 use App\Http\Controllers\HelpCentreController;
 use App\Http\Controllers\AboutController;
-use App\Http\Controllers\Public\NeedsController;
-use App\Http\Controllers\Public\TherapiesController;
-use App\Http\Controllers\Public\EventsController;
-use App\Http\Controllers\Public\OnlineController;
-use App\Http\Controllers\Public\LocationsController;
+use App\Http\Controllers\NeedsController;
+use App\Http\Controllers\TherapiesController;
+use App\Http\Controllers\EventsController;
+use App\Http\Controllers\OnlineController;
+use App\Http\Controllers\LocationsController;
 
 /** By Need */
 Route::get('/needs', [NeedsController::class, 'index'])->name('needs.index');
