@@ -10,7 +10,7 @@
     .wow-hero-nav{
       position:absolute;
       left:0; right:0;
-      bottom: 18px;
+      top: 18px;
       z-index: 10;
       pointer-events:none;
     }
