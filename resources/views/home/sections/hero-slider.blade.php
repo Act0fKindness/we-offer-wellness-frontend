@@ -8,10 +8,6 @@
     .wow-hero-swiper { position: relative; }
     .wow-hero-swiper .swiper-slide { height: auto; } /* important so content defines height */
 
-    #OUR_VIBE_LOGO_Image {
-        height: 75px;
-    }
-
     .wow-hero-nav{
       position:absolute;
       left:0; right:0;
@@ -281,6 +277,12 @@
   <div class="swiper-wrapper">
     <div class="swiper-slide">
       @include('home.sections.hero-slider-2')
+    </div>
+    <div class="swiper-slide">
+      @include('home.sections.hero-slider-1')
+    </div>
+    <div class="swiper-slide">
+      @include('home.sections.hero-slider-3')
     </div>
   </div>
 
