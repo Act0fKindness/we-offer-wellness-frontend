@@ -1,6 +1,5 @@
 {{-- resources/views/home/sections/hero-slider-2.blade.php --}}
 
-@push('head')
 <style>
   /* Slide 2: OUR VIBE flyer styling (scoped so it won't touch slide 1/3) */
   .whero.whero--s2{ position: relative; }
@@ -166,7 +165,6 @@
     .whero--s2 .festival-present{ border-left: none; padding-left: 0; }
   }
 </style>
-@endpush
 
 <section
   data-v-f43bb09d=""
