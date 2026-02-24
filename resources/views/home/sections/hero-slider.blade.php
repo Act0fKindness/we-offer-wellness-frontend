@@ -281,9 +281,6 @@
     <div class="swiper-slide">
       @include('home.sections.hero-slider-1')
     </div>
-    <div class="swiper-slide">
-      @include('home.sections.hero-slider-3')
-    </div>
   </div>
 
   {{-- Controls overlay --}}
