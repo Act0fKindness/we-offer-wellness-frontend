@@ -27,10 +27,7 @@
         height: 40px;
         border-radius: 999px;
         border: 1px solid #999;
-        background: rgba(255, 255, 255, .16);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 12px 30px rgba(16, 24, 40, .18);
+        background: rgba(255, 255, 255, .96);
         display: inline-flex;
         align-items: center;
         justify-content: center;
