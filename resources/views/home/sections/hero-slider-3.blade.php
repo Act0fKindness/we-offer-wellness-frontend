@@ -1,20 +1,24 @@
+{{-- resources/views/home/sections/hero-slider-3.blade.php --}}
 <section data-v-f43bb09d="" class="whero whero--s3">
-  <div data-v-f43bb09d="" class="whero-radial--s3" aria-hidden="true"></div>
+  <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
 
   <div data-v-f43bb09d="" class="container whero-pad">
     <div data-v-f43bb09d="" class="row align-items-center g-5">
       <div data-v-f43bb09d="" class="col-12 col-lg-7">
-        <span data-v-f43bb09d="" class="whero-eyebrow whero-eyebrow--s3">Events &amp; workshops</span>
-        <h1 data-v-f43bb09d="" class="whero-title--s3">Make your weekend feel like recovery, not chores</h1>
+        <span data-v-f43bb09d="" class="whero-eyebrow">Events &amp; workshops</span>
 
-        <p data-v-f43bb09d="" class="whero-sub mt-3 whero-sub--s3">
-          Workshops, classes and events designed to reset your nervous system — without the fluff.
-          <span data-v-f43bb09d="" class="whero-subline whero-subline--s3">
-            Dates, availability, and practitioners you can trust.
+        <h1 data-v-f43bb09d="" class="whero-title">
+          Workshops &amp; sessions worth leaving the house for
+        </h1>
+
+        <p data-v-f43bb09d="" class="whero-sub mt-3">
+          Find events, workshops and classes designed to reset your nervous system — without the fluff.
+          <span data-v-f43bb09d="" class="whero-subline">
+            Curated practitioners, clear dates, and proper availability.
           </span>
         </p>
 
-        <div class="whero-cta mt-4 whero-cta--s3">
+        <div data-v-f43bb09d="" class="whero-cta mt-4">
           <a href="/events-workshops" class="btn-wow btn-md btn-arrow" data-loader-init="1">
             <span class="btn-label">Browse Events &amp; Workshops</span>
             <span class="btn-icon-wrap" aria-hidden="true">
@@ -31,7 +35,7 @@
       </div>
 
       <div data-v-f43bb09d="" class="col-12 col-lg-5">
-        {{-- keep your right panel markup here (copy from slide 1), unchanged classes --}}
+        {{-- paste the SAME right panel markup from slide 1 here (unchanged classes) --}}
       </div>
     </div>
   </div>

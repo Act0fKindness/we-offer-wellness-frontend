@@ -1,110 +1,132 @@
-{{-- resources/views/home/partials/hero-slider.blade.php --}}
+{{-- resources/views/home/sections/hero-slider.blade.php --}}
 
 @push('head')
-<style>
-  /* HERO SLIDER (adds only new classes, does not touch existing whero styles) */
-  .wow-hero-slider{
-    position: relative;
-  }
-  .wow-hero-slide{
-    display: none;
-  }
-  .wow-hero-slide.is-active{
-    display: block;
-  }
+  {{-- Swiper CSS --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 
-  .wow-hero-slider-nav{
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 18px;
-    z-index: 5;
-    pointer-events: none;
-  }
-  .wow-hero-slider-nav .container{
-    display:flex;
-    align-items:center;
-    justify-content: space-between;
-    gap: 14px;
-  }
+  <style>
+    /* Keep your existing whero styling intact. This only styles the slider wrapper + controls. */
+    .wow-hero-swiper { position: relative; }
+    .wow-hero-swiper .swiper-slide { height: auto; } /* important so content defines height */
 
-  .wow-hero-nav-group{
-    display:flex;
-    align-items:center;
-    gap: 10px;
-    pointer-events: auto;
-  }
+    .wow-hero-nav{
+      position:absolute;
+      left:0; right:0;
+      bottom: 18px;
+      z-index: 10;
+      pointer-events:none;
+    }
+    .wow-hero-nav .container-page{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
 
-  .wow-hero-nav-btn{
-    width: 44px;
-    height: 44px;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,.30);
-    background: rgba(255,255,255,.16);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 12px 30px rgba(16,24,40,.18);
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-  }
-  .wow-hero-nav-btn:focus{ outline: none; box-shadow: 0 0 0 4px rgba(68,76,231,.20), 0 12px 30px rgba(16,24,40,.18); }
+    .wow-hero-btn{
+      pointer-events:auto;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.30);
+      background: rgba(255,255,255,.16);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 12px 30px rgba(16,24,40,.18);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      color: rgba(16,24,40,.85);
+    }
+    .wow-hero-btn:focus{ outline:none; box-shadow: 0 0 0 4px rgba(68,76,231,.20), 0 12px 30px rgba(16,24,40,.18); }
 
-  .wow-hero-dots{
-    display:flex;
-    align-items:center;
-    gap: 8px;
-    pointer-events: auto;
-  }
-  .wow-hero-dot{
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,.45);
-    background: rgba(255,255,255,.22);
-    cursor: pointer;
-    padding: 0;
-  }
-  .wow-hero-dot[aria-current="true"]{
-    width: 26px;
-    background: rgba(255,255,255,.65);
-    border-color: rgba(255,255,255,.65);
-  }
+    .wow-hero-pagination{
+      pointer-events:auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
 
-  /* Make sure nav doesn’t collide on small screens */
-  @media (max-width: 575px){
-    .wow-hero-slider-nav{ bottom: 10px; }
-    .wow-hero-nav-btn{ width: 40px; height: 40px; }
-  }
+    /* Swiper pagination bullets -> slick pill dots */
+    .wow-hero-pagination .swiper-pagination-bullet{
+      width: 10px; height:10px;
+      border-radius: 999px;
+      opacity: 1;
+      background: rgba(255,255,255,.22);
+      border: 1px solid rgba(255,255,255,.45);
+      transition: width .18s ease, background .18s ease, border-color .18s ease;
+      margin: 0 !important;
+    }
+    .wow-hero-pagination .swiper-pagination-bullet-active{
+      width: 26px;
+      background: rgba(255,255,255,.65);
+      border-color: rgba(255,255,255,.65);
+    }
 
-  /* Respect reduced motion */
-  @media (prefers-reduced-motion: reduce){
-    .wow-hero-slide{ transition: none !important; }
-  }
+    /* =========================
+       Per-slide BACKGROUNDS
+       =========================
+       We keep .whero-radial but override its background per slide.
+       (No class renames, only add modifiers)
+    */
 
-  /* Slide 2 look */
-  .whero--s2 .whero-radial--s2{
-    /* example: cooler / brighter */
-    filter: hue-rotate(18deg) saturate(1.15);
-    opacity: .85;
-  }
-  .whero--s2 .whero-eyebrow--s2{ letter-spacing: .02em; }
-  .whero--s2 .whero-title--s2{ max-width: 18ch; }
-  .whero--s2 .whero-sub--s2{ max-width: 62ch; }
+    /* Slide 1: keep your current rainbow rays vibe */
+    .whero.whero--s1 .whero-radial{
+      background:
+        conic-gradient(from 120deg at 58% 52%,
+          rgba(255,164,198,.85),
+          rgba(255,214,165,.85),
+          rgba(255,248,184,.85),
+          rgba(180,255,196,.85),
+          rgba(146,232,255,.85),
+          rgba(174,174,255,.85),
+          rgba(214,170,255,.85),
+          rgba(255,164,198,.85)
+        );
+      opacity: .95;
+    }
 
-  /* Slide 3 look */
-  .whero--s3 .whero-radial--s3{
-    /* example: warmer / bolder */
-    filter: hue-rotate(-12deg) saturate(1.25);
-    opacity: .9;
-  }
-  .whero--s3 .whero-title--s3{ max-width: 20ch; }
-  .whero--s3 .whero-subline--s3{ opacity: .95; }
-</style>
+    /* Slide 2: cooler mint/sky burst */
+    .whero.whero--s2 .whero-radial{
+      background:
+        conic-gradient(from 135deg at 60% 50%,
+          rgba(120,255,230,.85),
+          rgba(135,220,255,.85),
+          rgba(164,180,255,.85),
+          rgba(200,255,220,.85),
+          rgba(120,255,230,.85)
+        );
+      opacity: .92;
+    }
+
+    /* Slide 3: warm sunset / festival energy */
+    .whero.whero--s3 .whero-radial{
+      background:
+        conic-gradient(from 110deg at 58% 52%,
+          rgba(255,168,124,.88),
+          rgba(255,216,142,.88),
+          rgba(255,176,220,.88),
+          rgba(196,170,255,.88),
+          rgba(150,220,255,.88),
+          rgba(255,168,124,.88)
+        );
+      opacity: .93;
+    }
+
+    /* Optional: slide-specific text tweaks hooks (if you want them later) */
+    .whero--s2 .whero-title { /* e.g. */ }
+    .whero--s3 .whero-title { /* e.g. */ }
+
+    @media (max-width: 575px){
+      .wow-hero-nav{ bottom: 12px; }
+      .wow-hero-btn{ width:40px; height:40px; }
+    }
+  </style>
 @endpush
 
-{{-- Sticky search bar (UNCHANGED, appears once, keeps all IDs intact) --}}
+{{-- Keep your sticky bar OUTSIDE the slider (so IDs stay unique and not duplicated) --}}
 <div data-v-f43bb09d="" class="hidden lg:block fixed left-0 right-0 z-30 transition-all"
      style="top: 65px; display: none;">
     <div data-v-f43bb09d="" class="container-page py-2">
@@ -252,95 +274,76 @@
     </div>
 </div>
 
-{{-- Slider wrapper (NEW classes only) --}}
-<div class="wow-hero-slider" data-hero-slider>
-  <div class="wow-hero-stage" data-hero-stage>
-
-    <div class="wow-hero-slide wow-hero-slide--1 is-active" data-hero-slide="0" aria-hidden="false">
+{{-- Swiper slider --}}
+<div class="swiper wow-hero-swiper" data-hero-swiper>
+  <div class="swiper-wrapper">
+    <div class="swiper-slide">
       @include('home.sections.hero-slider-1')
     </div>
-
-    <div class="wow-hero-slide wow-hero-slide--2" data-hero-slide="1" aria-hidden="true">
+    <div class="swiper-slide">
       @include('home.sections.hero-slider-2')
     </div>
-
-    <div class="wow-hero-slide wow-hero-slide--3" data-hero-slide="2" aria-hidden="true">
+    <div class="swiper-slide">
       @include('home.sections.hero-slider-3')
     </div>
+  </div>
 
-    {{-- nav stays the same --}}
+  {{-- Controls overlay --}}
+  <div class="wow-hero-nav">
+    <div class="container-page">
+      <button type="button" class="wow-hero-btn wow-hero-prev" aria-label="Previous slide">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <div class="wow-hero-pagination"></div>
+
+      <button type="button" class="wow-hero-btn wow-hero-next" aria-label="Next slide">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
   </div>
 </div>
 
 @push('scripts')
-<script>
-(() => {
-  const root = document.querySelector('[data-hero-slider]');
-  if (!root) return;
+  {{-- Swiper JS --}}
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  const slides = Array.from(root.querySelectorAll('[data-hero-slide]'));
-  const dots   = Array.from(root.querySelectorAll('[data-hero-dot]'));
-  const btnPrev = root.querySelector('[data-hero-prev]');
-  const btnNext = root.querySelector('[data-hero-next]');
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.querySelector('[data-hero-swiper]');
+      if (!el) return;
 
-  if (slides.length <= 1) return;
+      new Swiper(el, {
+        loop: true,
+        speed: 650,
+        autoHeight: true,
+        effect: 'slide',
 
-  let i = 0;
-  let timer = null;
+        autoplay: {
+          delay: 7000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        },
 
-  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        navigation: {
+          nextEl: '.wow-hero-next',
+          prevEl: '.wow-hero-prev',
+        },
 
-  function setActive(next){
-    i = (next + slides.length) % slides.length;
+        pagination: {
+          el: '.wow-hero-pagination',
+          clickable: true,
+        },
 
-    slides.forEach((el, idx) => {
-      const on = idx === i;
-      el.classList.toggle('is-active', on);
-      el.setAttribute('aria-hidden', on ? 'false' : 'true');
+        keyboard: {
+          enabled: true,
+          onlyInViewport: true,
+        },
+
+        a11y: {
+          enabled: true,
+        },
+      });
     });
-
-    dots.forEach((d, idx) => {
-      d.setAttribute('aria-current', idx === i ? 'true' : 'false');
-    });
-  }
-
-  function next(){ setActive(i + 1); }
-  function prev(){ setActive(i - 1); }
-
-  function start(){
-    if (prefersReduced) return;
-    stop();
-    timer = setInterval(next, 8000); // 8s autoplay
-  }
-
-  function stop(){
-    if (timer) { clearInterval(timer); timer = null; }
-  }
-
-  btnNext && btnNext.addEventListener('click', () => { next(); start(); });
-  btnPrev && btnPrev.addEventListener('click', () => { prev(); start(); });
-
-  dots.forEach(d => {
-    d.addEventListener('click', () => {
-      const n = parseInt(d.getAttribute('data-hero-dot') || '0', 10);
-      setActive(n);
-      start();
-    });
-  });
-
-  // Pause on hover/focus (desktop)
-  root.addEventListener('mouseenter', stop);
-  root.addEventListener('mouseleave', start);
-  root.addEventListener('focusin', stop);
-  root.addEventListener('focusout', start);
-
-  // Keyboard
-  root.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') { prev(); start(); }
-    if (e.key === 'ArrowRight') { next(); start(); }
-  });
-
-  start();
-})();
-</script>
+  </script>
 @endpush

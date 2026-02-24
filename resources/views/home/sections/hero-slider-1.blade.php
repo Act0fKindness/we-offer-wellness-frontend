@@ -1,7 +1,7 @@
-{{-- resources/views/home/partials/hero-slider-1.blade.php --}}
+{{-- resources/views/home/sections/hero-slider-1.blade.php --}}
+<section data-v-f43bb09d="" class="whero whero--s1">
+  <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
 
-<section data-v-f43bb09d="" class="whero">
-    <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
     <div data-v-f43bb09d="" class="container whero-pad">
         <div data-v-f43bb09d="" class="row align-items-center g-5">
             <div data-v-f43bb09d="" class="col-12 col-lg-7"><span data-v-f43bb09d="" class="whero-eyebrow">Trusted holistic therapies</span>
