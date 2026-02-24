@@ -28,7 +28,7 @@
             </div>
             <div data-v-f43bb09d="" class="col-12 col-lg-5">
                 {{-- Keep the same right panel so existing styling/animation stays perfect --}}
-                @include('home.partials.hero-slider-1')
+                @include('home.sections.hero-slider-1')
             </div>
         </div>
     </div>
