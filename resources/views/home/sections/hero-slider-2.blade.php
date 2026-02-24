@@ -266,10 +266,12 @@
       font-size: 30px;
       box-shadow: none;
   }
-  .glow-sign glow-sign--2 {
-    right: 30px !important;
-    left: auto;
-  }
+.glow-signs .glow-sign--2 {
+    top: -100px;
+    left: calc(100vw - 400px);
+    right: auto;
+    opacity: .98;
+}
 </style>
 
 <section data-v-f43bb09d="" class="whero whero--s2">
