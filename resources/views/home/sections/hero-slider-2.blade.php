@@ -118,7 +118,7 @@
   .ourvibe-mid img{
     display:block;
     height: auto;
-    max-height: 35vh;
+    max-height: 450px;
     max-width: min(820px, 92vw);
     filter: drop-shadow(0 24px 60px rgba(0,0,0,.20));
   }
