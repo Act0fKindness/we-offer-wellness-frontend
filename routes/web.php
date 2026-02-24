@@ -26,6 +26,10 @@ use App\Http\Controllers\TherapiesController;
 use App\Http\Controllers\EventsController;
 use App\Http\Controllers\OnlineController;
 use App\Http\Controllers\LocationsController;
+use App\Http\Controllers\OnlineNearMeController;
+
+// Online & Near Me hub
+Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
 
 /** By Need */
 Route::get('/needs', [NeedsController::class, 'index'])->name('needs.index');
