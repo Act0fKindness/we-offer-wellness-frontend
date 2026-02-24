@@ -322,9 +322,20 @@
         <div class="ourvibe-left">
           <div class="ourvibe-wave" aria-hidden="true"></div>
 
-          <div class="ourvibe-script">
-            <img height="80" style="height: 90px; margin: 20px 0px 10px 20px;" src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/3c759f8e-fa97-43eb-bed0-41652086adf9.png" />
+          <div class="ourvibe-title">
+            <img height="80" style="height: 350px; margin: 20px 0px 10px 20px;" src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/3c759f8e-fa97-43eb-bed0-41652086adf9.png" />
+
           </div>
+
+          <div class="ourvibe-script">
+          </div>
+
+          <div class="ourvibe-loc-badge">
+          </div>
+
+          <div class="ourvibe-date">
+
+        </div>
 
         <div class="ourvibe-right">
           <div class="ourvibe-sticker">
