@@ -303,7 +303,7 @@
                 <defs>
                   <style>
                       #OUR_VIBE_LOGO_Image {
-                        height: 300px;
+                        height: 300px !important;
                       }
                     .cls-1 {
                       fill: #43b54a;
