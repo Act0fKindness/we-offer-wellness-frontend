@@ -294,12 +294,24 @@
   {{-- Controls overlay --}}
   <div class="wow-hero-nav">
     <div class="container-page">
+      <!-- Prev -->
       <button type="button" class="wow-hero-btn wow-hero-prev" aria-label="Previous slide">
         <i class="bi bi-chevron-left"></i>
       </button>
 
+      <!-- Pause / Play -->
+      <button type="button"
+              class="wow-hero-btn wow-hero-toggle"
+              data-hero-toggle
+              aria-label="Pause autoplay"
+              aria-pressed="false">
+        <i class="bi bi-pause-fill"></i>
+      </button>
+
+      <!-- Dots -->
       <div class="wow-hero-pagination"></div>
 
+      <!-- Next -->
       <button type="button" class="wow-hero-btn wow-hero-next" aria-label="Next slide">
         <i class="bi bi-chevron-right"></i>
       </button>
