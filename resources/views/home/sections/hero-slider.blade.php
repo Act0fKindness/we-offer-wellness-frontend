@@ -130,6 +130,8 @@
     @media (max-width: 991.98px){
       .browser-window{ display:none !important; }
     }
+
+
   </style>
 
 {{-- Keep your sticky bar OUTSIDE the slider (so IDs stay unique and not duplicated) --}}
@@ -292,6 +294,8 @@
   </div>
 
   {{-- Controls overlay --}}
+
+
   <div class="wow-hero-nav">
     <div class="container-page">
       <!-- Prev -->
