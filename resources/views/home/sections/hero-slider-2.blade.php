@@ -245,7 +245,7 @@
   </div>
 
   <div class="ourvibe-wrap">
-    <div data-v-f43bb09d="" class="container whero-pad ourvibe-shell">
+    <div data-v-f43bb09d="" class="container whero-pad ourvibe-shell" style="padding-top: 50px !important;">
 
       {{-- TOP: logo centred --}}
       <div class="ourvibe-top">
