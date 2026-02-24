@@ -328,7 +328,7 @@
           <a class="ourvibe-buy" href="https://link.weofferwellness.co.uk/ourvibe">
             <img
               src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/3c759f8e-fa97-43eb-bed0-41652086adf9.png"
-              alt="OUR VIBE — Sound Healing & Meditation Festival" style="max-height: 300px;"
+              alt="OUR VIBE — Sound Healing & Meditation Festival" style="max-height: 350px;"
               loading="eager"
             >
         </a>
