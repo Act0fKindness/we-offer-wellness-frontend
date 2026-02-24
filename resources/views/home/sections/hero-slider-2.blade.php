@@ -1,13 +1,13 @@
 {{-- resources/views/home/sections/hero-slider-2.blade.php --}}
 <section data-v-f43bb09d="" class="whero whero--s2">
-  <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
+  <div data-v-f43bb09d="" aria-hidden="true"></div>
 
   <div data-v-f43bb09d="" class="container whero-pad">
     <div data-v-f43bb09d="" class="row align-items-center g-5">
       <div data-v-f43bb09d="" class="col-12 col-lg-7">
         <span data-v-f43bb09d="" class="whero-eyebrow">Online &amp; near you</span>
 
-        <h1 data-v-f43bb09d="" class="whero-title">
+        <h1 data-v-f43bb09d="">
           Join from anywhere — or find something close by
         </h1>
 

@@ -1,13 +1,13 @@
 {{-- resources/views/home/sections/hero-slider-3.blade.php --}}
 <section data-v-f43bb09d="" class="whero whero--s3">
-  <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
+  <div data-v-f43bb09d="" aria-hidden="true"></div>
 
   <div data-v-f43bb09d="" class="container whero-pad">
     <div data-v-f43bb09d="" class="row align-items-center g-5">
       <div data-v-f43bb09d="" class="col-12 col-lg-7">
         <span data-v-f43bb09d="" class="whero-eyebrow">Events &amp; workshops</span>
 
-        <h1 data-v-f43bb09d="" class="whero-title">
+        <h1 data-v-f43bb09d="">
           Workshops &amp; sessions worth leaving the house for
         </h1>
 
