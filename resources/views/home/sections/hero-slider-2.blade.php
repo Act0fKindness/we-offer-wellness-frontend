@@ -168,13 +168,13 @@
 
   .ourvibe-sticker{
     position:absolute;
-    top: 8px;
+    top: 30px;
     right: 0;
     width: clamp(120px, 12vw, 170px);
     height: clamp(120px, 12vw, 170px);
     border-radius: 999px;
     background: #0b0f19;
-    color: #ffd400;
+    color: #42b649;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -185,7 +185,7 @@
     letter-spacing: .06em;
     line-height: 1.05;
     font-size: clamp(11px, 1.1vw, 14px);
-    transform: rotate(-10deg);
+    transform: rotate(15deg);
     box-shadow: 0 22px 60px rgba(0,0,0,.30);
   }
 
