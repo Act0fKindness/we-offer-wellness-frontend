@@ -310,41 +310,84 @@
   {{-- Swiper JS --}}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const el = document.querySelector('[data-hero-swiper]');
-      if (!el) return;
+ <script>
+   document.addEventListener('DOMContentLoaded', () => {
+     const el = document.querySelector('[data-hero-swiper]');
+     if (!el) return;
 
-      new Swiper(el, {
-        loop: true,
-        speed: 650,
-        autoHeight: true,
-        effect: 'slide',
+     const toggleBtn = document.querySelector('[data-hero-toggle]');
+     let isPaused = false;
 
-        autoplay: {
-          delay: 7000,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        },
+     const swiper = new Swiper(el, {
+       loop: true,
+       speed: 650,
+       autoHeight: true,
+       effect: 'slide',
 
-        navigation: {
-          nextEl: '.wow-hero-next',
-          prevEl: '.wow-hero-prev',
-        },
+       autoplay: {
+         delay: 7000,
+         disableOnInteraction: false,
+         pauseOnMouseEnter: true,
+       },
 
-        pagination: {
-          el: '.wow-hero-pagination',
-          clickable: true,
-        },
+       navigation: {
+         nextEl: '.wow-hero-next',
+         prevEl: '.wow-hero-prev',
+       },
 
-        keyboard: {
-          enabled: true,
-          onlyInViewport: true,
-        },
+       pagination: {
+         el: '.wow-hero-pagination',
+         clickable: true,
+       },
 
-        a11y: {
-          enabled: true,
-        },
-      });
-    });
-  </script>
+       keyboard: {
+         enabled: true,
+         onlyInViewport: true,
+       },
+
+       a11y: {
+         enabled: true,
+       },
+     });
+
+     function setPaused(nextPaused) {
+       isPaused = !!nextPaused;
+
+       // If the toggle button isn't present, still allow the rest of the slider to work
+       if (!toggleBtn) {
+         if (isPaused) swiper.autoplay.stop();
+         else swiper.autoplay.start();
+         return;
+       }
+
+       const icon = toggleBtn.querySelector('i');
+
+       if (isPaused) {
+         swiper.autoplay.stop();
+         toggleBtn.setAttribute('aria-label', 'Play autoplay');
+         toggleBtn.setAttribute('aria-pressed', 'true');
+         if (icon) icon.className = 'bi bi-play-fill';
+       } else {
+         swiper.autoplay.start();
+         toggleBtn.setAttribute('aria-label', 'Pause autoplay');
+         toggleBtn.setAttribute('aria-pressed', 'false');
+         if (icon) icon.className = 'bi bi-pause-fill';
+       }
+     }
+
+     // Start paused if user prefers reduced motion
+     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+       setPaused(true);
+     }
+
+     // Click to toggle pause/play
+     if (toggleBtn) {
+       toggleBtn.addEventListener('click', () => setPaused(!isPaused));
+     }
+
+     // Optional: if you want autoplay to resume after manual swipe unless paused
+     swiper.on('touchEnd', () => {
+       if (!isPaused) swiper.autoplay.start();
+     });
+   });
+ </script>
