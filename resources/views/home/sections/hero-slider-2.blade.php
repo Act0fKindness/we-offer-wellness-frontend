@@ -394,7 +394,7 @@
           </div>
 
           <div class="ourvibe-script">
-            <img height="80" style="height: 90px; margin: 20px 0px 10px 20px;" src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/cd90de68-645b-48c0-b54c-6c40c0592df8.png" />
+            <img height="80" style="height: 90px; margin: 20px 0px 10px 20px;" src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/3c759f8e-fa97-43eb-bed0-41652086adf9.png" />
           </div>
 
           <div class="ourvibe-loc-badge">
