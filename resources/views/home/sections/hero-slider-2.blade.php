@@ -253,33 +253,6 @@
 </style>
 
 <section data-v-f43bb09d="" class="whero whero--s2">
-  {{-- floating right-side callouts --}}
-  <div class="ourvibe-floats" aria-hidden="true">
-    <div class="ourvibe-sticker">
-      DJs AND LIVE<br>
-      MUSICIANS<br>
-      PLAYING CHILLED<br>
-      BEATS IN OUR<br>
-      CHILL ZONE
-    </div>
-
-    <div class="ourvibe-box box-1">
-      BEAUTIFUL<br>
-      WELLNESS<br>
-      PRODUCTS TO<br>
-      BUY, THERAPIES<br>
-      TO TRY &amp;<br>
-      READINGS IN<br>
-      OUR READERS’<br>
-      <span class="spaced">R O O M</span>
-    </div>
-
-    <div class="ourvibe-box box-2">
-      35 SOUND HEALING<br>
-      SESSIONS, TALKS &amp;<br>
-      <span class="spaced">W O R K S H O P S</span>
-    </div>
-  </div>
 
   <div class="ourvibe-wrap">
     <div data-v-f43bb09d="" class="container whero-pad ourvibe-shell" style="padding-top: 50px !important;">
