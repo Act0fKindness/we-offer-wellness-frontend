@@ -1,8 +1,9 @@
 {{-- resources/views/home/sections/hero-slider-1.blade.php --}}
 
-<section class="whero" style="min-height: 100vh;">
-  <div class="container whero-pad h-100">
-    <div data-v-f43bb09d="" class="row align-items-center g-5 h-100">
+<section data-v-f43bb09d="" class="whero whero--s1">
+  <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
+
+    <div data-v-f43bb09d="" class="container whero-pad">
         <div data-v-f43bb09d="" class="row align-items-center g-5">
             <div data-v-f43bb09d="" class="col-12 col-lg-7"><span data-v-f43bb09d="" class="whero-eyebrow">Trusted holistic therapies</span>
                 <h1 data-v-f43bb09d="" class="whero-title">Discover therapies and classes that work for

@@ -114,6 +114,10 @@
       opacity: .93;
     }
 
+.swiper-wrapper {
+    height: auto !important;
+}
+
     /* Optional: slide-specific text tweaks hooks (if you want them later) */
     .whero--s2 .whero-title { /* e.g. */ }
     .whero--s3 .whero-title { /* e.g. */ }
@@ -126,8 +130,6 @@
     @media (max-width: 991.98px){
       .browser-window{ display:none !important; }
     }
-
-
   </style>
 
 {{-- Keep your sticky bar OUTSIDE the slider (so IDs stay unique and not duplicated) --}}
@@ -290,8 +292,6 @@
   </div>
 
   {{-- Controls overlay --}}
-
-
   <div class="wow-hero-nav">
     <div class="container-page">
       <!-- Prev -->
