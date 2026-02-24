@@ -268,6 +268,7 @@
   }
   .glow-sign glow-sign--2 {
     right: 30px !important;
+    left: auto;
   }
 </style>
 
