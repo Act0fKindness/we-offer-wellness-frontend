@@ -1,5 +1,5 @@
 <section data-v-f43bb09d="" class="whero whero--s3">
-  <div data-v-f43bb09d="" class="whero-radial whero-radial--s3" aria-hidden="true"></div>
+  <div data-v-f43bb09d="" class="whero-radial--s3" aria-hidden="true"></div>
 
   <div data-v-f43bb09d="" class="container whero-pad">
     <div data-v-f43bb09d="" class="row align-items-center g-5">
