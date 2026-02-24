@@ -52,7 +52,7 @@
                         <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/classes">Classes</a></div>
                         <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events-workshops">Events
                             &amp; Workshops</a></div>
-                        <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/near-me">Online &amp; Near
+                        <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/online-near-me">Online &amp; Near
                             Me</a></div>
                         <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/mindful-times">Mindful
                             Times</a></div>
@@ -162,7 +162,7 @@
                         <div class="menu-col">
                             <div class="mega-kicker mb-2">Explore</div>
                             <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/near-me">Online &amp; near me</a></li>
+                                <li><a class="menu-link" href="/online-near-me">Online &amp; near me</a></li>
                                 <li><a class="menu-link" href="/help">Help centre</a></li>
                             </ul>
                         </div>
@@ -255,7 +255,7 @@
                     <li><a class="mobile-menu__link" href="/therapies">Therapies</a></li>
                     <li><a class="mobile-menu__link" href="/classes">Classes</a></li>
                     <li><a class="mobile-menu__link" href="/events-workshops">Events &amp; Workshops</a></li>
-                    <li><a class="mobile-menu__link" href="/near-me">Online &amp; Near Me</a></li>
+                    <li><a class="mobile-menu__link" href="/online-near-me">Online &amp; Near Me</a></li>
                     <li><a class="mobile-menu__link" href="/mindful-times">Mindful Times</a></li>
                 </ul>
                 <div class="mobile-menu__section">
