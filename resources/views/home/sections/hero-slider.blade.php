@@ -21,21 +21,21 @@
       gap:14px;
     }
 
-    .wow-hero-btn{
-      pointer-events:auto;
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.30);
-      background: rgba(255,255,255,.16);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 12px 30px rgba(16,24,40,.18);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      color: rgba(16,24,40,.85);
+    .wow-hero-btn {
+        pointer-events: auto;
+        width: 44px;
+        height: 40px;
+        border-radius: 999px;
+        border: 1px solid #999;
+        background: rgba(255, 255, 255, .16);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 12px 30px rgba(16, 24, 40, .18);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: rgba(16, 24, 40, .85);
     }
     .wow-hero-btn:focus{ outline:none; box-shadow: 0 0 0 4px rgba(68,76,231,.20), 0 12px 30px rgba(16,24,40,.18); }
 
