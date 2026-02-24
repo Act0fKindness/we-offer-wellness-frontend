@@ -234,38 +234,22 @@
 </div>
 
 {{-- Slider wrapper (NEW classes only) --}}
-<div class="wow-hero-slider" data-hero-slider aria-roledescription="carousel" aria-label="Homepage hero">
+<div class="wow-hero-slider" data-hero-slider>
+  <div class="wow-hero-stage" data-hero-stage>
 
-  <div class="wow-hero-slide is-active" data-hero-slide aria-hidden="false">
-    @include('home.sections.hero-slider-1')
-  </div>
-
-  <div class="wow-hero-slide" data-hero-slide aria-hidden="true">
-    @include('home.sections.hero-slider-2')
-  </div>
-
-  <div class="wow-hero-slide" data-hero-slide aria-hidden="true">
-    @include('home.sections.hero-slider-3')
-  </div>
-
-  {{-- Nav --}}
-  <div class="wow-hero-slider-nav" aria-hidden="false">
-    <div class="container">
-      <div class="wow-hero-nav-group">
-        <button type="button" class="wow-hero-nav-btn" data-hero-prev aria-label="Previous slide">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        <button type="button" class="wow-hero-nav-btn" data-hero-next aria-label="Next slide">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-
-      <div class="wow-hero-dots" role="tablist" aria-label="Choose a hero slide">
-        <button type="button" class="wow-hero-dot" data-hero-dot="0" aria-label="Slide 1" aria-current="true"></button>
-        <button type="button" class="wow-hero-dot" data-hero-dot="1" aria-label="Slide 2" aria-current="false"></button>
-        <button type="button" class="wow-hero-dot" data-hero-dot="2" aria-label="Slide 3" aria-current="false"></button>
-      </div>
+    <div class="wow-hero-slide wow-hero-slide--1 is-active" data-hero-slide="0" aria-hidden="false">
+      @include('home.sections.hero-slider-1')
     </div>
+
+    <div class="wow-hero-slide wow-hero-slide--2" data-hero-slide="1" aria-hidden="true">
+      @include('home.sections.hero-slider-2')
+    </div>
+
+    <div class="wow-hero-slide wow-hero-slide--3" data-hero-slide="2" aria-hidden="true">
+      @include('home.sections.hero-slider-3')
+    </div>
+
+    {{-- nav stays the same --}}
   </div>
 </div>
 
