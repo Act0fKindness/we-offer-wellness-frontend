@@ -44,6 +44,7 @@
     justify-content: space-between;
     gap: 14px;
     position: relative;
+    padding-bottom: 20px !important;
   }
 
   /* TOP BRAND (centre + top) */
