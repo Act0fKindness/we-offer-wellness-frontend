@@ -392,8 +392,7 @@
           </div>
 
           <div class="ourvibe-script">
-            Sound Healing &amp;<br>
-            <small>Meditation Festival</small>
+            <img src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/cd90de68-645b-48c0-b54c-6c40c0592df8.png" />
           </div>
 
           <div class="ourvibe-loc-badge">
