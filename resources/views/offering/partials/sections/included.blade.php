@@ -1,4 +1,7 @@
-@php $included = trim((string)($included ?? '')); @endphp
+@php 
+  $included = trim((string)($included ?? ''));
+  if ($included !== '') { $included = \App\Support\ContentFormatter::format($included); }
+@endphp
 @if($included !== '')
   <div class="wow-acc-item">
     <button class="wow-acc-header" type="button" data-bs-toggle="collapse" data-bs-target="#wowIncluded" aria-expanded="true" aria-controls="wowIncluded">
@@ -7,9 +10,8 @@
     </button>
     <div id="wowIncluded" class="collapse show">
       <div class="wow-acc-body">
-        <div class="wow-paragraph">{!! nl2br(e($included)) !!}</div>
+        <div class="wow-paragraph">{!! $included !!}</div>
       </div>
     </div>
   </div>
 @endif
-
