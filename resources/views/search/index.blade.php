@@ -153,8 +153,9 @@
 /* Desktop split: page scrolls the list; map stays sticky */
 @media (min-width: 992px){
   .results-scroll{ padding-right: 6px; }
-  .map-wrap{ position: sticky; top: 16px; }
-  .map{ width: 100%; height: calc(100vh - 32px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
+  .map-wrap{ position: sticky; top: 80px; }
+  /* Adjust height to account for increased sticky top */
+  .map{ width: 100%; height: calc(100vh - 80px - 24px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
 }
 /* Segmented controls (match Under/For styles) */
 .seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
