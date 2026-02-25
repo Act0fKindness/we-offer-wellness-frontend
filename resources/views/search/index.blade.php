@@ -195,6 +195,9 @@
     var data = @json($mapData);
     var token = @json($mapboxKey);
     var mapEl = document.getElementById('search-map');
+    if (mapEl && !token) {
+      try { mapEl.innerHTML = '<div style="padding:12px;color:#334155;font-size:14px;">Map unavailable: missing MAPBOX_API_KEY. Set it in .env.</div>'; } catch(e){}
+    }
     if (mapEl && token) {
       function initMapbox(){
         try{
