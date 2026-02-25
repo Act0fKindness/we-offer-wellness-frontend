@@ -138,13 +138,15 @@
       /* General: keep the slider wrapper stable visually */
       .wow-hero-swiper { overflow: hidden; }
       /* Slide 2 specific tweaks */
-      .whero.whero--s2 .ourvibe-poster { max-height: 360px !important; height: auto; width: auto; }
-      .whero.whero--s2 .ourvibe-bottom--desktop-consistent { font-size: 19px !important; line-height: 1.2; }
-      .whero.whero--s2 .ourvibe-actions { margin-top: 18px !important; }
-      .whero.whero--s2 a.ourvibe-buy { font-size: 24px !important; padding: 10px 14px; }
+      .whero.whero--s2 .ourvibe-poster { max-height: 300px !important; height: auto; width: auto; }
+      .whero.whero--s2 .ourvibe-bottom--desktop-consistent { font-size: 16px !important; line-height: 1.18; }
+      .whero.whero--s2 .ourvibe-actions { margin-top: 12px !important; }
+      .whero.whero--s2 a.ourvibe-buy { font-size: 20px !important; padding: 8px 12px; }
+      .whero.whero--s2 .ourvibe-sticker { width: 110px !important; height: 110px !important; }
+      .whero.whero--s2 .ourvibe-box { transform: scale(.85); transform-origin: top right; }
       .whero.whero--s2 .present { letter-spacing: .28em; }
       /* Cap section internal spacing to avoid overflow vs slide 1 */
-      .whero.whero--s2 .whero-pad { padding-top: 40px !important; padding-bottom: 40px !important; }
+      .whero.whero--s2 .whero-pad { padding-top: 28px !important; padding-bottom: 28px !important; min-height: clamp(560px, 5vh, 820px); }
     }
   </style>
 
