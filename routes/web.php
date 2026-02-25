@@ -27,6 +27,9 @@ use App\Http\Controllers\EventsController;
 use App\Http\Controllers\OnlineController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\OnlineNearMeController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Api\ProductCardsController;
 
 // Online & Near Me hub
 Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
@@ -34,19 +37,19 @@ Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('o
 /** By Need */
 Route::get('/needs', [NeedsController::class, 'index'])->name('needs.index');
 Route::get('/needs/{slug}', [NeedsController::class, 'show'])
-    ->where('slug', '[A-Za-z0-9\-]+')
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('needs.show');
 
 /** Therapies */
 Route::get('/therapies', [TherapiesController::class, 'index'])->name('therapies.index');
 Route::get('/therapies/{slug}', [TherapiesController::class, 'show'])
-    ->where('slug', '[A-Za-z0-9\-]+')
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('therapies.show');
 
 /** Events & Workshops */
 Route::get('/events-workshops', [EventsController::class, 'index'])->name('events.index');
 Route::get('/events-workshops/{slug}', [EventsController::class, 'show'])
-    ->where('slug', '[A-Za-z0-9\-]+')
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('events.show');
 
 /** Online */
@@ -55,168 +58,11 @@ Route::get('/online', [OnlineController::class, 'index'])->name('online.index');
 /** Locations + Near Me */
 Route::get('/locations', [LocationsController::class, 'index'])->name('locations.index');
 Route::get('/locations/{slug}', [LocationsController::class, 'show'])
-    ->where('slug', '[A-Za-z0-9\-]+')
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('locations.show');
 Route::get('/near-me', [LocationsController::class, 'nearMe'])->name('nearMe');
 
-Route::get('/', function () {
-    // Fetch a few curated product slices for the home page
-    try {
-        $base = \App\Models\Product::query()
-            ->withCount('reviews')
-            ->withAvg('reviews', 'rating')
-            ->withMin('variants', 'price')
-            ->with(['media', 'options.values', 'category'])
-            // Only visible products: include live/approved OR legacy rows without status set
-            ->where(function($q){
-                $q->whereHas('status', function($qs){ $qs->whereIn('status', ['live','approved']); })
-                  ->orWhereNull('product_status_id');
-            });
-
-        // Gifts under £50 (consider variant prices too)
-        $giftsUnder50 = (clone $base)
-            ->where(function($q){
-                $q->whereRaw("LOWER(COALESCE(tags_list,'')) like '%gift%'")
-                  ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%voucher%'")
-                  ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%card%'")
-                  ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%present%'")
-                  ->orWhereRaw("LOWER(COALESCE(product_type,'')) like '%gift%'");
-            })
-            ->where(function($q){
-                $q->where(function($inner){
-                        $inner->where('price', '<', 1000)->where('price', '<=', 50);
-                    })
-                  ->orWhere(function($inner){
-                        $inner->where('price', '>=', 1000)->where('price', '<=', 50 * 100);
-                    })
-                  ->orWhereHas('variants', function($qv){
-                        $qv->where(function($qq){ $qq->where('price','<',1000)->where('price','<=',50); })
-                           ->orWhere(function($qq){ $qq->where('price','>=',1000)->where('price','<=',50*100); });
-                    });
-            })
-            ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-            ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-            ->orderByRaw('COALESCE(reviews_count, 0) DESC')
-            ->limit(12)
-            ->get()
-            ->filter(function($p){
-                $min = $p->variants_min_price ?? $p->price;
-                if (!is_numeric($min)) return false;
-                $min = (float) $min;
-                if ($min >= 1000) $min = $min / 100; // treat pennies only for large values
-                return $min <= 50.0;
-            })
-            ->values();
-
-        // Fallback: if no explicit gift-tagged items, show popular under £50 of any type
-        if ($giftsUnder50->isEmpty()) {
-            $giftsUnder50 = (clone $base)
-                ->where(function($q){
-                    $q->where(function($inner){
-                            $inner->where('price','<',1000)->where('price','<=',50);
-                        })
-                      ->orWhere(function($inner){
-                            $inner->where('price','>=',1000)->where('price','<=',50*100);
-                        })
-                      ->orWhereHas('variants', function($qv){
-                            $qv->where(function($qq){ $qq->where('price','<',1000)->where('price','<=',50); })
-                               ->orWhere(function($qq){ $qq->where('price','>=',1000)->where('price','<=',50*100); });
-                        });
-                })
-                ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                ->orderByRaw('COALESCE(reviews_count, 0) DESC')
-                ->limit(12)
-                ->get()
-                ->filter(function($p){
-                    $min = $p->variants_min_price ?? $p->price;
-                    if (!is_numeric($min)) return false;
-                    $min = (float) $min;
-                    if ($min >= 1000) $min = $min / 100;
-                    return $min <= 50.0;
-                })
-                ->values();
-        }
-
-        // Online options under £50 (consider variant prices too)
-        $onlineUnder50 = (clone $base)
-            ->whereHas('options', function ($q) {
-                $q->where('meta_name', 'locations')
-                  ->whereHas('values', function ($q2) {
-                      $q2->whereRaw('LOWER(value) = ?', ['online']);
-                  });
-            })
-            ->where(function($q){
-                $q->where(function($inner){
-                        $inner->where('price', '<', 1000)->where('price', '<=', 50);
-                    })
-                  ->orWhere(function($inner){
-                        $inner->where('price', '>=', 1000)->where('price', '<=', 50 * 100);
-                    })
-                  ->orWhereHas('variants', function($qv){
-                        $qv->where(function($qq){ $qq->where('price','<',1000)->where('price','<=',50); })
-                           ->orWhere(function($qq){ $qq->where('price','>=',1000)->where('price','<=',50*100); });
-                    });
-            })
-            ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-            ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-            ->orderByRaw('COALESCE(reviews_count, 0) DESC')
-            ->limit(12)
-            ->get()
-            ->filter(function($p){
-                $min = $p->variants_min_price ?? $p->price;
-                if (!is_numeric($min)) return false;
-                $min = (float) $min;
-                if ($min >= 1000) $min = $min / 100;
-                return $min <= 50.0;
-            })
-            ->values();
-
-        // Check if there are any classes with a scheduled date within the current week
-        $weekStart = now()->startOfWeek();
-        $weekEnd = now()->endOfWeek();
-        $hasClassesThisWeek = false;
-        try {
-            $classes = (clone $base)
-                ->whereRaw("LOWER(COALESCE(product_type,'')) like '%class%'")
-                ->latest('id')
-                ->limit(120)
-                ->get();
-            foreach ($classes as $p) {
-                $meta = $p->meta_json ?? [];
-                $date = $meta['date'] ?? null;
-                $start = $meta['start_date'] ?? null;
-                $end = $meta['end_date'] ?? null;
-                // Normalise potential strings to Carbon
-                $d = $date ? \Illuminate\Support\Carbon::parse((string)$date) : null;
-                $s = $start ? \Illuminate\Support\Carbon::parse((string)$start) : null;
-                $e = $end ? \Illuminate\Support\Carbon::parse((string)$end) : null;
-                // If single date, check it's within the week
-                if ($d && $d->between($weekStart, $weekEnd)) { $hasClassesThisWeek = true; break; }
-                // If a range, check overlap with week
-                if ($s || $e) {
-                    $rs = $s ?: $e; // if only end provided, treat as point
-                    $re = $e ?: $s;
-                    if ($rs && $re) {
-                        if ($rs <= $weekEnd && $re >= $weekStart) { $hasClassesThisWeek = true; break; }
-                    } elseif ($rs) {
-                        if ($rs->between($weekStart, $weekEnd)) { $hasClassesThisWeek = true; break; }
-                    }
-                }
-            }
-        } catch (\Throwable $e) { $hasClassesThisWeek = false; }
-    } catch (\Throwable $e) {
-        $giftsUnder50 = collect();
-        $onlineUnder50 = collect();
-        $hasClassesThisWeek = false;
-    }
-
-    return view('home.index', [
-        'giftsUnder50' => $giftsUnder50,
-        'onlineUnder50' => $onlineUnder50,
-        'hasClassesThisWeek' => $hasClassesThisWeek,
-    ]);
-});
+Route::get('/', [HomeController::class, 'index']);
 
 // V3 holding page
 Route::get('/v3', function () {
@@ -229,36 +75,7 @@ Route::get('/v3', function () {
     ]);
 })->name('v3.holding');
 
-Route::get('/search', function (\Illuminate\Http\Request $request) {
-    // Normalise legacy/alternate params without touching the SPA code
-    $format = strtolower((string) $request->query('format', ''));
-    if ($format === 'online') {
-        // For the "Explore Anytime Options" CTA: route to classes hub, online only, anytime
-        return redirect('/classes?mode=online&anytime=1', 302);
-    }
-    // Support category landing via /search?category=Yoga[&type=classes]
-    if ($request->has('category')) {
-        $raw = trim((string) $request->query('category'));
-        if ($raw !== '') {
-            $slug = Str::slug($raw);
-            $type = strtolower((string) $request->query('type', 'therapies'));
-            $allowed = ['therapies','events','workshops','classes','retreats','gifts'];
-            if (!in_array($type, $allowed, true)) { $type = 'therapies'; }
-            return redirect('/'.$type.'/'.$slug, 302);
-        }
-    }
-    if ($format && !$request->has('mode')) {
-        // Map other format values to mode for search, e.g., format=in-person
-        $qs = $request->query();
-        $qs['mode'] = $format;
-        unset($qs['format']);
-        $to = url('/search') . '?' . http_build_query($qs);
-        return redirect($to, 302);
-    }
-    return view('search.index', [
-        'mapsKey' => env('GOOGLE_MAPS_API_KEY'),
-    ]);
-})->name('search');
+Route::get('/search', [SearchController::class, 'index'])->name('search');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -281,53 +98,7 @@ require __DIR__.'/auth.php';
 // Lightweight JSON endpoints for frontend
 Route::get('/api/products', [ProductController::class, 'index']);
 // HTML fragments: render product cards via Blade for dynamic sections (e.g., comfort rail)
-Route::get('/api/product-cards', function (Request $request) {
-    $limit = (int) $request->integer('limit', 12);
-    $limit = max(1, min($limit, 24));
-    $pm = (float) $request->input('price_max', 50);
-    $mode = strtolower((string) $request->input('mode', 'online'));
-
-    $q = \App\Models\Product::query()
-        ->withCount('reviews')
-        ->withAvg('reviews', 'rating')
-        ->withMin('variants', 'price')
-        ->with(['media','options.values','category'])
-        ->where(function($w){
-            $w->whereHas('status', function($qs){ $qs->whereIn('status', ['live','approved']); })
-              ->orWhereNull('product_status_id');
-        });
-
-    if ($mode === 'online') {
-        $q->whereHas('options', function ($oq) {
-            $oq->where('meta_name', 'locations')
-               ->whereHas('values', function ($vq) { $vq->whereRaw("LOWER(value) = 'online'"); });
-        });
-    } elseif ($mode === 'in-person') {
-        $q->whereHas('options', function ($oq) {
-            $oq->where('meta_name', 'locations')
-               ->whereHas('values', function ($vq) { $vq->whereRaw("LOWER(value) <> 'online'"); });
-        });
-    }
-
-    // Price ceiling (unit-aware)
-    $q->where(function($qq) use ($pm){
-        $qq->where(function($qp) use ($pm){ $qp->where('price','<',1000)->where('price','<=',$pm); })
-           ->orWhere(function($qp) use ($pm){ $qp->where('price','>=',1000)->where('price','<=',$pm*100); })
-           ->orWhereHas('variants', function($qv) use ($pm){
-               $qv->where(function($qq2) use ($pm){ $qq2->where('price','<',1000)->where('price','<=',$pm); })
-                  ->orWhere(function($qq2) use ($pm){ $qq2->where('price','>=',1000)->where('price','<=',$pm*100); });
-           });
-    });
-
-    $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-      ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-      ->orderByRaw('COALESCE(reviews_count, 0) DESC');
-
-    $items = $q->limit($limit)->get();
-    $html = '';
-    foreach ($items as $p) { $html .= view('partials.product_card', ['product' => $p])->render(); }
-    return response($html, 200)->header('Content-Type', 'text/html');
-});
+Route::get('/api/product-cards', [ProductCardsController::class, 'index']);
 Route::get('/api/articles', [ArticleController::class, 'index']);
 Route::get('/api/catalog', [CatalogController::class, 'index']);
 Route::get('/api/product-types', [ProductTypeController::class, 'index']);
@@ -344,14 +115,10 @@ Route::post('/api/geo', [\App\Http\Controllers\GeoController::class, 'update']);
 // Landing/Hubs and Universal Pattern pages
 // ------------------------------------------------------------------
 
-// Hubs (top-level)
-Route::get('/therapies', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'therapies'));
-Route::get('/events', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'events'));
-Route::get('/workshops', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'workshops'));
-Route::get('/classes', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'classes'));
-Route::get('/retreats', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'retreats'));
-Route::get('/gifts', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'gifts'));
-Route::get('/near-me', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'near-me'));
+// Redirect legacy hubs to Blade counterparts where applicable
+Route::redirect('/events', '/events-workshops', 301);
+Route::redirect('/workshops', '/events-workshops', 301);
+Route::redirect('/classes', '/events-workshops', 301);
 // Pain-point landing pages
 Route::get('/need/{need}', fn(\Illuminate\Http\Request $r, string $need) => app(LandingController::class)->need($r, $need));
 // Quiz plan results page
@@ -359,17 +126,17 @@ Route::get('/plan', fn(\Illuminate\Http\Request $r) => app(LandingController::cl
 
 // Singular → plural 301 redirects for hubs
 Route::get('/therapy', fn() => redirect('/therapies', 301));
-Route::get('/event', fn() => redirect('/events', 301));
-Route::get('/workshop', fn() => redirect('/workshops', 301));
-Route::get('/class', fn() => redirect('/classes', 301));
+Route::get('/event', fn() => redirect('/events-workshops', 301));
+Route::get('/workshop', fn() => redirect('/events-workshops', 301));
+Route::get('/class', fn() => redirect('/events-workshops', 301));
 Route::get('/retreat', fn() => redirect('/retreats', 301));
 Route::get('/gift', fn() => redirect('/gifts', 301));
 
-// Singular → plural 301 redirects for universal pattern
+// Singular → plural 301 redirects for legacy category paths
 Route::get('/therapy/{category}', fn(string $category) => redirect('/therapies/'.$category, 301));
-Route::get('/event/{category}', fn(string $category) => redirect('/events/'.$category, 301));
-Route::get('/workshop/{category}', fn(string $category) => redirect('/workshops/'.$category, 301));
-Route::get('/class/{category}', fn(string $category) => redirect('/classes/'.$category, 301));
+Route::get('/event/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
+Route::get('/workshop/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
+Route::get('/class/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
 Route::get('/retreat/{category}', fn(string $category) => redirect('/retreats/'.$category, 301));
 Route::get('/gift/{category}', fn(string $category) => redirect('/gifts/'.$category, 301));
 
@@ -392,12 +159,7 @@ Route::get('/{type}/o/{handle}', function (\Illuminate\Http\Request $r, string $
     return redirect('/'.strtolower($type).'/'.$p->id.'-'.$slug, 301);
 })->where('type', 'therapies|events|workshops|classes|retreats|gifts');
 
-// Universal pattern: /{type}/{category} (category slug may not start with digits to avoid clashing with offering route)
-Route::get('/{type}/{category}', function (\Illuminate\Http\Request $r, string $type, string $category) {
-    $allowed = ['therapies','events','workshops','classes','retreats','gifts'];
-    if (!in_array(strtolower($type), $allowed, true)) { abort(404); }
-    return app(LandingController::class)->category($r, $type, $category);
-})->where(['type' => 'therapies|events|workshops|classes|retreats|gifts', 'category' => '[A-Za-z][A-Za-z0-9\-]*' ]);
+// Removed universal category catch-all to avoid conflicts with Blade routes
 
 // City pages (limited whitelist to avoid conflicting with known routes)
 $cities = implode('|', [

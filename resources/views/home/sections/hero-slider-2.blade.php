@@ -258,6 +258,7 @@
     .ourvibe-box{ border-width: 5px; padding: 14px 14px; }
     .ourvibe-box.box-1{ bottom: 220px; }
     .ourvibe-box.box-2{ bottom: 118px; }
+        margin-top: 40px;
   }
 
   a.ourvibe-buy {
