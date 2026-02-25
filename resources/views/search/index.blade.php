@@ -86,6 +86,23 @@
         </div>
         <button class="btn-wow is-squarish btn-xl"><span class="btn-label">Search</span><span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></button>
       </form>
+      <!-- Controls moved under search bar -->
+      <div class="d-flex align-items-center justify-content-between gap-2 mb-3 mt-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="font-semibold text-ink-800">View</span>
+          <div class="seg-group" role="tablist" aria-label="List or Map">
+            <button class="seg active" role="tab" aria-selected="true" data-view="list">List</button>
+            <button class="seg" role="tab" aria-selected="false" data-view="map">Map</button>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="font-semibold text-ink-800">Mode</span>
+          <div class="seg-group" role="tablist" aria-label="Map Mode">
+            <button class="seg" role="tab" aria-selected="false" data-mode="2d">2D</button>
+            <button class="seg active" role="tab" aria-selected="true" data-mode="3d">3D</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -119,22 +136,6 @@
         </div>
       </div>
       <div class="col-12 col-lg-5 col-map">
-        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-          <div class="d-flex align-items-center gap-2">
-            <span class="font-semibold text-ink-800">View</span>
-            <div class="seg-group" role="tablist" aria-label="List or Map">
-              <button class="seg active" role="tab" aria-selected="true" data-view="list">List</button>
-              <button class="seg" role="tab" aria-selected="false" data-view="map">Map</button>
-            </div>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="font-semibold text-ink-800">Mode</span>
-            <div class="seg-group" role="tablist" aria-label="Map Mode">
-              <button class="seg" role="tab" aria-selected="false" data-mode="2d">2D</button>
-              <button class="seg active" role="tab" aria-selected="true" data-mode="3d">3D</button>
-            </div>
-          </div>
-        </div>
         <div class="map-wrap">
           <div id="search-map" class="map"></div>
         </div>
@@ -147,8 +148,9 @@
 /* Desktop split: results (7 cols) scrollable; map (5 cols) sticky */
 @media (min-width: 992px){
   .results-scroll{ max-height: calc(100vh - 220px); overflow-y: auto; padding-right: 6px; }
-  .map-wrap{ position: sticky; top: 84px; height: calc(100vh - 100px); }
-  .map{ width: 100%; height: 100%; border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
+  .map-wrap{ position: sticky; top: 84px; }
+  /* Keep map within viewport: subtract sticky top and a small margin */
+  .map{ width: 100%; height: calc(100vh - 84px - 24px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
 }
 @media (max-width: 991.98px){
   .search-layout.sr-map-only .col-results{ display:none }
