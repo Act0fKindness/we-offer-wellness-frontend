@@ -304,6 +304,15 @@ button.btn-wow.is-squarish.btn-xl{
 /* ======================
    Links (≤300 weight, random underline opt-in)
    ====================== */
+
+/* Specific tweak: medium arrow button should have no shadow,
+   no extra right margin, and sit 5px to the right to align visuals */
+button.btn-wow.btn-md.btn-arrow{
+  box-shadow: none;
+  margin-right: 0;
+  right: -5px;
+}
+
 .link-wow,
 .link-wow--muted,
 .link-wow--nav,
