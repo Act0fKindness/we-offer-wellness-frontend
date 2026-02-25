@@ -176,6 +176,14 @@
   position: relative;
   max-height: 58px;
 }
+/* Ensure active state wins over base .wow-ultra .seg background */
+.wow-ultra .seg.active,
+.wow-ultra .seg[aria-selected="true"]{
+  background: linear-gradient(180deg, #549483, #3b7768) !important;
+  color:#fff !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.4) inset;
+  border-color: transparent;
+}
 /* Custom map markers */
 .wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); box-shadow: 0 14px 34px rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; transform-origin: bottom center; will-change: transform; }
 .wow-marker::after{ content:""; width:10px; height:10px; border-radius:999px; background:#549483; box-shadow: 0 0 0 5px rgba(84,56,255,.18); }
