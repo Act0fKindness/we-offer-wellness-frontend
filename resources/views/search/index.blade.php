@@ -277,7 +277,7 @@
             container: mapEl,
             style: 'mapbox://styles/mapbox/streets-v12',
             center: center,
-            zoom: 10,
+            zoom: 12,
             pitch: 0,
             bearing: 0,
             antialias: true
@@ -306,6 +306,7 @@
             // Markers (grouped by product id for hover effects)
             window.__wowMarkersByPid = {};
             var bounds = new mapboxgl.LngLatBounds();
+            var added = 0;
             data.forEach(function(p){
               var el = document.createElement('div');
               el.className = 'wow-marker';
@@ -313,14 +314,15 @@
               var marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([Number(p.lng), Number(p.lat)]).setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML('<div style="font-weight:600">'+(p.title||'')+'</div>')).addTo(map);
               var pid = String(p.pid||p.id||'');
               (window.__wowMarkersByPid[pid] = window.__wowMarkersByPid[pid] || []).push({ marker: marker, el: el });
-              try { bounds.extend([Number(p.lng), Number(p.lat)]); } catch(e){}
+              try { bounds.extend([Number(p.lng), Number(p.lat)]); added++; } catch(e){}
             });
             try {
-              if (data && data.length > 1) {
-                map.fitBounds(bounds, { padding: 80, maxZoom: 10, duration: 500 });
-              } else if (data && data.length === 1) {
-                map.setCenter([Number(data[0].lng), Number(data[0].lat)]);
-                map.setZoom(12);
+              if (added > 1) {
+                map.fitBounds(bounds, { padding: 100, maxZoom: 12, duration: 400 });
+              } else if (added === 1) {
+                var only = data[0];
+                map.setCenter([Number(only.lng), Number(only.lat)]);
+                map.setZoom(13);
               }
             } catch(e){}
           });
