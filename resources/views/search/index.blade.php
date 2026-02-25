@@ -124,7 +124,7 @@
     </div>
   </div>
 </section>
- 
+
 <style>
 /* Desktop split: results (7 cols) scrollable; map (5 cols) sticky */
 @media (min-width: 992px){
