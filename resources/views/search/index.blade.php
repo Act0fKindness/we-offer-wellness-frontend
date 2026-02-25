@@ -91,73 +91,90 @@
 </section>
 
 <section class="py-6 md:py-10">
-  <div class="container-page space-y-6">
+  <div class="container-page space-y-4">
     <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
       <div>
         <div class="kicker mb-1 text-ink-600">Search results</div>
-        <h1 class="text-ink-900" style="font-size:1.75rem;font-weight:700;"><span id="sr-count">0</span> results</h1>
+        <h1 class="text-ink-900" style="font-size:1.75rem;font-weight:700;">{{ $resultCount }} results</h1>
       </div>
       <div class="d-flex flex-wrap align-items-center gap-2" id="sr-tags"></div>
     </div>
 
-    <div id="sr-status" class="card p-8 text-ink-600 text-center text-lg" style="display:none"></div>
-    <div id="sr-grid" class="row g-3"></div>
+    <div class="row gx-4">
+      <div class="col-12 col-lg-7">
+        <div class="results-scroll">
+          @if(isset($products) && $products->count())
+            <div class="row g-3">
+              @foreach($products as $product)
+                <div class="col-12">
+                  @include('partials.product_card', ['product' => $product])
+                </div>
+              @endforeach
+            </div>
+          @else
+            <div class="card p-6 text-ink-600">No results matched your filters. Try widening your search.</div>
+          @endif
+        </div>
+      </div>
+      <div class="col-12 col-lg-5 d-none d-lg-block">
+        <div class="map-wrap">
+          <div id="search-map" class="map"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
+<style>
+/* Desktop split: results (7 cols) scrollable; map (5 cols) sticky */
+@media (min-width: 992px){
+  .results-scroll{ max-height: calc(100vh - 220px); overflow-y: auto; padding-right: 6px; }
+  .map-wrap{ position: sticky; top: 84px; height: calc(100vh - 100px); }
+  .map{ width: 100%; height: 100%; border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
+}
+</style>
+
 <script>
 (function(){
-  // Ensure search-top bar is initialised
   try { (window.setupUltraSearchBar||function(){})('search-top') } catch(e){}
+  // Tags from query for visual context
+  try{
+    var tagsEl = document.getElementById('sr-tags');
+    function esc(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+    var p = new URLSearchParams(window.location.search||''); var tags=[];
+    if(p.get('where')) tags.push(p.get('where'));
+    if(p.get('mode')) tags.push(p.get('mode').toLowerCase()==='online'?'Online only':'In person');
+    if(p.get('type')) tags.push(p.get('type'));
+    if(p.get('tag')) tags.push('#'+p.get('tag'));
+    if(p.get('price_max')) tags.push('Under £'+p.get('price_max'));
+    if(tagsEl) tagsEl.innerHTML = tags.map(t => '<span class="chip">'+esc(t)+'</span>').join('');
+  }catch{}
 
-  var grid = document.getElementById('sr-grid');
-  var countEl = document.getElementById('sr-count');
-  var tagsEl = document.getElementById('sr-tags');
-  var statusEl = document.getElementById('sr-status');
+  // Map
+  try {
+    var data = @json(($products ?? collect())->map(function($p){ $m = $p->meta_json ?? []; return [
+      'id' => $p->id,
+      'title' => $p->title,
+      'lat' => $m['lat'] ?? null,
+      'lng' => $m['lng'] ?? null,
+      'url' => url('/therapies/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
+    ]; })->filter(function($x){ return is_numeric($x['lat']??null) && is_numeric($x['lng']??null); })->values());
 
-  function qs(){ return new URLSearchParams(window.location.search||'') }
-  function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]); }); }
-  function normPrice(v){ var n = Number(v); if(!isFinite(n)) return null; if(n >= 1000) n = n/100; return n }
-
-  function buildTags(){
-    var p = qs(); var tags = [];
-    if(p.get('where')) tags.push(p.get('where'))
-    if(p.get('mode')) tags.push(p.get('mode').toLowerCase()==='online'?'Online only':'In person')
-    if(p.get('type')) tags.push(p.get('type'))
-    if(p.get('tag')) tags.push('#'+p.get('tag'))
-    if(p.get('price_max')) tags.push('Under £'+p.get('price_max'))
-    tagsEl.innerHTML = tags.map(function(t){ return '<span class="chip">'+esc(t)+'</span>' }).join('')
-  }
-
-  function card(it){
-    var priceMin = normPrice(it.price_min ?? it.price);
-    var priceHtml = priceMin!=null ? '<div class="price">£'+Number(priceMin).toFixed(2)+' <small>from</small></div>' : '';
-    return '<div class="col-12 col-sm-6 col-lg-3">'
-      + '<a href="'+esc(it.url||'#')+'" class="wow-card md is-fluid">'
-      + '<div class="wow-media">'+(it.image?'<img src="'+esc(it.image)+'" alt="'+esc(it.title)+'">':'')+'</div>'
-      + '<div class="wow-body"><div class="wow-type text-muted">'+esc(it.type||'Experience')+'</div><div class="wow-title">'+esc(it.title)+'</div>'
-      + (it.rating ? ('<div class="rating-text">★ '+Number(it.rating).toFixed(1)+(it.review_count?' <small class="text-muted">('+it.review_count+')</small>':'')+'</div>') : '')
-      + '</div><div class="wow-bottom">'+priceHtml+'<div class="actions"><span class="link-wow">View</span></div></div>'
-      + '</a></div>'
-  }
-
-  function load(){
-    var u = '/api/products'+(window.location.search||'');
-    statusEl.style.display='block'; statusEl.textContent='Loading results…';
-    fetch(u, { headers:{ 'Accept':'application/json' } }).then(function(r){ return r.json() }).then(function(items){
-      var list = Array.isArray(items) ? items : [];
-      buildTags();
-      countEl.textContent = String(list.length);
-      if(list.length === 0){ statusEl.textContent='No results matched your filters. Try widening your search.'; grid.innerHTML=''; return; }
-      statusEl.style.display='none';
-      grid.innerHTML = list.map(card).join('');
-    }).catch(function(){ statusEl.style.display='block'; statusEl.textContent='We\'re having trouble loading results right now.'; grid.innerHTML=''; });
-  }
-
-  load();
-  window.addEventListener('popstate', load);
+    if (data.length && document.getElementById('search-map')) {
+      function init(){
+        try{
+          var center = { lat: Number(data[0].lat), lng: Number(data[0].lng) };
+          var map = new google.maps.Map(document.getElementById('search-map'), { center:center, zoom: 11, mapTypeControl:false, streetViewControl:false, fullscreenControl:false });
+          data.forEach(function(p){ new google.maps.Marker({ position:{ lat:Number(p.lat), lng:Number(p.lng) }, map, title:p.title }); });
+        }catch(e){ console.warn('map init failed', e) }
+      }
+      if (window.google && window.google.maps) init();
+      else {
+        var s=document.createElement('script'); s.src='https://maps.googleapis.com/maps/api/js?key={{ $mapsKey }}&libraries=marker'; s.async=true; s.defer=true; s.onload=init; document.head.appendChild(s);
+      }
+    }
+  } catch (e) { console.warn('map skipped', e) }
 })();
 </script>
 
 @endsection
-
