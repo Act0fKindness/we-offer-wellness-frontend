@@ -125,7 +125,12 @@
               @foreach($products as $product)
                 <div class="col-12">
                   <div class="wow-card-sm-wrap">
-                    @include('partials.product_card_list', ['product' => $product])
+                    <div class="result-view-map">
+                      @include('partials.product_card_list', ['product' => $product])
+                    </div>
+                    <div class="result-view-list" style="display:none;">
+                      @include('partials.product_card', ['product' => $product])
+                    </div>
                   </div>
                 </div>
               @endforeach
@@ -152,9 +157,19 @@
   /* Keep map within viewport: subtract sticky top and a small margin */
   .map{ width: 100%; height: calc(100vh - 84px - 24px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
 }
+/* Segmented controls (match Under/For styles) */
+.seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
+.seg{ appearance:none; border:0; background:transparent; padding:6px 12px; border-radius:999px; color: var(--ink-700); font-weight:600; font-size:.9rem; transition: all .15s ease; }
+.seg:hover{ background:#eef2f7 }
+.seg.active{ background: linear-gradient(180deg, #549483, #3b7768); color:#fff; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset }
 /* Hide/show columns for list/map view at all widths */
 /* Map view shows both columns; List view hides map */
 .search-layout.sr-list-only .col-map{ display:none; }
+/* Toggle which card is shown per view */
+.search-layout .result-view-map{ display:block; }
+.search-layout .result-view-list{ display:none; }
+.search-layout.sr-list-only .result-view-map{ display:none; }
+.search-layout.sr-list-only .result-view-list{ display:block; }
 /* Disabled seg buttons */
 .seg[disabled], .seg[aria-disabled="true"]{ opacity: .5; cursor: not-allowed; }
 @media (max-width: 991.98px){
