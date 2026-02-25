@@ -278,14 +278,29 @@
   try {
     var layout = document.querySelector('.search-layout');
     var modeButtons = Array.from(document.querySelectorAll('[data-mode]'));
+    var resultsCol = document.querySelector('.search-layout .col-results');
+    var mapCol = document.querySelector('.search-layout .col-map');
     function setModeEnabled(enabled){
       modeButtons.forEach(function(b){
         if (enabled) { b.removeAttribute('disabled'); b.setAttribute('aria-disabled','false'); }
         else { b.setAttribute('disabled','disabled'); b.setAttribute('aria-disabled','true'); }
       });
     }
+    function setColsForView(view){
+      if (!resultsCol || !mapCol) return;
+      if (view === 'list') {
+        // results full width
+        resultsCol.classList.remove('col-lg-7');
+        resultsCol.classList.add('col-lg-12');
+      } else {
+        // side by side: 7/5 split
+        resultsCol.classList.remove('col-lg-12');
+        resultsCol.classList.add('col-lg-7');
+      }
+    }
     // Initial state: List active -> disable mode
     setModeEnabled(false);
+    setColsForView('list');
     document.querySelectorAll('[data-view]')?.forEach(function(btn){
       btn.addEventListener('click', function(){
         document.querySelectorAll('[data-view]')?.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false') })
@@ -296,10 +311,12 @@
         if (v === 'map') {
           // Map view: show both columns
           setModeEnabled(true);
+          setColsForView('map');
         } else {
           // List view: hide map column
           layout.classList.add('sr-list-only');
           setModeEnabled(false);
+          setColsForView('list');
         }
       })
     })
