@@ -9,7 +9,7 @@
 @endphp
 
 <style>
-  :root{ --wow-accent:#18b36b; --wow-accent-2:#0fa25e; --wow-text:#101828; --wow-muted:rgba(16,24,40,.68); --wow-line:rgba(16,24,40,.14); --wow-soft-2:rgba(16,24,40,.08); --wow-radius-lg:20px }
+  :root{ --wow-accent:#549483; --wow-accent-2:#17643d; --wow-text:#101828; --wow-muted:rgba(16,24,40,.68); --wow-line:rgba(16,24,40,.14); --wow-soft-2:rgba(16,24,40,.08); --wow-radius-lg:20px }
   .wow-acc{ border-top:1px solid var(--wow-line); }
   .wow-acc-item{ border-bottom:1px solid var(--wow-line); }
   .wow-acc-header{ width:100%; background:transparent; border:0; padding:14px 0; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer }

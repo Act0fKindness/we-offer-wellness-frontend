@@ -248,6 +248,13 @@
 /* Square (3px radius) */
 .is-square{ --btn-rd:3px; }
 
+/* Explicit style for large squarish primary buttons (e.g., search)
+   Ensure no border/shadow per spec */
+button.btn-wow.is-squarish.btn-xl{
+  border:none;
+  box-shadow:none;
+}
+
 /* Square buttons: enforce symmetric padding and remove internal gap */
 .btn-wow.is-square,
 .cta-btn.is-square{
