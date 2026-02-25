@@ -9,11 +9,11 @@ class ReviewsController extends Controller
 {
     public function index()
     {
-        $reviews = Review::with(['user:id,first_name,last_name,name,location', 'product:id,title,slug', 'vendor:id,vendor_name'])
+        $paginator = Review::with(['user:id,first_name,last_name,name,location', 'product:id,title,slug', 'vendor:id,vendor_name'])
             ->whereNotNull('review_text')
             ->orderByDesc('created_at')
-            ->get()
-            ->map(function(Review $review) {
+            ->paginate(18)
+            ->through(function(Review $review) {
                 $user = $review->user;
                 $customerName = $user ? trim(($user->first_name ?? '').' '.($user->last_name ?? '')) : null;
                 if (!$customerName) {
@@ -33,7 +33,7 @@ class ReviewsController extends Controller
             });
 
         return Inertia::render('Reviews/Index', [
-            'reviews' => $reviews,
+            'reviews' => $paginator,
             'meta' => [
                 'title' => 'Client Reviews | We Offer Wellness',
                 'description' => 'Read real stories from people who booked therapies, classes, workshops and retreats with We Offer Wellness.',
@@ -41,4 +41,3 @@ class ReviewsController extends Controller
         ]);
     }
 }
-

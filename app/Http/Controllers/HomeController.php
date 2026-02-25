@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use App\Models\Product;
+use App\Models\Review;
 
 class HomeController extends Controller
 {
@@ -170,7 +171,9 @@ class HomeController extends Controller
             'giftsUnder50' => $giftsUnder50,
             'onlineUnder50' => $onlineUnder50,
             'hasClassesThisWeek' => $hasClassesThisWeek,
+            // Site-wide review stats for trust section
+            'review_count' => (int) (Review::query()->count() ?? 0),
+            'avg_rating' => ($r = (float) (Review::query()->avg('rating') ?? 0)) > 0 ? round($r, 1) : null,
         ]);
     }
 }
-

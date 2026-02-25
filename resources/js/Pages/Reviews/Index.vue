@@ -4,13 +4,14 @@ import { Head } from '@inertiajs/vue3'
 import SiteLayout from '@/Layouts/SiteLayout.vue'
 
 const props = defineProps({
-  reviews: { type: Array, default: () => [] },
+  reviews: { type: Object, default: () => ({ data: [], links: [] }) },
   meta: { type: Object, default: () => ({}) },
 })
 
 const pageTitle = computed(() => props.meta?.title || 'Client Reviews | We Offer Wellness')
 const pageDescription = computed(() => props.meta?.description || 'Real stories from people who booked therapies, classes, workshops and retreats.')
-const entries = computed(() => props.reviews || [])
+const entries = computed(() => Array.isArray(props.reviews?.data) ? props.reviews.data : (props.reviews || []))
+const links = computed(() => Array.isArray(props.reviews?.links) ? props.reviews.links : [])
 
 function starLabel(rating) {
   if (!rating || rating <= 0) return null
@@ -71,6 +72,9 @@ function displayDate(iso) {
           </article>
         </div>
         <div v-else class="card p-6 text-ink-600">Reviews will appear here once they’re published.</div>
+        <nav v-if="links.length" class="pagination-nav">
+          <a v-for="l in links" :key="l.url || l.label" :href="l.url || '#'" :class="['page-link', { active: l.active, disabled: !l.url } ]" v-html="l.label"/>
+        </nav>
       </div>
     </section>
   </SiteLayout>
@@ -89,6 +93,11 @@ function displayDate(iso) {
 .quote{ font-size:1.05rem; color:#0b1323; line-height:1.6; flex:1; }
 .meta .name{ font-weight:600; color:#0f172a; }
 .meta .details{ font-size:.9rem; color:#64748b; }
+
+.pagination-nav{ display:flex; gap:.35rem; flex-wrap:wrap; justify-content:center; margin-top:1rem }
+.page-link{ display:inline-block; padding:.4rem .7rem; border:1px solid var(--ink-200); border-radius:8px; color:#0b1323; text-decoration:none; background:#fff }
+.page-link.active{ background:#0b1323; color:#fff; border-color:#0b1323 }
+.page-link.disabled{ opacity:.5; pointer-events:none }
 
 @media (max-width: 767.98px){
   .reviews-hero{ flex-direction:column; align-items:flex-start; }

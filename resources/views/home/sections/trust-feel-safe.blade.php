@@ -16,8 +16,8 @@
                                   d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
                         </svg>
                         <div data-v-f43bb09d="">
-                            <div data-v-f43bb09d="" class="title">—</div>
-                            <div data-v-f43bb09d="" class="sub">0 verified reviews</div>
+                            <div data-v-f43bb09d="" class="title">{{ isset($avg_rating) && $avg_rating ? number_format($avg_rating, 1) . '/5' : '—' }}</div>
+                            <div data-v-f43bb09d="" class="sub">{{ number_format((int)($review_count ?? 0)) }} verified reviews</div>
                         </div>
                     </div>
                     <div data-v-f43bb09d="" class="stat-pill"><span data-v-f43bb09d="" class="dot"
