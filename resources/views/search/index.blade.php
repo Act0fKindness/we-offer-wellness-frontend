@@ -286,7 +286,8 @@
             zoom: 12,
             pitch: 0,
             bearing: 0,
-            antialias: true
+            antialias: true,
+            fadeDuration: 0
           });
           map.on('load', function(){
             // 3D buildings layer
@@ -353,11 +354,16 @@
           } catch(e){}
         }catch(e){ console.warn('mapbox init failed', e) }
       }
-      // load mapbox css/js if needed
-      if (!window.mapboxgl) {
-        var l = document.createElement('link'); l.rel='stylesheet'; l.href='https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css'; document.head.appendChild(l)
-        var s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js'; s.async=true; s.defer=true; s.onload=initMapbox; document.head.appendChild(s)
-      } else { initMapbox() }
+      // Ensure Mapbox CSS is present, then load/init JS
+      (function ensureCssThenInit(){
+        var hasCss = !!document.querySelector('link[href*="mapbox-gl.css"]');
+        if (!hasCss) {
+          var l = document.createElement('link'); l.rel='stylesheet'; l.href='https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css'; document.head.appendChild(l)
+        }
+        if (!window.mapboxgl) {
+          var s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js'; s.async=true; s.defer=true; s.onload=initMapbox; document.head.appendChild(s)
+        } else { initMapbox() }
+      })();
     }
   } catch (e) { console.warn('map skipped', e) }
 
