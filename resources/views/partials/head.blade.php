@@ -46,6 +46,9 @@
 <!-- WOW V3 Typography Deck (source of truth) -->
 <link rel="stylesheet" href="/css/wow-typography.css">
 
+<!-- Safety: Bootstrap CSS CDN fallback to keep homepage/cards styled even if Vite CSS fails -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
 @stack('head')
 
 <!-- Google Tag Manager (optional via env) -->
@@ -95,4 +98,3 @@
   ];
 @endphp
 <script type="application/ld+json">{!! json_encode($orgLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
-
