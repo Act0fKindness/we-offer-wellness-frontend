@@ -89,17 +89,17 @@
       <!-- Controls moved under search bar -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 mt-2">
         <div class="d-flex align-items-center gap-2">
+          <span class="font-semibold text-ink-800">View</span>
+          <div class="seg-group" role="tablist" aria-label="List or Map">
+            <button class="seg" role="tab" aria-selected="false" data-view="list">List</button>
+            <button class="seg active" role="tab" aria-selected="true" data-view="map">Map</button>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
           <span class="font-semibold text-ink-800">Mode</span>
           <div class="seg-group" role="tablist" aria-label="Map Mode">
             <button class="seg" role="tab" aria-selected="false" data-mode="2d">2D</button>
             <button class="seg active" role="tab" aria-selected="true" data-mode="3d">3D</button>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="font-semibold text-ink-800">View</span>
-          <div class="seg-group" role="tablist" aria-label="List or Map">
-            <button class="seg active" role="tab" aria-selected="true" data-view="list">List</button>
-            <button class="seg" role="tab" aria-selected="false" data-view="map">Map</button>
           </div>
         </div>
       </div>
@@ -313,9 +313,30 @@
         resultsCol.classList.add('col-lg-7');
       }
     }
-    // Initial state: List active -> disable mode
-    setModeEnabled(false);
-    setColsForView('list');
+    function setItemCols(view){
+      var items = document.querySelectorAll('.results-scroll .row > div');
+      items.forEach(function(it){
+        if (view === 'list') {
+          it.classList.remove('col-12');
+          it.classList.add('col-sm-6','col-lg-3');
+        } else {
+          it.classList.remove('col-sm-6','col-lg-3');
+          it.classList.add('col-12');
+        }
+      });
+    }
+    // Initial state: Map active -> enable mode, show both columns
+    setModeEnabled(true);
+    setColsForView('map');
+    setItemCols('map');
+    // Ensure buttons reflect Map active
+    try{
+      var viewBtns = document.querySelectorAll('[data-view]');
+      viewBtns.forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      var mapBtn = document.querySelector('[data-view="map"]');
+      if(mapBtn){ mapBtn.classList.add('active'); mapBtn.setAttribute('aria-selected','true'); }
+      layout.classList.remove('sr-list-only');
+    }catch(e){}
     document.querySelectorAll('[data-view]')?.forEach(function(btn){
       btn.addEventListener('click', function(){
         document.querySelectorAll('[data-view]')?.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false') })
@@ -327,11 +348,13 @@
           // Map view: show both columns
           setModeEnabled(true);
           setColsForView('map');
+          setItemCols('map');
         } else {
           // List view: hide map column
           layout.classList.add('sr-list-only');
           setModeEnabled(false);
           setColsForView('list');
+          setItemCols('list');
         }
       })
     })
