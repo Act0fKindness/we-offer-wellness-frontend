@@ -26,22 +26,24 @@
 @endphp
 
 @once
-  <style>
-  /* Small product card — compact height + slimmer layout */
-  .wow-card-sm-wrap{ --border:#e5e7eb; --ink:#0b1323; --muted:#64748b; --shadow:0 10px 24px rgba(2,8,23,.06); }
-  .wow-card-sm{ display:grid; grid-template-columns: 120px 1fr; gap:12px; align-items:stretch; width:100%; text-decoration:none; color:inherit; background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow: var(--shadow); }
-  .wow-card-sm .thumb{ height:100%; min-height:120px; background:#f8fafc; border-right:1px solid var(--border); }
-  .wow-card-sm .thumb img{ width:100%; height:100%; object-fit:cover; display:block }
-  .wow-card-sm .body{ display:flex; flex-direction:column; gap:6px; padding:10px 12px }
-  .wow-card-sm .type{ font-size:.82rem; color:var(--muted) }
-  .wow-card-sm .title{ font-size:1rem; line-height:1.25; font-weight:600; color:var(--ink); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
-  .wow-card-sm .rating{ font-size:.85rem; color:#111827 }
-  .wow-card-sm .bottom{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:8px }
-  .wow-card-sm .price{ font-size:1rem; font-weight:600; color:var(--ink) }
-  .wow-card-sm .price small{ font-weight:500; color:var(--muted) }
-  .wow-card-sm .cta{ color:#0f1e2e; text-decoration:none; font-weight:600 }
-  @media (max-width: 575.98px){ .wow-card-sm{ grid-template-columns: 100px 1fr } .wow-card-sm .thumb{ min-height:100px } }
-  </style>
+  @push('head')
+    <style>
+    /* Small product card — compact height + slimmer layout */
+    .wow-card-sm-wrap{ --border:#e5e7eb; --ink:#0b1323; --muted:#64748b; --shadow:0 10px 24px rgba(2,8,23,.06); }
+    .wow-card-sm{ display:grid; grid-template-columns: 120px 1fr; gap:12px; align-items:stretch; width:100%; text-decoration: none; color:inherit; background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow: var(--shadow); }
+    .wow-card-sm .thumb{ height:100%; min-height:120px; background:#f8fafc; border-right:1px solid var(--border); }
+    .wow-card-sm .thumb img{ width:100%; height:100%; object-fit:cover; display:block }
+    .wow-card-sm .body{ display:flex; flex-direction:column; gap:6px; padding:10px 12px }
+    .wow-card-sm .type{ font-size:.82rem; color:var(--muted) }
+    .wow-card-sm .title{ font-size:1rem; line-height:1.25; font-weight:600; color:var(--ink); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
+    .wow-card-sm .rating{ font-size:.85rem; color:#111827 }
+    .wow-card-sm .bottom{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:8px }
+    .wow-card-sm .price{ font-size:1rem; font-weight:600; color:var(--ink) }
+    .wow-card-sm .price small{ font-weight:500; color:var(--muted) }
+    .wow-card-sm .cta{ color:#0f1e2e; text-decoration: none; font-weight:600 }
+    @media (max-width: 575.98px){ .wow-card-sm{ grid-template-columns: 100px 1fr } .wow-card-sm .thumb{ min-height:100px } }
+    </style>
+  @endpush
 @endonce
 
 <a href="{{ $url }}" class="wow-card-sm" aria-label="{{ $titleFormatted }}">
@@ -66,4 +68,3 @@
     </div>
   </div>
 </a>
-
