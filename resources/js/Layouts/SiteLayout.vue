@@ -219,7 +219,7 @@ const menus = {
   ],
   practitioners: [
     { title: 'Practitioner hub', links: [
-      link('Become a practitioner', practitionerSignupUrl),
+      link('Become a provider', practitionerSignupUrl),
       link('Practitioner login', 'https://atease.weofferwellness.co.uk/login', { external: true }),
       link('Workshops & trainings', '/events/practitioner/trainings'),
       link('Practitioner FAQs', '/help/practitioners'),
@@ -603,7 +603,7 @@ function openV3NotifyModal(event){
             <p>Share your expertise with the WOW community. Trauma-aware, inclusive practitioners are always welcome.</p>
           </div>
           <a :href="practitionerSignupUrl" class="btn-wow btn-wow--cta btn-sm" target="_blank" rel="noopener">
-            Become a practitioner
+            Become a provider
           </a>
         </div>
 
@@ -663,7 +663,7 @@ function openV3NotifyModal(event){
             <a href="/cookies">Cookies</a>
           </div>
           <a :href="practitionerSignupUrl" class="btn-wow btn-wow--cta btn-sm" target="_blank" rel="noopener">
-            Become a practitioner
+            Become a provider
           </a>
         </div>
       </div>
