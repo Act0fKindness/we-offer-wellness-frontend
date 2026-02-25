@@ -240,15 +240,4 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 </style>
 
-<meta name="description"
-      content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
-      inertia="">
-<link rel="canonical" href="/" inertia="">
-<meta property="og:title" content="Holistic Therapy That Works | We Offer Wellness®" inertia="">
-<meta property="og:description"
-      content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®."
-      inertia="">
-<meta property="og:url" content="" inertia="">
-<title inertia="">Holistic Therapies That Work | We Offer Wellness®</title>
-
 @stack('head')
