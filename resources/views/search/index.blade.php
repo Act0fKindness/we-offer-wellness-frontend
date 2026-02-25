@@ -187,7 +187,13 @@
 /* Custom map markers */
 .wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); box-shadow: 0 14px 34px rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; transform-origin: bottom center; will-change: transform; }
 .wow-marker::after{ content:""; width:10px; height:10px; border-radius:999px; background:#549483; box-shadow: 0 0 0 5px rgba(84,56,255,.18); }
-.wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
+  .wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
+/* Mobile: hide Where, When, Who segments; keep What + Search visible */
+@media (max-width: 991.98px){
+  #search-top-seg-where,
+  #search-top-seg-when,
+  #search-top-seg-who{ display: none !important; }
+}
 /* Hide/show columns for list/map view at all widths */
 /* Map view shows both columns; List view hides map */
 .search-layout.sr-list-only .col-map{ display:none; }
@@ -214,6 +220,29 @@
 <script>
 (function(){
   try { (window.setupUltraSearchBar||function(){})('search-top') } catch(e){}
+  // Mobile-specific search bar behavior
+  try{
+    var mq = window.matchMedia('(max-width: 991.98px)');
+    function initMobileBar(){
+      if (!mq.matches) return;
+      // Open the What suggestions panel
+      var what = document.getElementById('search-top-what');
+      var pane = document.getElementById('search-top-what-pane');
+      if (what) what.setAttribute('aria-expanded','true');
+      if (pane) pane.classList.remove('d-none');
+      // Default Where to Online if empty
+      var whereEd = document.getElementById('search-top-where-editor');
+      var whereInp = document.getElementById('search-top-where');
+      var cur = (whereEd && whereEd.textContent || '').trim();
+      if (whereEd && whereInp && cur === ''){
+        whereEd.textContent = 'Online';
+        whereInp.value = 'Online';
+      }
+    }
+    initMobileBar();
+    // Re-evaluate on viewport changes
+    try{ mq.addEventListener ? mq.addEventListener('change', initMobileBar) : mq.addListener(initMobileBar); }catch(e){}
+  }catch(e){}
   // Tags from query for visual context
   try{
     var tagsEl = document.getElementById('sr-tags');
