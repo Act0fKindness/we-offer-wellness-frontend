@@ -153,7 +153,7 @@
   .map{ width: 100%; height: calc(100vh - 84px - 24px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
 }
 /* Hide/show columns for list/map view at all widths */
-.search-layout.sr-map-only .col-results{ display:none; }
+/* Map view shows both columns; List view hides map */
 .search-layout.sr-list-only .col-map{ display:none; }
 /* Disabled seg buttons */
 .seg[disabled], .seg[aria-disabled="true"]{ opacity: .5; cursor: not-allowed; }
@@ -292,11 +292,12 @@
         btn.classList.add('active'); btn.setAttribute('aria-selected','true')
         var v = btn.getAttribute('data-view');
         if (!layout) return;
-        layout.classList.remove('sr-map-only','sr-list-only');
+        layout.classList.remove('sr-list-only');
         if (v === 'map') {
-          layout.classList.add('sr-map-only');
+          // Map view: show both columns
           setModeEnabled(true);
         } else {
+          // List view: hide map column
           layout.classList.add('sr-list-only');
           setModeEnabled(false);
         }
