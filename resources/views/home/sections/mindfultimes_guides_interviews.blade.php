@@ -34,8 +34,8 @@
     #mindful-times .tabloid-hero .wow-meta{ color: rgba(255,255,255,.78) }
     #mindful-times .tabloid-hero .wow-meta .cat{ color:#9fd0ff }
     #mindful-times .tabloid-row{ display:grid; gap:14px; grid-template-columns: repeat(3, 1fr); }
-    #mindful-times .tabloid-small{ display:grid; gap:10px; padding:12px; border-radius:18px; border:1px solid var(--ink-200, rgba(16,24,40,.12)); background:#fff; box-shadow:0 12px 30px rgba(16,24,40,.08) }
-    #mindful-times .tabloid-small .wow-media{ height:150px; border-radius:16px; overflow:hidden; background:#f8fafc }
+    #mindful-times .tabloid-small{ display:grid; gap:10px; padding:12px; border-radius:6px; border:1px solid var(--ink-200, rgba(16,24,40,.12)); background:#fff; box-shadow:0 12px 30px rgba(16,24,40,.08) }
+    #mindful-times .tabloid-small .wow-media{ height:150px; width:100%; border-radius:3px; overflow:hidden; background:#f8fafc }
     #mindful-times .tabloid-small .wow-media img{ width:100%; height:100%; object-fit:cover }
     #mindful-times .wow-link{ color:inherit; text-decoration:none }
     #mindful-times .wow-h{ margin:0; font-weight:800; letter-spacing:-.02em; line-height:1.2; font-size:16px }
