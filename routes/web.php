@@ -201,10 +201,8 @@ Route::get('/corporate-wellness', function () {
 });
 Route::redirect('/corporate-wellbeing', '/corporate-wellness', 301);
 
-Route::get('/events-and-workshops', function () {
-    return Inertia::render('EventsAndWorkshops');
-});
-Route::redirect('/events-workshops', '/events-and-workshops', 301);
+// Consolidate events/workshops hub to Blade route
+Route::redirect('/events-and-workshops', '/events-workshops', 301);
 
 Route::get('/gift-cards', function () {
     return Inertia::render('GiftCards');
