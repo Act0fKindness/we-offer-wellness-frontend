@@ -125,7 +125,7 @@
               @foreach($products as $product)
                 <div class="col-12">
                   <div class="wow-card-sm-wrap">
-                    @include('partials.product_card_sm', ['product' => $product])
+                    @include('partials.product_card_list', ['product' => $product])
                   </div>
                 </div>
               @endforeach
