@@ -78,7 +78,7 @@
                               d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
                     </svg>
                 </a>
-                    <button class="icon-btn position-relative js-cart-toggle" aria-label="Open cart" aria-expanded="false">
+                    <button class="icon-btn position-relative cart-open-close" aria-label="Open cart" aria-expanded="false">
                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
                              height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -223,7 +223,7 @@
     return { load:load, save:save, count:count, total:total, add:add, upd:upd, rem:rem, renderMini:renderMini, syncAdd:syncAdd };
   })();
 
-  var btn = document.querySelector('.js-cart-toggle');
+  var btn = document.querySelector('.cart-open-close');
   var pop = document.getElementById('mini-cart-popover');
   function hasCookieCart(){ try{ var c=document.cookie.split('; ').find(r=>r.startsWith('wow_cart=')); return !!(c && decodeURIComponent(c.split('=')[1]||'').length>2); }catch(_){ return false } }
   function fetchMini(retry){ if(!pop) return; var url='/api/cart/mini?t='+Date.now(); fetch(url, { headers:{ 'Accept':'text/html', 'Cache-Control':'no-cache' }, credentials:'same-origin' }).then(r=>r.text()).then(html=>{ pop.innerHTML = html; bindRemove(); if(retry && /mini-cart__empty/.test(html) && hasCookieCart()){ setTimeout(function(){ fetchMini(false); }, 220); } }).catch(()=>{ pop.innerHTML = '<div class="p-3 text-muted">Cart unavailable</div>'; }); }
@@ -236,7 +236,7 @@
   function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
   function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-XSRF-TOKEN': token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
   function updateBadge(){ try{ var localCount = CartClient.count(CartClient.load()); var b=document.querySelector('.cart-badge'); if(b){ b.textContent = String(localCount); b.style.display = (localCount>0)?'inline-block':'none'; } }catch(_){ } fetch('/api/cart/count', { credentials:'same-origin' }).then(r=>r.json()).then(function(j){ var b=document.querySelector('.cart-badge'); if(b){ b.textContent = String(j.count||0); b.style.display = (j.count||0)>0 ? 'inline-block' : 'none'; } }).catch(function(){}); }
-  document.addEventListener('click', function(e){ if(e.target.closest('.js-cart-toggle')){ e.preventDefault(); toggle(); } else { outside(e); } });
+  document.addEventListener('click', function(e){ if(e.target.closest('.cart-open-close')){ e.preventDefault(); toggle(); } else { outside(e); } });
   window.addEventListener('resize', position);
   updateBadge();
   window.addEventListener('wow:add-to-cart', function(ev){
