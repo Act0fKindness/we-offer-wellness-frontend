@@ -2,7 +2,7 @@
 <head>
     @include('partials.head')
 </head>
-<body class="font-sans antialiased">
+<body class="antialiased">
 <div id="app"
      data-page="{&quot;component&quot;:&quot;Home&quot;,&quot;props&quot;:{&quot;errors&quot;:{},&quot;auth&quot;:{&quot;user&quot;:null},&quot;mapboxKey&quot;:&quot;&quot;},&quot;url&quot;:&quot;/&quot;,&quot;version&quot;:&quot;static&quot;}"
      data-v-app=""><!---->

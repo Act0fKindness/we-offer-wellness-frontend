@@ -71,6 +71,9 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap" rel="stylesheet">
 
+        <!-- WOW V3 Typography Deck (source of truth) -->
+        <link rel="stylesheet" href="/css/wow-typography.css">
+
         <!-- Scripts -->
         @routes
         {{-- Load the app bundle only; page chunk is dynamically imported by Inertia --}}
@@ -104,7 +107,7 @@
         <script type="application/ld+json">{!! json_encode($orgLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
         @inertiaHead
     </head>
-    <body class="font-sans antialiased">
+    <body class="antialiased">
         @if ($gtmId)
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         @endif

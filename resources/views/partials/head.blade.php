@@ -5,13 +5,20 @@
 <meta name="description"
       content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®.">
 
-<!-- Fonts: Manrope (general text, buttons, product headings) and Playfair Display (section headings) -->
+<!-- Fonts: Manrope (general), Playfair Display (section headings), Instrument Sans (UI) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+<!-- Add Instrument Sans -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- WOW V3 Typography Deck (source of truth) -->
+<link rel="stylesheet" href="/css/wow-typography.css">
 
 <!-- Built CSS bundle from Vite/Laravel -->
 
@@ -26516,12 +26523,8 @@ This stylesheet scopes variables to .wow-card to avoid global conflicts. */
 
 </style>
 <style>
-/* Global font overrides */
-body, button, .btn, input, select, textarea { font-family: 'Manrope', var(--bs-font-sans-serif); }
-/* Section headings (homepage/landing/product section blocks) */
-.wow-section-title, .section-title, .home-section-title, .landing-section-title { font-family: 'Playfair Display', Georgia, serif; }
-/* Use Playfair for H2 page titles (e.g., section titles like the example) */
-h2 { font-family: 'Playfair Display', Georgia, serif; font-weight: 500; }
+/* Removed global font overrides; typography now controlled via wow-typography.css */
+/* Keep only specific legacy helpers if needed */
 /* Parenthetical text in titles uses Manrope */
 .paren-manrope {
   font-size: 20px;
