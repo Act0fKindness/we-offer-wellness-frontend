@@ -130,8 +130,8 @@
           <div class="d-flex align-items-center gap-2">
             <span class="font-semibold text-ink-800">Mode</span>
             <div class="seg-group" role="tablist" aria-label="Map Mode">
-              <button class="seg active" role="tab" aria-selected="true" data-mode="2d">2D</button>
-              <button class="seg" role="tab" aria-selected="false" data-mode="3d">3D</button>
+              <button class="seg" role="tab" aria-selected="false" data-mode="2d">2D</button>
+              <button class="seg active" role="tab" aria-selected="true" data-mode="3d">3D</button>
             </div>
           </div>
         </div>
@@ -205,8 +205,8 @@
             style: 'mapbox://styles/mapbox/streets-v12',
             center: center,
             zoom: 11,
-            pitch: 0,
-            bearing: 0,
+            pitch: 60,
+            bearing: -17,
             antialias: true
           });
           map.on('load', function(){
@@ -245,6 +245,15 @@
               else { map.easeTo({ pitch: 0, bearing: 0, duration: 600 }) }
             })
           })
+          // Ensure initial UI reflects 3D default
+          try {
+            var btn3d = document.querySelector('[data-mode="3d"]');
+            var btn2d = document.querySelector('[data-mode="2d"]');
+            if (btn3d && btn2d) {
+              btn2d.classList.remove('active'); btn2d.setAttribute('aria-selected','false');
+              btn3d.classList.add('active'); btn3d.setAttribute('aria-selected','true');
+            }
+          } catch(e){}
         }catch(e){ console.warn('mapbox init failed', e) }
       }
       // load mapbox css/js if needed
