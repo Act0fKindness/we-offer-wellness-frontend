@@ -89,17 +89,17 @@
       <!-- Controls moved under search bar -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 mt-2">
         <div class="d-flex align-items-center gap-2">
-          <span class="font-semibold text-ink-800">View</span>
-          <div class="seg-group" role="tablist" aria-label="List or Map">
-            <button class="seg active" role="tab" aria-selected="true" data-view="list">List</button>
-            <button class="seg" role="tab" aria-selected="false" data-view="map">Map</button>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2">
           <span class="font-semibold text-ink-800">Mode</span>
           <div class="seg-group" role="tablist" aria-label="Map Mode">
             <button class="seg" role="tab" aria-selected="false" data-mode="2d">2D</button>
             <button class="seg active" role="tab" aria-selected="true" data-mode="3d">3D</button>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="font-semibold text-ink-800">View</span>
+          <div class="seg-group" role="tablist" aria-label="List or Map">
+            <button class="seg active" role="tab" aria-selected="true" data-view="list">List</button>
+            <button class="seg" role="tab" aria-selected="false" data-view="map">Map</button>
           </div>
         </div>
       </div>
@@ -152,6 +152,11 @@
   /* Keep map within viewport: subtract sticky top and a small margin */
   .map{ width: 100%; height: calc(100vh - 84px - 24px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
 }
+/* Hide/show columns for list/map view at all widths */
+.search-layout.sr-map-only .col-results{ display:none; }
+.search-layout.sr-list-only .col-map{ display:none; }
+/* Disabled seg buttons */
+.seg[disabled], .seg[aria-disabled="true"]{ opacity: .5; cursor: not-allowed; }
 @media (max-width: 991.98px){
   .search-layout.sr-map-only .col-results{ display:none }
   .search-layout.sr-list-only .col-map{ display:none }
@@ -269,9 +274,18 @@
     }
   } catch (e) { console.warn('map skipped', e) }
 
-  // List/Map toggle (primarily for mobile)
+  // List/Map toggle + disable mode when list
   try {
     var layout = document.querySelector('.search-layout');
+    var modeButtons = Array.from(document.querySelectorAll('[data-mode]'));
+    function setModeEnabled(enabled){
+      modeButtons.forEach(function(b){
+        if (enabled) { b.removeAttribute('disabled'); b.setAttribute('aria-disabled','false'); }
+        else { b.setAttribute('disabled','disabled'); b.setAttribute('aria-disabled','true'); }
+      });
+    }
+    // Initial state: List active -> disable mode
+    setModeEnabled(false);
     document.querySelectorAll('[data-view]')?.forEach(function(btn){
       btn.addEventListener('click', function(){
         document.querySelectorAll('[data-view]')?.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false') })
@@ -279,7 +293,13 @@
         var v = btn.getAttribute('data-view');
         if (!layout) return;
         layout.classList.remove('sr-map-only','sr-list-only');
-        if (v === 'map') layout.classList.add('sr-map-only'); else layout.classList.add('sr-list-only');
+        if (v === 'map') {
+          layout.classList.add('sr-map-only');
+          setModeEnabled(true);
+        } else {
+          layout.classList.add('sr-list-only');
+          setModeEnabled(false);
+        }
       })
     })
   } catch {}
