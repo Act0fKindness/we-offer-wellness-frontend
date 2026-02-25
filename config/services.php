@@ -41,4 +41,8 @@ return [
         ],
     ],
 
+    'mapbox' => [
+        'token' => env('MAPBOX_API_KEY'),
+    ],
+
 ];

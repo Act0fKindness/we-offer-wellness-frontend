@@ -190,7 +190,7 @@
               ];
           }
       }
-      $mapboxKey = env('MAPBOX_API_KEY');
+      $mapboxKey = config('services.mapbox.token');
     @endphp
     var data = @json($mapData);
     var token = @json($mapboxKey) || window.WOW_MAPS_KEY || '';
@@ -261,8 +261,8 @@
       }
       // load mapbox css/js if needed
       if (!window.mapboxgl) {
-        var l = document.createElement('link'); l.rel='stylesheet'; l.href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css'; document.head.appendChild(l)
-        var s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'; s.async=true; s.defer=true; s.onload=initMapbox; document.head.appendChild(s)
+        var l = document.createElement('link'); l.rel='stylesheet'; l.href='https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css'; document.head.appendChild(l)
+        var s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js'; s.async=true; s.defer=true; s.onload=initMapbox; document.head.appendChild(s)
       } else { initMapbox() }
     }
   } catch (e) { console.warn('map skipped', e) }
