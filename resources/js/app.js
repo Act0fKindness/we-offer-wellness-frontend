@@ -6,6 +6,7 @@ import '../css/app.css';
 import '../css/wow-buttons.css';
 import '../css/wow-cards.css';
 import '../css/site.css';
+import '../css/home-hero.css';
 // Load Bootstrap JS (Popper included via dependency)
 import 'bootstrap';
 import './bootstrap';
