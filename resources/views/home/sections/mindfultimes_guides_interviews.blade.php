@@ -24,7 +24,7 @@
   <style>
     /* Scoped styles for the tabloid layout within #mindful-times */
     #mindful-times .tabloid-wrap{ display:grid; gap:16px; }
-    #mindful-times .tabloid-hero{ position:relative; border-radius:24px; overflow:hidden; border:1px solid rgba(255,255,255,.18); background:#0b1220; box-shadow:0 18px 50px rgba(16,24,40,.22); min-height:360px; }
+    #mindful-times .tabloid-hero{ position:relative; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,.18); background:#0b1220; box-shadow:0 18px 50px rgba(16,24,40,.22); min-height:360px; }
     #mindful-times .tabloid-hero .bg{ position:absolute; inset:0; opacity:.95 }
     #mindful-times .tabloid-hero .bg img{ width:100%; height:100%; object-fit:cover; filter:contrast(1.06) saturate(1.05); transform:scale(1.01) }
     #mindful-times .tabloid-hero::after{ content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.05) 0%, rgba(0,0,0,.55) 55%, rgba(0,0,0,.82) 100%); }
