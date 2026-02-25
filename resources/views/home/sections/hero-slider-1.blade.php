@@ -1,5 +1,16 @@
 {{-- resources/views/home/sections/hero-slider-1.blade.php --}}
 
+<style>
+
+    @media (max-width: 575.98px){
+      .container.whero-pad{
+        padding: 30px !important;
+      }
+    }
+
+</style>
+
+
 <section data-v-f43bb09d="" class="whero whero--s1">
   <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
 

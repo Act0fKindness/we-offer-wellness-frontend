@@ -27,7 +27,7 @@
         height: 40px;
         border-radius: 999px;
         border: 1px solid #999;
-        background: rgba(255, 255, 255, .96);
+        background: #fff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -50,7 +50,7 @@
       border-radius: 999px;
       opacity: 1;
       background: rgba(255,255,255,.22);
-      border: 1px solid rgba(255,255,255,.45);
+      border: 1px solid #fff;
       transition: width .18s ease, background .18s ease, border-color .18s ease;
       margin: 0 !important;
     }
