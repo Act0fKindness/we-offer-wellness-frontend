@@ -133,6 +133,8 @@
       .wow-therapy-card-scope .price .now{ font-size: var(--priceNow); font-weight:600; letter-spacing:-.02em; color: rgba(11,18,32,.92) }
       .wow-therapy-card-scope .price .was{ font-size: var(--was); font-weight:400; color: rgba(11,18,32,.75) }
       .wow-therapy-card-scope .actions{ display:grid; grid-template-columns:1fr; gap:10px }
+      /* Hide original middle column info when using list layout variant */
+      .wow-therapy-card-scope .list-main .content-top{ display:none }
       .wow-therapy-card-scope .btn{ height: var(--btnH); border-radius: var(--btnR); font-size: var(--btnFont); font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color: rgba(11,18,32,.82); display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08) }
       .wow-therapy-card-scope .btn--primary{ border-color: rgba(0,0,0,.10); color:#fff; background:#549483 !important }
       .wow-therapy-card-scope .btn:hover,.wow-therapy-card-scope .btn:focus{ background:#f7f7f7 !important; color: rgba(11,18,32,.90); border-color: rgba(0,0,0,.18) }
@@ -169,6 +171,7 @@
   <article class="therapy-card therapy-card--list" data-url="{{ $url }}" aria-label="Listing {{ $product->id }}">
     <div class="list-media">
       <a href="{{ $url }}" class="d-block text-decoration-none" aria-label="View {{ e($titleFormatted) }}">
+        <h2 class="title mb-2">{{ $titleFormatted }}</h2>
         <div class="media">
           @if($image)
             <img src="{{ $image }}" alt="{{ e($titleFormatted) }}" loading="lazy" />
@@ -251,7 +254,63 @@
     </div>
     <aside class="list-aside">
       <div>
-        <p class="fomo">{{ $fomoText ?: 'Click to find out more information' }}</p>
+        @if($providerFormatted)
+          <p class="provider">with {{ $providerFormatted }}</p>
+        @endif
+        @if($r !== null && $reviewCount > 0)
+          <div class="rating-row" aria-label="Rating {{ $r }} out of 5 from {{ $reviewCount }} reviews">
+            <span class="stars" aria-hidden="true">
+              @for($i=1;$i<=5;$i++)
+                @php $filled = $i <= $fullStars; @endphp
+                <span class="star {{ $filled ? '' : 'star--empty' }}" style="{{ $filled ? 'color:#f5c84b;' : '' }}"></span>
+              @endfor
+            </span>
+            <span>{{ number_format($r, 1) }} <span class="text-muted">({{ $reviewCount }})</span></span>
+          </div>
+        @endif
+        <div class="meta">
+          @if($durationLabel)
+            <span class="item">{{ $durationLabel }}</span>
+          @endif
+          @if($hasOnline && $primary === null)
+            <span class="item"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><span class="label">Online</span></span>
+          @elseif(!$hasOnline && $primary && $remainingCount === 0)
+            <span class="item"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.8 13.938h-.011a7 7 0 1 0-11.464.144h-.016l.14.171c.1.127.2.251.3.371L12 21l5.13-6.248c.194-.209.374-.429.54-.659l.13-.155Z"/></svg><span class="label">{{ $primary }}</span></span>
+          @else
+            @if($hasOnline)
+              <span class="item"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><span class="label">Online</span></span>
+            @endif
+            @if($primary)
+              <span class="item"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.8 13.938h-.011a7 7 0 1 0-11.464.144h-.016l.14.171c.1.127.2.251.3.371L12 21l5.13-6.248c.194-.209.374-.429.54-.659l.13-.155Z"/></svg><span class="label">{{ $primary }}</span></span>
+            @endif
+            @if($remainingCount > 0)
+              <span class="item loc-overflow">
+                <span class="chip" role="button" tabindex="0" data-href="{{ $url }}#locations" aria-haspopup="dialog" aria-expanded="false">+{{ $remainingCount }}</span>
+                <div class="loc-popover" role="dialog" aria-label="Available locations">
+                  <h4>Available locations</h4>
+                  <div class="list">
+                    @if($hasOnline)
+                      <span class="pill"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        Online</span>
+                    @endif
+                    @php $shown = 0; @endphp
+                    @foreach($physicalShort as $ps)
+                      @continue(mb_strtolower($ps) === mb_strtolower($primary))
+                      @php if ($shown++ >= 6) break; @endphp
+                      <span class="pill"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.8 13.938h-.011a7 7 0 1 0-11.464.144h-.016l.14.171c.1.127.2.251.3.371L12 21l5.13-6.248c.194-.209.374-.429.54-.659l.13-.155Z"/></svg>
+                        {{ $ps }}</span>
+                    @endforeach
+                  </div>
+                  <a class="link" href="{{ $url }}#locations">View all locations</a>
+                </div>
+              </span>
+            @endif
+          @endif
+          @if($nextLabel)
+            <span class="item">Next: {{ $nextLabel }}</span>
+          @endif
+        </div>
+        <p class="fomo mt-2">{{ $fomoText ?: 'Click to find out more information' }}</p>
         @if($priceMin)
           <div class="price">
             <span class="from">From</span>
@@ -263,16 +322,8 @@
         @endif
       </div>
       <div class="actions">
-        <button type="button" class="btn js-add-to-cart js-open-cart"
-          data-id="{{ $product->id }}"
-          data-title="{{ e($titleFormatted) }}"
-          data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
-          data-image="{{ $image }}"
-          data-url="{{ $url }}"
-        >Add to cart</button>
-        <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}">Book now</span>
+        <a href="{{ $url }}" class="btn btn--primary" role="button">View</a>
       </div>
     </aside>
   </article>
 </div>
-
