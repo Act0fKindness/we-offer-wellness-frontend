@@ -152,13 +152,23 @@
 
   // Map
   try {
-    var data = @json(($products ?? collect())->map(function($p){ $m = $p->meta_json ?? []; return [
-      'id' => $p->id,
-      'title' => $p->title,
-      'lat' => $m['lat'] ?? null,
-      'lng' => $m['lng'] ?? null,
-      'url' => url('/therapies/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
-    ]; })->filter(function($x){ return is_numeric($x['lat']??null) && is_numeric($x['lng']??null); })->values());
+    @php
+      $mapData = [];
+      foreach (($products ?? collect()) as $p) {
+          $m = $p->meta_json ?? [];
+          $lat = $m['lat'] ?? null; $lng = $m['lng'] ?? null;
+          if (is_numeric($lat) && is_numeric($lng)) {
+              $mapData[] = [
+                  'id' => $p->id,
+                  'title' => $p->title,
+                  'lat' => (float) $lat,
+                  'lng' => (float) $lng,
+                  'url' => url('/therapies/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
+              ];
+          }
+      }
+    @endphp
+    var data = @json($mapData);
 
     if (data.length && document.getElementById('search-map')) {
       function init(){
