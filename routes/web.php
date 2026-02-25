@@ -35,6 +35,11 @@ use App\Http\Controllers\ProvidersController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CorporateController;
 use App\Http\Controllers\StaticPagesController;
+use App\Http\Controllers\ReviewsController;
+use App\Http\Controllers\HelpPagesController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\LandingRedirectsController;
 
 // Online & Near Me hub
 Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
@@ -128,9 +133,9 @@ Route::redirect('/events', '/events-workshops', 301);
 Route::redirect('/workshops', '/events-workshops', 301);
 Route::redirect('/classes', '/events-workshops', 301);
 // Pain-point landing pages
-Route::get('/need/{need}', fn(\Illuminate\Http\Request $r, string $need) => app(LandingController::class)->need($r, $need));
+Route::get('/need/{need}', [LandingController::class, 'need']);
 // Quiz plan results page
-Route::get('/plan', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->plan($r));
+Route::get('/plan', [LandingController::class, 'plan']);
 
 // Singular → plural 301 redirects for hubs
 Route::get('/therapy', fn() => redirect('/therapies', 301));
@@ -149,23 +154,12 @@ Route::get('/retreat/{category}', fn(string $category) => redirect('/retreats/'.
 Route::get('/gift/{category}', fn(string $category) => redirect('/gifts/'.$category, 301));
 
 // Offering detail pages: /{type}/{id}-{slug}
-Route::get('/{type}/{offering}', function (\Illuminate\Http\Request $r, string $type, string $offering) {
-    $allowed = ['therapies','events','workshops','classes','retreats','gifts'];
-    if (!in_array(strtolower($type), $allowed, true)) { abort(404); }
-    return app(\App\Http\Controllers\LandingController::class)->offering($r, $type, $offering);
-})->where(['type' => 'therapies|events|workshops|classes|retreats|gifts', 'offering' => '\\d+-[A-Za-z0-9\-]+' ]);
+Route::get('/{type}/{offering}', [LandingController::class, 'offering'])
+    ->where(['type' => 'therapies|events|workshops|classes|retreats|gifts', 'offering' => '\\d+-[A-Za-z0-9\-]+' ]);
 
 // Legacy offering route support: /{type}/o/{handle} → 301 to /{type}/{id}-{slug}
-Route::get('/{type}/o/{handle}', function (\Illuminate\Http\Request $r, string $type, string $handle) {
-    $allowed = ['therapies','events','workshops','classes','retreats','gifts'];
-    if (!in_array(strtolower($type), $allowed, true)) { abort(404); }
-    $p = \App\Models\Product::query()->where('handle', $handle)
-        ->orWhere(fn($q)=>$q->where('id', is_numeric($handle) ? (int)$handle : 0))
-        ->first();
-    if (!$p) abort(404);
-    $slug = \Illuminate\Support\Str::slug($p->title ?: (string)$p->id);
-    return redirect('/'.strtolower($type).'/'.$p->id.'-'.$slug, 301);
-})->where('type', 'therapies|events|workshops|classes|retreats|gifts');
+Route::get('/{type}/o/{handle}', [LandingRedirectsController::class, 'offeringHandle'])
+    ->where('type', 'therapies|events|workshops|classes|retreats|gifts');
 
 // Removed universal category catch-all to avoid conflicts with Blade routes
 
@@ -178,78 +172,16 @@ Route::get('/{city}/{type}/{category}', [LandingController::class, 'cityCategory
     ->where(['city' => $cities, 'type' => 'therapies|events|workshops|classes']);
 
 // Legacy experiences → 301 redirects
-Route::get('/experiences', function () {
-    // Vanity landing: route to Gifts hub for now
-    return redirect('/gifts', 301);
-});
-Route::get('/experience', function () {
-    return redirect('/gifts', 301);
-});
-Route::get('/experience/{slug}', function (string $slug) {
-    return redirect('/experiences/'.ltrim($slug, '/'), 301);
-});
-Route::get('/experiences/{slug}', function (string $slug) {
-    $s = strtolower($slug);
-    // quick mapping heuristics
-    if (str_contains($s, 'sound-bath')) return redirect("/events/sound-bath", 301);
-    if ($s === 'reiki') return redirect('/therapies/reiki', 301);
-    if (str_contains($s, 'breathwork')) return redirect('/events/breathwork-workshops', 301);
-    if (str_contains($s, 'retreat')) return redirect('/retreats', 301);
-    // default guess: therapy
-    return redirect('/therapies/'.$s, 301);
-});
+Route::get('/experiences', [LandingRedirectsController::class, 'experiencesIndex']);
+Route::get('/experience', [LandingRedirectsController::class, 'experienceIndex']);
+Route::get('/experience/{slug}', [LandingRedirectsController::class, 'experienceSlug']);
+Route::get('/experiences/{slug}', [LandingRedirectsController::class, 'experiencesSlug']);
 
-// Static placeholders (trust/corporate/legal). Guarded by ENABLE_STATIC_PAGES
-if (config('wow.enable_static_pages')) {
-Route::get('/corporate', function () {
-    return Inertia::render('Corporate/Hub');
-});
-Route::get('/corporate-wellness', function () {
-    return Inertia::render('Corporate/ComingSoon');
-});
 Route::redirect('/corporate-wellbeing', '/corporate-wellness', 301);
-
-// Consolidate events/workshops hub to Blade route
 Route::redirect('/events-and-workshops', '/events-workshops', 301);
-
-Route::get('/gift-cards', function () {
-    return Inertia::render('GiftCards');
-});
 Route::redirect('/gift-vouchers', '/gift-cards', 301);
-}
 
-Route::get('/reviews', function(){
-    $reviews = Review::with(['user:id,first_name,last_name,name,location', 'product:id,title,slug', 'vendor:id,vendor_name'])
-        ->whereNotNull('review_text')
-        ->orderByDesc('created_at')
-        ->get()
-        ->map(function(Review $review) {
-            $user = $review->user;
-            $customerName = $user ? trim(($user->first_name ?? '').' '.($user->last_name ?? '')) : null;
-            if (!$customerName) {
-                $customerName = $user?->name ?: 'Verified client';
-            }
-            return [
-                'id' => $review->id,
-                'quote' => trim($review->review_text),
-                'rating' => $review->rating ? (int) $review->rating : null,
-                'customer' => $customerName,
-                'location' => $user->location ?? null,
-                'product' => $review->product?->title,
-                'product_slug' => $review->product?->slug,
-                'vendor' => $review->vendor?->vendor_name,
-                'created_at' => optional($review->created_at)->toIso8601String(),
-            ];
-        });
-
-    return Inertia::render('Reviews/Index', [
-        'reviews' => $reviews,
-        'meta' => [
-            'title' => 'Client Reviews | We Offer Wellness',
-            'description' => 'Read real stories from people who booked therapies, classes, workshops and retreats with We Offer Wellness.',
-        ],
-    ]);
-})->name('reviews.index');
+Route::get('/reviews', [ReviewsController::class, 'index'])->name('reviews.index');
 if (config('wow.enable_static_pages')) {
 Route::get('/about', function(){
     return Inertia::render('General/Page', [
@@ -338,84 +270,20 @@ Route::view('/404', 'app');
 }
 
 // Cart page
-Route::get('/cart', function () {
-    // Restore cart from cookie if session empty
-    $items = session('cart.items', []);
-    if (empty($items)) {
-        $cookie = request()->cookie('wow_cart');
-        if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { session(['cart.items' => $restored]); } }
-    }
-    return view('cart.index');
-});
+Route::get('/cart', [CartController::class, 'page']);
 
 // Checkout routes
 Route::post('/checkout', [CheckoutController::class, 'create']);
 Route::get('/checkout/success', [CheckoutController::class, 'success']);
 Route::get('/checkout/cancel', [CheckoutController::class, 'cancel']);
 
-// Cart code persistence in session
-Route::post('/api/cart/promo', function (Request $request) {
-    $code = strtoupper(trim((string)$request->input('code', '')));
-    if ($code !== '') session(['cart_promo_code' => $code]); else session()->forget('cart_promo_code');
-    return response()->json(['ok' => true, 'code' => $code]);
-});
-// Cart session store
-Route::get('/api/cart/count', function(){
-    $items = session('cart.items', []);
-    if (empty($items)) {
-        $cookie = request()->cookie('wow_cart');
-        if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { $items = $restored; session(['cart.items' => $items]); } }
-    }
-    $count = array_sum(array_map(fn($it)=> (int)($it['qty'] ?? 0), $items));
-    return response()->json(['count'=>$count])->header('Cache-Control','no-store, no-cache, must-revalidate')->header('Pragma','no-cache')->header('Vary','Cookie');
-});
-Route::get('/api/cart/mini', function(){
-    $items = session('cart.items', []);
-    if (empty($items)) {
-        $cookie = request()->cookie('wow_cart');
-        if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { session(['cart.items' => $restored]); } }
-    }
-    return response(view('partials.mini_cart')->render(), 200)
-        ->header('Content-Type','text/html')
-        ->header('Cache-Control','no-store, no-cache, must-revalidate')
-        ->header('Pragma','no-cache')
-        ->header('Vary','Cookie');
-});
-Route::post('/api/cart/add', function (Request $request) {
-    $id = (int) $request->input('id'); $qty = max(1, (int)$request->input('qty', 1));
-    if ($id <= 0) return response()->json(['ok'=>false,'error'=>'invalid'], 400);
-    $p = \App\Models\Product::query()->withMin('variants','price')->find($id);
-    if (!$p) return response()->json(['ok'=>false,'error'=>'not_found'], 404);
-    $price = $p->variants_min_price ?? $p->price ?? 0; $price = (float)$price;
-    $slug = \Illuminate\Support\Str::slug($p->title ?: (string)$p->id);
-    // Determine segment similar to product_card
-    $t = strtolower((string)($p->product_type ?? '')); $tags = strtolower((string)($p->tags_list ?? '')); $seg='therapies';
-    if (str_contains($t,'workshop')) $seg='workshops'; elseif (str_contains($t,'event')) $seg='events'; elseif (str_contains($t,'class')) $seg='classes'; elseif (str_contains($t,'retreat')) $seg='retreats'; elseif (str_contains($t,'gift')||str_contains($tags,'gift')) $seg='gifts';
-    $url = url('/'.$seg.'/'.$p->id.'-'.$slug);
-    $image = method_exists($p,'getFirstImageUrl') ? $p->getFirstImageUrl() : null;
-    $cart = session('cart', ['items'=>[]]);
-    $items = $cart['items'] ?? [];
-    $key = (string)$id;
-    if(isset($items[$key])){ $items[$key]['qty'] = (int)($items[$key]['qty'] ?? 1) + $qty; }
-    else { $items[$key] = ['id'=>$id, 'title'=>$p->title, 'price'=>$price, 'qty'=>$qty, 'image'=>$image, 'url'=>$url]; }
-    session(['cart.items' => $items]);
-    $cookie = cookie('wow_cart', json_encode($items), 60*24*30); // 30 days
-    $count = array_sum(array_map(fn($it)=> (int)($it['qty'] ?? 0), $items));
-    return response()->json(['ok'=>true,'count'=>$count])->withCookie($cookie);
-});
-Route::post('/api/cart/remove', function (Request $request) {
-    $id = (string) $request->input('id'); $items = session('cart.items', []); unset($items[$id]); session(['cart.items'=>$items]);
-    $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
-    return response()->json(['ok'=>true])->withCookie($cookie);
-});
-Route::post('/api/cart/update', function (Request $request) {
-    $id = (string)$request->input('id'); $qty = max(0,(int)$request->input('qty',1));
-    $items = session('cart.items', []); if(!isset($items[$id])) return response()->json(['ok'=>false],404);
-    if($qty===0){ unset($items[$id]); } else { $items[$id]['qty']=$qty; }
-    session(['cart.items'=>$items]);
-    $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
-    return response()->json(['ok'=>true])->withCookie($cookie);
-});
+// Cart APIs
+Route::post('/api/cart/promo', [CartController::class, 'promo']);
+Route::get('/api/cart/count', [CartController::class, 'count']);
+Route::get('/api/cart/mini', [CartController::class, 'mini']);
+Route::post('/api/cart/add', [CartController::class, 'add']);
+Route::post('/api/cart/remove', [CartController::class, 'remove']);
+Route::post('/api/cart/update', [CartController::class, 'update']);
 // V3 subscriber opt-in API (CSRF-protected; same-domain)
 Route::post('/api/v3-subscribers', [V3SubscriberController::class, 'store'])->name('api.v3-subscribers.store');
 Route::post('/api/v3-subscribers/track', [V3SubscriberController::class, 'track'])->name('api.v3-subscribers.track');
@@ -425,126 +293,13 @@ Route::post('/api/cart/gift', function (Request $request) {
     return response()->json(['ok' => true, 'code' => $code]);
 });
 
-// Providers (directory/profile)
-Route::get('/providers', function(){
-    return Inertia::render('Providers/Index', [
-        'title' => 'Practitioners',
-        'metaDescription' => 'Find trusted wellness practitioners across therapies and modalities.',
-    ]);
-});
-Route::get('/provider/{slug}', function(string $slug){
-    return Inertia::render('Providers/Show', [
-        'slug' => $slug,
-    ]);
-});
+// Providers handled via ProvidersController below
 
 // Help / Partners (guarded)
-if (config('wow.enable_static_pages')) {
-Route::get('/help', function(){
-    $body = <<<'HTML'
-<p>Need a hand with bookings, accounts or vouchers? Start with our FAQ, then reach out if you still need support.</p>
-<ul>
-  <li><a href="/help/faq">Read the FAQ</a> for booking, payment and cancellation answers.</li>
-  <li><a href="/contact?topic=support">Contact support</a> if you need personalised help.</li>
-  <li><a href="/help/gift-cards">Gift card help</a> covers delivery, redemption and balances.</li>
-</ul>
-HTML;
-    return Inertia::render('General/Page', [
-        'title' => 'Help Centre',
-        'metaDescription' => 'FAQs and support for bookings and account.',
-        'bodyHtml' => $body,
-        'canonical' => url('/help'),
-    ]);
-});
-Route::get('/help/faq', function(){
-    $body = <<<'HTML'
-<h2>Frequently asked questions</h2>
-<p><strong>How do I manage a booking?</strong><br>Visit your confirmation email to reschedule or cancel, or message the practitioner directly from your account.</p>
-<p><strong>What if I need to cancel?</strong><br>Each listing includes a cancellation window. If you cannot find it, <a href="/contact?topic=support">contact support</a>.</p>
-<p><strong>Do I need any equipment?</strong><br>Most therapies only require comfortable clothing and a quiet space. Classes will note props if needed.</p>
-HTML;
-    return Inertia::render('General/Page', [
-        'title' => 'FAQ',
-        'metaDescription' => 'Common booking, payment and account questions.',
-        'bodyHtml' => $body,
-        'canonical' => url('/help/faq'),
-    ]);
-});
-Route::get('/help/gift-cards', function(){
-    $body = <<<'HTML'
-<p>WOW gift cards arrive instantly by email with your personalised message. Gift cards never expire and can be redeemed on therapies, classes, events and workshops.</p>
-<ul>
-  <li><strong>How to send:</strong> Choose an amount, enter the recipient’s name and email, and schedule delivery or send immediately.</li>
-  <li><strong>How to redeem:</strong> Recipients enter the unique code at checkout. Balances can be used across multiple bookings.</li>
-  <li><strong>Need a custom amount?</strong> <a href="/contact?topic=gifting">Contact the team</a> for bulk or corporate gifting.</li>
-</ul>
-HTML;
-    return Inertia::render('General/Page', [
-        'title' => 'Gift Card Help',
-        'metaDescription' => 'How WOW gift vouchers work and how to redeem them.',
-        'bodyHtml' => $body,
-        'canonical' => url('/help/gift-cards'),
-    ]);
-});
 Route::get('/partners', [StaticPagesController::class, 'partners']);
-}
 
 // XML sitemap
-Route::get('/sitemap.xml', function () {
-    $base = url('');
-    $now = now()->toAtomString();
-    $urls = [];
-
-    // Top-level hubs & key pages
-    foreach (['/','/therapies','/events-workshops','/retreats','/gifts','/gift-cards','/corporate','/corporate-wellness','/search'] as $p) {
-        $urls[] = [ 'loc' => $base.$p, 'lastmod' => $now ];
-    }
-
-    // City pages (limited whitelist)
-    foreach (['london','manchester','birmingham','leeds','bristol','brighton','liverpool','glasgow','edinburgh','cardiff','kent'] as $city) {
-        $urls[] = [ 'loc' => $base.'/'.rawurlencode($city), 'lastmod' => $now ];
-    }
-
-    // Therapy categories (top N by product count)
-    try {
-        $cats = ProductCategory::query()
-            ->withCount('products')
-            ->orderByDesc('products_count')->orderBy('name')
-            ->limit(120)->get();
-        foreach ($cats as $c) {
-            $slug = Str::slug($c->name ?? '');
-            if ($slug) $urls[] = [ 'loc' => $base.'/therapies/'.$slug, 'lastmod' => $now ];
-        }
-    } catch (\Throwable $e) {}
-
-    // Offerings (cap to keep sitemap lean)
-    try {
-        $items = Product::query()->select(['id','title','product_type','tags_list','updated_at'])->latest('updated_at')->limit(1000)->get();
-        foreach ($items as $p) {
-            $t = strtolower((string) $p->product_type);
-            $tags = strtolower((string) $p->tags_list);
-            if (str_contains($t, 'workshop')) $seg = 'workshops';
-            elseif (str_contains($t, 'event')) $seg = 'events';
-            elseif (str_contains($t, 'class')) $seg = 'classes';
-            elseif (str_contains($t, 'retreat')) $seg = 'retreats';
-            elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $seg = 'gifts';
-            else $seg = 'therapies';
-            $slug = Str::slug($p->title ?: (string)$p->id);
-            $urls[] = [ 'loc' => $base.'/'.$seg.'/'.$p->id.'-'.$slug, 'lastmod' => optional($p->updated_at)->toAtomString() ?: $now ];
-        }
-    } catch (\Throwable $e) {}
-
-    $xml = '<?xml version="1.0" encoding="UTF-8"?>'.
-           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-    foreach ($urls as $u) {
-        $xml .= '<url>'
-              . '<loc>'.htmlspecialchars($u['loc'], ENT_XML1).'</loc>'
-              . (isset($u['lastmod']) ? '<lastmod>'.htmlspecialchars($u['lastmod'], ENT_XML1).'</lastmod>' : '')
-              . '</url>';
-    }
-    $xml .= '</urlset>';
-    return response($xml, 200)->header('Content-Type', 'application/xml');
-});
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
 
 // General content pages (always available)
