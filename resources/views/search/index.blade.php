@@ -177,9 +177,9 @@
   max-height: 58px;
 }
 /* Custom map markers */
-.wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); box-shadow: 0 14px 34px rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; }
+.wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); box-shadow: 0 14px 34px rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; transform-origin: bottom center; will-change: transform; }
 .wow-marker::after{ content:""; width:10px; height:10px; border-radius:999px; background:#549483; box-shadow: 0 0 0 5px rgba(84,56,255,.18); }
-.wow-marker.is-active{ transform: scale(1.12); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
+.wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
 /* Hide/show columns for list/map view at all widths */
 /* Map view shows both columns; List view hides map */
 .search-layout.sr-list-only .col-map{ display:none; }
@@ -269,7 +269,7 @@
             container: mapEl,
             style: 'mapbox://styles/mapbox/streets-v12',
             center: center,
-            zoom: 11,
+            zoom: 9,
             pitch: 60,
             bearing: -17,
             antialias: true
@@ -307,7 +307,14 @@
               (window.__wowMarkersByPid[pid] = window.__wowMarkersByPid[pid] || []).push({ marker: marker, el: el });
               try { bounds.extend([Number(p.lng), Number(p.lat)]); } catch(e){}
             });
-            try { if (data && data.length > 0) { map.fitBounds(bounds, { padding: 70, maxZoom: 12, duration: 650 }); } } catch(e){}
+            try {
+              if (data && data.length > 1) {
+                map.fitBounds(bounds, { padding: 80, maxZoom: 9, duration: 500 });
+              } else if (data && data.length === 1) {
+                map.setCenter([Number(data[0].lng), Number(data[0].lat)]);
+                map.setZoom(12);
+              }
+            } catch(e){}
           });
           // Mode toggle (2D/3D)
           document.querySelectorAll('[data-mode]')?.forEach(function(btn){
