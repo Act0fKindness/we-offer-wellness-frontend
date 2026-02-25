@@ -341,7 +341,7 @@
 
         <div class="ourvibe-actions">
           <a class="ourvibe-buy" href="https://link.weofferwellness.co.uk/ourvibe">
-            Book Ticket on Eventbrite <i class="bi bi-arrow-right"></i>
+            Book Ticket <i class="bi bi-arrow-right"></i>
           </a>
         </div>
       </div>
