@@ -50,22 +50,7 @@
       #mindful-times .tabloid-small .wow-media{ height:190px }
     }
 
-    /* ===== BBC-style layout (optional alt) ===== */
-    #mindful-times .bbc-grid{ display:grid; gap:16px; grid-template-columns: 1.25fr .95fr; align-items:start }
-    #mindful-times .bbc-hero{ display:grid; gap:12px }
-    #mindful-times .bbc-hero .wow-media{ height:340px; border-radius:16px; overflow:hidden }
-    #mindful-times .bbc-side{ display:grid; gap:14px }
-    #mindful-times .bbc-side__top{ display:grid; gap:14px; grid-template-columns: 1fr 1fr }
-    #mindful-times .bbc-side__mid{ display:grid; gap:14px; grid-template-columns: 1fr 1fr }
-    #mindful-times .bbc-mini .wow-media{ height:116px; border-radius:12px; overflow:hidden; background:#f8fafc; border:1px solid var(--ink-200, rgba(16,24,40,.12)) }
-    #mindful-times .bbc-list{ display:grid; gap:10px; padding-top:8px; border-top:1px solid var(--ink-200, rgba(16,24,40,.12)) }
-    #mindful-times .bbc-list a{ display:block; padding:10px 0; border-bottom:1px solid rgba(16,24,40,.07) }
-    #mindful-times .bbc-list a:last-child{ border-bottom:0 }
-    @media (max-width: 992px){
-      #mindful-times .bbc-grid{ grid-template-columns: 1fr }
-      #mindful-times .bbc-side__top, #mindful-times .bbc-side__mid{ grid-template-columns: 1fr }
-      #mindful-times .bbc-hero .wow-media{ height:280px }
-    }
+    /* (Removed alt news grid layout) */
   </style>
 
   <script>
@@ -98,37 +83,10 @@
         return '<div class="tabloid-wrap">'+ heroHtml + '<div class="tabloid-row">'+ rest.map(small).join('') + '</div></div>';
       }
 
-      function renderBBC(items){
-        var list = items.slice(0,9);
-        var hero = list[0] || null;
-        var sideTop = list.slice(1,3);
-        var sideMid = list.slice(3,7);
-        var listLinks = list.slice(7,9);
-        function meta(a){ return '<div class="wow-meta"><span class="cat">'+esc(a.tag||a.category||'MindfulTimes')+'</span></div>'; }
-        var heroHtml = hero ? (
-          '<a class="wow-link bbc-hero" href="'+esc(hero.href||'#')+'">'
-          +  '<div class="wow-media"><img loading="lazy" src="'+esc(normImg(hero.img||''))+'" alt="'+esc(hero.title)+'"></div>'
-          +  '<div><div class="wow-kicker"><span class="dot"></span>'+esc(hero.tag||hero.category||'MindfulTimes')+'</div><h3 class="wow-h wow-h--hero">'+esc(hero.title)+'</h3><p class="wow-p mt-2">'+esc(hero.excerpt||'')+'</p>'+ meta(hero) +'</div>'
-          + '</a>'
-        ) : '';
-        function mini(a){ return '<a class="wow-link wow-card bbc-mini" href="'+esc(a.href||'#')+'">'
-          + '<div class="wow-media">'+ (a.img?'<img loading="lazy" src="'+esc(normImg(a.img))+'" alt="'+esc(a.title)+'">':'') + '</div>'
-          + '<div class="wow-card__body"><h4 class="wow-h">'+esc(a.title)+'</h4>'+ meta(a) +'</div>'
-          + '</a>'; }
-        function listItem(a){ return '<a class="wow-link" href="'+esc(a.href||'#')+'"><h4 class="wow-h">'+esc(a.title)+'</h4>'+ meta(a) +'</a>'; }
-        return '<div class="bbc-grid"><div>'+heroHtml+'</div><div class="bbc-side">'
-          + '<div class="bbc-side__top">'+ sideTop.map(mini).join('') + '</div>'
-          + '<div class="bbc-side__mid">'+ sideMid.map(mini).join('') + '</div>'
-          + (listLinks.length?('<div class="bbc-list">'+ listLinks.map(listItem).join('') + '</div>'):'')
-          + '</div></div>';
-      }
 
       function render(items){
         if(!Array.isArray(items) || items.length===0){ mount.innerHTML = '<div class="text-muted">No stories yet. <a class="link-wow" href="https://times.weofferwellness.co.uk">Visit Mindful Times</a>.</div>'; return; }
-        var layouts = ['tabloid','bbc'];
-        var forced = (new URLSearchParams(location.search)).get('mt_layout');
-        var layout = layouts.includes(forced) ? forced : (Math.random() < 0.5 ? 'tabloid' : 'bbc');
-        var html = layout === 'bbc' ? renderBBC(items) : renderTabloid(items);
+        var html = renderTabloid(items);
         mount.innerHTML = html;
       }
 

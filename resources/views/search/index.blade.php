@@ -100,14 +100,16 @@
       <div class="d-flex flex-wrap align-items-center gap-2" id="sr-tags"></div>
     </div>
 
-    <div class="row gx-4">
-      <div class="col-12 col-lg-7">
+    <div class="row gx-4 search-layout">
+      <div class="col-12 col-lg-7 col-results">
         <div class="results-scroll">
           @if(isset($products) && $products->count())
             <div class="row g-3">
               @foreach($products as $product)
                 <div class="col-12">
-                  @include('partials.product_card', ['product' => $product])
+                  <div class="wow-card-sm-wrap">
+                    @include('partials.product_card_sm', ['product' => $product])
+                  </div>
                 </div>
               @endforeach
             </div>
@@ -116,7 +118,23 @@
           @endif
         </div>
       </div>
-      <div class="col-12 col-lg-5 d-none d-lg-block">
+      <div class="col-12 col-lg-5 col-map">
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="font-semibold text-ink-800">View</span>
+            <div class="seg-group" role="tablist" aria-label="List or Map">
+              <button class="seg active" role="tab" aria-selected="true" data-view="list">List</button>
+              <button class="seg" role="tab" aria-selected="false" data-view="map">Map</button>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="font-semibold text-ink-800">Mode</span>
+            <div class="seg-group" role="tablist" aria-label="Map Mode">
+              <button class="seg active" role="tab" aria-selected="true" data-mode="2d">2D</button>
+              <button class="seg" role="tab" aria-selected="false" data-mode="3d">3D</button>
+            </div>
+          </div>
+        </div>
         <div class="map-wrap">
           <div id="search-map" class="map"></div>
         </div>
@@ -131,6 +149,11 @@
   .results-scroll{ max-height: calc(100vh - 220px); overflow-y: auto; padding-right: 6px; }
   .map-wrap{ position: sticky; top: 84px; height: calc(100vh - 100px); }
   .map{ width: 100%; height: 100%; border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
+}
+@media (max-width: 991.98px){
+  .search-layout.sr-map-only .col-results{ display:none }
+  .search-layout.sr-list-only .col-map{ display:none }
+  .col-map .map{ height: 60vh }
 }
 </style>
 
@@ -150,7 +173,7 @@
     if(tagsEl) tagsEl.innerHTML = tags.map(t => '<span class="chip">'+esc(t)+'</span>').join('');
   }catch{}
 
-  // Map
+  // Map (Mapbox GL JS with 3D buildings)
   try {
     @php
       $mapData = [];
@@ -167,23 +190,85 @@
               ];
           }
       }
+      $mapboxKey = env('MAPBOX_API_KEY');
     @endphp
     var data = @json($mapData);
-
-    if (data.length && document.getElementById('search-map')) {
-      function init(){
+    var token = @json($mapboxKey);
+    var mapEl = document.getElementById('search-map');
+    if (mapEl && token) {
+      function initMapbox(){
         try{
-          var center = { lat: Number(data[0].lat), lng: Number(data[0].lng) };
-          var map = new google.maps.Map(document.getElementById('search-map'), { center:center, zoom: 11, mapTypeControl:false, streetViewControl:false, fullscreenControl:false });
-          data.forEach(function(p){ new google.maps.Marker({ position:{ lat:Number(p.lat), lng:Number(p.lng) }, map, title:p.title }); });
-        }catch(e){ console.warn('map init failed', e) }
+          mapboxgl.accessToken = token;
+          var center = data.length ? [Number(data[0].lng), Number(data[0].lat)] : [-0.1276, 51.5072];
+          var map = new mapboxgl.Map({
+            container: mapEl,
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: center,
+            zoom: 11,
+            pitch: 0,
+            bearing: 0,
+            antialias: true
+          });
+          map.on('load', function(){
+            // 3D buildings layer
+            var layers = map.getStyle().layers;
+            var labelLayerId;
+            for (var i = 0; i < layers.length; i++) {
+              if (layers[i].type === 'symbol' && layers[i].layout['text-field']) { labelLayerId = layers[i].id; break; }
+            }
+            map.addLayer({
+              'id': '3d-buildings',
+              'source': 'composite',
+              'source-layer': 'building',
+              'filter': ['==', 'extrude', 'true'],
+              'type': 'fill-extrusion',
+              'minzoom': 15,
+              'paint': {
+                'fill-extrusion-color': '#aaa',
+                'fill-extrusion-height': ['get', 'height'],
+                'fill-extrusion-base': ['get', 'min_height'],
+                'fill-extrusion-opacity': 0.6
+              }
+            }, labelLayerId);
+            // Markers
+            data.forEach(function(p){
+              var m = new mapboxgl.Marker().setLngLat([Number(p.lng), Number(p.lat)]).setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML('<div style="font-weight:600">'+(p.title||'')+'</div>')).addTo(map);
+            });
+          });
+          // Mode toggle (2D/3D)
+          document.querySelectorAll('[data-mode]')?.forEach(function(btn){
+            btn.addEventListener('click', function(){
+              document.querySelectorAll('[data-mode]')?.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false') })
+              btn.classList.add('active'); btn.setAttribute('aria-selected','true')
+              var mode = btn.getAttribute('data-mode');
+              if (mode === '3d') { map.easeTo({ pitch: 60, bearing: -17, duration: 600 }) }
+              else { map.easeTo({ pitch: 0, bearing: 0, duration: 600 }) }
+            })
+          })
+        }catch(e){ console.warn('mapbox init failed', e) }
       }
-      if (window.google && window.google.maps) init();
-      else {
-        var s=document.createElement('script'); s.src='https://maps.googleapis.com/maps/api/js?key={{ $mapsKey }}&libraries=marker'; s.async=true; s.defer=true; s.onload=init; document.head.appendChild(s);
-      }
+      // load mapbox css/js if needed
+      if (!window.mapboxgl) {
+        var l = document.createElement('link'); l.rel='stylesheet'; l.href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css'; document.head.appendChild(l)
+        var s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'; s.async=true; s.defer=true; s.onload=initMapbox; document.head.appendChild(s)
+      } else { initMapbox() }
     }
   } catch (e) { console.warn('map skipped', e) }
+
+  // List/Map toggle (primarily for mobile)
+  try {
+    var layout = document.querySelector('.search-layout');
+    document.querySelectorAll('[data-view]')?.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        document.querySelectorAll('[data-view]')?.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false') })
+        btn.classList.add('active'); btn.setAttribute('aria-selected','true')
+        var v = btn.getAttribute('data-view');
+        if (!layout) return;
+        layout.classList.remove('sr-map-only','sr-list-only');
+        if (v === 'map') layout.classList.add('sr-map-only'); else layout.classList.add('sr-list-only');
+      })
+    })
+  } catch {}
 })();
 </script>
 

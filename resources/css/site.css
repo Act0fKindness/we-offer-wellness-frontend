@@ -26377,6 +26377,11 @@
         --card-h: 530px;
         width: 309px;
         max-width: 309px;
+        border: none !important;
+        box-shadow: none;
+        /*
+: ; */
+        background: none;
     }
 
     .wow-card.md .wow-body {

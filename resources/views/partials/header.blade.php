@@ -78,7 +78,7 @@
                               d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
                     </svg>
                 </a>
-                    <button class="icon-btn position-relative cart-open-close" aria-label="Open cart" aria-expanded="false">
+                    <button class="icon-btn position-relative cart-trigger" aria-label="Open cart" aria-expanded="false">
                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
                              height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -87,7 +87,7 @@
                         <span
                             class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge bg-danger">0</span>
                     </button>
-                    <div id="mini-cart-popover" class="mini-cart-popover" style="display:none"></div>
+                    <div id="cart-dropdown" class="cart-dropdown" hidden></div>
                 </div><!---->
                 <button
                     class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100"
@@ -183,75 +183,37 @@
             </div>
         </header>
 <script>
+// Rebuilt cart dropdown JS (new classes, minimal dependencies)
 (function(){
-  // Lightweight client cart for instant UX + persistence
-  window.CartClient = (function(){
-    var key = 'wow_cart';
-    var legacy = 'wow_cart_v1';
-    function parse(raw){ try{ return raw? JSON.parse(raw):{} }catch(_){ return {} } }
-    function toBag(obj){
-      // Convert {items:[...]} or plain object to bag {id: item}
-      var bag = {};
-      if(obj && Array.isArray(obj.items)){
-        obj.items.forEach(function(it){ var id=String(it.id||''); if(!id) return; bag[id] = { id:id, title:it.title||'', price:Number(it.price||0), image:it.image||'', url:it.url||'#', qty:Number(it.qty||1) }; });
-      } else if (obj && typeof obj==='object') {
-        Object.keys(obj).forEach(function(k){ var it=obj[k]; if(it && (it.id||k)){ var id=String(it.id||k); bag[id] = { id:id, title:it.title||'', price:Number(it.price||0), image:it.image||'', url:it.url||'#', qty:Number(it.qty||1) }; } });
-      }
-      return bag;
-    }
-    function load(){
-      try{
-        var raw = localStorage.getItem(key) || decodeURIComponent(document.cookie.split('; ').find(r=>r.startsWith(key+'='))?.split('=')[1]||'');
-        var obj = parse(raw);
-        // Merge legacy key if present (array format: {items:[]})
-        var legacyRaw = localStorage.getItem(legacy);
-        var legacyObj = parse(legacyRaw);
-        var bag = toBag(obj);
-        var legacyBag = toBag(legacyObj);
-        Object.keys(legacyBag).forEach(function(id){ if(bag[id]){ bag[id].qty += Number(legacyBag[id].qty||1); } else { bag[id]=legacyBag[id]; } });
-        return bag || {};
-      }catch(_){ return {} }
-    }
-    function save(obj){ try{ var json = JSON.stringify(obj||{}); localStorage.setItem(key, json); var expires = new Date(Date.now()+30*24*60*60*1000).toUTCString(); document.cookie = key+'='+encodeURIComponent(json)+'; Path=/; SameSite=Lax; Expires='+expires; }catch(_){ } }
-    function count(obj){ var n=0; Object.values(obj||{}).forEach(function(it){ n += Number(it.qty||0) }); return n }
-    function total(obj){ var t=0; Object.values(obj||{}).forEach(function(it){ t += (Number(it.price||0)) * Number(it.qty||1) }); return t }
-    function add(item){ var bag=load(); var id=String(item.id); if(!id) return bag; var ex=bag[id]||{id:id,qty:0}; bag[id] = { id:id, title:item.title||ex.title||'', price:Number(item.price)||0, image:item.image||ex.image||'', url:item.url||ex.url||'#', qty: Number(ex.qty||0)+1 }; save(bag); return bag }
-    function upd(id, qty){ var bag=load(); id=String(id); if(!bag[id]) return bag; if(qty<=0){ delete bag[id] } else { bag[id].qty = qty } save(bag); return bag }
-    function rem(id){ var bag=load(); id=String(id); if(bag[id]) delete bag[id]; save(bag); return bag }
-    function renderMini(el){ if(!el) return; var bag=load(); var ids=Object.keys(bag); if(!ids.length){ el.innerHTML = '<div class="mini-cart"><div class="mini-cart__empty">Your cart is empty.</div></div>'; return; } var html=['<div class="mini-cart"><div class="mini-cart__items">']; ids.forEach(function(id){ var it=bag[id]; html.push('<div class="mini-cart__row" data-id="'+id+'"><a class="mini-cart__img" href="'+(it.url||'#')+'">'+(it.image?('<img src="'+it.image+'" alt="">'):'')+'</a><div class="mini-cart__info"><a class="mini-cart__title" href="'+(it.url||'#')+'">'+(it.title||'Item')+'</a><div class="mini-cart__meta">Qty '+(it.qty||1)+' • £'+Number(it.price||0).toFixed(2)+'</div></div><button class="mini-cart__remove" type="button" data-remove="'+id+'" aria-label="Remove">×</button></div>'); }); html.push('</div>'); var tot=total(bag); html.push('<div class="mini-cart__foot"><div class="mini-cart__total"><span>Total</span><strong>£'+tot.toFixed(2)+'</strong></div><div class="mini-cart__actions"><a class="btn-wow btn-wow--outline btn-sm" href="/cart">View cart</a><a class="btn-wow btn-wow--cta btn-sm" href="/cart#checkout">Checkout</a></div></div></div>'); el.innerHTML = html.join('') }
-    function syncAdd(id){ try{ fetch('/api/cart/add', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ id:id, qty:1 }), credentials:'same-origin' }).catch(function(){}); }catch(_){ } }
-    return { load:load, save:save, count:count, total:total, add:add, upd:upd, rem:rem, renderMini:renderMini, syncAdd:syncAdd };
-  })();
+  var btn = document.querySelector('.cart-trigger');
+  var panel = document.getElementById('cart-dropdown');
+  if (!btn || !panel) return;
 
-  var btn = document.querySelector('.cart-open-close');
-  var pop = document.getElementById('mini-cart-popover');
-  function hasCookieCart(){ try{ var c=document.cookie.split('; ').find(r=>r.startsWith('wow_cart=')); return !!(c && decodeURIComponent(c.split('=')[1]||'').length>2); }catch(_){ return false } }
-  function fetchMini(retry){ if(!pop) return; var url='/api/cart/mini?t='+Date.now(); fetch(url, { headers:{ 'Accept':'text/html', 'Cache-Control':'no-cache' }, credentials:'same-origin' }).then(r=>r.text()).then(html=>{ pop.innerHTML = html; bindRemove(); if(retry && /mini-cart__empty/.test(html) && hasCookieCart()){ setTimeout(function(){ fetchMini(false); }, 220); } }).catch(()=>{ pop.innerHTML = '<div class="p-3 text-muted">Cart unavailable</div>'; }); }
-  function open(){ if(!pop) return; try{ window.CartClient.renderMini(pop); }catch(_){}; fetchMini(); pop.style.display='block'; btn?.setAttribute('aria-expanded','true'); position(); }
-  function close(){ if(!pop) return; pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); }
-  function toggle(){ if(!pop) return; var vis = pop.style.display !== 'none'; if(vis){ close(); } else { open(); }}
-  function position(){ try{ var rect = btn.getBoundingClientRect(); pop.style.position='absolute'; pop.style.top = (btn.offsetTop + btn.offsetHeight + 8)+'px'; pop.style.right = '0'; }catch(e){} }
-  function outside(e){ if(!pop) return; if(pop.contains(e.target) || btn.contains(e.target)) return; pop.style.display='none'; btn?.setAttribute('aria-expanded','false'); }
-  function bindRemove(){ document.querySelectorAll('[data-remove]').forEach(function(el){ el.addEventListener('click', function(){ var id=el.getAttribute('data-remove'); CartClient.rem(id); updateBadge(); if(pop) CartClient.renderMini(pop); post('/api/cart/remove', { id:id }).then(function(){ fetchMini(); updateBadge(); }); }); }); }
-  function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
-  function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-XSRF-TOKEN': token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
-  function updateBadge(){ try{ var localCount = CartClient.count(CartClient.load()); var b=document.querySelector('.cart-badge'); if(b){ b.textContent = String(localCount); b.style.display = (localCount>0)?'inline-block':'none'; } }catch(_){ } fetch('/api/cart/count', { credentials:'same-origin' }).then(r=>r.json()).then(function(j){ var b=document.querySelector('.cart-badge'); if(b){ b.textContent = String(j.count||0); b.style.display = (j.count||0)>0 ? 'inline-block' : 'none'; } }).catch(function(){}); }
-  document.addEventListener('click', function(e){ if(e.target.closest('.cart-open-close')){ e.preventDefault(); toggle(); } else { outside(e); } });
-  window.addEventListener('resize', position);
-  updateBadge();
-  window.addEventListener('wow:add-to-cart', function(ev){
-    // update badge quickly, fetch mini if open, animate
-    setTimeout(updateBadge, 50);
-    if(pop&&pop.style.display!=='none'){ setTimeout(function(){ CartClient.renderMini(pop); fetchMini(true); }, 120); }
-    animateCart(ev?.detail);
-  });
-  window.addEventListener('wow:open-cart', function(ev){ setTimeout(function(){ updateBadge(); if(pop){ CartClient.renderMini(pop); } open(); fetchMini(true); }, 160); });
-  function animateCart(detail){ /* animations disabled per request */ }
+  function show(){
+    if (isMobile()) { window.location.href = '/cart'; return }
+    render();
+    position();
+    panel.hidden = false;
+    btn.setAttribute('aria-expanded','true');
+  }
+  function hide(){ panel.hidden = true; btn.setAttribute('aria-expanded','false'); }
+  function toggle(){ panel.hidden ? show() : hide() }
+  function isMobile(){ try{ return window.matchMedia('(max-width: 767px)').matches }catch(_){ return false } }
+  function position(){ try{ var rect = btn.getBoundingClientRect(); panel.style.position='absolute'; panel.style.top = (btn.offsetTop + btn.offsetHeight + 8)+'px'; panel.style.right = '0' }catch(_){} }
+  function outside(e){ if (!panel) return; if (panel.contains(e.target) || btn.contains(e.target)) return; hide() }
+  function htmlError(){ return '<div class="p-3 text-muted">Cart unavailable</div>' }
+  function render(){ fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'text/html' }, credentials:'same-origin' })
+    .then(r=>r.text()).then(html => { panel.innerHTML = html; updateBadge() }).catch(()=>{ panel.innerHTML = htmlError() }) }
+  function updateBadge(){ fetch('/api/cart/count', { credentials:'same-origin' }).then(r=>r.json()).then(function(j){ var b=document.querySelector('.cart-badge'); if(b){ var c=Number(j.count||0); b.textContent=String(c); b.style.display=c>0?'inline-block':'none' } }).catch(function(){}) }
+
+  document.addEventListener('click', function(e){ if(e.target.closest('.cart-trigger')){ e.preventDefault(); toggle() } else { outside(e) } })
+  window.addEventListener('resize', position)
+  window.addEventListener('wow:open-cart', function(){ show() })
+  updateBadge()
 })();
 </script>
 <style>
-.mini-cart-popover{ position:absolute; right:0; top:100%; margin-top:8px; z-index:1000 }
-/* Removed image-based fly animation to prevent rare layout glitches */
+.cart-dropdown{ position:absolute; right:0; top:100%; margin-top:8px; z-index:1000; min-width:280px; }
 </style>
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">

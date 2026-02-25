@@ -15,6 +15,9 @@
 <title>{{ $title }}</title>
 <meta name="description" content="{{ $desc }}">
 <link rel="canonical" href="{{ $canonicalUrl }}">
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png">
+<link rel="shortcut icon" href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{ $title }}">
 <meta property="og:description" content="{{ $desc }}">
