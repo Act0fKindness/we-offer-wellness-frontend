@@ -3,18 +3,13 @@
     @include('partials.head')
 </head>
 <body class="antialiased">
-<div id="app"
-     data-page="{&quot;component&quot;:&quot;Home&quot;,&quot;props&quot;:{&quot;errors&quot;:{},&quot;auth&quot;:{&quot;user&quot;:null},&quot;mapboxKey&quot;:&quot;&quot;},&quot;url&quot;:&quot;/&quot;,&quot;version&quot;:&quot;static&quot;}"
-     data-v-app=""><!---->
-    <div class="min-h-screen text-ink-800">
-        @include('partials.header')
-        <main></main>
-        <main class="">
-            @yield('content')
-        </main>
-        @include('partials.footer')
-    </div>
- </div>
+  <div class="min-h-screen text-ink-800">
+      @include('partials.header')
+      <main class="">
+          @yield('content')
+      </main>
+      @include('partials.footer')
+  </div>
 
 <script>
 (function(){

@@ -75,11 +75,7 @@
 </script>
 @endif
 
-<!-- Vite bundle (CSS is imported via JS); guard if manifest missing -->
-@php $manifest = public_path('build/manifest.json'); @endphp
-@if (file_exists($manifest))
-  @vite('resources/js/app.js')
-@endif
+{{-- Inertia/Vite bundle is included in resources/views/app.blade.php for SPA pages only. --}}
 
 <!-- JSON-LD: Organization -->
 @php

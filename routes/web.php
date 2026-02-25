@@ -41,6 +41,8 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\LandingRedirectsController;
 
+Route::get('/', [HomeController::class, 'index']);
+
 // Online & Near Me hub
 Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
 
@@ -74,8 +76,6 @@ Route::get('/near-me', [LocationsController::class, 'nearMe'])->name('nearMe');
 
 // Misc redirects for broken/legacy links
 Route::redirect('/help/which-therapy', '/plan', 301);
-
-Route::get('/', [HomeController::class, 'index']);
 
 // V3 holding page
 Route::get('/v3', function () {
