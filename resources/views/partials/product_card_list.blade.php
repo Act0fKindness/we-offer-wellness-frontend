@@ -139,7 +139,7 @@
       .wow-therapy-card-scope .btn--primary{ border-color: rgba(0,0,0,.10); color:#fff; background:#549483 !important }
       .wow-therapy-card-scope .btn:hover,.wow-therapy-card-scope .btn:focus{ background:#f7f7f7 !important; color: rgba(11,18,32,.90); border-color: rgba(0,0,0,.18) }
       @media (max-width: 991.98px){ .wow-therapy-card-scope{ --imgW: 220px; --imgH: 160px } .wow-therapy-card-scope .list-aside{ width:240px; flex-basis:240px } }
-      @media (max-width: 767.98px){ .wow-therapy-card-scope .therapy-card.therapy-card--list{ flex-direction:column } .wow-therapy-card-scope .list-media{ width:100%; flex-basis:auto; padding-right: var(--pad) } .wow-therapy-card-scope .list-media .media{ height:190px } .wow-therapy-card-scope .list-aside{ width:100%; flex-basis:auto; border-left:0; border-top:1px solid rgba(16,24,40,.10) } .wow-therapy-card-scope .actions{ grid-template-columns: 1fr 1.15fr } }
+      @media (max-width: 767.98px){ .wow-therapy-card-scope .therapy-card.therapy-card--list{ grid-template-columns: 1fr } .wow-therapy-card-scope .list-media{ padding-right: var(--pad) } .wow-therapy-card-scope .list-media .media{ height:190px } .wow-therapy-card-scope .list-aside{ width:100%; border-left:0; border-top:1px solid rgba(16,24,40,.10) } .wow-therapy-card-scope .actions{ grid-template-columns: 1fr 1.15fr } }
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function(){

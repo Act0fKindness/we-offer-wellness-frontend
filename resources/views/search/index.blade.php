@@ -87,7 +87,7 @@
         <button class="btn-wow is-squarish btn-xl"><span class="btn-label">Search</span><span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></button>
       </form>
       <!-- Controls moved under search bar -->
-      <div class="d-flex align-items-center justify-content-between gap-2 mb-3 mt-2">
+      <div class="search-controls d-flex align-items-center justify-content-between gap-2 mb-3 mt-2">
         <div class="d-flex align-items-center gap-2">
           <span class="font-semibold text-ink-800">View</span>
           <div class="seg-group" role="tablist" aria-label="List or Map">
@@ -157,14 +157,14 @@
   /* Adjust height to account for increased sticky top */
   .map{ width: 100%; height: calc(100vh - 80px - 24px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
 }
-/* Segmented controls (match Under/For styles) */
-.seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
-.seg{ appearance:none; border:0; background:transparent; padding:6px 12px; border-radius:999px; color: var(--ink-700); font-weight:600; font-size:.9rem; transition: all .15s ease; }
-.seg:hover{ background:#eef2f7 }
-.seg.active, .seg[aria-selected="true"]{ background: linear-gradient(180deg, #549483, #3b7768); color:#fff; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset }
-.seg-group > .seg:first-of-type{ margin-right: 5px; }
-/* Page-specific override of ultra segments */
-.wow-ultra .seg{
+/* Segmented controls (search controls only) */
+.search-controls .seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
+.search-controls .seg{ appearance:none; border:0; background:transparent; padding:6px 12px; border-radius:999px; color: var(--ink-700); font-weight:600; font-size:.9rem; transition: all .15s ease; }
+.search-controls .seg:hover{ background:#eef2f7 }
+.search-controls .seg.active, .search-controls .seg[aria-selected="true"]{ background: linear-gradient(180deg, #549483, #3b7768); color:#fff; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset }
+.search-controls .seg-group > .seg:first-of-type{ margin-right: 5px; }
+/* removed global .wow-ultra override to prevent conflicts */
+/* .wow-ultra .seg{ */
   flex: 1 1 220px;
   display: flex;
   gap: 10px;
@@ -177,13 +177,13 @@
   max-height: 58px;
 }
 /* Ensure active state wins over base .wow-ultra .seg background */
-.wow-ultra .seg.active,
-.wow-ultra .seg[aria-selected="true"]{
+/* .wow-ultra .seg.active,
+ .seg[aria-selected="true"]{
   background: linear-gradient(180deg, #549483, #3b7768) !important;
   color:#fff !important;
   box-shadow: 0 1px 0 rgba(255,255,255,.4) inset;
   border-color: transparent;
-}
+}*/
 /* Custom map markers */
 .wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); box-shadow: 0 14px 34px rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; transform-origin: bottom center; will-change: transform; }
 .wow-marker::after{ content:""; width:10px; height:10px; border-radius:999px; background:#549483; box-shadow: 0 0 0 5px rgba(84,56,255,.18); }
