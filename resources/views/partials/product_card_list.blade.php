@@ -95,7 +95,7 @@
       --muted:rgba(11,18,32,.62);
       --badgeWarmBg:#ffe7c2; --badgeWarmText:#6b4b12; --badgeCoolBg:#dfe9ff; --badgeCoolText:#1f3a77;
       --radius:14px; --borderW:1px;
-      --col1Min: 240px; --col3Min: 320px; --col1Flex: 0.9fr; --col2Flex: 2.6fr; --col3Flex: 1.1fr;
+      --col1Min: 240px; --col3Min: 320px; --col1Flex: 0.9fr; --col2Flex: 3fr; --col3Flex: 1.1fr;
       --pad:14px;
       --badgeH:32px; --badgePx:10px; --badgeFont:12px;
       --save:36px; --saveR:10px; --saveIcon:18px;
@@ -104,7 +104,7 @@
       --btnH:40px; --btnR:12px; --btnFont:14px;
       --from:12px; --priceNow:22px; --was:12px;
     }
-    .wow-row-card{ background:var(--card); border:var(--borderW) solid rgba(16,24,40,.16); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; display:grid;
+    .wow-row-card{ background:var(--card); border:2px solid #ccc; border-radius:3px; box-shadow:var(--shadow); overflow:hidden; display:grid;
       grid-template-columns: minmax(var(--col1Min), var(--col1Flex)) minmax(0, var(--col2Flex)) minmax(var(--col3Min), var(--col3Flex)); transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease; position:relative; }
     .wow-row-card:hover{ transform:translateY(-1px); box-shadow:0 22px 70px rgba(16,24,40,.14); border-color:rgba(16,24,40,.22); }
     .wow-row-card[data-url]{ cursor:pointer; }
@@ -232,17 +232,7 @@
         @endif
       </div>
 
-      <div class="wow-actions">
-          <button type="button" class="wow-btn js-add-to-cart js-open-cart"
-                  data-id="{{ $product->id }}"
-                  data-title="{{ e($titleFormatted) }}"
-                  data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
-                  data-image="{{ $image }}"
-                  data-url="{{ $url }}"
-          >Add to cart</button>
-          <span class="wow-btn wow-btn--primary js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}">Book now</span>
-      </div>
+      
   </div>
 
 </div>
-
