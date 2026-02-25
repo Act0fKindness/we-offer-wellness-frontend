@@ -203,6 +203,12 @@
   .search-layout.sr-list-only .col-map{ display:none }
   .col-map .map{ height: 60vh }
 }
+/* Search-only overrides for legacy wow-card md sizing */
+.search-layout .wow-card.md{
+  --card-h: 530px;
+  width: auto;
+  max-width: 309px;
+}
 </style>
 
 <script>
