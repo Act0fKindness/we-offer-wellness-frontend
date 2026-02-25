@@ -126,10 +126,10 @@
                 <div class="col-12">
                   <div class="wow-card-sm-wrap">
                     <div class="result-view-map">
-                      @include('partials.product_card_list', ['product' => $product])
+                      @include('partials.product_card', ['product' => $product])
                     </div>
                     <div class="result-view-list" style="display:none;">
-                      @include('partials.product_card', ['product' => $product])
+                      @include('partials.product_card_list', ['product' => $product])
                     </div>
                   </div>
                 </div>

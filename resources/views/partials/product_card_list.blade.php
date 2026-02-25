@@ -261,7 +261,6 @@
           </span>
           <span class="badge badge--cool">Top Rated</span>
         </div>
-        <a href="{{ $url }}" class="title-link"><h2 class="title mb-1">{{ $titleFormatted }}</h2></a>
         @if($providerFormatted)
           <p class="provider">with {{ $providerFormatted }}</p>
         @endif
