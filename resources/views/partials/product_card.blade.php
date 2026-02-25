@@ -346,56 +346,7 @@
         <img src="{{ $image }}" alt="{{ $title }}" loading="lazy" />
 </div>
 
-@once
-  <script>
-  (function(){
-    function addToLocalCart(item){
-      try{
-        var key='wow_cart_v1';
-        var raw=localStorage.getItem(key);
-        var obj; try{ obj=raw?JSON.parse(raw):null }catch(e){ obj=null }
-        if(!obj||!Array.isArray(obj.items)) obj={items:[]};
-        var id=String(item.id||''); if(!id) return;
-        var existing=obj.items.find(function(it){ return String(it.id)===id });
-        if(existing){ existing.qty=(Number(existing.qty)||1)+1; }
-        else {
-          obj.items.push({ id:id, title:item.title||'', price:Number(item.price)||0, image:item.image||null, url:item.url||('#/products/'+id), qty:1, meta:{} });
-        }
-        localStorage.setItem(key, JSON.stringify(obj));
-      }catch(e){}
-    }
-    function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
-    function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-XSRF-TOKEN': token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
-    function handleClick(e){ /* disabled */ }
-    // document.addEventListener('click', handleClick);
-  })();
-  </script>
-@endonce
-
-@once
-  <script>
-    // Delegate link-like behavior for elements inside the card to avoid nested <a>
-    (function(){
-      function go(href){ try{ window.location.assign(href); }catch(e){ window.location.href = href; } }
-      document.addEventListener('click', function(e){
-        var el = e.target.closest('[data-href][role="link"]');
-        if(!el) return;
-        e.preventDefault();
-        e.stopPropagation();
-        var href = el.getAttribute('data-href');
-        if(href) go(href);
-      });
-      document.addEventListener('keydown', function(e){
-        if(e.key !== 'Enter' && e.key !== ' ') return;
-        var el = e.target.closest('[data-href][role="link"]');
-        if(!el) return;
-        e.preventDefault();
-        var href = el.getAttribute('data-href');
-        if(href) go(href);
-      });
-    })();
-  </script>
-@endonce
+{{-- Removed inline JS bindings to avoid unintended click handlers from card markup --}}
 
       <div class="content">
         <div class="content-top">
@@ -489,7 +440,7 @@
             </div>
           @endif
           <div class="actions">
-            <button type="button" class="btn js-add-to-cart"
+            <button type="button" class="btn js-add-to-cart js-open-cart"
               data-id="{{ $product->id }}"
               data-title="{{ e($titleFormatted) }}"
               data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
