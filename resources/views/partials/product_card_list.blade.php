@@ -103,7 +103,7 @@
       --meta:12px; --metaIcon:14px;
       --btnH:40px; --btnR:12px; --btnFont:14px;
       --from:12px; --priceNow:22px; --was:12px;
-      --rowH: 280px;
+      --rowH: 230px;
     }
     .wow-row-card{ background:var(--card); border:1px solid #eee; border-radius:4px; box-shadow:var(--shadow); overflow:hidden; display:grid; height: var(--rowH);
       grid-template-columns: minmax(var(--col1Min), var(--col1Flex)) minmax(var(--col2Min), var(--col2Flex)) minmax(var(--col3Min), var(--col3Flex)); transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease; position:relative; }
@@ -233,7 +233,16 @@
         @endif
       </div>
 
-      
+      <div class="wow-actions">
+          <button type="button" class="btn js-add-to-cart js-open-cart"
+                  data-id="{{ $product->id }}"
+                  data-title="{{ e($titleFormatted) }}"
+                  data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
+                  data-image="{{ $image }}"
+                  data-url="{{ $url }}"
+          >Add to cart</button>
+          <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}">Book now</span>
+      </div>
   </div>
 
 </div>
