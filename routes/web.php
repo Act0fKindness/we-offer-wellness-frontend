@@ -51,6 +51,8 @@ Route::get('/needs', [NeedsController::class, 'index'])->name('needs.index');
 Route::get('/needs/{slug}', [NeedsController::class, 'show'])
     ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('needs.show');
+// Back-compat: old slug variant without "and"
+Route::redirect('/needs/stress-anxiety', '/needs/stress-and-anxiety', 301);
 
 /** Therapies */
 Route::get('/therapies', [TherapiesController::class, 'index'])->name('therapies.index');
