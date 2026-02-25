@@ -269,9 +269,9 @@
             container: mapEl,
             style: 'mapbox://styles/mapbox/streets-v12',
             center: center,
-            zoom: 9,
-            pitch: 60,
-            bearing: -17,
+            zoom: 10,
+            pitch: 0,
+            bearing: 0,
             antialias: true
           });
           map.on('load', function(){
@@ -309,7 +309,7 @@
             });
             try {
               if (data && data.length > 1) {
-                map.fitBounds(bounds, { padding: 80, maxZoom: 9, duration: 500 });
+                map.fitBounds(bounds, { padding: 80, maxZoom: 10, duration: 500 });
               } else if (data && data.length === 1) {
                 map.setCenter([Number(data[0].lng), Number(data[0].lat)]);
                 map.setZoom(12);
@@ -326,13 +326,13 @@
               else { map.easeTo({ pitch: 0, bearing: 0, duration: 600 }) }
             })
           })
-          // Ensure initial UI reflects 3D default
+          // Ensure initial UI reflects 2D default
           try {
             var btn3d = document.querySelector('[data-mode="3d"]');
             var btn2d = document.querySelector('[data-mode="2d"]');
             if (btn3d && btn2d) {
-              btn2d.classList.remove('active'); btn2d.setAttribute('aria-selected','false');
-              btn3d.classList.add('active'); btn3d.setAttribute('aria-selected','true');
+              btn3d.classList.remove('active'); btn3d.setAttribute('aria-selected','false');
+              btn2d.classList.add('active'); btn2d.setAttribute('aria-selected','true');
             }
           } catch(e){}
         }catch(e){ console.warn('mapbox init failed', e) }
