@@ -3,26 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Review;
+use App\Models\ProductReview;
 
 class ReviewStatsController extends Controller
 {
     public function index()
     {
-        // Overall stats
-        $avg = (float) (Review::query()->avg('rating') ?? 0);
+        // Overall stats from product reviews
+        $avg = (float) (ProductReview::query()->avg('rating') ?? 0);
         $avgRounded = $avg > 0 ? round($avg, 1) : null;
-        $count = (int) (Review::query()->count() ?? 0);
+        $count = (int) (ProductReview::query()->count() ?? 0);
 
-        // Verified = exclude provider-added if the flag exists
-        $verifiedCount = (int) Review::query()
-            ->where(function ($q) {
-                $q->whereNull('is_provider_added')
-                  ->orWhere('is_provider_added', false)
-                  ->orWhere('is_provider_added', 0)
-                  ->orWhere('is_provider_added', '0');
-            })
-            ->count();
+        // Verified count: ProductReview has no provider-added flag; treat all as verified
+        $verifiedCount = $count;
 
         return response()->json([
             'avg_rating' => $avgRounded,
@@ -31,4 +24,3 @@ class ReviewStatsController extends Controller
         ]);
     }
 }
-
