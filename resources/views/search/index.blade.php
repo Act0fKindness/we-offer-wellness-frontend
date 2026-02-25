@@ -150,12 +150,11 @@
 </section>
 
 <style>
-/* Desktop split: results (7 cols) scrollable; map (5 cols) sticky */
+/* Desktop split: page scrolls the list; map stays sticky */
 @media (min-width: 992px){
-  .results-scroll{ max-height: calc(100vh - 220px); overflow-y: auto; padding-right: 6px; }
-  .map-wrap{ position: sticky; top: 84px; }
-  /* Keep map within viewport: subtract sticky top and a small margin */
-  .map{ width: 100%; height: calc(100vh - 84px - 24px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
+  .results-scroll{ padding-right: 6px; }
+  .map-wrap{ position: sticky; top: 16px; }
+  .map{ width: 100%; height: calc(100vh - 32px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
 }
 /* Segmented controls (match Under/For styles) */
 .seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
