@@ -297,6 +297,7 @@
             }, labelLayerId);
             // Markers (grouped by product id for hover effects)
             window.__wowMarkersByPid = {};
+            var bounds = new mapboxgl.LngLatBounds();
             data.forEach(function(p){
               var el = document.createElement('div');
               el.className = 'wow-marker';
@@ -304,7 +305,9 @@
               var marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([Number(p.lng), Number(p.lat)]).setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML('<div style="font-weight:600">'+(p.title||'')+'</div>')).addTo(map);
               var pid = String(p.pid||p.id||'');
               (window.__wowMarkersByPid[pid] = window.__wowMarkersByPid[pid] || []).push({ marker: marker, el: el });
+              try { bounds.extend([Number(p.lng), Number(p.lat)]); } catch(e){}
             });
+            try { if (data && data.length > 0) { map.fitBounds(bounds, { padding: 70, maxZoom: 12, duration: 650 }); } } catch(e){}
           });
           // Mode toggle (2D/3D)
           document.querySelectorAll('[data-mode]')?.forEach(function(btn){
