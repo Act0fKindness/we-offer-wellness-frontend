@@ -218,6 +218,24 @@
   window.addEventListener('resize', position)
   window.addEventListener('wow:open-cart', function(){ show() })
   updateBadge()
+
+  // Add-to-cart: delegate clicks and post to API, then open + refresh mini cart
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('.js-add-to-cart');
+    if (!t) return;
+    e.preventDefault();
+    try{
+      var id = parseInt(t.getAttribute('data-id')||'0',10);
+      var qty = parseInt(t.getAttribute('data-qty')||'1',10); if(!isFinite(qty) || qty<1) qty=1;
+      var token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+      fetch('/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token?{'X-CSRF-TOKEN':token}:{}) },
+        credentials: 'same-origin',
+        body: JSON.stringify({ id:id, qty:qty })
+      }).then(function(r){ return r.json().catch(function(){ return {} }) }).then(function(){ updateBadge(); show(); }).catch(function(){ show(); });
+    }catch(_){ show(); }
+  });
 })();
 </script>
 <style>
