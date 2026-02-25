@@ -103,6 +103,7 @@
   user-select:none;
   -webkit-tap-highlight-color:transparent;
   text-decoration:none; /* works for <a> too */
+  white-space: nowrap; /* keep labels like "Visit Mindful Times" on one line */
 }
 
 .btn-wow:active,
