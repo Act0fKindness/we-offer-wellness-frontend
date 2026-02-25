@@ -4,6 +4,8 @@
 <title>We Offer Wellness®</title>
 <meta name="description"
       content="Holistic therapy, done right: new classes daily, frequent workshops &amp; events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®.">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="canonical" href="{{ url()->current() }}">
 
 <!-- Fonts: Manrope (general text, buttons, product headings) and Playfair Display (section headings) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +15,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
 
-<!-- Built CSS bundle from Vite/Laravel -->
+<!-- Built assets via Vite (JS only here; keep inline <style> below intact) -->
+@php $manifest = public_path('build/manifest.json'); @endphp
+@if (file_exists($manifest))
+  @routes
+  @vite('resources/js/app.js')
+@endif
 
 <style>@charset "UTF-8";
 /*!
@@ -26749,3 +26756,5 @@ document.addEventListener('DOMContentLoaded', function(){
       inertia="">
 <meta property="og:url" content="" inertia="">
 <title inertia="">Holistic Therapies That Work | We Offer Wellness®</title>
+
+@stack('head')
