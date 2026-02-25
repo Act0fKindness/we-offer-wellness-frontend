@@ -12,6 +12,9 @@
   </div>
 
 <script>
+  window.WOW_MAPS_KEY = window.WOW_MAPS_KEY || @json(env('MAPBOX_API_KEY'));
+</script>
+<script>
 (function(){
   function setupUltraSearchBar(prefix){
     var root = document.querySelector('[id^="'+prefix+'-seg-"]')?.closest('.wow-ultra') || document.querySelector('#'+prefix+'-seg-what')?.closest('.wow-ultra');

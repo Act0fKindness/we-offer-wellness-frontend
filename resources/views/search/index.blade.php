@@ -193,7 +193,7 @@
       $mapboxKey = env('MAPBOX_API_KEY');
     @endphp
     var data = @json($mapData);
-    var token = @json($mapboxKey);
+    var token = @json($mapboxKey) || window.WOW_MAPS_KEY || '';
     var mapEl = document.getElementById('search-map');
     if (mapEl && !token) {
       try { mapEl.innerHTML = '<div style="padding:12px;color:#334155;font-size:14px;">Map unavailable: missing MAPBOX_API_KEY. Set it in .env.</div>'; } catch(e){}
