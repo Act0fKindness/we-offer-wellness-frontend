@@ -421,8 +421,7 @@ function openV3NotifyModal(event){
           </button>
           <CartDropdown :open="cartOpen" @close="cartOpen = false" />
         </div>
-        <!-- Outside-click backdrop (desktop only, behind header to dim content) -->
-        <div v-if="cartOpen" class="fixed inset-0 z-30 d-none d-md-block"></div>
+        <!-- Removed desktop backdrop to keep dropdown feel and avoid modal-like overlay -->
         <button class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100" @click="mobileOpen = !mobileOpen" aria-label="Toggle menu">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="mobileOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'"/></svg>
         </button>

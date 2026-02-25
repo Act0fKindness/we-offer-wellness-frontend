@@ -1,8 +1,37 @@
 import { reactive, computed, watch } from 'vue'
 
 const LS_KEY = 'wow_cart_v1'
+const COOKIE_KEY = 'wow_cart'
+
+function readCookie(name){
+  try {
+    const m = document.cookie.split('; ').find(r => r.startsWith(name + '='))
+    return m ? decodeURIComponent(m.split('=')[1] || '') : ''
+  } catch { return '' }
+}
+
+function mapToItems(obj){
+  if (!obj) return []
+  if (Array.isArray(obj)) return obj.map(normalizeItemSafely)
+  if (typeof obj === 'object') return Object.values(obj).map(normalizeItemSafely)
+  return []
+}
+
+function normalizeItemSafely(it){
+  try { return normalizeItem(it) } catch { return null }
+}
 
 function load() {
+  // Prefer server-synced cookie (wow_cart) if present
+  try {
+    const cookieRaw = readCookie(COOKIE_KEY)
+    if (cookieRaw) {
+      const parsed = JSON.parse(cookieRaw)
+      const items = mapToItems(parsed).filter(Boolean)
+      if (items.length) return { items }
+    }
+  } catch {}
+  // Fallback to legacy localStorage format
   try {
     const raw = localStorage.getItem(LS_KEY)
     if (!raw) return { items: [] }
@@ -55,4 +84,3 @@ export function useCart() {
 
   return { items, count, subtotal, add, remove, updateQty, clear }
 }
-
