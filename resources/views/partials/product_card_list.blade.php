@@ -95,7 +95,7 @@
       --muted:rgba(11,18,32,.62);
       --badgeWarmBg:#ffe7c2; --badgeWarmText:#6b4b12; --badgeCoolBg:#dfe9ff; --badgeCoolText:#1f3a77;
       --radius:14px; --borderW:1px;
-      --col1Min: 200px; --col2Min: 380px; --col3Min: 260px; --col1Flex: 0.8fr; --col2Flex: 3.2fr; --col3Flex: 1fr;
+      --col1Min: 200px; --col2Min: 300px; --col3Min: 200px; --col1Flex: 0.8fr; --col2Flex: 3.2fr; --col3Flex: 1fr;
       --pad:14px;
       --badgeH:32px; --badgePx:10px; --badgeFont:12px;
       --save:36px; --saveR:10px; --saveIcon:18px;
@@ -122,7 +122,7 @@
     .wow-save:hover{ transform:translateY(-1px); box-shadow:0 14px 28px rgba(16,24,40,.12); }
     .wow-save:active{ transform:translateY(0) scale(.99); }
     .wow-save svg{ width:var(--saveIcon); height:var(--saveIcon); color:rgba(11,18,32,.72); }
-    .wow-row-title{ font-size:var(--title); line-height:1.12; letter-spacing:-.015em; font-weight:900; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .wow-row-title{ font-size:var(--title); line-height:1.12; letter-spacing:-.015em; font-weight:900; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family: 'Manrope', var(--bs-font-sans-serif); }
     .wow-row-provider{ margin:6px 0 0; color:var(--muted); font-size:var(--provider); }
     .wow-rating{ display:flex; align-items:center; gap:10px; color:rgba(11,18,32,.84); font-size:var(--rating); margin-top:8px; }
     .wow-stars{ display:inline-flex; align-items:center; gap:3px; transform:translateY(1px); }
@@ -148,8 +148,8 @@
     .wow-btn:hover{ background:#f7f7f7; border-color:rgba(16,24,40,.24); }
     .wow-btn--primary{ background:linear-gradient(180deg,#549483,#3f7f6f); color:#fff; border-color:rgba(0,0,0,.08); }
     .wow-btn--primary:hover{ filter:brightness(.98); }
-    @media (max-width: 1199.98px){ .wow-row-card{ --col1Min: 190px; --col2Min: 340px; --col3Min: 240px; --col1Flex: 0.8fr; --col2Flex: 3.4fr; --col3Flex: 0.9fr; } }
-    @media (max-width: 991.98px){ .wow-row-card{ --col1Min: 180px; --col2Min: 300px; --col3Min: 220px; --col1Flex: 0.8fr; --col2Flex: 3fr; --col3Flex: 0.9fr; } }
+    @media (max-width: 1199.98px){ .wow-row-card{ --col1Min: 200px; --col2Min: 300px; --col3Min: 200px; --col1Flex: 0.8fr; --col2Flex: 3.0fr; --col3Flex: 1fr; } }
+    @media (max-width: 991.98px){ .wow-row-card{ --col1Min: 200px; --col2Min: 300px; --col3Min: 200px; --col1Flex: 0.8fr; --col2Flex: 3.0fr; --col3Flex: 1fr; } }
     @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; height:auto; } .wow-row-media{ grid-column:1; height:220px; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr 1.1fr; } }
     @media (prefers-reduced-motion: reduce){ .wow-row-card{ transition:none; } .wow-save{ transition:none; } }
   </style>
