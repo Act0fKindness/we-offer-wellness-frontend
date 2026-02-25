@@ -325,7 +325,7 @@
 
       {{-- MIDDLE: poster image centred --}}
       <div class="ourvibe-mid">
-          <a class="ourvibe-buy" href="https://link.weofferwellness.co.uk/ourvibe">
+          <a class="ourvibe-buy" href="https://testing.link.weofferwellness.co.uk/OURVIBE-website">
             <img
               src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/3c759f8e-fa97-43eb-bed0-41652086adf9.png"
               alt="OUR VIBE — Sound Healing & Meditation Festival" style="max-height: 350px;"
@@ -340,7 +340,7 @@
         Tuning Forks · Drumming
 
         <div class="ourvibe-actions">
-          <a class="ourvibe-buy" href="https://link.weofferwellness.co.uk/ourvibe">
+          <a class="ourvibe-buy" href="https://testing.link.weofferwellness.co.uk/OURVIBE-website">
             Book Ticket <i class="bi bi-arrow-right"></i>
           </a>
         </div>
