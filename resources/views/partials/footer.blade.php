@@ -55,14 +55,7 @@
                 </div>
             </div>
         </div>
-        <div class="footer-cta">
-            <div>
-                <div class="title">Practitioners</div>
-                <p>Share your expertise with the WOW community. Trauma-aware, inclusive practitioners are always
-                    welcome.</p></div>
-            <a href="https://studio.weofferwellness.co.uk" class="btn-wow btn-wow--cta btn-sm"
-               target="_blank" rel="noopener" data-loader-init="1"> Become a provider <span
-                class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a></div>
+        
         <div class="safety-card">
             <div>
                 <div class="title">Safety &amp; Contraindications</div>
