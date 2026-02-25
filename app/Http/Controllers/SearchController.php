@@ -39,7 +39,7 @@ class SearchController extends Controller
             ->withAvg('reviews', 'rating')
             ->withMin('variants', 'price')
             ->withMax('variants', 'price')
-            ->with(['media', 'options.values', 'category', 'status']);
+            ->with(['media', 'options.values', 'category', 'status', 'vendor.locations']);
 
         $query = clone $base;
         // Only visible products

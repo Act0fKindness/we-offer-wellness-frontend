@@ -123,7 +123,7 @@
           @if(isset($products) && $products->count())
             <div class="row g-3">
               @foreach($products as $product)
-                <div class="col-12">
+                <div class="col-12" data-pid="{{ $product->id }}">
                   <div class="wow-card-sm-wrap">
                     <div class="result-view-map">
                         @include('partials.product_card_list', ['product' => $product])
@@ -176,6 +176,10 @@
   position: relative;
   max-height: 58px;
 }
+/* Custom map markers */
+.wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); box-shadow: 0 14px 34px rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; }
+.wow-marker::after{ content:""; width:10px; height:10px; border-radius:999px; background:#549483; box-shadow: 0 0 0 5px rgba(84,56,255,.18); }
+.wow-marker.is-active{ transform: scale(1.12); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
 /* Hide/show columns for list/map view at all widths */
 /* Map view shows both columns; List view hides map */
 .search-layout.sr-list-only .col-map{ display:none; }
@@ -214,16 +218,38 @@
     @php
       $mapData = [];
       foreach (($products ?? collect()) as $p) {
-          $m = $p->meta_json ?? [];
-          $lat = $m['lat'] ?? null; $lng = $m['lng'] ?? null;
-          if (is_numeric($lat) && is_numeric($lng)) {
-              $mapData[] = [
-                  'id' => $p->id,
-                  'title' => $p->title,
-                  'lat' => (float) $lat,
-                  'lng' => (float) $lng,
-                  'url' => url('/therapies/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
-              ];
+          // Prefer vendor locations (multiple pins)
+          $vendor = $p->vendor ?? null;
+          $locs = $vendor && $vendor->relationLoaded('locations') ? $vendor->locations : [];
+          $count = 0;
+          foreach ($locs as $vl) {
+              $lat = $vl->lat ?? null; $lng = $vl->lng ?? null;
+              if (is_numeric($lat) && is_numeric($lng)) {
+                  $mapData[] = [
+                      'pid' => $p->id,
+                      'title' => $p->title,
+                      'lat' => (float) $lat,
+                      'lng' => (float) $lng,
+                      'label' => trim(($vl->city ?? '') . ', ' . ($vl->address ?? '')),
+                      'url' => url('/therapies/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
+                  ];
+                  $count++;
+              }
+          }
+          // Fallback to single meta lat/lng if no vendor pins
+          if ($count === 0) {
+              $m = $p->meta_json ?? [];
+              $lat = $m['lat'] ?? null; $lng = $m['lng'] ?? null;
+              if (is_numeric($lat) && is_numeric($lng)) {
+                  $mapData[] = [
+                      'pid' => $p->id,
+                      'title' => $p->title,
+                      'lat' => (float) $lat,
+                      'lng' => (float) $lng,
+                      'label' => $p->category->name ?? 'Location',
+                      'url' => url('/therapies/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
+                  ];
+              }
           }
       }
       $mapboxKey = config('services.mapbox.token');
@@ -269,9 +295,15 @@
                 'fill-extrusion-opacity': 0.6
               }
             }, labelLayerId);
-            // Markers
+            // Markers (grouped by product id for hover effects)
+            window.__wowMarkersByPid = {};
             data.forEach(function(p){
-              var m = new mapboxgl.Marker().setLngLat([Number(p.lng), Number(p.lat)]).setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML('<div style="font-weight:600">'+(p.title||'')+'</div>')).addTo(map);
+              var el = document.createElement('div');
+              el.className = 'wow-marker';
+              el.title = p.title || '';
+              var marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([Number(p.lng), Number(p.lat)]).setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML('<div style="font-weight:600">'+(p.title||'')+'</div>')).addTo(map);
+              var pid = String(p.pid||p.id||'');
+              (window.__wowMarkersByPid[pid] = window.__wowMarkersByPid[pid] || []).push({ marker: marker, el: el });
             });
           });
           // Mode toggle (2D/3D)
@@ -339,6 +371,25 @@
         }
       });
     }
+    // Hover markers when hovering product items
+    function bindHover(){
+      var container = document.querySelector('.results-scroll');
+      if(!container) return;
+      container.addEventListener('mouseover', function(e){
+        var item = e.target.closest('[data-pid]');
+        if(!item) return;
+        var pid = item.getAttribute('data-pid');
+        var group = (window.__wowMarkersByPid||{})[String(pid)]||[];
+        group.forEach(function(m){ m.el.classList.add('is-active'); });
+      });
+      container.addEventListener('mouseout', function(e){
+        var item = e.target.closest('[data-pid]');
+        if(!item) return;
+        var pid = item.getAttribute('data-pid');
+        var group = (window.__wowMarkersByPid||{})[String(pid)]||[];
+        group.forEach(function(m){ m.el.classList.remove('is-active'); });
+      });
+    }
     // Initial state: Map active -> enable mode, show both columns
     setModeEnabled(true);
     setColsForView('map');
@@ -372,6 +423,7 @@
         }
       })
     })
+    bindHover();
   } catch {}
 })();
 </script>
