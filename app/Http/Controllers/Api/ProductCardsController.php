@@ -50,25 +50,11 @@ class ProductCardsController extends Controller
           ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
           ->orderByRaw('COALESCE(reviews_count, 0) DESC');
 
-        $items = $q->limit($limit)->get()->map(function ($p) {
-            $min = $p->variants_min_price ?? $p->price;
-            $price = null;
-            if (is_numeric($min)) {
-                $price = (float) $min;
-                if ($price >= 1000) $price = $price / 100;
-            }
-            return [
-                'id' => $p->id,
-                'title' => $p->title,
-                'url' => url('/'.$this->typeSegment($p).'/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
-                'image' => method_exists($p, 'getFirstImageUrl') ? $p->getFirstImageUrl() : null,
-                'rating' => round((float)($p->reviews_avg_rating ?? 0), 1) ?: null,
-                'review_count' => (int)($p->reviews_count ?? 0),
-                'price' => $price,
-            ];
-        })->values();
-
-        $html = view('partials.product_card', ['items' => $items])->render();
+        $products = $q->limit($limit)->get();
+        $html = '';
+        foreach ($products as $p) {
+            $html .= view('partials.product_card', ['product' => $p])->render();
+        }
         return response($html)->header('Content-Type', 'text/html');
     }
 
@@ -84,4 +70,3 @@ class ProductCardsController extends Controller
         return 'therapies';
     }
 }
-
