@@ -91,8 +91,8 @@
         <div class="d-flex align-items-center gap-2">
           <span class="font-semibold text-ink-800">View</span>
           <div class="seg-group" role="tablist" aria-label="List or Map">
-            <button class="seg" role="tab" aria-selected="false" data-view="list">List</button>
-            <button class="seg active" role="tab" aria-selected="true" data-view="map">Map</button>
+              <button class="seg active" role="tab" aria-selected="true" data-view="map">Map</button>
+              <button class="seg" role="tab" aria-selected="false" data-view="list">List</button>
           </div>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -128,7 +128,7 @@
                     <div class="result-view-map">
                       @include('partials.product_card', ['product' => $product])
                     </div>
-                    <div class="result-view-list" style="display:none;">
+                    <div class="result-view-list">
                       @include('partials.product_card_list', ['product' => $product])
                     </div>
                   </div>
