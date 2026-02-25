@@ -130,6 +130,22 @@
             height: 40px;
         }
     }
+
+    /* Ensure consistent visual height across slides on desktop by
+       constraining slide 2 elements to fit the same hero band height
+       as slide 1. This reduces poster + typography sizes on desktop. */
+    @media (min-width: 992px) {
+      /* General: keep the slider wrapper stable visually */
+      .wow-hero-swiper { overflow: hidden; }
+      /* Slide 2 specific tweaks */
+      .whero.whero--s2 .ourvibe-poster { max-height: 360px !important; height: auto; width: auto; }
+      .whero.whero--s2 .ourvibe-bottom--desktop-consistent { font-size: 19px !important; line-height: 1.2; }
+      .whero.whero--s2 .ourvibe-actions { margin-top: 18px !important; }
+      .whero.whero--s2 a.ourvibe-buy { font-size: 24px !important; padding: 10px 14px; }
+      .whero.whero--s2 .present { letter-spacing: .28em; }
+      /* Cap section internal spacing to avoid overflow vs slide 1 */
+      .whero.whero--s2 .whero-pad { padding-top: 40px !important; padding-bottom: 40px !important; }
+    }
   </style>
 
 {{-- Keep your sticky bar OUTSIDE the slider (so IDs stay unique and not duplicated) --}}
