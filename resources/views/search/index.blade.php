@@ -162,7 +162,20 @@
 .seg{ appearance:none; border:0; background:transparent; padding:6px 12px; border-radius:999px; color: var(--ink-700); font-weight:600; font-size:.9rem; transition: all .15s ease; }
 .seg:hover{ background:#eef2f7 }
 .seg.active{ background: linear-gradient(180deg, #549483, #3b7768); color:#fff; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset }
-.seg-group > .seg:first-of-type{ margin-right: 10px; }
+.seg-group > .seg:first-of-type{ margin-right: 5px; }
+/* Page-specific override of ultra segments */
+.wow-ultra .seg{
+  flex: 1 1 220px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #eeee;
+  border-radius: 40px;
+  padding: 5px 10px;
+  position: relative;
+  max-height: 58px;
+}
 /* Hide/show columns for list/map view at all widths */
 /* Map view shows both columns; List view hides map */
 .search-layout.sr-list-only .col-map{ display:none; }
