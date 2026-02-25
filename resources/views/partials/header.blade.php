@@ -2,7 +2,19 @@
     button.md\:hidden.inline-flex.items-center.justify-center.p-2.rounded-md.text-ink-700.hover\:bg-ink-100 {
         border-radius: 40px !important;
     }
-    </style>
+    /* Burger menu button (mobile) */
+    .burgermenu{ border:none; background:none; width:34px; height:26px; position:relative; padding:0; color:#0b1320; }
+    .burgermenu span,
+    .burgermenu span::before,
+    .burgermenu span::after{ content:""; position:absolute; left:0; right:0; height:2px; background: currentColor; transition: transform .35s ease, opacity .25s ease; }
+    .burgermenu span{ top:50%; transform: translateY(-50%); }
+    .burgermenu span::before{ top:-8px }
+    .burgermenu span::after{ top:8px }
+    .burgermenu.opened span{ opacity:0 }
+    .burgermenu.opened span::before{ transform: translateY(8px) rotate(45deg) }
+    .burgermenu.opened span::after{ transform: translateY(-8px) rotate(-45deg) }
+    /* hover state inherit existing bg hover */
+</style>
 
 <div class="pointer-events-none fixed inset-0 -z-10"></div>
         <div class="utility-bar hidden md:block">
@@ -90,13 +102,9 @@
                     <div id="cart-dropdown" class="cart-dropdown" hidden></div>
                 </div><!---->
                 <button
-                    class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100"
-                    aria-label="Toggle menu">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
+                    class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100 burgermenu"
+                    aria-label="Toggle menu" aria-expanded="false">
+                    <span></span>
                 </button>
             </div><!----><!---->
             <!-- Static mega panel (desktop) -->

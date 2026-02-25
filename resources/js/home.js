@@ -28,7 +28,11 @@ function initMobileMenu() {
   const drawer = document.getElementById('mobile-menu');
   if (!toggle || !drawer) return;
   toggle.addEventListener('click', () => {
-    drawer.style.display = drawer.style.display === 'none' || !drawer.style.display ? 'block' : 'none';
+    const isOpen = drawer.style.display === 'block';
+    const nextOpen = !isOpen;
+    drawer.style.display = nextOpen ? 'block' : 'none';
+    toggle.classList.toggle('opened', nextOpen);
+    toggle.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
   });
 }
 
@@ -54,4 +58,3 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initMobileMenu(); } catch {}
   try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch {}
 });
-
