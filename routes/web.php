@@ -30,6 +30,11 @@ use App\Http\Controllers\OnlineNearMeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Api\ProductCardsController;
+use App\Http\Controllers\MindfulTimesController;
+use App\Http\Controllers\ProvidersController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CorporateController;
+use App\Http\Controllers\StaticPagesController;
 
 // Online & Near Me hub
 Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
@@ -61,6 +66,9 @@ Route::get('/locations/{slug}', [LocationsController::class, 'show'])
     ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('locations.show');
 Route::get('/near-me', [LocationsController::class, 'nearMe'])->name('nearMe');
+
+// Misc redirects for broken/legacy links
+Route::redirect('/help/which-therapy', '/plan', 301);
 
 Route::get('/', [HomeController::class, 'index']);
 
@@ -478,14 +486,7 @@ HTML;
         'canonical' => url('/help/gift-cards'),
     ]);
 });
-Route::get('/partners', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Partners',
-        'metaDescription' => 'Partner with We Offer Wellness for referrals and corporate programmes.',
-        'bodyHtml' => '<p>Tell partners how to work with you. Replace with full program details.</p>',
-        'canonical' => url('/partners'),
-    ]);
-});
+Route::get('/partners', [StaticPagesController::class, 'partners']);
 }
 
 // XML sitemap
@@ -495,7 +496,7 @@ Route::get('/sitemap.xml', function () {
     $urls = [];
 
     // Top-level hubs & key pages
-    foreach (['/','/therapies','/events','/workshops','/classes','/retreats','/gifts','/gift-cards','/events-and-workshops','/corporate','/corporate-wellness','/search'] as $p) {
+    foreach (['/','/therapies','/events-workshops','/retreats','/gifts','/gift-cards','/corporate','/corporate-wellness','/search'] as $p) {
         $urls[] = [ 'loc' => $base.$p, 'lastmod' => $now ];
     }
 
@@ -546,42 +547,36 @@ Route::get('/sitemap.xml', function () {
 });
 Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
 
-// General content pages (privacy, terms, cookies) guarded
-if (config('wow.enable_static_pages')) {
-Route::get('/privacy', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Privacy Policy',
-        'metaDescription' => 'How We Offer Wellness collects, uses and protects your information.',
-        'bodyHtml' => '<p>This page describes how we handle your data. Replace with your full policy.</p>',
-        'canonical' => url('/privacy'),
-    ]);
-});
-Route::get('/terms', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Terms & Conditions',
-        'metaDescription' => 'Terms for using We Offer Wellness services and bookings.',
-        'bodyHtml' => '<p>These are your terms. Replace with your full terms of service.</p>',
-        'canonical' => url('/terms'),
-    ]);
-});
-Route::get('/cookies', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Cookies',
-        'metaDescription' => 'Information about cookies and controls.',
-        'bodyHtml' => '<p>We use cookies to improve your experience. Replace with your cookie policy and consent details.</p>',
-        'canonical' => url('/cookies'),
-    ]);
-});
-}
+// General content pages (always available)
+Route::get('/privacy', [StaticPagesController::class, 'privacy']);
+Route::get('/terms', [StaticPagesController::class, 'terms']);
+Route::get('/cookies', [StaticPagesController::class, 'cookies']);
+Route::get('/refunds-and-cancellations', [StaticPagesController::class, 'refunds']);
 
 Route::get('/safety-and-contraindications', [SafetyContraindicationsController::class, 'index'])
     ->name('safety-and-contraindications');
 
-Route::get('/help', [HelpCentreController::class, 'index'])
-    ->name('help');
+Route::get('/help', [HelpCentreController::class, 'index'])->name('help');
 
 Route::get('/about', [AboutController::class, 'index'])
     ->name('about');
+
+// Mindful Times (simple hub)
+Route::get('/mindful-times', [MindfulTimesController::class, 'index']);
+
+// Providers directory
+Route::get('/providers', [ProvidersController::class, 'index']);
+Route::get('/provider/{slug}', [ProvidersController::class, 'show']);
+
+// Contact
+Route::get('/contact', [ContactController::class, 'index']);
+
+// Corporate
+Route::get('/corporate', [CorporateController::class, 'hub']);
+Route::get('/corporate-wellness', [CorporateController::class, 'comingSoon']);
+
+// Gift cards
+Route::get('/gift-cards', [StaticPagesController::class, 'giftCards']);
 
 // Dynamic CMS-like pages stored in shared DB (from Backend admin)
 Route::fallback([\App\Http\Controllers\PageController::class, 'show']);
