@@ -103,8 +103,9 @@
       --meta:12px; --metaIcon:14px;
       --btnH:40px; --btnR:12px; --btnFont:14px;
       --from:12px; --priceNow:22px; --was:12px;
+      --rowH: 280px;
     }
-    .wow-row-card{ background:var(--card); border:2px solid #ccc; border-radius:3px; box-shadow:var(--shadow); overflow:hidden; display:grid;
+    .wow-row-card{ background:var(--card); border:2px solid #ccc; border-radius:3px; box-shadow:var(--shadow); overflow:hidden; display:grid; height: var(--rowH);
       grid-template-columns: minmax(var(--col1Min), var(--col1Flex)) minmax(0, var(--col2Flex)) minmax(var(--col3Min), var(--col3Flex)); transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease; position:relative; }
     .wow-row-card:hover{ transform:translateY(-1px); box-shadow:0 22px 70px rgba(16,24,40,.14); border-color:rgba(16,24,40,.22); }
     .wow-row-card[data-url]{ cursor:pointer; }
@@ -149,7 +150,7 @@
     .wow-btn--primary:hover{ filter:brightness(.98); }
     @media (max-width: 1199.98px){ .wow-row-card{ --col1Min: 220px; --col3Min: 300px; --col1Flex: 0.85fr; --col2Flex: 2.8fr; --col3Flex: 1.05fr; } }
     @media (max-width: 991.98px){ .wow-row-card{ --col1Min: 210px; --col3Min: 290px; --col1Flex: 0.85fr; --col2Flex: 3fr; --col3Flex: 1fr; } }
-    @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; } .wow-row-media{ grid-column:1; height:220px; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr 1.1fr; } }
+    @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; height:auto; } .wow-row-media{ grid-column:1; height:220px; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr 1.1fr; } }
     @media (prefers-reduced-motion: reduce){ .wow-row-card{ transition:none; } .wow-save{ transition:none; } }
   </style>
 @endonce
