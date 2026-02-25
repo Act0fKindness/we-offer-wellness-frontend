@@ -277,21 +277,7 @@ Route::post('/checkout', [CheckoutController::class, 'create']);
 Route::get('/checkout/success', [CheckoutController::class, 'success']);
 Route::get('/checkout/cancel', [CheckoutController::class, 'cancel']);
 
-// Cart APIs
-Route::post('/api/cart/promo', [CartController::class, 'promo']);
-Route::get('/api/cart/count', [CartController::class, 'count']);
-Route::get('/api/cart/mini', [CartController::class, 'mini']);
-Route::post('/api/cart/add', [CartController::class, 'add']);
-Route::post('/api/cart/remove', [CartController::class, 'remove']);
-Route::post('/api/cart/update', [CartController::class, 'update']);
-// V3 subscriber opt-in API (CSRF-protected; same-domain)
-Route::post('/api/v3-subscribers', [V3SubscriberController::class, 'store'])->name('api.v3-subscribers.store');
-Route::post('/api/v3-subscribers/track', [V3SubscriberController::class, 'track'])->name('api.v3-subscribers.track');
-Route::post('/api/cart/gift', function (Request $request) {
-    $code = strtoupper(trim((string)$request->input('code', '')));
-    if ($code !== '') session(['cart_gift_code' => $code]); else session()->forget('cart_gift_code');
-    return response()->json(['ok' => true, 'code' => $code]);
-});
+// API routes moved to routes/api.php
 
 // Providers handled via ProvidersController below
 

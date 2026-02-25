@@ -88,5 +88,11 @@ Product::query()->withMin('variants','price')->find($id);
         $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
         return response()->json(['ok'=>true])->withCookie($cookie);
     }
-}
 
+    public function gift(Request $request)
+    {
+        $code = strtoupper(trim((string)$request->input('code', '')));
+        if ($code !== '') session(['cart_gift_code' => $code]); else session()->forget('cart_gift_code');
+        return response()->json(['ok' => true, 'code' => $code]);
+    }
+}
