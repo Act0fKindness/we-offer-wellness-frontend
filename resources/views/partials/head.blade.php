@@ -22958,8 +22958,9 @@ a:hover {
 }
 .wow-ultra .bar{
     background:#fff;
-    border-radius:18px;
+    border-radius:23px;
     padding:5px;
+    border:3px solid rgba(0, 0, 0, 0.1);
     box-shadow:var(--shadow);
     display:flex;
     gap:5px;
