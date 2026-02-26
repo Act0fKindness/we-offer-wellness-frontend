@@ -5,10 +5,9 @@
     $status = $status ?? session('status');
     $profileUser = auth()->user();
     $firstName = trim($profileUser->first_name ?: \Illuminate\Support\Str::of($profileUser->name ?? '')->before(' '));
-    $avatarPath = $profileUser->profile_picture ?? null;
-    if ($avatarPath && !\Illuminate\Support\Str::startsWith($avatarPath, ['http://', 'https://'])) {
-        $avatarPath = \Illuminate\Support\Facades\Storage::disk('public')->url($avatarPath);
-    }
+    $lastName = trim($profileUser->last_name ?: \Illuminate\Support\Str::of($profileUser->name ?? '')->after(' '));
+    $initials = mb_strtoupper(mb_substr($firstName ?: 'You', 0, 1).mb_substr($lastName ?: '', 0, 1));
+    $initials = trim($initials) !== '' ? $initials : 'YOU';
 @endphp
 
 <div class="account-card">
@@ -39,13 +38,7 @@
       @method('PATCH')
 
       <div class="profile-photo-field">
-        <div class="account-avatar account-avatar--profile" aria-hidden="true">
-          @if($avatarPath)
-            <img src="{{ $avatarPath }}" alt="">
-          @else
-            <span>{{ $firstName ?: 'You' }}</span>
-          @endif
-        </div>
+        <div class="account-avatar account-avatar--profile" aria-hidden="true"><span>{{ $initials }}</span></div>
         <label class="btn-wow btn-wow--outline btn-sm" for="profile-picture-upload">Upload photo</label>
         <input id="profile-picture-upload" type="file" name="profile_picture" accept="image/*" hidden>
       </div>

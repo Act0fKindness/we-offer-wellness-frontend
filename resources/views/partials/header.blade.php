@@ -107,19 +107,9 @@
                                 $headerFullName = trim($headerFirst.' '.$headerLast) ?: ($headerRawName ?: 'Customer');
                                 $headerInitials = mb_strtoupper(mb_substr($headerFirst ?: $headerFullName, 0, 1).mb_substr($headerLast ?: '', 0, 1));
                                 $headerInitials = trim($headerInitials) !== '' ? $headerInitials : 'YOU';
-                                $headerAvatar = $headerUser?->profile_picture;
-                                if ($headerAvatar && !\Illuminate\Support\Str::startsWith($headerAvatar, ['http://', 'https://'])) {
-                                    $headerAvatar = \Illuminate\Support\Facades\Storage::disk('public')->url($headerAvatar);
-                                }
                             @endphp
                             <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
-                                <span class="account-trigger__avatar" aria-hidden="true">
-                                    @if($headerAvatar)
-                                        <img src="{{ $headerAvatar }}" alt="">
-                                    @else
-                                        {{ $headerInitials }}
-                                    @endif
-                                </span>
+                                <span class="account-trigger__avatar" aria-hidden="true">{{ $headerInitials }}</span>
                                 <span class="sr-only">Open menu</span>
                             </button>
                             <div class="account-dropdown" id="accountDropdown" hidden>
