@@ -161,7 +161,12 @@
       var id = row.getAttribute('data-id'); var inp = row.querySelector('.qty-input'); var v = parseInt(inp.value||'1',10); v = isFinite(v)?v:1; v += (e.target.classList.contains('js-qinc')?1:-1); if(v<1) v=1; inp.value = v; recalc(); post('/api/cart/update', { id:id, qty:v }); return;
     }
     if(e.target.matches('[data-remove]')){
-      var id = e.target.getAttribute('data-remove'); post('/api/cart/remove', { id:id }).then(function(){ var r=document.querySelector('.cart-row[data-id="'+id+'"]'); if(r){ r.remove(); recalc(); if(!document.querySelector('.cart-row')){ window.location.reload(); } } }); return;
+      var id = e.target.getAttribute('data-remove');
+      // Update LS
+      try{
+        var raw = localStorage.getItem('wow_cart'); var data = raw?JSON.parse(raw):{}; var arr = Array.isArray(data.items)?data.items:[]; data.items = arr.filter(function(it){ return String(it.id)!==String(id) }); localStorage.setItem('wow_cart', JSON.stringify(data));
+      }catch(_){ }
+      post('/api/cart/remove', { id:id }).then(function(){ var r=document.querySelector('.cart-row[data-id="'+id+'"]'); if(r){ r.remove(); recalc(); if(!document.querySelector('.cart-row')){ window.location.reload(); } } }); return;
     }
   });
   document.getElementById('apply-promo')?.addEventListener('click', function(){

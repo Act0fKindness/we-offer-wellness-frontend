@@ -96,17 +96,21 @@ document.addEventListener('DOMContentLoaded', () => {
         try{
           const body = panel.querySelector('#cartdd-body');
           if(!body) return;
-          if(!Array.isArray(items) || items.length===0){ body.innerHTML = '<div class="cartdd-empty">Your cart is empty</div>'; updateTotals([]); return; }
+          if(!Array.isArray(items) || items.length===0){ body.innerHTML = '<div class="cartdd-empty">Your cart is empty</div>'; updateTotals([]); updateBadgeFrom([]); return; }
           body.innerHTML = items.map(function(it){
             var img = it.image ? '<div class="cartdd-img"><img src="'+String(it.image).replace(/"/g,'&quot;')+'" alt=""></div>' : '<div class="cartdd-img"></div>';
             var title = String(it.title||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
             var qty = Number(it.qty||1);
             var price = (typeof it.price!== 'undefined') ? money(it.price) : '';
             var amt = (it.price!=null) ? money((Number(it.price)||0) * qty) : '';
-            return '<div class="cartdd-item">'+ img +'<div class="cartdd-info"><a class="cartdd-title" href="'+(it.url||'#')+'">'+title+'</a><div class="cartdd-meta">Qty '+qty+(price?(' • '+price+' each'):'')+'</div></div><div class="cartdd-amt">'+amt+'</div></div>';
+            return '<div class="cartdd-item" data-id="'+String(it.id||'')+'">'+ img +'<div class="cartdd-info"><a class="cartdd-title" href="'+(it.url||'#')+'">'+title+'</a><div class="cartdd-meta">Qty '+qty+(price?(' • '+price+' each'):'')+' <button class="remove-btn js-remove" type="button" data-remove="'+String(it.id||'')+'">Remove</button></div></div><div class="cartdd-amt">'+amt+'</div></div>';
           }).join('');
           updateTotals(items);
+          updateBadgeFrom(items);
         }catch(_){ /* no-op */ }
+      }
+      function updateBadgeFrom(items){
+        try{ var b=document.querySelector('.cart-badge'); if(!b) return; var c=0; (items||[]).forEach(function(it){ c += Number(it.qty||1)||1; }); b.textContent=String(c); b.style.display=c>0?'inline-block':'none'; }catch(_){ }
       }
       function readLocalCart(){
         try{
@@ -114,9 +118,11 @@ document.addEventListener('DOMContentLoaded', () => {
           var data = JSON.parse(raw);
           var items = data && (data.items||data.cart||data) || [];
           if(!Array.isArray(items)) return [];
-          return items.map(function(x){ return { title:x.title||x.name, qty:Number(x.qty||x.quantity||1), price:x.price_min||x.price, image:x.image||x.img, url:x.url||x.href } });
+          return items.map(function(x){ return { title:x.title||x.name, qty:Number(x.qty||x.quantity||1), price:x.price_min||x.price, image:x.image||x.img, url:x.url||x.href, id:x.id } });
         }catch(_){ return []; }
       }
+      function writeLocalCart(items){ try{ var bag={ items: items||[] }; (items||[]).forEach(function(it){ if(it && typeof it.id!=='undefined'){ bag[String(it.id)] = it; } }); localStorage.setItem('wow_cart', JSON.stringify(bag)); }catch(_){ }
+      function removeFromLocalCart(id){ try{ var items=readLocalCart().filter(function(it){ return String(it.id)!==String(id); }); writeLocalCart(items); return items; }catch(_){ return []; } }
       function loadMini(){
         if (loaded) return; loaded = true;
         fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'text/html' }, credentials:'same-origin' })
@@ -145,6 +151,17 @@ document.addEventListener('DOMContentLoaded', () => {
       // Expose helpers for external triggers (e.g., add-to-cart)
       try { window.__cartDropdownShow = show; } catch(_){ }
       try { window.__cartDropdownRender = function(items){ try{ renderItems(items); panel.hidden=false; }catch(_){ } } } catch(_){ }
+      // Remove handler inside dropdown
+      try{
+        panel.addEventListener('click', function(e){
+          var btn = e.target.closest('.js-remove,[data-remove]'); if(!btn) return;
+          e.preventDefault(); e.stopPropagation();
+          var id = btn.getAttribute('data-remove') || btn.dataset.remove || btn.getAttribute('data-id'); if(!id) return;
+          var next = removeFromLocalCart(id); renderItems(next);
+          // server remove in background
+          try { var token=(document.querySelector('meta[name="csrf-token"]')?.content)||decodeURIComponent((document.cookie.split('; ').find(r=>r.startsWith('XSRF-TOKEN='))||'').split('=')[1]||''); fetch('/api/cart/remove', { method:'POST', headers:{ 'Content-Type':'application/json','X-CSRF-TOKEN':token }, credentials:'same-origin', body: JSON.stringify({ id:id }) }); } catch(_){ }
+        });
+      }catch(_){ }
       // Upsell loader
       try{
         var upsellLoaded = false;
