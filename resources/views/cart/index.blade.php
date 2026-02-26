@@ -14,17 +14,17 @@
       $total = max(0, $subtotal - $discount);
     @endphp
     @if(empty($items))
-      <div class="card p-8 text-ink-700 text-center">
-        <div class="mb-2" style="font-size:3rem;line-height:1">🛒</div>
-        <h3 class="m-0">Your cart is empty</h3>
-        <p class="text-ink-600 mt-1">Find something you’ll love.</p>
-        <div class="mt-3">
+      <div class="cart-empty">
+        <div class="cart-empty-card">
+          <div class="icon">🛒</div>
+          <h3>Your cart is empty</h3>
+          <p>Discover experiences tailored to you.</p>
           <a class="btn-wow btn-wow--cta" href="/search">Browse listings</a>
         </div>
       </div>
     @else
       <div class="cart-grid">
-        <div class="cart-main card p-0">
+        <div class="cart-main card p-0 cart-main--elev">
           <div class="cart-head">
             <div>Item</div>
             <div>Qty</div>
@@ -58,7 +58,7 @@
           </div>
         </div>
 
-        <aside class="cart-side card p-0" id="checkout">
+        <aside class="cart-side card p-0 cart-side--elev" id="checkout">
           <div class="sum-head">Order summary</div>
           <div class="sum-body">
             <div class="sum-row"><span>Subtotal</span><strong id="sum-subtotal">£{{ number_format($subtotal, 2) }}</strong></div>
@@ -136,6 +136,12 @@
 </script>
 
 <style>
+.cart-empty{ display:grid; place-items:center; padding:40px 0 }
+.cart-empty-card{ width:min(640px, 96vw); border:1px solid #e6ebf2; border-radius:16px; background:linear-gradient(180deg,#ffffff, #f8fafc); box-shadow: 0 30px 80px rgba(16,24,40,.12); padding:32px; text-align:center }
+.cart-empty-card .icon{ font-size:3rem; line-height:1; margin-bottom:8px }
+.cart-empty-card h3{ margin:6px 0 4px; font-size:1.5rem; font-weight:800; color:#0b1323 }
+.cart-empty-card p{ margin:0 0 16px; color:#64748b; font-size:1rem }
+.cart-main--elev, .cart-side--elev{ border-radius:16px; overflow:hidden; border:1px solid #e6ebf2; box-shadow: 0 20px 60px rgba(16,24,40,.10) }
 .cart-grid{ display:grid; grid-template-columns: 1fr; gap:16px }
 @media (min-width: 1024px){ .cart-grid{ grid-template-columns: 1.6fr 1fr } }
 .cart-head{ display:grid; grid-template-columns: 1fr 140px 120px; gap:10px; padding:14px 16px; border-bottom:1px solid #e5e7eb; background:linear-gradient(180deg,#fff,#f9fafb) }

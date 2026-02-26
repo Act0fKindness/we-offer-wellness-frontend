@@ -60,4 +60,26 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initMegaMenu(); } catch {}
   try { initMobileMenu(); } catch {}
   try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch {}
+  try {
+    // Cart dropdown: hover on desktop shows mini cart; mobile click navigates
+    const wrap = document.querySelector('.cart-wrap');
+    const link = document.querySelector('.cart-wrap .cart-link');
+    const panel = document.getElementById('cart-dropdown');
+    if (wrap && link && panel) {
+      function isDesktop(){ try { return window.matchMedia('(min-width: 992px)').matches } catch { return true } }
+      let loaded = false; let hideTimer = null;
+      function loadMini(){
+        if (loaded) return; loaded = true;
+        fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'text/html' }, credentials:'same-origin' })
+          .then(r=>r.ok?r.text():Promise.reject()).then(html => { panel.querySelector('#cartdd-body').innerHTML = html; })
+          .catch(() => { /* keep empty state */ });
+      }
+      function show(){ if(!isDesktop()) return; loadMini(); panel.hidden = false; }
+      function hide(){ panel.hidden = true; }
+      wrap.addEventListener('mouseenter', () => { if (hideTimer) { clearTimeout(hideTimer); hideTimer=null; } show(); });
+      wrap.addEventListener('mouseleave', () => { hideTimer = setTimeout(hide, 120); });
+      // Prevent default on desktop clicks to keep dropdown open; on mobile it navigates
+      link.addEventListener('click', (e) => { if (isDesktop()) { e.preventDefault(); show(); } });
+    }
+  } catch {}
 });

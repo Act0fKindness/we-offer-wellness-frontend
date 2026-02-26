@@ -91,11 +91,20 @@
                               d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
                     </svg>
                 </a>
-                    <a class="icon-btn position-relative" aria-label="Open cart" href="/cart">
+                    <div class="cart-wrap position-relative">
+                    <a class="icon-btn position-relative cart-link" aria-label="Open cart" href="/cart">
                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"></path>
                         </svg>
                     </a>
+                    <div id="cart-dropdown" class="cart-dropdown2" hidden>
+                        <div class="cartdd-head">Your cart</div>
+                        <div class="cartdd-body" id="cartdd-body">
+                            <div class="cartdd-empty">Your cart is empty</div>
+                        </div>
+                        <div class="cartdd-foot"><a href="/cart" class="visit-link">Visit cart</a></div>
+                    </div>
+                    </div>
                 </div><!---->
                 <button
                     class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100 burgermenu"
@@ -198,6 +207,23 @@
 }
 /* Ensure utility bar sits above the overlay */
 .utility-bar{ position: relative; z-index: 41; }
+/* Cart dropdown (desktop hover) */
+.cart-wrap{ position: relative; }
+.cart-dropdown2{ position:absolute; right:0; top:calc(100% + 10px); width: min(380px, 92vw); background:#fff; border:1px solid var(--ink-200); border-radius:14px; box-shadow: 0 24px 60px rgba(16,24,40,.16); overflow:hidden; z-index: 45; }
+.cartdd-head{ padding:10px 14px; font-weight:700; background: linear-gradient(180deg,#fff,#f8fafc); border-bottom:1px solid #eef2f7 }
+.cartdd-body{ max-height: 380px; overflow:auto }
+.cartdd-empty{ padding:18px; color: var(--ink-600); text-align:center }
+.cartdd-item{ display:flex; gap:10px; align-items:center; padding:12px 14px; border-bottom:1px solid #f1f5f9; }
+.cartdd-item:last-child{ border-bottom:0 }
+.cartdd-img{ width:54px; height:54px; border-radius:10px; overflow:hidden; border:1px solid #eceff3; background:#fafafa }
+.cartdd-img img{ width:100%; height:100%; object-fit:cover; display:block }
+.cartdd-info{ flex:1 1 auto; min-width:0 }
+.cartdd-title{ font-weight:600; color:#0b1323; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-decoration:none }
+.cartdd-meta{ font-size:.9rem; color:#64748b }
+.cartdd-amt{ font-weight:700; color:#0b1323; white-space:nowrap }
+.cartdd-foot{ padding:10px 14px; border-top:1px solid #eef2f7; background:#fff; text-align:right }
+.visit-link{ font-weight:700; color:#2c6bed; text-decoration:none }
+.visit-link:hover{ text-decoration:underline }
 </style>
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">
