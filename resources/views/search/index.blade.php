@@ -312,7 +312,7 @@
             container: mapEl,
             style: 'mapbox://styles/mapbox/streets-v12',
             center: center,
-            zoom: 12,
+            zoom: 13,
             pitch: 0,
             bearing: 0,
             antialias: true,
@@ -350,15 +350,29 @@
               var marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([Number(p.lng), Number(p.lat)]).setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML('<div style="font-weight:600">'+(p.title||'')+'</div>')).addTo(map);
               var pid = String(p.pid||p.id||'');
               (window.__wowMarkersByPid[pid] = window.__wowMarkersByPid[pid] || []).push({ marker: marker, el: el });
+              // Click marker -> scroll to corresponding list item and lightly zoom
+              try {
+                el.addEventListener('click', function(e){
+                  try{ e.stopPropagation(); }catch(_e){}
+                  var item = document.querySelector('[data-pid="'+pid+'"]');
+                  if (item) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Optional: add a transient highlight
+                    item.classList.add('is-active');
+                    setTimeout(function(){ try{ item.classList.remove('is-active'); }catch(_){ } }, 1200);
+                  }
+                  try{ map.easeTo({ center: [Number(p.lng), Number(p.lat)], zoom: Math.max(map.getZoom(), 14), duration: 500 }); }catch(_e){}
+                });
+              } catch(_e){}
               try { bounds.extend([Number(p.lng), Number(p.lat)]); added++; } catch(e){}
             });
             try {
               if (added > 1) {
-                map.fitBounds(bounds, { padding: 100, maxZoom: 12, duration: 400 });
+                map.fitBounds(bounds, { padding: 100, maxZoom: 13, duration: 500 });
               } else if (added === 1) {
                 var only = data[0];
                 map.setCenter([Number(only.lng), Number(only.lat)]);
-                map.setZoom(13);
+                map.setZoom(14);
               }
             } catch(e){}
           });
