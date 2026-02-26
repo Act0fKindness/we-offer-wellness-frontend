@@ -13,10 +13,9 @@
 
 <aside class="account-sidebar" aria-label="Customer account navigation">
   <div class="account-card account-user-card">
-    <div class="account-avatar" aria-hidden="true"><span>{{ $initials }}</span></div>
+    <span class="account-trigger__avatar account-user-avatar" aria-hidden="true">{{ $initials }}</span>
     <div>
       <div class="account-user-name">{{ $fullName }}</div>
-      <div class="account-user-email">{{ optional($accountUser)->email ?? '—' }}</div>
     </div>
   </div>
   <nav class="account-nav" aria-label="Account sections">

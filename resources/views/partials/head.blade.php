@@ -109,6 +109,7 @@
 .account-link--logout{ background:none; border:0; padding:0; font:inherit; color:inherit; text-align:left; cursor:pointer; }
 .account-avatar{ width:56px; height:56px; border-radius:999px; background: var(--brand-100); color: var(--brand-800); font-weight:700; display:inline-flex; align-items:center; justify-content:center; text-transform:capitalize; overflow:hidden; }
 .account-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+.account-user-avatar{ width:48px; height:48px; font-size:1rem; margin-right:8px; }
 .account-avatar--profile{ width:74px; height:74px; font-size:1.1rem; }
 .profile-photo-field{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .account-trigger__avatar{ width:36px; height:36px; border-radius:999px; background:var(--ink-100); color:var(--ink-800); font-weight:700; display:inline-flex; align-items:center; justify-content:center; text-transform:uppercase; overflow:hidden; }
