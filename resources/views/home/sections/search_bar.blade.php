@@ -153,7 +153,12 @@
 
 <style>
 @media (max-width: 991.98px){
-  .wow-ultra .bar{ background:#fff; border-radius:40px; position: relative; }
+  .wow-ultra .bar{
+    background: rgba(0,0,0,0.1);
+    border-radius:40px;
+    border:none;
+    position: relative;
+  }
   .wow-ultra .seg{ border-radius:40px; }
   /* Hide Where/When/Who on mobile */
   #home-template-seg-where,

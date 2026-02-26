@@ -221,7 +221,14 @@
   /* Hide view/mode segmented controls on mobile */
   .search-controls{ display:none !important; }
   /* Mobile search bar tweaks */
-  .wow-ultra .bar{ background:#fff; border-radius:40px; position: relative; }
+  .wow-ultra .bar{
+    background: rgba(0,0,0,0.1);
+    border-radius:40px;
+    border:none;
+    position: sticky;
+    top: 100px;
+    z-index: 10;
+  }
   .wow-ultra .seg{ border-radius:40px; }
   .btn-wow.is-squarish.btn-xl{
     border-radius:50% !important;
