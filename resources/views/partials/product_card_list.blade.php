@@ -112,7 +112,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
-            margin-bottom: 10px !important;
+            margin-bottom: 0px !important;
         }
 
     .wow-row-media {
