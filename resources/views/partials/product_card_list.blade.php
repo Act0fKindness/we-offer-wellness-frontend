@@ -144,7 +144,33 @@
     .wow-price .from{ font-size:var(--from); color:rgba(11,18,32,.70); }
     .wow-price .now{ font-size:var(--priceNow); font-weight:900; letter-spacing:-.02em; }
     .wow-price .was{ font-size:var(--was); color:rgba(11,18,32,.75); }
-    .wow-actions{ display:grid; grid-template-columns:1fr; gap:10px; width:100%; min-width:0; }
+    .wow-actions{ display:grid; grid-template-columns: 1fr 1.15fr; gap:10px; width:100%; min-width:0; }
+    /* Button styles to match product_card */
+    .wow-row-card .btn{
+      height: var(--btnH);
+      border-radius: var(--btnR);
+      font-size: var(--btnFont);
+      font-weight: 400;
+      border: 1px solid rgba(16,24,40,.22);
+      background: #fff !important;
+      color: rgba(11,18,32,.82);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 22px rgba(16,24,40,.08);
+    }
+    .wow-row-card .btn--primary{
+      border-color: rgba(0,0,0,.10);
+      color: #fff;
+      background: #549483 !important;
+    }
+    .wow-row-card .btn:hover,
+    .wow-row-card .btn:focus{
+      background: #f7f7f7 !important;
+      color: rgba(11,18,32,.90);
+      border-color: rgba(0,0,0,.18);
+    }
     .wow-btn{ height:var(--btnH); border-radius:var(--btnR); font-size:var(--btnFont); font-weight:800; border:1px solid rgba(16,24,40,.18); background:#fff; color:rgba(11,18,32,.84); box-shadow:0 10px 22px rgba(16,24,40,.08); display:flex; align-items:center; justify-content:center; user-select:none; }
     .wow-btn:hover{ background:#f7f7f7; border-color:rgba(16,24,40,.24); }
     .wow-btn--primary{ background:linear-gradient(180deg,#549483,#3f7f6f); color:#fff; border-color:rgba(0,0,0,.08); }
