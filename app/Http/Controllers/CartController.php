@@ -3,28 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Http\Controllers\CheckoutResultController;
 use Illuminate\Http\Request;
 class CartController extends Controller
 {
     public function page(Request $request)
     {
-        if ($request->boolean('paid')) {
-            $orderId = (int) $request->query('order');
-            $order = $orderId ? Order::find($orderId) : null;
-            if ($order) {
-                $token = CheckoutResultController::tokenForOrder($order);
-                return redirect()->route('checkout.success', ['order' => $order->id, 'token' => $token]);
-            }
-        }
-
-        if ($request->boolean('cancel')) {
-            $orderId = (int) $request->query('order');
-            if ($orderId) {
-                return redirect()->route('checkout.cancel', ['order' => $orderId]);
-            }
-        }
-
         $items = session('cart.items', []);
         if (empty($items)) {
             $cookie = request()->cookie('wow_cart');
