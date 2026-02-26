@@ -34,7 +34,7 @@
             --pad: clamp(18px, 2.2vw, 32px);
         }
         * { box-sizing: border-box; }
-        html, body { height: 100%; }
+        html, body { min-height: 100%; }
         body.account-auth-body {
             margin: 0;
             font-family: var(--font);
@@ -44,10 +44,12 @@
                 radial-gradient(900px 700px at 86% 18%, rgba(11,18,32,.08), transparent 60%),
                 linear-gradient(180deg, #F5F7FA, var(--bg));
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 26px;
+            padding: 50px 26px;
+            min-height: 100vh;
             overflow-x: hidden;
+            overflow-y: auto;
         }
         body.account-auth-body::before {
             content:"";
@@ -69,6 +71,7 @@
             display: grid;
             grid-template-columns: 1.05fr 0.95fr;
             isolation: isolate;
+            margin: 0 auto;
         }
         .account-auth-left {
             display: flex;
