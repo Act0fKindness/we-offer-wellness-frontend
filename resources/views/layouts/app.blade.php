@@ -49,12 +49,17 @@
       whereEditor.addEventListener('focus', function(){ openPane('where') });
       whereEditor.addEventListener('click', function(){ openPane('where') });
     }
+    // Also open when clicking the whole segment (icon/label area)
+    var segWhere = byId('seg-where');
+    if(segWhere){ segWhere.addEventListener('click', function(){ openPane('where') }) }
 
     var whenInput = byId('when');
     if(whenInput){
       whenInput.addEventListener('focus', function(){ openPane('when') });
       whenInput.addEventListener('click', function(){ openPane('when') });
     }
+    var segWhen = byId('seg-when');
+    if(segWhen){ segWhen.addEventListener('click', function(){ openPane('when') }) }
 
     var whoSeg = byId('seg-who');
     if(whoSeg){
@@ -63,7 +68,7 @@
 
     // Close when clicking outside
     document.addEventListener('click', function(e){
-      if(!root.contains(e.target)) hideAll();
+      try{ if(root && !root.contains(e.target)) hideAll(); }catch(_){ /* no-op */ }
     });
     // ESC closes
     document.addEventListener('keydown', function(e){ if(e.key==='Escape') hideAll() });
@@ -89,6 +94,8 @@
     }
     var whoDone = byId('who-done');
     if(whoDone){ whoDone.addEventListener('click', function(){ hideAll() }) }
+    // Ensure panes start closed on load
+    try{ hideAll(); } catch(_){ }
 
     // Submit handler → build /search URL
     try {
