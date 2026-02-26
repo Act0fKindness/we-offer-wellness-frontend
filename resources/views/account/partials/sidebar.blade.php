@@ -37,5 +37,9 @@
       <a class="btn-wow btn-wow--outline btn-sm" href="/contact">Message support</a>
       <a class="account-support__link" href="mailto:hello@weofferwellness.co.uk">hello@weofferwellness.co.uk</a>
     </div>
+    <form method="POST" action="{{ route('logout') }}" class="account-logout-form">
+      @csrf
+      <button type="submit" class="btn-wow btn-wow--outline btn-sm" style="width:100%; margin-top:10px;">Log out</button>
+    </form>
   </div>
 </aside>
