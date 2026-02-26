@@ -306,8 +306,8 @@
 #visit-link{ font-weight:700; color:#2c6bed; text-decoration:none }
 #visit-link:hover{ text-decoration:underline }
 .account-links-stack{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
-.account-links-stack .account-link{ font-weight:700; color:var(--ink-800); }
-.accountdd-logout{ margin-top:10px; }
+.account-links-stack .account-link{ font-weight:700; color:var(--ink-800); font-size:14px; }
+.accountdd-logout{ margin-top:15px; }
 .accountdd-logout__btn{ width:100%; }
 </style>
         <!-- Mobile menu (drawer) -->
