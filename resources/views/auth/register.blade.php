@@ -78,7 +78,7 @@
       <a href="{{ route('login', ['redirect' => $redirect ?? '/cart']) }}">Login</a>
     </div>
 
-    <button class="account-auth-btn primary" id="registerSubmit" type="submit">
+    <button class="btn btn--primary account-auth-btn" id="registerSubmit" type="submit">
       <span class="spinner" aria-hidden="true"></span>
       Create account
     </button>

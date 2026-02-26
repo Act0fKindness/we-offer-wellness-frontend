@@ -97,13 +97,48 @@
         .account-auth-row a:hover { text-decoration:underline; }
         .account-auth-check { display:flex; align-items:center; gap:10px; user-select:none; }
         .account-auth-check input { width:18px; height:18px; accent-color: var(--wow-green); }
-        .account-auth-btn { width:100%; border: 1px solid transparent; border-radius: 12px; padding: 12px 14px; font-family: var(--ui); font-weight: 700; font-size: 14px; cursor:pointer; transition: transform .15s ease, background .15s ease, box-shadow .15s ease; display:inline-flex; align-items:center; justify-content:center; gap: 10px; min-height: 46px; user-select:none; }
-        .account-auth-btn.primary { background: var(--wow-green); color:#fff; box-shadow: 0 18px 30px rgba(74,136,120,.22); }
-        .account-auth-btn.primary:hover { background: var(--wow-green-hover); transform: translateY(-1px); }
-        .account-auth-btn.primary:active { background: var(--wow-green-press); transform: translateY(0); }
-        .account-auth-btn.ghost { background:#fff; border-color: rgba(16,24,40,.16); color: rgba(11,18,32,.80); box-shadow: 0 12px 18px rgba(16,24,40,.06); }
-        .account-auth-btn.ghost:hover { transform: translateY(-1px); }
-        .account-auth-btn.ghost:active { transform: translateY(0); }
+        .btn {
+            width:100%;
+            border: 1px solid rgba(16,24,40,.22);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-family: var(--ui);
+            font-size: 16px;
+            font-weight: 400;
+            cursor:pointer;
+            transition: transform .15s ease, background .15s ease, box-shadow .15s ease, color .15s ease, border-color .15s ease;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap: 10px;
+            min-height: 46px;
+            user-select:none;
+            background:#fff !important;
+            color: rgba(11,18,32,.82);
+            box-shadow: 0 10px 22px rgba(16,24,40,.08);
+            text-decoration:none;
+        }
+        .btn:hover,
+        .btn:focus {
+            background:#f7f7f7 !important;
+            color: rgba(11,18,32,.90);
+            border-color: rgba(0,0,0,.18);
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn--primary {
+            border-color: rgba(0,0,0,.10);
+            color:#fff;
+            background:#549483 !important;
+        }
+        .btn--primary:hover,
+        .btn--primary:focus {
+            background:#4a8575 !important;
+            color:#fff;
+        }
+        .account-auth-btn { width:100%; border-radius:12px; font-weight:700; font-size:14px; }
         .account-auth-inline { margin-top: 10px; font-family: var(--ui); font-size: 13px; color: rgba(11,18,32,.72); }
         .account-auth-inline a { color: var(--wow-green); text-decoration:none; font-weight:700; }
         .account-auth-inline a:hover { text-decoration:underline; }

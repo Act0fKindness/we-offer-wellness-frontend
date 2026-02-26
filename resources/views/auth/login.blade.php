@@ -48,7 +48,7 @@
       <a href="{{ route('password.request') }}">Forgot password?</a>
     </div>
 
-    <button class="account-auth-btn primary" id="loginSubmit" type="submit">
+    <button class="btn btn--primary account-auth-btn" id="loginSubmit" type="submit">
       <span class="spinner" aria-hidden="true"></span>
       Log in
     </button>
