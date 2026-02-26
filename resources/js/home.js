@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Pair it with a quick reset',
             'Top-rated online sessions',
             'Online best-sellers this week',
-            'Most booked online experiences',
+              'Most booked online therapies',
             'Finish strong: add an online upgrade'
           ],
           'in-person-only': [

@@ -1,7 +1,7 @@
 <section class="section" aria-labelledby="studio-entry-title">
     <div class="container-page">
         <h2 id="studio-entry-title" class="section-title">Are you a practitioner? Run your wellness business with AI.</h2>
-        <p class="text-muted">Create experiences, manage bookings, message clients, run sessions, and grow — all in We Offer Wellness Studio.</p>
+        <p class="text-muted">Create therapies, manage bookings, message clients, run sessions, and grow — all in We Offer Wellness Studio.</p>
         <div class="row g-3 mt-1">
             <div class="col-12 col-md-4"><div class="card p-3 h-100"><div class="fw-semibold">AI listing builder</div><div class="text-muted mt-1">Turn notes into polished listings.</div></div></div>
             <div class="col-12 col-md-4"><div class="card p-3 h-100"><div class="fw-semibold">Smart pricing & packages</div><div class="text-muted mt-1">Bundles that convert.</div></div></div>
@@ -16,4 +16,3 @@
         </div>
     </div>
 </section>
-

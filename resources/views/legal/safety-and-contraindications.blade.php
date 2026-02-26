@@ -3,7 +3,7 @@
 
 @php
     $pageTitle = $title ?? 'Safety & Contraindications';
-    $pageDescription = $metaDescription ?? 'Safety guidance and contraindications for wellness experiences on We Offer Wellness®.';
+    $pageDescription = $metaDescription ?? 'Safety guidance and contraindications for wellness therapies on We Offer Wellness®.';
     $pageCanonical = $canonical ?? url('/safety-and-contraindications');
 
     $faqs = [
@@ -13,7 +13,7 @@
 We review profiles for clarity and alignment with our wellness guidelines and may remove providers who do not meet our standards or where we have concerns about safety or professionalism.',
         ],
         [
-            'q' => 'Are your experiences safe?',
+            'q' => 'Are your therapies safe?',
             'a' => 'Yes. Our providers follow industry best practices for health, safety and hygiene. If you have specific concerns, feel free to ask before booking.',
         ],
         [

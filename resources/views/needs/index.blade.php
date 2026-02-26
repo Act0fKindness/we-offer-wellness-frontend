@@ -14,7 +14,7 @@
       <div class="kicker">Browse</div>
       <h1>By Need</h1>
       <p class="text-ink-600 mt-2" style="max-width:70ch;">
-        Start with what you need most — then we’ll match you with experiences and therapies that fit.
+        Start with what you need most — then we’ll match you with therapies that fit.
       </p>
     </div>
 

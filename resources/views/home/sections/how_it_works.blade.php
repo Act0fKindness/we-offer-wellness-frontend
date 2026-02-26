@@ -12,7 +12,7 @@
             </div>
             <div class="col-12 col-md-4">
                 <div class="card p-3 h-100">
-                    <div class="fw-semibold">2. Personalise your experience</div>
+                    <div class="fw-semibold">2. Personalise your therapy</div>
                     <div class="text-muted mt-1">Online or in‑person, time, budget and level that fits your life.</div>
                     <div class="small text-muted mt-2">Flexible • Simple booking</div>
                 </div>

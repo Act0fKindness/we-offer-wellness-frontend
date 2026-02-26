@@ -67,9 +67,9 @@
               <div class="empty-illu" aria-hidden="true">🛒</div>
               <div>
                 <h2>Your cart is empty</h2>
-                <p>Add an experience and you’re good to go.</p>
+                <p>Add a therapy and you’re good to go.</p>
                 <div class="empty-actions">
-                  <a class="btn-wow btn-wow--cta" href="/search">Browse experiences</a>
+                  <a class="btn-wow btn-wow--cta" href="/search">Browse therapies</a>
                 </div>
               </div>
             </div>

@@ -75,7 +75,7 @@
         @foreach($items as $it)
           @php
             $title = $it['title'] ?? 'Untitled';
-            $type  = $it['type'] ?? ($it['offering_type'] ?? 'Experience');
+            $type  = $it['type'] ?? ($it['offering_type'] ?? 'Therapy');
             $img   = $it['image'] ?? ($it['featured_image'] ?? null);
 
             $url = $it['url'] ?? ($it['handle'] ?? null);

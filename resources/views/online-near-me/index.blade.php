@@ -26,7 +26,7 @@
           <div class="wow-type text-muted">Option</div>
           <div class="wow-title">Online</div>
           <div class="text-ink-600 mt-2">
-            Experiences you can join from anywhere — calm, convenient, no travel required.
+            Therapies you can join from anywhere — calm, convenient, no travel required.
           </div>
         </div>
         <div class="wow-bottom">

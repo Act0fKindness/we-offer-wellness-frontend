@@ -12,7 +12,7 @@
                     <div id="home-sticky-what-pane" class="pane narrow d-none" role="listbox"
                          aria-label="What suggestions">
                         <div id="home-sticky-what-list" class="listy">
-                            <div class="section-title">Experiences</div>
+                            <div class="section-title">Therapies</div>
                             <div>
                                 <button type="button" class="item" role="option" data-value="Sound Bath">
                                     <i class="bi bi-dot"></i>

@@ -14,7 +14,7 @@
       <div class="kicker">Browse</div>
       <h1>Locations</h1>
       <p class="text-ink-600 mt-2" style="max-width:70ch;">
-        Find experiences by location — or use Near Me for the fastest route to what’s close.
+        Find therapies by location — or use Near Me for the fastest route to what’s close.
       </p>
       <div class="mt-3">
         <a class="btn btn-primary" href="{{ route('nearMe') }}">Near Me</a>

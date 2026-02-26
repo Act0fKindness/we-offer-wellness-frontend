@@ -110,7 +110,7 @@
       a.innerHTML =
         '<div class="wow-media">' + (it.image ? '<img src="' + esc(it.image) + '" alt="' + esc(it.title) + '">' : '') + '</div>' +
         '<div class="wow-body">' +
-          '<div class="wow-type text-muted">' + esc(it.type || 'Experience') + '</div>' +
+          '<div class="wow-type text-muted">' + esc(it.type || 'Therapy') + '</div>' +
           '<div class="wow-title">' + esc(it.title) + '</div>' +
           (it.rating ? (
             '<div class="rating-row" aria-label="Rating ' + Number(it.rating).toFixed(1) + ' out of 5' + (it.review_count? (' from ' + it.review_count + ' reviews') : '') + '">' +

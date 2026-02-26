@@ -12,7 +12,7 @@
             <input id="search-top-what" type="text" autocomplete="off" placeholder="Massage, yoga, breathwork…" aria-expanded="false" aria-controls="search-top-what-pane"></div>
           <div id="search-top-what-pane" class="pane narrow d-none" role="listbox" aria-label="What suggestions">
             <div id="search-top-what-list" class="listy">
-              <div class="section-title">Experiences</div>
+              <div class="section-title">Therapies</div>
               <div>
                 <button type="button" class="item" role="option" data-value="Sound Bath"><i class="bi bi-dot"></i><span class="title">Sound Bath</span><span class="type">Group</span></button>
                 <button type="button" class="item" role="option" data-value="Massage"><i class="bi bi-dot"></i><span class="title">Massage</span><span class="type">Therapy</span></button>

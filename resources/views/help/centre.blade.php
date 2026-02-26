@@ -79,7 +79,7 @@
             'tags' => ['Refunds', 'Cancellation'],
             'popular' => true,
             'content' => '
-                <p>Refund eligibility depends on the specific offering and the timing of the cancellation. Some experiences may be non-refundable once a practitioner has allocated time and preparation.</p>
+                <p>Refund eligibility depends on the specific offering and the timing of the cancellation. Some therapies may be non-refundable once a practitioner has allocated time and preparation.</p>
                 <h3>Typical outcomes</h3>
                 <ul>
                     <li><strong>Refund</strong> to original payment method (where applicable).</li>
@@ -717,7 +717,7 @@
                         </div>
 
                         <details>
-                            <summary>Are your experiences safe?</summary>
+                            <summary>Are your therapies safe?</summary>
                             <p>Yes. Our providers follow industry best practices for health, safety and hygiene. If you have specific concerns, feel free to ask before booking.</p>
                         </details>
 

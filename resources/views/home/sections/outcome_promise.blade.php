@@ -8,10 +8,10 @@
             <li>Always ‘on’?</li>
             <li>No time for yourself?</li>
         </ul>
-        <p class="mt-3 text-muted">We’ve built simple, evidence‑informed wellness experiences designed to help you reset fast.</p>
+        <p class="mt-3 text-muted">We’ve built simple, evidence‑informed wellness therapies designed to help you reset fast.</p>
         <div class="mt-4 d-flex gap-2">
             <a href="/plan" class="btn-wow btn-md btn-arrow" data-analytics="quiz_start"><span class="btn-label">Find My Reset Plan</span></a>
-            <a href="/therapies" class="btn-wow btn-wow--outline btn-md btn-arrow" data-analytics="browse_start"><span class="btn-label">Explore Experiences</span></a>
+            <a href="/therapies" class="btn-wow btn-wow--outline btn-md btn-arrow" data-analytics="browse_start"><span class="btn-label">Explore Therapies</span></a>
         </div>
     </div>
 </section>

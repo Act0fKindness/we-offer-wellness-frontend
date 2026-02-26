@@ -4,8 +4,8 @@
 
 @php
   $p = $product ?? [];
-  $title = $p['title'] ?? 'Experience';
-  $type = $p['type'] ?? 'experience';
+  $title = $p['title'] ?? 'Therapy';
+  $type = $p['type'] ?? 'therapy';
   $rating = $p['rating'] ?? null;
   $reviewCount = $p['review_count'] ?? 0;
   $priceMin = $p['price_min'] ?? ($p['price'] ?? null);
@@ -69,7 +69,7 @@
     <div class="row g-4">
       <div class="col-12 col-lg-8">
         <div class="mb-3">
-          <div class="kicker mb-1">{{ ucfirst($type ?? 'Experience') }}</div>
+          <div class="kicker mb-1">{{ ucfirst($type ?? 'Therapy') }}</div>
           <h1 class="h2 m-0">{{ $title ?? 'Offering' }}</h1>
         </div>
         @if(!empty($images))
