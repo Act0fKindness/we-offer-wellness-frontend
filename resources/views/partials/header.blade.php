@@ -108,9 +108,9 @@
                         </div>
                         <div class="cartdd-subtotal"><span>Subtotal</span><strong id="cartdd-subtotal">£0.00</strong></div>
                         <div class="cartdd-upsell" id="cartdd-upsell" style="padding:10px 12px 0"></div>
-                        <div class="cartdd-foot" style="gap:8px">
-                          <a href="/cart" class="btn-wow btn-wow--outline btn-sm visit-link" style="flex:1 1 auto; text-align:center">Visit cart</a>
-                          <a href="/checkout" class="btn-wow btn-wow--cta btn-sm checkout-link" style="flex:1.15 1 auto; text-align:center">Checkout</a>
+                        <div class="cartdd-foot">
+                          <a href="/cart" class="btn visit-cart-btn">Visit cart</a>
+                          <a href="/checkout" class="btn btn--primary checkout-btn">Checkout</a>
                         </div>
                     </div>
                     </div>
@@ -236,6 +236,10 @@
 .cartdd-upsell .upsell-item img{ width:46px; height:46px; object-fit:cover; border-radius:8px; border:1px solid #eceff3 }
 .cartdd-upsell .upsell-title{ margin:0; font-size:13px; font-weight:700; color:#0b1323; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
 .cartdd-upsell .upsell-price{ font-size:12px; color:#64748b; font-weight:700; margin-top:4px }
+.cartdd-foot{ display:flex; gap:10px; align-items:center; justify-content:space-between; background:#fff; padding:10px 12px 14px }
+/* Buttons styled like product card actions */
+.cart-dropdown2 .btn{ height:38px; border-radius:4px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color: rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); text-decoration:none; flex:1 1 auto }
+.cart-dropdown2 .btn--primary{ border-color: rgba(0,0,0,.10); color:#fff; background:#549483 !important }
 .cartdd-foot{ padding:10px 14px; border-top:1px solid #eef2f7; background:#fff; text-align:right }
 .visit-link{ font-weight:700; color:#2c6bed; text-decoration:none }
 .visit-link:hover{ text-decoration:underline }
