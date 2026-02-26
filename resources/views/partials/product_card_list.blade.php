@@ -118,7 +118,7 @@
     .wow-row-media {
         grid-column: 1;
         background: #fff;
-        padding: 10px;
+        padding: 15px;
         height: 100%;
         min-height: 210px;
     }
