@@ -62,8 +62,9 @@
                 <p>Always consult your GP or healthcare provider if you are pregnant, have a diagnosed condition
                     or take prescription medication. Review contraindications for every therapy and contact the
                     practitioner if you are unsure.</p></div>
-            <a href="/safety-and-contraindications" class="btn-wow btn-wow--ghost" data-loader-init="1">Read
-                full guidance<span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a>
+            <a href="/safety-and-contraindications" class="btn btn--primary" data-loader-init="1">
+                Read full guidance
+            </a>
         </div>
         <div class="links-col">
             <div class="col">
@@ -110,6 +111,8 @@
     </div>
     <style>
         .wow-footer .links-col .col--full { grid-column: 1 / -1; }
+        .wow-footer .safety-card { display:flex; flex-direction:column; gap:10px; padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.15); text-align:left; margin-bottom:15px; }
+        .wow-footer .safety-card .title { font-weight:700; margin-bottom:4px; }
         @media (max-width: 640px) {
             .wow-footer .footer-hero { text-align: center; }
             .wow-footer .subscribe-card { text-align: center; margin-left: 0; }
@@ -117,6 +120,8 @@
             .wow-footer .sub-btn { width: 100%; justify-content: center; }
             .wow-footer .sub-note { text-align: center; }
             .wow-footer .links-col .col--full { text-align: center; }
+            .wow-footer .safety-card { align-items: center; text-align: center; }
+            .wow-footer .safety-card a { width: 100%; justify-content: center; }
         }
     </style>
 </footer>
