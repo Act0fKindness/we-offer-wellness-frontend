@@ -227,6 +227,7 @@
     border-radius:40px;
     position:absolute; right:8px; top:50%; transform: translateY(-50%);
     display:inline-flex; align-items:center; justify-content:center;
+    width:45px; height:45px; min-width:45px; min-height:45px; max-width:45px; max-height:45px;
   }
   .btn-wow.is-squarish.btn-xl .btn-label{ display:none; }
   .btn-wow.is-squarish.btn-xl .icon-search{ width:24px; height:24px; color:#fff; }
