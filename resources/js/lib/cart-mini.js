@@ -10,8 +10,14 @@
   const LS_KEY = 'wow_cart';
   function loadLS(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'{}')||{} }catch(_){ return {} } }
   function saveLS(obj){ try{ localStorage.setItem(LS_KEY, JSON.stringify(obj||{})); }catch(_){ } }
-  function getItems(){ const o=loadLS(); return Array.isArray(o.items)?o.items:[] }
-  function setItems(items){ saveLS({ items: items||[] }); }
+  function getItems(){ const o=loadLS(); if(Array.isArray(o.items)) return o.items; // new schema
+    // legacy keyed map fallback
+    const out=[]; Object.keys(o||{}).forEach(k=>{ if(k!=='items'){ out.push(o[k]); } }); return out; }
+  function setItems(items){
+    const bag = { items: items||[] };
+    (items||[]).forEach(it => { if(it && typeof it.id!=='undefined'){ bag[String(it.id)] = it; } });
+    saveLS(bag);
+  }
   function countItems(){ return getItems().reduce((sum,it)=> sum + (Number(it.qty||1)||1), 0); }
   function upsertItem(newItem){
     const items = getItems();
