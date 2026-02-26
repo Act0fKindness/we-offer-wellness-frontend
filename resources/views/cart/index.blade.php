@@ -101,6 +101,42 @@
     if(!document.querySelector('.cart-row')){
       var items = CartClient.list();
       if(items.length){
+        // If the full cart grid isn't present (empty state), inject the skeleton
+        if(!document.querySelector('.cart-head')){
+          var empty = document.querySelector('.cart-empty');
+          var skeleton = ''+
+            '<div class="cart-grid">'
+              +'<div class="cart-main card p-0 cart-main--elev">'
+                +'<div class="cart-head"><div>Item</div><div>Qty</div><div>Price</div></div>'
+                +'<div class="cart-body"></div>'
+                +'<div class="cart-foot"><a href="/search" class="link-wow">Continue shopping</a></div>'
+              +'</div>'
+              +'<aside class="cart-side card p-0 cart-side--elev" id="checkout">'
+                +'<div class="sum-head">Order summary</div>'
+                +'<div class="sum-body">'
+                  +'<div class="sum-row"><span>Subtotal</span><strong id="sum-subtotal">£0.00</strong></div>'
+                  +'<div class="sum-row"><span>Discounts</span><strong id="sum-discount">-£0.00</strong></div>'
+                  +'<div class="sum-row muted"><span>Taxes</span><span>Included where applicable</span></div>'
+                  +'<div class="sum-sep"></div>'
+                  +'<div class="sum-row total"><span>Total</span><strong id="sum-total">£0.00</strong></div>'
+                  +'<div class="promo">'
+                    +'<label for="promo-code">Promo code</label>'
+                    +'<div class="promo-inline">'
+                      +'<input id="promo-code" type="text" placeholder="Enter code" />'
+                      +'<button type="button" class="btn-wow btn-wow--outline btn-sm" id="apply-promo">Apply</button>'
+                    +'</div>'
+                    +'<div id="promo-msg" class="promo-msg"></div>'
+                  +'</div>'
+                  +'<button class="btn-wow btn-wow--cta w-100" id="checkoutBtn">Proceed to checkout</button>'
+                  +'<div class="trust-hints">'
+                    +'<div class="hint"><span class="dot"></span>Secure checkout</div>'
+                    +'<div class="hint"><span class="dot"></span>Free reschedule window</div>'
+                  +'</div>'
+                +'</div>'
+              +'</aside>'
+            +'</div>';
+          if (empty) { empty.outerHTML = skeleton; }
+        }
         var body = document.querySelector('.cart-body');
         var head = document.querySelector('.cart-head');
         if(body && head){
@@ -108,6 +144,8 @@
           items.forEach(function(it){ var unit=Number(it.price||0); var qty=Number(it.qty||1); html += '<div class="cart-row" data-id="'+it.id+'" data-unit="'+unit.toFixed(2)+'">' + '<div class="cart-item">' + '<a class="cart-img" href="'+(it.url||'#')+'">'+(it.image?('<img src="'+it.image+'" alt="">'):'')+'</a>' + '<div class="cart-info">' + '<a class="title" href="'+(it.url||'#')+'">'+(it.title||'Item')+'</a>' + '<div class="meta">Unit: £'+unit.toFixed(2)+'</div>' + '<button class="cart-remove mt-1" type="button" data-remove="'+it.id+'" aria-label="Remove">Remove</button>' + '</div></div>' + '<div class="cart-qty"><div class="qty">' + '<button type="button" class="btn btn-sm js-qdec" aria-label="Decrease">−</button>' + '<input type="number" class="qty-input" min="1" value="'+qty+'" />' + '<button type="button" class="btn btn-sm js-qinc" aria-label="Increase">+</button>' + '</div></div>' + '<div class="cart-amt">£'+(unit*qty).toFixed(2)+'</div>' + '</div>'; });
           body.innerHTML = html;
           CartClient.syncServer();
+          // Recalculate totals now that rows are present
+          recalc();
         }
       }
     }
