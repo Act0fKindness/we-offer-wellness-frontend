@@ -209,6 +209,7 @@
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     box-shadow: 0 14px 40px rgba(16,24,40,.14);
+    transition: top .2s ease;
   }
   .wow-ultra .bar::before{
     content:"";
@@ -222,6 +223,8 @@
   .wow-ultra .bar > *{ position: relative; z-index: 1; }
   /* Reserve space so content sits in original position under fixed bar */
   .wow-ultra{ padding-top: 74px; }
+  /* When page is scrolled, compact the search bar upward to 80px */
+  .search-compact .wow-ultra .bar{ top: 80px; }
 }
 /* Active teardrop pin removed per request */
   .wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
@@ -371,6 +374,21 @@
       }
     }catch(_e){}
   }catch(e){}
+  // Compact desktop search bar once the page is scrolled
+  try{
+    var root = document.documentElement;
+    function onScroll(){
+      if (window.matchMedia('(min-width: 992px)').matches) {
+        if (window.scrollY > 5) root.classList.add('search-compact');
+        else root.classList.remove('search-compact');
+      } else {
+        root.classList.remove('search-compact');
+      }
+    }
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+  }catch(_e){}
   // Tags from query for visual context
   try{
     var tagsEl = document.getElementById('sr-tags');
