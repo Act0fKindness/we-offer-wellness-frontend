@@ -223,7 +223,7 @@
   /* Mobile search bar tweaks */
   .wow-ultra .bar{ background: rgba(0,0,0,0.1); border-radius:40px; border:none; position: relative; }
   /* Keep the whole search section anchored ~100px from the top for mobile */
-  section.pt-4.pb-2.bg-transparent{ position: sticky; top:100px; z-index: 15; }
+  section.pt-4.pb-2.bg-transparent{ position: sticky; top:50px; z-index: 1000; }
   .wow-ultra .seg{ border-radius:40px; }
   .btn-wow.is-squarish.btn-xl{
     border-radius:50% !important;
