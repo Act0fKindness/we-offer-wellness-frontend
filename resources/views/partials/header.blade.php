@@ -241,8 +241,17 @@
 </script>
 <style>
 .cart-dropdown{ position:absolute; right:0; top:100%; margin-top:8px; z-index:1000; min-width:280px; }
-/* Backdrop for mega menu (below header z-40, above content) */
-.mega-overlay{ position: fixed; inset: 0; background: rgba(27,99,168,.10); z-index: 39; pointer-events: none; }
+/* Backdrop for mega menu (below header/utility, above content) */
+.mega-overlay{
+    position: fixed; inset: 0;
+    background: rgba(27,99,168,.12);
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    backdrop-filter: blur(10px) saturate(1.2);
+    z-index: 35; /* below header (40) and utility-bar (41), above content/search (30) */
+    pointer-events: none;
+}
+/* Ensure utility bar sits above the overlay */
+.utility-bar{ position: relative; z-index: 41; }
 </style>
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">
