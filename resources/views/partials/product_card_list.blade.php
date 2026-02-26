@@ -148,8 +148,6 @@
     .wow-actions{ display:grid; grid-template-columns: 1fr; gap:10px; width:100%; min-width:0; }
     .wow-btn{ height:var(--btnH); border-radius:var(--btnR); font-size:var(--btnFont); font-weight:800; border:1px solid rgba(16,24,40,.18); background:#fff; color:rgba(11,18,32,.84); box-shadow:0 10px 22px rgba(16,24,40,.08); display:flex; align-items:center; justify-content:center; user-select:none; }
     .wow-btn:hover{ background:#f7f7f7; border-color:rgba(16,24,40,.24); }
-    .wow-btn--primary{ background:linear-gradient(180deg,#549483,#3f7f6f); color:#fff; border-color:rgba(0,0,0,.08); }
-    .wow-btn--primary:hover{ filter:brightness(.98); }
     @media (max-width: 1199.98px){ .wow-row-card{ --col1Min: 200px; --col2Min: 300px; --col3Min: 200px; --col1Flex: 0.8fr; --col2Flex: 3.0fr; --col3Flex: 1fr; } }
     @media (max-width: 991.98px){ .wow-row-card{ --col1Min: 200px; --col2Min: 300px; --col3Min: 200px; --col1Flex: 0.8fr; --col2Flex: 3.0fr; --col3Flex: 1fr; } }
     @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; height:auto; } .wow-row-media{ grid-column:1; height:220px; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr; } }
@@ -159,12 +157,9 @@
         border-color: rgba(0, 0, 0, .10);
         color: #fff;
         background: #549483 !important;
-    }
-
-    .wow-row-card .btn {
-        height: var(--btnH);
-        border-radius: var(--btnR);
-        font-size: var(--btnFont);
+        height: 38px;
+        border-radius: 4px;
+        font-size: 16px;
         font-weight: 400;
         border: 1px solid rgba(16, 24, 40, .22);
         background: #fff !important;
