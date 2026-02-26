@@ -298,6 +298,8 @@
   font-size: 12px;
   line-height: 1.25;
 }
+/* Nudge Where label down slightly */
+#search-top-seg-where .seg-label{ margin-top: 5px; }
 </style>
 
 <script>
