@@ -209,7 +209,7 @@
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     box-shadow: 0 14px 40px rgba(16,24,40,.14);
-    transition: top .2s ease;
+    transition: top .2s ease, width .22s ease;
   }
   .wow-ultra .bar::before{
     content:"";
@@ -225,6 +225,20 @@
   .wow-ultra{ padding-top: 74px; }
   /* When page is scrolled, compact the search bar upward to 80px */
   .search-compact .wow-ultra .bar{ top: 80px; }
+  /* Compact state: shrink width and hide Where/When/Who */
+  .search-compact .wow-ultra .bar{ width: 400px; }
+  .search-compact .wow-ultra #search-top-seg-where,
+  .search-compact .wow-ultra #search-top-seg-when,
+  .search-compact .wow-ultra #search-top-seg-who{ display:none !important; }
+  /* Expand back on hover or focus within (desktop) */
+  .search-compact .wow-ultra:hover .bar,
+  .search-compact .wow-ultra:focus-within .bar{ width: min(1200px, calc(100vw - 32px)); }
+  .search-compact .wow-ultra:hover #search-top-seg-where,
+  .search-compact .wow-ultra:hover #search-top-seg-when,
+  .search-compact .wow-ultra:hover #search-top-seg-who,
+  .search-compact .wow-ultra:focus-within #search-top-seg-where,
+  .search-compact .wow-ultra:focus-within #search-top-seg-when,
+  .search-compact .wow-ultra:focus-within #search-top-seg-who{ display:flex !important; }
 }
 /* Active teardrop pin removed per request */
   .wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
