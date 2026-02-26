@@ -202,7 +202,7 @@
     border: none;
     border-top: 1px solid rgba(255,255,255,.50);
     border-bottom: 1px solid rgba(0,0,0,.08);
-    position: fixed; top: 100px; z-index: 30;
+    position: fixed; top: 115px; z-index: 30;
     border-radius: 18px;
     left: 50%; transform: translateX(-50%);
     width: min(1200px, calc(100vw - 32px));
