@@ -68,11 +68,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (wrap && link && panel) {
       function isDesktop(){ try { return window.matchMedia('(min-width: 992px)').matches } catch { return true } }
       let loaded = false; let hideTimer = null;
+      function money(n){ try{ var x=Number(n); if(x>=1000) x=x/100; return '£'+x.toFixed(2) }catch(_){ return '£0.00' } }
+      function renderItems(items){
+        try{
+          const body = panel.querySelector('#cartdd-body');
+          if(!body) return;
+          if(!Array.isArray(items) || items.length===0){ body.innerHTML = '<div class="cartdd-empty">Your cart is empty</div>'; return; }
+          body.innerHTML = items.map(function(it){
+            var img = it.image ? '<div class="cartdd-img"><img src="'+String(it.image).replace(/"/g,'&quot;')+'" alt=""></div>' : '<div class="cartdd-img"></div>';
+            var title = String(it.title||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+            var qty = Number(it.qty||1);
+            var price = (typeof it.price!== 'undefined') ? money(it.price) : '';
+            var amt = (it.price!=null) ? money((Number(it.price)||0) * qty) : '';
+            return '<div class="cartdd-item">'+ img +'<div class="cartdd-info"><a class="cartdd-title" href="'+(it.url||'#')+'">'+title+'</a><div class="cartdd-meta">Qty '+qty+(price?(' • '+price+' each'):'')+'</div></div><div class="cartdd-amt">'+amt+'</div></div>';
+          }).join('');
+        }catch(_){ /* no-op */ }
+      }
+      function readLocalCart(){
+        try{
+          var raw = localStorage.getItem('wow_cart'); if(!raw) return [];
+          var data = JSON.parse(raw);
+          var items = data && (data.items||data.cart||data) || [];
+          if(!Array.isArray(items)) return [];
+          return items.map(function(x){ return { title:x.title||x.name, qty:Number(x.qty||x.quantity||1), price:x.price_min||x.price, image:x.image||x.img, url:x.url||x.href } });
+        }catch(_){ return []; }
+      }
       function loadMini(){
         if (loaded) return; loaded = true;
         fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'text/html' }, credentials:'same-origin' })
-          .then(r=>r.ok?r.text():Promise.reject()).then(html => { panel.querySelector('#cartdd-body').innerHTML = html; })
-          .catch(() => { /* keep empty state */ });
+          .then(r=>r.ok?r.text():Promise.reject())
+          .then(html => {
+            // Heuristic: if server returned a full page/shell, ignore and render from local cart
+            var bad = !html || html.length>50000 || /<html|<head|<meta\s|<header[\s>]/i.test(html);
+            if (bad) { renderItems(readLocalCart()); return; }
+            // Try to extract just the mini-cart fragment if the response wrapped it
+            var frag = html;
+            try{
+              var tmp = document.createElement('div'); tmp.innerHTML = html;
+              var mini = tmp.querySelector('[data-mini-cart], .mini-cart, #mini-cart, .cartdd-body');
+              if (mini) { frag = mini.innerHTML; }
+            }catch(_e){}
+            var body = panel.querySelector('#cartdd-body'); if(body) body.innerHTML = frag;
+          })
+          .catch(() => { renderItems(readLocalCart()); });
       }
       function show(){ if(!isDesktop()) return; loadMini(); panel.hidden = false; }
       function hide(){ panel.hidden = true; }
