@@ -152,6 +152,9 @@
 </section><!---->
 
 <style>
+/* Desktop default: show text label, hide icon on Search button */
+.btn-wow.is-squarish.btn-xl .btn-label{ display:inline; }
+.btn-wow.is-squarish.btn-xl .btn-icon{ display:none; }
 @media (max-width: 991.98px){
   .wow-ultra .bar{
     background: rgba(255,255,255,.14);
@@ -179,6 +182,7 @@
     padding:0 !important; line-height:45px; overflow:hidden;
   }
   .btn-wow.is-squarish.btn-xl .btn-label{ display:none; }
+  .btn-wow.is-squarish.btn-xl .btn-icon{ display:inline-flex; }
   .btn-wow.is-squarish.btn-xl .icon-search{ width:24px; height:24px; color:#fff; }
 }
 </style>
