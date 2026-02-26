@@ -26,7 +26,7 @@
 
     .content { padding:32px; font-size:15px; line-height:1.6; background:#ffffff; }
     h1 { font-size:26px; margin:0 0 12px; letter-spacing:-.01em; }
-    .code-box { display:inline-flex; align-items:center; justify-content:center; padding:14px 26px; border-radius:16px; background:#f3f6fb; font-size:30px; font-weight:800; letter-spacing:6px; border:1px solid rgba(15,23,42,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.6); margin:8px 0 16px; }
+    .code-box { display:inline-flex; align-items:center; justify-content:center; padding:5px 14px; border-radius:6px; background:#f3f6fb; font-size:30px; font-weight:800; letter-spacing:6px; border:1px solid rgba(15,23,42,.08); margin:8px 0 16px; }
     .muted { color:#667085; }
     .eyebrow { text-transform:uppercase; font-size:12px; letter-spacing:.2em; color:#7f8aa3; font-weight:700; margin-bottom:10px; display:block; }
     .info-card { border-radius:18px; border:1px solid rgba(15,23,42,.08); background:#f7f9fc; padding:18px 20px; margin:22px 0; }
