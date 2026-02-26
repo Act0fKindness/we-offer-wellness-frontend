@@ -204,7 +204,7 @@
     border-top: 1px solid rgba(255,255,255,.50);
     border-bottom: 1px solid rgba(0,0,0,.08);
     position: sticky; top: 80px; z-index: 1000;
-    border-radius: 18px;
+    border-radius: 0;
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     box-shadow: 0 14px 40px rgba(16,24,40,.14);
