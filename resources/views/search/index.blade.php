@@ -198,6 +198,10 @@
 .wow-marker::after{ content:""; width:10px; height:10px; border-radius:999px; background:#549483; box-shadow: 0 0 0 5px rgba(84,56,255,.18); }
 /* Active teardrop pin removed per request */
   .wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
+/* Desktop default: show text label, hide icon on Search button */
+.btn-wow.is-squarish.btn-xl .btn-label{ display:inline; }
+.btn-wow.is-squarish.btn-xl .btn-icon{ display:none; }
+
 /* Mobile: hide Where, When, Who segments; keep What + Search visible */
 @media (max-width: 991.98px){
   #search-top-seg-where,
@@ -245,6 +249,7 @@
     padding:0 !important; line-height:45px; overflow:hidden;
   }
   .btn-wow.is-squarish.btn-xl .btn-label{ display:none; }
+  .btn-wow.is-squarish.btn-xl .btn-icon{ display:inline-flex; }
   .btn-wow.is-squarish.btn-xl .icon-search{ width:24px; height:24px; color:#fff; }
 }
 /* Search-only overrides for legacy wow-card md sizing */
