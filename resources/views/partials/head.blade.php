@@ -61,6 +61,9 @@
   @vite('resources/js/app.js')
 @endif
 
+
+<!-- Daniel it goes here -->
+
 <style>@charset "UTF-8";
 /*!
 * Bootstrap  v5.3.8 (https://getbootstrap.com/)

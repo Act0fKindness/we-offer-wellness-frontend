@@ -26585,10 +26585,7 @@ h2 { font-family: 'Playfair Display', Georgia, serif; font-weight: 500; }
         transform: rotate(360deg);
     }
 }
-</style>
 
-<!-- Quick override: ensure therapy card media + fomo render consistently -->
-<style>
  .wow-therapy-card-scope .media img{
      width:100%;
      height:100%;
