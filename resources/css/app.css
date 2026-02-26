@@ -209,6 +209,7 @@ a:hover { text-decoration: none; }
 .account-user-avatar { width: 48px; height: 48px; font-size: 1rem; margin-right: 8px; }
 .account-avatar--profile { width: 74px; height: 74px; font-size: 1.1rem; }
 .profile-photo-field { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lead-cart{ margin:0 0 18px; color: var(--ink-600); font-size:14px; font-weight:600; }
 .account-actions { display:flex; flex-direction:column; gap:10px; }
 .account-actions .btn-wow { width:100%; }
 .account-link { color: var(--ink-700); font-weight:700; text-decoration:none; }

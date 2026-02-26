@@ -40,12 +40,12 @@
       <div class="account-content">
         <header class="account-page-header">
           @if(!empty($eyebrow))
-            <p class="account-eyebrow">{{ $eyebrow }}</p>
+            <div class="kicker">{{ $eyebrow }}</div>
           @endif
           <div class="account-page-heading">
-            <h1>{{ $title ?? 'Your account' }}</h1>
+            <h1 class="mb-1">{{ $title ?? 'Your account' }}</h1>
             @if(!empty($intro))
-              <p class="account-intro">{{ $intro }}</p>
+              <p class="lead-cart">{{ $intro }}</p>
             @endif
           </div>
         </header>
