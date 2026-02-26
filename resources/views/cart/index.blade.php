@@ -414,9 +414,13 @@
 
 <style>
  .lead-cart{ margin:0 0 18px; color: var(--ink-600); font-size:14px; font-weight:600; }
-.card.glass{ position:relative; border-radius:16px; border:1px solid rgba(255,255,255,.55); background: rgba(255,255,255,.85); box-shadow: 0 18px 55px rgba(16,24,40,.10); overflow:hidden; }
-.card.glass:before{ content:""; position:absolute; inset:0; background: rgba(255,255,255,.35); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); pointer-events:none; }
-.card.glass > *{ position:relative; }
+.card.glass{
+  position:relative;
+  border-radius:3px;
+  border:1px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,.85);
+  overflow:hidden;
+}
 
 .cart-grid{ display:flex; align-items:flex-start; gap: var(--gap); --gap:14px; --sideBasis:34.5%; --ease:cubic-bezier(.2,.8,.2,1); --dur:.42s; transition: gap var(--dur) var(--ease); }
 .cart-main{ flex:1 1 auto; min-width:0; max-width:100%; opacity:1; transform: translateX(0) scale(1); transition:max-width var(--dur) var(--ease), transform var(--dur) var(--ease), opacity .22s var(--ease); }
