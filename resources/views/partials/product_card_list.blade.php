@@ -160,7 +160,20 @@
     .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
     .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
     .badge svg{ width: var(--badgeIcon); height: var(--badgeIcon); color:#d59d4c; transform: translateY(1px); }
-    .wow-save{ width:var(--save); height:var(--save); border-radius:var(--saveR); border:1px solid rgba(16,24,40,.18); background:#fff; display:grid; place-items:center; box-shadow:0 10px 22px rgba(16,24,40,.08); transition:transform .12s ease, box-shadow .12s ease; flex:0 0 auto; }
+    .wow-save{
+        width: 34px;
+         height: 34px;
+         border-radius: 3px;
+         border: 1px solid rgba(16, 24, 40, .20);
+         background: #fff;
+         display: grid;
+         place-items: center;
+         cursor: pointer;
+         box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
+         transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+         flex: 0 0 auto;
+     }
+
     .wow-save:hover{ transform:translateY(-1px); box-shadow:0 14px 28px rgba(16,24,40,.12); }
     .wow-save:active{ transform:translateY(0) scale(.99); }
     .wow-save svg{ width:var(--saveIcon); height:var(--saveIcon); color:rgba(11,18,32,.72); }
