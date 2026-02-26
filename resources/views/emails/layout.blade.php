@@ -18,7 +18,7 @@
     .wrapper { width:100%; padding:32px 16px; background:radial-gradient(900px 320px at 20% 0%, rgba(74,136,120,.18), transparent 60%),radial-gradient(900px 240px at 80% 0%, rgba(15,23,42,.12), transparent 60%),#edf2f5; }
     .card { width:100%; max-width:640px; border-radius:3px; overflow:hidden; background:#ffffff; box-shadow:0 50px 80px rgba(12,19,34,.17); border:5px solid rgba(0,0,0,.1); }
 
-    .hero-top { position:relative; padding:28px 32px 48px; background-image:url('https://images.pexels.com/photos/5208298/pexels-photo-5208298.jpeg'); background-size:cover; background-position:center; color:#0b1220; }
+    .hero-top { position:relative; padding:28px 32px 28px; background-image:url('https://images.pexels.com/photos/5208298/pexels-photo-5208298.jpeg'); background-size:cover; background-position:center; color:#0b1220; }
     .hero-top::after { content:""; position:absolute; inset:0; background:rgba(255,255,255,.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
     .brand { position:relative; z-index:1; width:170px; height:auto; display:block; }
     .hero-heading { position:relative; z-index:1; font-size:30px; margin:12px 0 0; letter-spacing:-.02em; color:#0b1220; }
