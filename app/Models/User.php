@@ -385,7 +385,7 @@ class User extends Authenticatable implements MustVerifyEmail
         ])->save();
 
         // Email content tries to avoid spam triggers: concise, code-first, minimal links
-        $subject = 'Your AtEase verification code: ' . $code;
+        $subject = 'Your We Offer Wellness verification code: ' . $code;
         MailService::send(
             $this->email,
             $subject,

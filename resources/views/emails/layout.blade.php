@@ -19,9 +19,9 @@
     .brand { height:auto; width:160px; max-width:70%; }
 
     /* Content */
-    .content { padding:20px; font-size:15px; line-height:1.6; }
+    .content { padding:20px; font-size:15px; line-height:1.6; text-align:left; }
     h1, h2, h3 { margin:0 0 12px; font-weight:700; letter-spacing:-.01em; }
-    h1 { font-size:22px; }
+    h1 { font-size:24px; }
     .btn { display:inline-block; padding:12px 18px; background:#111214; color:#ffffff !important; text-decoration:none; border-radius:999px; font-weight:600; letter-spacing:.01em; }
     .muted { color:#6e6e80; }
 
