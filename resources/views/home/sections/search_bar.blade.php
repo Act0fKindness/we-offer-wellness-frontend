@@ -161,7 +161,7 @@
   #home-template-seg-who{ display:none !important; }
   .btn-wow.is-squarish.btn-xl{
     border-radius:40px;
-    position:absolute; right:8px; top:50%; transform: translateY(-50%);
+    position:absolute; right:11px; top:50%; transform: translateY(-50%);
     display:inline-flex; align-items:center; justify-content:center;
     width:45px; height:45px; min-width:45px; min-height:45px; max-width:45px; max-height:45px;
   }
