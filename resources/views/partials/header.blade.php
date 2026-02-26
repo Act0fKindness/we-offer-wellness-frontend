@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <header class="fixed top-0 z-40 bg-white/90 backdrop-blur border-b"
+        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b"
                 style="border-bottom: 1px solid rgba(153, 153, 153, 0.4);">
             <div class="container-page h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
