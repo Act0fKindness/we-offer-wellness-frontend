@@ -99,7 +99,7 @@
             justify-content: center;
             box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
         }
-        span.btn-cart-list {
+        .btn-cart-list {
             height: 38px;
             border-radius: 4px;
             font-size: 16px;
@@ -295,7 +295,7 @@
       </div>
 
       <div class="wow-actions">
-          <button type="button" class="btn js-add-to-cart js-open-cart"
+          <button type="button" class="btn js-add-to-cart js-open-cart btn-cart-list"
                   data-id="{{ $product->id }}"
                   data-qty="1"
                   data-title="{{ e($titleFormatted) }}"
@@ -303,7 +303,7 @@
                   data-image="{{ $image }}"
                   data-url="{{ $url }}"
           >Add to cart</button>
-          <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}" data-url="{{ $url }}">Book now</span>
+          <span class="btn btn-primary-list js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}" data-url="{{ $url }}">Book now</span>
       </div>
   </div>
 
