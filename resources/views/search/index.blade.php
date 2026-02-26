@@ -224,7 +224,7 @@
   .wow-ultra .bar{ background:#fff; border-radius:40px; position: relative; }
   .wow-ultra .seg{ border-radius:40px; }
   .btn-wow.is-squarish.btn-xl{
-    margin-top:4px; width:50px; height:50px; border-radius:40px;
+    border-radius:40px;
     position:absolute; right:8px; top:50%; transform: translateY(-50%);
     display:inline-flex; align-items:center; justify-content:center;
   }
