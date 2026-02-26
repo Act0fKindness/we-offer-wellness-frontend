@@ -20,6 +20,20 @@ function initMegaMenu() {
       if (overlay) overlay.style.display = 'block';
     });
   });
+  // Links without a mega menu should not trigger the frosted overlay.
+  try {
+    const simpleLinks = header.querySelectorAll('.nav-item > a:not([data-mega-menu])');
+    simpleLinks.forEach((a) => {
+      a.addEventListener('mouseenter', () => {
+        try { panel.style.display = 'none'; } catch(_){}
+        try { if (overlay) overlay.style.display = 'none'; } catch(_){}
+      });
+      a.addEventListener('focus', () => {
+        try { panel.style.display = 'none'; } catch(_){}
+        try { if (overlay) overlay.style.display = 'none'; } catch(_){}
+      });
+    });
+  } catch {}
   header.addEventListener('mouseleave', () => { panel.style.display = 'none'; if (overlay) overlay.style.display = 'none'; });
   document.addEventListener('click', (e) => {
     if (!header.contains(e.target)) { panel.style.display = 'none'; if (overlay) overlay.style.display = 'none'; }
