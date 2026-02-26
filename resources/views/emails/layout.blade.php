@@ -55,7 +55,7 @@
           </tr>
           <tr>
             <td class="footer">
-              © {{ date('Y') }} AtEase by We Offer Wellness
+              © {{ date('Y') }} AtEase by We Offer Wellness®
             </td>
           </tr>
         </table>
