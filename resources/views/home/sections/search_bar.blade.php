@@ -162,7 +162,7 @@
     border:none;
     border-top: 1px solid rgba(255,255,255,0.5);
     border-bottom: 1px solid rgba(0,0,0,0.08);
-    position: relative;
+    position: sticky; top: 84px; z-index: 30;
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     box-shadow: 0 14px 40px rgba(16,24,40,.14);
