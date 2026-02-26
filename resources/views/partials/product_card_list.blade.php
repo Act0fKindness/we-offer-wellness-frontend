@@ -85,7 +85,7 @@
 @endphp
 
 <style>
-        .btn-primary-list {
+        span.btn-primary-list {
             border-color: rgba(0, 0, 0, .10);
             color: #fff;
             background: #549483 !important;
@@ -102,13 +102,21 @@
             justify-content: center;
             box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
         }
+
+    .wow-row-media {
+        grid-column: 1;
+        background: #fff;
+        padding: 10px;
+        height: 100%;
+        min-height: 210px;
+    }
   </style>
 
 
 @once
   <style>
     /* Copy of template styling, scoped to .wow-row-card */
-    span.btn-primary-list {
+    .wow-row-card{
       --bg:#f4f5f7;
       --card:#fff;
       --shadow:0 18px 55px rgba(16,24,40,.10);
@@ -130,14 +138,8 @@
       grid-template-columns: minmax(var(--col1Min), var(--col1Flex)) minmax(var(--col2Min), var(--col2Flex)) minmax(var(--col3Min), var(--col3Flex)); transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease; position:relative; }
     .wow-row-card:hover{ transform:translateY(-1px); box-shadow:0 22px 70px rgba(16,24,40,.14); border-color:rgba(16,24,40,.22); }
     .wow-row-card[data-url]{ cursor:pointer; }
-    .wow-row-media{     grid-column: 1;
-                        background: #fff;
-                        padding: 10px;
-                        height: 100%;
-                        min-height: 210px;
-
-                     }
-    .wow-row-media img{ width:100%; height:100%; object-fit:cover; display:block; border-radius: 3px; }
+    .wow-row-media{ grid-column:1; background:#f2f3f5; height:100%; min-height:210px; }
+    .wow-row-media img{ width:100%; height:100%; object-fit:cover; display:block; }
     .wow-row-body{ grid-column:2; min-width:0; display:flex; flex-direction:column; padding:var(--pad); gap:12px; }
     .wow-row-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; min-width:0; }
     /* Use product_card badge styles (no absolute positioning) */
