@@ -87,10 +87,10 @@
         .auth-sub { margin: -6px 0 6px; color: var(--muted); font-size: 13px; max-width: 46ch; line-height: 1.5; font-family: var(--ui); }
         .account-auth-form { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
         .account-auth-field-group { display:flex; flex-direction:column; gap:6px; }
-        .account-auth-field { position: relative; border-radius: 12px; border: 1px solid rgba(16,24,40,.14); background: #fff; box-shadow: 0 10px 18px rgba(16,24,40,.06); transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease; }
+        .account-auth-field { position: relative; border-radius: 3px; border: 1px solid rgba(16,24,40,.14); background: #fff; box-shadow: 0 10px 18px rgba(16,24,40,.06); transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease; }
         .account-auth-field:focus-within { border-color: rgba(74,136,120,.35); box-shadow: var(--focus), 0 12px 22px rgba(16,24,40,.08); transform: translateY(-1px); }
         .account-auth-label { display:block; font-family: var(--ui); font-size: 12px; color: rgba(11,18,32,.62); margin: 0 0 6px; }
-        .account-auth-input { width:100%; border:0; outline:0; background:transparent; padding: 12px 42px 12px 12px; font-family: var(--ui); font-size: 14px; color: var(--ink); }
+        .account-auth-input { width:100%; border:0; outline:0; background:transparent; padding: 12px 42px 12px 12px; font-family: var(--ui); font-size: 14px; border-radius:3px; color: var(--ink); }
         .account-auth-toggle { position:absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 10px; border: 1px solid rgba(16,24,40,.10); background: rgba(255,255,255,.95); display:flex; align-items:center; justify-content:center; cursor:pointer; transition: transform .15s ease, background .15s ease; }
         .account-auth-toggle:hover { transform: translateY(-50%) scale(1.04); }
         .account-auth-toggle:active { transform: translateY(-50%) scale(.98); }
