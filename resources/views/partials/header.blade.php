@@ -217,8 +217,8 @@
     z-index: 35; /* below header (40) and utility-bar (41), above content/search (30) */
     pointer-events: none;
 }
-/* Ensure utility bar sits above the overlay */
-.utility-bar{ position: relative; z-index: 41; }
+/* Ensure utility bar sticks and sits above the overlay */
+.utility-bar{ position: sticky; top: 0; z-index: 41; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
 /* Cart dropdown (desktop hover) */
 .cart-wrap{ position: relative; }
 .cart-dropdown2{ position:absolute; right:0; top:calc(100% + 10px); width: min(380px, 92vw); background:#fff; border:1px solid var(--ink-200); border-radius:14px; box-shadow: 0 24px 60px rgba(16,24,40,.16); overflow:hidden; z-index: 45; }
