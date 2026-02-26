@@ -200,7 +200,7 @@
     .wow-meta .item{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
     .wow-meta svg{ width:var(--metaIcon); height:var(--metaIcon); color:rgba(11,18,32,.58); }
     .wow-meta .label{ display:inline-block; max-width:140px; letter-spacing:normal; margin-left:0; font-size:12px; padding-left:0; font-weight:400; text-transform:capitalize; overflow:hidden; text-overflow:ellipsis; }
-    .wow-row-bottom{ grid-column:3; padding:var(--pad); border-left:1px solid rgba(16,24,40,.10); background:#fff; display:flex; flex-direction:column; justify-content:space-between; gap:14px; }
+    .wow-row-bottom{ grid-column:3; padding:var(--pad); padding-right:22px; border-left:1px solid rgba(16,24,40,.10); background:#fff; display:flex; flex-direction:column; justify-content:space-between; gap:14px; }
     .wow-fomo{ margin:0 0 6px; font-size:12px; font-weight:800; color:rgba(11,18,32,.84); }
     .wow-price{ display:flex; align-items:baseline; gap:8px; margin:0; }
     .wow-price .from{ font-size:var(--from); color:rgba(11,18,32,.70); }
