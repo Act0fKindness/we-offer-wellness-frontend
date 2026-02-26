@@ -120,7 +120,7 @@
                                         {{ $headerInitials }}
                                     @endif
                                 </span>
-                                <span class="sr-only">Open account menu</span>
+                                <span class="sr-only">Open menu</span>
                             </button>
                             <div class="account-dropdown" id="accountDropdown" hidden>
                                 <div class="account-dropdown__header">
@@ -129,7 +129,7 @@
                                 </div>
                                 <div class="account-actions account-actions--authed">
                                     <div class="cartdd-foot accountdd-foot">
-                                        <a class="btn visit-cart-btn" href="{{ route('account.dashboard') }}">Account overview</a>
+                                        <a class="btn visit-cart-btn" href="{{ route('account.dashboard') }}">Overview</a>
                                         <a class="btn btn--primary checkout-btn" href="{{ route('account.orders') }}">Orders &amp; receipts</a>
                                     </div>
                                     <a class="account-link" href="{{ route('profile.edit') }}">Profile &amp; contact</a>
@@ -141,7 +141,7 @@
                             </div>
                         @else
                             <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
-                                <span class="sr-only">Open account options</span>
+                                <span class="sr-only">Open menu</span>
                                 <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                                 </svg>
@@ -151,7 +151,7 @@
                                 <div class="account-actions">
                                     <div class="cartdd-foot accountdd-foot">
                                         <a class="btn visit-cart-btn" href="{{ route('login', ['redirect' => '/account']) }}">Log in</a>
-                                        <a class="btn btn--primary checkout-btn" href="{{ route('register', ['redirect' => '/account']) }}">Create account</a>
+                                        <a class="btn btn--primary checkout-btn" href="{{ route('register', ['redirect' => '/account']) }}">Sign up</a>
                                     </div>
                                     <a class="account-link" href="{{ route('password.request') }}">Forgot password?</a>
                                 </div>
