@@ -155,6 +155,10 @@
 @media (max-width: 991.98px){
   .wow-ultra .bar{ background:#fff; border-radius:40px; position: relative; }
   .wow-ultra .seg{ border-radius:40px; }
+  /* Hide Where/When/Who on mobile */
+  #home-template-seg-where,
+  #home-template-seg-when,
+  #home-template-seg-who{ display:none !important; }
   .btn-wow.is-squarish.btn-xl{
     border-radius:40px;
     position:absolute; right:8px; top:50%; transform: translateY(-50%);
