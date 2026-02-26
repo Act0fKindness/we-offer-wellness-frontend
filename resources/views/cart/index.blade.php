@@ -24,7 +24,7 @@
     <h1 class="mb-1">Ready to book</h1>
     <p class="lead-cart">Secure, safe and flexible — you can reschedule when needed.</p>
 
-    <div id="cartGrid" class="cart-grid {{ empty($serverCart) ? 'is-empty' : '' }}">
+<div id="cartGrid" class="cart-grid {{ empty($serverCart) ? 'is-empty' : '' }}">
       <div class="cart-main card glass" id="cartMain">
         <div class="cart-head" id="cartHead">
           <div>Item</div><div>Qty</div><div>Price</div>
@@ -101,8 +101,27 @@
   </div>
 </section>
 
+<div id="guestCheckoutModal" class="guest-modal" aria-hidden="true">
+  <div class="guest-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle">
+    <button type="button" class="guest-modal__close" aria-label="Close" data-guest-close>×</button>
+    <h2 id="guestModalTitle">Almost there</h2>
+    <p>Please tell us where to send your order confirmation. You can create an account later with the same email.</p>
+    <form id="guestCheckoutForm">
+      <label for="guestEmail">Email address</label>
+      <input id="guestEmail" type="email" required placeholder="you@example.com">
+      <div id="guestError" class="guest-modal__error" role="alert"></div>
+      <button type="submit" class="btn-wow btn-wow--cta" id="guestSubmitBtn">Continue as guest</button>
+      <div class="guest-modal__links">
+        <a href="/login" class="link-wow">Log in instead</a>
+        <a href="/register" class="link-wow">Create an account</a>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 (function(){
+  const isAuthed = !!@json(auth()->check());
   function cookie(name){
     try{
       var match = document.cookie.split(';').map(function(row){ return row.trim(); }).find(function(row){ return row.startsWith(name+'='); });
@@ -285,6 +304,43 @@
     window.addEventListener('wow:cart:change', function(e){ if (suppressChange) return; try { cart = readLocalCart(); safeRender(); } catch(_){ } });
   }catch(_){ }
 
+  const guestModal = document.getElementById('guestCheckoutModal');
+  const guestForm = document.getElementById('guestCheckoutForm');
+  const guestEmailInput = document.getElementById('guestEmail');
+  const guestError = document.getElementById('guestError');
+  const guestSubmitBtn = document.getElementById('guestSubmitBtn');
+
+  function openGuestModal(){
+    guestError.textContent='';
+    guestEmailInput.value='';
+    guestModal.classList.add('show');
+    guestModal.setAttribute('aria-hidden','false');
+    guestEmailInput.focus();
+  }
+  function closeGuestModal(){
+    guestModal.classList.remove('show');
+    guestModal.setAttribute('aria-hidden','true');
+  }
+  document.querySelectorAll('[data-guest-close]').forEach(btn => btn.addEventListener('click', closeGuestModal));
+  guestModal?.addEventListener('click', function(e){ if(e.target===guestModal) closeGuestModal(); });
+
+  function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+  let checkoutBusy = false;
+
+  guestForm?.addEventListener('submit', function(e){
+    e.preventDefault(); if(checkoutBusy) return;
+    const email = guestEmailInput.value.trim();
+    if(!isValidEmail(email)) { guestError.textContent = 'Enter a valid email address.'; return; }
+    guestError.textContent='';
+    checkoutBusy = true;
+    guestSubmitBtn.disabled=true;
+    guestSubmitBtn.textContent='Redirecting…';
+    post('/checkout/session', { items: serializeCartForCheckout(), email: email })
+      .then(function(res){ if(res && res.url){ window.location.assign(res.url); return; } throw new Error('no url'); })
+      .catch(function(){ guestError.textContent='Could not start checkout. Try again.'; guestSubmitBtn.disabled=false; guestSubmitBtn.textContent='Continue as guest'; checkoutBusy=false; });
+  });
+
   document.addEventListener('click', function(e){
     var row = e.target.closest('.cart-row');
     if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){ var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; item.qty=Math.max(1,Number(item.qty||1)+(e.target.closest('.js-qinc')?1:-1)); suppressChange=true; renderCart(); suppressChange=false; post('/api/cart/update',{id:id,qty:item.qty}); return; }
@@ -304,6 +360,10 @@
     // Checkout via Stripe Checkout Session
     if(e.target && e.target.id==='checkoutBtn'){
       if (cart.length === 0) return;
+      if (!isAuthed){
+        openGuestModal();
+        return;
+      }
       var btn = e.target; var prev = btn.textContent; btn.disabled = true; btn.style.opacity='.65'; btn.textContent = 'Redirecting…';
       post('/checkout/session', { items: serializeCartForCheckout() })
         .then(function(res){ if(res && res.url){ window.location.assign(res.url); return; } throw new Error('no url'); })
@@ -423,5 +483,13 @@
 .upsell-add{ height:34px; border-radius:999px; border:1px solid var(--ink-200); background: rgba(255,255,255,.92); font-weight:950; font-size:12px; padding:0 12px; cursor:pointer; box-shadow: 0 10px 18px rgba(16,24,40,.06); white-space:nowrap; }
 .upsell-add:hover{ background: rgba(247,248,250,.95); border-color: var(--ink-300); }
 .upsell-add.is-added{ background: color-mix(in srgb, var(--accent-600) 12%, white); border-color: color-mix(in srgb, var(--accent-600) 45%, transparent); }
+.guest-modal{ position:fixed; inset:0; background:rgba(15,23,42,.55); display:none; align-items:center; justify-content:center; padding:20px; z-index:200; }
+.guest-modal.show{ display:flex; }
+.guest-modal__dialog{ width:min(420px, 96vw); background:#fff; border-radius:20px; padding:24px; position:relative; box-shadow:0 20px 40px rgba(15,23,42,.25); }
+.guest-modal__close{ position:absolute; top:12px; right:12px; border:0; background:transparent; font-size:22px; cursor:pointer; }
+#guestCheckoutForm{ display:grid; gap:12px; margin-top:12px; }
+#guestCheckoutForm input{ border:1px solid var(--ink-200); border-radius:12px; padding:12px; font-size:16px; }
+.guest-modal__links{ display:flex; justify-content:space-between; font-weight:700; }
+.guest-modal__error{ color:#dc2626; font-weight:700; min-height:18px; }
 </style>
 @endsection

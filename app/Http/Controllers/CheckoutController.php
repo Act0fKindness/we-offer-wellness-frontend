@@ -97,11 +97,15 @@ class CheckoutController extends Controller
 
         // Create an Order record
         $order = null;
+        $guestEmail = trim((string)$request->input('email', ''));
+        if ($guestEmail !== '' && !filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['ok'=>false,'error'=>'invalid_email'], 422);
+        }
         DB::beginTransaction();
         try {
             $order = Order::create([
                 'user_id' => optional($request->user())->id,
-                'email' => optional($request->user())->email,
+                'email' => optional($request->user())->email ?: ($guestEmail ?: null),
                 'currency' => strtoupper($currency),
                 'amount_total' => $amountTotal,
                 'status' => 'pending',
