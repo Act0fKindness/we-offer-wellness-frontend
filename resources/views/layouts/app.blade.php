@@ -174,8 +174,9 @@
         if(!key){ hideMenu(); return }
         panel.style.display = 'block';
         panel.setAttribute('data-active', key);
+        try{ headerEl.classList.add('header--mega-open'); }catch(_){ }
       }
-      function hideMenu(){ panel.style.display = 'none'; panel.removeAttribute('data-active'); }
+      function hideMenu(){ panel.style.display = 'none'; panel.removeAttribute('data-active'); try{ headerEl.classList.remove('header--mega-open'); }catch(_){ } }
 
       // Attach to nav links via data-mega-menu attribute (e.g., data-mega-menu="need").
       // If a link has no mega menu, hovering it will close any open panel.

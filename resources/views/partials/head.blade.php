@@ -22950,7 +22950,7 @@ a:hover {
 }
 
 /* Header full-width content */
-header .container-page{ max-width: none; padding-left: 16px; padding-right: 16px; }
+/* Header uses Bootstrap .container now; no override */
 
 @media (min-width: 640px) {
     .container-page {

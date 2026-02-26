@@ -20,6 +20,9 @@
   @media (min-width: 992px){
     header.is-fixed{ position:fixed; top:0; left:0; right:0; }
   }
+  /* Animate header box when mega menu is open */
+  header .header-inner{ transition: border-radius .2s ease, border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
+  header.header--mega-open .header-inner{ border-radius:40px; border:1px solid #bbb !important; box-shadow: 0 10px 32px rgba(16,24,40,.10); background: rgba(255,255,255,.92); overflow:hidden; }
 </style>
 <!-- Overlay shown behind header mega menu -->
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
@@ -37,7 +40,7 @@
         <div id="header-sentinel" style="position:relative;height:1px;width:1px"></div>
         <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b"
                 style="border-bottom: 1px solid rgba(153, 153, 153, 0.4);">
-            <div class="container-page h-16 flex items-center justify-between">
+            <div class="container header-inner h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
                     <!-- Inline SVG logo -->
                     <span class="block" style="height:28px; display:inline-flex; align-items:center">
