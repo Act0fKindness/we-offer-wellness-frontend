@@ -1,4 +1,4 @@
-<footer class="wow-footer mt-24">
+<footer class="wow-footer">
     <div class="container-page py-10">
         <div class="footer-hero">
             <div class="brand-col">
