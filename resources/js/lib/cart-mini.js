@@ -84,6 +84,13 @@
     });
   }
 
+  // Keep dropdown and badge in sync when other pages change the cart
+  try{
+    window.addEventListener('wow:cart:change', function(){
+      try { updateBadgeUI(countItems()); renderDropdownFromLS(); } catch(_){ }
+    });
+  }catch(_){ }
+
   function handleAddFromBtn(btn, ev){
     if (ev){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(_){} }
     const id = btn.getAttribute('data-id');

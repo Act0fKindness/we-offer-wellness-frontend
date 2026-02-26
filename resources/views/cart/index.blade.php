@@ -140,6 +140,16 @@
   function discountAmount(){ return subtotal() * (promo.pct||0); }
   function total(){ return Math.max(0, subtotal() - discountAmount()); }
 
+  function writeLocalFromCart(){
+    try{
+      var items = (cart||[]).map(function(it){ return { id:String(it.id), title:String(it.title||''), qty:Number(it.qty||1)||1, price:Number(it.unit||0), image:it.img||'', url:it.url||'#' }; });
+      var bag = { items: items };
+      items.forEach(function(it){ bag[String(it.id)] = it; });
+      localStorage.setItem('wow_cart', JSON.stringify(bag));
+      try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items, source:'cart:page' } })); } catch(_){ }
+    }catch(_){ }
+  }
+
   function renderSummary(){
     sumSubtotal.textContent = money(subtotal());
     sumDiscount.textContent = '-' + money(discountAmount());
@@ -221,6 +231,7 @@
     + '</div>' ); }).join('');
     renderSummary();
     renderUpsells();
+    writeLocalFromCart();
   }
 
   // Listen for cart changes from header dropdown/minicart and other add-to-cart actions
@@ -233,7 +244,7 @@
   document.addEventListener('click', function(e){
     var row = e.target.closest('.cart-row');
     if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){ var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; item.qty=Math.max(1,Number(item.qty||1)+(e.target.closest('.js-qinc')?1:-1)); renderCart(); post('/api/cart/update',{id:id,qty:item.qty}); return; }
-    if(e.target.matches('[data-remove]')){ var id=e.target.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); try{ var raw=localStorage.getItem('wow_cart'); var data=raw?JSON.parse(raw):{}; var arr=Array.isArray(data.items)?data.items:[]; data.items=arr.filter(function(it){return String(it.id)!==String(id)}); localStorage.setItem('wow_cart', JSON.stringify(data)); }catch(_){ } renderCart(); post('/api/cart/remove',{id:id}); return; }
+    if(e.target.matches('[data-remove]')){ var id=e.target.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); renderCart(); post('/api/cart/remove',{id:id}); return; }
     if(e.target && e.target.id==='clearCartBtn'){ var ids=cart.map(function(x){return x.id}); cart=[]; renderCart(); ids.forEach(function(id){ post('/api/cart/remove',{id:id}) }); return; }
     if(e.target && e.target.id==='apply-promo'){ var code=(document.getElementById('promo-code')?.value||'').trim(); var msg=document.getElementById('promo-msg'); post('/api/cart/promo',{code:code}).then(function(){ msg.textContent=code?("Code '"+code+"' applied"):'Code cleared'; }).catch(function(){ msg.textContent='Could not apply code'; }); return; }
 
