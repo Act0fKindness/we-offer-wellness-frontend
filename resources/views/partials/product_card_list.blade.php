@@ -99,6 +99,20 @@
             justify-content: center;
             box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
         }
+        span.btn-cart-list {
+            height: 38px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 400;
+            border: 1px solid rgba(16, 24, 40, .22);
+            background: #fff !important;
+            color: rgba(11, 18, 32, .82);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
+        }
 
     .wow-row-media {
         grid-column: 1;
@@ -266,7 +280,7 @@
       </div>
 
       <div class="actions">
-          <span class="btn-primary-list" style="margin-bottom: 5px;">Add to cart</span>
+          <span class="btn-cart-list" style="margin-bottom: 10px;">Add to cart</span>
           <span class="btn-primary-list" style="">Book now</span>
         </div>
   </div>
