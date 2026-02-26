@@ -91,6 +91,8 @@ Route::get('/v3', function () {
 })->name('v3.holding');
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
+// Stripe Checkout session (web POST with CSRF)
+Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

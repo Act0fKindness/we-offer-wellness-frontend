@@ -241,19 +241,19 @@
 
   // Listen for cart changes from header dropdown/minicart and other add-to-cart actions
   try{
-    window.addEventListener('wow:cart:change', function(){
-      try { cart = readLocalCart(); renderCart(); } catch(_){ }
-    });
+    var suppressChange = false;
+    function safeRender(){ suppressChange = true; try{ renderCart(); } finally { suppressChange = false; } }
+    window.addEventListener('wow:cart:change', function(e){ if (suppressChange) return; try { cart = readLocalCart(); safeRender(); } catch(_){ } });
   }catch(_){ }
 
   document.addEventListener('click', function(e){
     var row = e.target.closest('.cart-row');
-    if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){ var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; item.qty=Math.max(1,Number(item.qty||1)+(e.target.closest('.js-qinc')?1:-1)); renderCart(); post('/api/cart/update',{id:id,qty:item.qty}); return; }
+    if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){ var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; item.qty=Math.max(1,Number(item.qty||1)+(e.target.closest('.js-qinc')?1:-1)); suppressChange=true; renderCart(); suppressChange=false; post('/api/cart/update',{id:id,qty:item.qty}); return; }
     var rem = e.target.closest('[data-remove]');
-    if(rem){ var id=rem.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); renderCart(); post('/api/cart/remove',{id:id}); return; }
+    if(rem){ var id=rem.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); suppressChange=true; renderCart(); suppressChange=false; post('/api/cart/remove',{id:id}); return; }
     if(e.target && e.target.id==='clearCartBtn'){
       cart = [];
-      renderCart();
+      suppressChange=true; renderCart(); suppressChange=false;
       // Update server (best-effort)
       post('/api/cart/clear',{}).catch(function(_){});
       // Also clear cookie immediately so refresh reflects empty state
@@ -266,7 +266,7 @@
     if(e.target && e.target.id==='checkoutBtn'){
       if (cart.length === 0) return;
       var btn = e.target; var prev = btn.textContent; btn.disabled = true; btn.style.opacity='.65'; btn.textContent = 'Redirecting…';
-      post('/api/checkout/session', {})
+      post('/checkout/session', {})
         .then(function(res){ if(res && res.url){ window.location.assign(res.url); return; } throw new Error('no url'); })
         .catch(function(){ alert('Could not start checkout. Please try again.'); btn.disabled=false; btn.style.opacity='1'; btn.textContent=prev; });
       return;
