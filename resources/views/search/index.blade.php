@@ -221,6 +221,8 @@
     opacity:.55;
   }
   .wow-ultra .bar > *{ position: relative; z-index: 1; }
+  /* Reserve space so content sits in original position under fixed bar */
+  .wow-ultra{ padding-top: 74px; }
 }
 /* Active teardrop pin removed per request */
   .wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
@@ -278,6 +280,8 @@
   .btn-wow.is-squarish.btn-xl .btn-label{ display:none; }
   .btn-wow.is-squarish.btn-xl .btn-icon{ display:inline-flex; }
   .btn-wow.is-squarish.btn-xl .icon-search{ width:24px; height:24px; color:#fff; }
+  /* Reserve vertical space under fixed bar on mobile */
+  .wow-ultra{ padding-top: 58px; }
 }
 /* Search-only overrides for legacy wow-card md sizing */
 .search-layout .wow-card.md{
