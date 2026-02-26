@@ -293,10 +293,17 @@
         @endif
       </div>
 
-      <div class="actions">
-          <span class="btn-cart-list" style="margin-bottom: 10px;">Add to cart</span>
-          <span class="btn-primary-list" style="">Book now</span>
-        </div>
+      <div class="wow-actions">
+          <button type="button" class="btn js-add-to-cart js-open-cart"
+                  data-id="{{ $product->id }}"
+                  data-qty="1"
+                  data-title="{{ e($titleFormatted) }}"
+                  data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
+                  data-image="{{ $image }}"
+                  data-url="{{ $url }}"
+          >Add to cart</button>
+          <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}" data-url="{{ $url }}">Book now</span>
+      </div>
   </div>
 
 </div>

@@ -491,6 +491,19 @@
         group.forEach(function(m){ m.el.classList.remove('is-active'); });
       });
     }
+    // Ensure map view buttons work and don't bubble to any parent click areas
+    try{
+      document.addEventListener('click', function(e){
+        var add = e.target.closest('.result-view-map .js-add-to-cart');
+        if (add) { try{ e.stopPropagation(); }catch(_e){} }
+        var buy = e.target.closest('.result-view-map .js-buy-now');
+        if (buy) {
+          try{ e.stopPropagation(); }catch(_e){}
+          var url = buy.getAttribute('data-url');
+          if (url) { window.location.href = url; }
+        }
+      }, true);
+    }catch(_e){}
     // Track scroll: keep map focused on product at top of list
     function bindScrollTracking(){
       var cont = document.querySelector('.results-scroll');
