@@ -2,12 +2,16 @@
 
 @section('title','Verify your email')
 @section('content')
-  <p>Hello {{ $user->first_name ?? $user->name }},</p>
+  <span class="eyebrow">Action required</span>
   <h1>Verify your email</h1>
-  <p>Here is your We Offer Wellness verification code:</p>
-  <p style="font-size:28px;font-weight:800;letter-spacing:4px; margin:8px 0 12px">{{ $code }}</p>
+  <p>Hello {{ $user->first_name ?? $user->name }}, here is your secure verification code:</p>
+  <div class="code-box">{{ $code }}</div>
   <p class="muted">This code expires in {{ $expires ?? 60 }} minutes.</p>
-  <p style="margin-top:18px">Prefer a link? You can also verify here:</p>
-  <p><a href="{{ $url }}" class="btn">Verify your email</a></p>
-  <p class="muted" style="margin-top:18px">If you didn’t request this, you can ignore this message.</p>
+
+  <div class="info-card">
+    <p style="margin:0 0 10px; font-weight:600;">Prefer a magic link?</p>
+    <a href="{{ $url }}" class="btn" target="_blank" rel="noopener">Verify your email</a>
+  </div>
+
+  <p class="muted" style="margin-top:18px">If you didn’t request this email, you can safely ignore it—your account remains secure.</p>
 @endsection
