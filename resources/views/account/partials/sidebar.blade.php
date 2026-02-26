@@ -34,12 +34,12 @@
     <p class="account-support__title">Need help?</p>
     <p class="account-support__text">Chat with our concierge team for booking changes, receipts, or personalised suggestions.</p>
     <div class="account-support__actions">
-      <a class="btn-wow btn-wow--outline btn-sm" href="/contact">Message support</a>
       <a class="account-support__link" href="mailto:hello@weofferwellness.co.uk">hello@weofferwellness.co.uk</a>
+      <a class="btn-wow btn-wow--outline btn-sm" href="/contact">Message support</a>
     </div>
     <form method="POST" action="{{ route('logout') }}" class="account-logout-form">
       @csrf
-      <button type="submit" class="btn-wow btn-wow--outline btn-sm" style="width:100%; margin-top:10px;">Log out</button>
+      <button type="submit" class="btn-wow btn-wow--cta btn-sm" style="width:100%; margin-top:10px; background:#000; color:#fff;">Log out</button>
     </form>
   </div>
 </aside>
