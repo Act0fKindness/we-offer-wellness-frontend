@@ -112,8 +112,8 @@
       <div id="guestError" class="guest-modal__error" role="alert"></div>
       <button type="submit" class="btn-wow btn-wow--cta" id="guestSubmitBtn">Continue as guest</button>
       <div class="guest-modal__links">
-        <a href="/login" class="link-wow">Log in instead</a>
-        <a href="/register" class="link-wow">Create an account</a>
+        <a href="{{ route('login', ['redirect' => '/cart']) }}" class="link-wow">Log in instead</a>
+        <a href="{{ route('register', ['redirect' => '/cart']) }}" class="link-wow">Create an account</a>
       </div>
     </form>
   </div>

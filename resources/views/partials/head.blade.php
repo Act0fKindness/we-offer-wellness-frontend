@@ -78,6 +78,13 @@
 .hero-card .order-line span:last-child{ color: var(--ink-900); }
 .cta-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:18px; }
 .cta-row .link-wow{ align-self:center; font-weight:700; }
+.alert{ margin:12px 0; padding:12px 16px; border-radius:12px; font-weight:700; }
+.alert-success{ background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+.alert-warning{ background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+.auth-card{ max-width:480px; margin:0 auto; padding:32px; background:#fff; border-radius:20px; border:1px solid var(--ink-100); box-shadow:0 20px 40px rgba(15,23,42,.08); }
+.auth-form{ display:grid; gap:12px; }
+.auth-form input[type="email"], .auth-form input[type="password"], .auth-form input[type="text"]{ border:1px solid var(--ink-200); border-radius:12px; padding:12px; font-size:16px; }
+.field-error{ color:#dc2626; font-weight:700; font-size:13px; }
 /*!
 * Bootstrap  v5.3.8 (https://getbootstrap.com/)
 * Copyright 2011-2025 The Bootstrap Authors
