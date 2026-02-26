@@ -210,7 +210,8 @@
     backdrop-filter: blur(14px);
     box-shadow: 0 14px 40px rgba(16,24,40,.14);
     transition: top .2s ease, width .18s ease;
-    overflow: hidden;
+    /* Allow dropdown panes to render outside the bar */
+    overflow: visible;
   }
   .wow-ultra .bar::before{
     content:"";
