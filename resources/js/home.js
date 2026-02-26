@@ -338,4 +338,32 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }catch(_){ }
   }
+
+  // Account dropdown toggle
+  try {
+    const accountTrigger = document.querySelector('.account-wrap .account-trigger');
+    const accountDropdown = document.getElementById('accountDropdown');
+    if (accountTrigger && accountDropdown) {
+      accountTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isOpen = accountDropdown.hasAttribute('hidden') ? false : accountDropdown.classList.contains('show');
+        if (isOpen) {
+          accountDropdown.classList.remove('show');
+          accountDropdown.setAttribute('hidden', 'hidden');
+          accountTrigger.setAttribute('aria-expanded', 'false');
+        } else {
+          accountDropdown.removeAttribute('hidden');
+          accountDropdown.classList.add('show');
+          accountTrigger.setAttribute('aria-expanded', 'true');
+        }
+      });
+      document.addEventListener('click', (e) => {
+        if (!accountDropdown.contains(e.target) && !accountTrigger.contains(e.target)) {
+          accountDropdown.classList.remove('show');
+          accountDropdown.setAttribute('hidden', 'hidden');
+          accountTrigger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+  } catch (e) {}
 });

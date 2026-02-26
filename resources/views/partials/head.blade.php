@@ -91,6 +91,15 @@
 .auth-perks li{ margin-bottom:6px; }
 .auth-switch{ text-align:center; margin-top:10px; color: var(--ink-600); }
 .auth-switch a{ font-weight:700; }
+.account-wrap{ position:relative; }
+.account-dropdown{ position:absolute; right:0; top:calc(100% + 8px); width:280px; background:#fff; border:1px solid var(--ink-100); border-radius:16px; box-shadow:0 20px 40px rgba(15,23,42,.15); padding:16px; display:none; z-index:70; }
+.account-dropdown.show{ display:block; }
+.account-name{ font-weight:800; margin-bottom:4px; }
+.account-email{ color: var(--ink-600); margin-bottom:12px; font-size:14px; }
+.account-actions{ display:flex; flex-direction:column; gap:10px; }
+.account-actions .btn-wow{ width:100%; }
+.account-link{ color: var(--ink-700); font-weight:700; text-decoration:none; }
+.account-link:hover{ text-decoration:underline; }
 /*!
 * Bootstrap  v5.3.8 (https://getbootstrap.com/)
 * Copyright 2011-2025 The Bootstrap Authors

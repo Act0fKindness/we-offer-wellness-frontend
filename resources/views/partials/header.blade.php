@@ -85,20 +85,50 @@
                             Times</a></div>
                     </nav>
                 </div>
-                <div class="hidden md:flex items-center gap-2 position-relative"><a class="icon-btn" aria-label="Search"
-                                                                                    href="/search">
-                    <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                         fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                <div class="hidden md:flex items-center gap-2 position-relative">
+                    <a class="icon-btn" aria-label="Search" href="/search">
+                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                             fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
                               d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"></path>
                     </svg>
-                </a><!----><a class="icon-btn" aria-label="Sign in" href="/login">
-                    <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                         fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
-                    </svg>
-                </a>
+                    </a>
+                    <div class="account-wrap">
+                        @auth
+                            <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
+                                <span class="sr-only">Account</span>
+                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                </svg>
+                            </button>
+                            <div class="account-dropdown" id="accountDropdown" hidden>
+                                <div class="account-name">{{ auth()->user()->name ?? 'Customer' }}</div>
+                                <div class="account-email">{{ auth()->user()->email }}</div>
+                                <div class="account-actions">
+                                    <a class="btn-wow btn-wow--outline" href="/customer/orders">View orders</a>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="btn-wow btn-wow--cta">Log out</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @else
+                            <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
+                                <span class="sr-only">Account</span>
+                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                </svg>
+                            </button>
+                            <div class="account-dropdown" id="accountDropdown" hidden>
+                                <p class="account-email">Sign in to manage bookings faster.</p>
+                                <div class="account-actions">
+                                    <a class="btn-wow btn-wow--cta" href="{{ route('login', ['redirect' => '/cart']) }}">Log in</a>
+                                    <a class="btn-wow btn-wow--outline" href="{{ route('register', ['redirect' => '/cart']) }}">Create account</a>
+                                    <a class="account-link" href="{{ route('password.request') }}">Forgot password?</a>
+                                </div>
+                            </div>
+                        @endauth
+                    </div>
                     <div class="cart-wrap position-relative">
                     <a class="icon-btn position-relative cart-link" aria-label="Open cart" href="/cart">
                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
