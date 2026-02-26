@@ -117,14 +117,14 @@
                                     <p class="account-email">{{ $headerUser->email }}</p>
                                 </div>
                                 <div class="account-actions account-actions--authed">
-                                    <div class="cartdd-foot accountdd-foot">
-                                        <a class="btn visit-cart-btn" href="{{ route('account.dashboard') }}">Overview</a>
-                                        <a class="btn btn--primary checkout-btn" href="{{ route('account.orders') }}">Orders &amp; receipts</a>
+                                    <div class="account-links-stack">
+                                        <a class="account-link" href="{{ route('account.dashboard') }}">Overview</a>
+                                        <a class="account-link" href="{{ route('account.orders') }}">Orders &amp; receipts</a>
+                                        <a class="account-link" href="{{ route('profile.edit') }}">Profile &amp; contact</a>
                                     </div>
-                                    <a class="account-link" href="{{ route('profile.edit') }}">Profile &amp; contact</a>
                                     <form method="POST" action="{{ route('logout') }}" class="accountdd-logout">
                                         @csrf
-                                        <button type="submit" class="btn visit-cart-btn accountdd-logout__btn">Log out</button>
+                                        <button type="submit" class="btn btn--primary accountdd-logout__btn">Log out</button>
                                     </form>
                                 </div>
                             </div>
@@ -303,9 +303,12 @@
 .account-dropdown .btn--primary{ border-color: rgba(0,0,0,.10); color:#fff; background:#549483 !important }
 .accountdd-logout{ margin-top:10px; }
 .accountdd-logout__btn{ width:100%; }
-.cartdd-foot{ padding:10px 14px; border-top:1px solid #eef2f7; background:#fff; text-align:right }
-.visit-link{ font-weight:700; color:#2c6bed; text-decoration:none }
-.visit-link:hover{ text-decoration:underline }
+#visit-link{ font-weight:700; color:#2c6bed; text-decoration:none }
+#visit-link:hover{ text-decoration:underline }
+.account-links-stack{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+.account-links-stack .account-link{ font-weight:700; color:var(--ink-800); }
+.accountdd-logout{ margin-top:10px; }
+.accountdd-logout__btn{ width:100%; }
 </style>
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">
