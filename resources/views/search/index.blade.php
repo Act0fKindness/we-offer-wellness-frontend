@@ -81,7 +81,6 @@
                 <button type="button" class="item" data-group="Group" aria-selected="false"><i class="bi bi-people"></i><span class="title">Group</span></button>
               </div>
             </div>
-            <div class="text-end p-3"><button type="button" class="btn btn-primary btn-sm" id="search-top-who-done">Done</button></div>
           </div>
         </div>
         <button class="btn-wow is-squarish btn-xl">
@@ -308,11 +307,19 @@
 /* Nudge Where label down slightly */
 #search-top-seg-where .seg-label{ margin-top: 5px; }
 /* Ensure Who pane never overflows right edge and has constrained height */
-.wow-ultra #search-top-who-pane{ left:auto !important; right:0 !important; width: min(560px, 96vw); max-width:96vw; height:auto; max-height:300px; overflow:auto; }
+/* Who pane: clamp within viewport, max height 304px, hide scrollbars */
+.wow-ultra #search-top-who-pane{
+  left:auto !important; right:0 !important;
+  width: min(560px, 96vw); max-width:96vw;
+  height:auto; max-height:304px; overflow:auto;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.wow-ultra #search-top-who-pane::-webkit-scrollbar{ width:0; height:0 }
 /* Requested narrow pane sizing */
-.wow-ultra .pane.narrow{ width: min(560px, 96vw); right:auto; height:auto; max-height:300px; }
+.wow-ultra .pane.narrow{ width: min(560px, 96vw); right:auto; height:auto; max-height:304px; }
 /* Constrain scrollable list */
-.wow-ultra .listy{ max-height: 300px; overflow:auto; }
+/* Avoid inner list scrollbars in Who pane */
+.wow-ultra #search-top-who-pane .listy{ max-height: none; overflow: visible; }
 </style>
 
 <script>
