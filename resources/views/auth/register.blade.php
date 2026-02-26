@@ -75,7 +75,6 @@
         <input type="checkbox" id="reg-terms" name="terms" {{ old('terms') ? 'checked' : '' }} required>
         <span>I agree to the <a href="/terms" style="color:inherit;">Terms</a> and <a href="/privacy" style="color:inherit;">Privacy Policy</a>.</span>
       </label>
-      <a href="{{ route('login', ['redirect' => $redirect ?? '/cart']) }}">Login</a>
     </div>
 
     <button class="btn btn--primary account-auth-btn" id="registerSubmit" type="submit">
