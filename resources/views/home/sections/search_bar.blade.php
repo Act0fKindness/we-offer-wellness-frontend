@@ -157,6 +157,8 @@
     background: rgba(0,0,0,0.1);
     border-radius:40px;
     border:none;
+    border-top: 1px solid rgba(255,255,255,0.5);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
     position: relative;
   }
   .wow-ultra .seg{ border-radius:40px; }
