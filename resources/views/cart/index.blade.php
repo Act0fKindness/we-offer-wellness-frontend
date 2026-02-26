@@ -180,10 +180,10 @@
 .card.glass:before{ content:""; position:absolute; inset:0; background: rgba(255,255,255,.35); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); pointer-events:none; }
 .card.glass > *{ position:relative; }
 
-.cart-grid{ display:flex; gap:14px; align-items:flex-start; }
-.cart-main{ flex:1 1 auto; min-width:0; max-width:100%; transition:max-width .42s cubic-bezier(.2,.8,.2,1), transform .42s cubic-bezier(.2,.8,.2,1), opacity .22s; }
-.cart-side{ flex:0 0 34.5%; min-width:0; position:sticky; top:14px; }
-.cart-grid.is-empty{ gap:0; }
+.cart-grid{ display:flex; align-items:flex-start; gap: var(--gap); --gap:14px; --sideBasis:34.5%; --ease:cubic-bezier(.2,.8,.2,1); --dur:.42s; transition: gap var(--dur) var(--ease); }
+.cart-main{ flex:1 1 auto; min-width:0; max-width:100%; opacity:1; transform: translateX(0) scale(1); transition:max-width var(--dur) var(--ease), transform var(--dur) var(--ease), opacity .22s var(--ease); }
+.cart-side{ flex:0 0 var(--sideBasis); min-width:0; position:sticky; top:14px; transition:flex-basis var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.cart-grid.is-empty{ --gap:0px; }
 .cart-grid.is-empty .cart-main{ max-width:0; opacity:0; transform: translateX(-10px) scale(.98); pointer-events:none; overflow:hidden; }
 @media (max-width: 991.98px){ .cart-grid{ flex-direction:column; gap:14px; } .cart-side{ position:static; } .cart-grid.is-empty .cart-main{ max-width:100%; opacity:1; transform:none; pointer-events:auto; overflow:visible; } }
 
