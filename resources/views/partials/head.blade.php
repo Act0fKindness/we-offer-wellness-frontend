@@ -39,6 +39,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
 
+<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/Home-PUJfnV1T.js">
+<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/SiteLayout-DKnyduE5.js">
+<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/_plugin-vue_export-helper-1tPrXgE0.js">
+<link rel="stylesheet" crossorigin="" href="/build/assets/SiteLayout-dNJFhRS5.css">
+<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/ProductCard-BSjt_v_N.js">
+<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/WowButton-CFEh0Oz8.js">
+<link rel="stylesheet" crossorigin="" href="/build/assets/ProductCard-CWmZ0eZB.css">
+<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/UltraSearchBar-BfOnvyJy.js">
+<link rel="modulepreload" as="script" crossorigin=""
+      href="/build/assets/UltraSearchBar.vue_vue_type_style_index_0_lang-DRm_99TD.js">
+<link rel="stylesheet" crossorigin="" href="/build/assets/UltraSearchBar-NUgbpZRO.css">
+<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/ClassSchedule-CsCHxwuF.js">
+<link rel="stylesheet" crossorigin="" href="/build/assets/ClassSchedule-CH6Jm1u5.css">
+<link rel="stylesheet" crossorigin="" href="/build/assets/Home-DuBmdSoH.css">
+
 <!-- Built assets via Vite (JS only here; keep inline <style> below intact) -->
 @php $manifest = public_path('build/manifest.json'); @endphp
 @if (file_exists($manifest))
@@ -26593,20 +26608,7 @@ document.addEventListener('DOMContentLoaded', function(){
   } catch(_) {}
 });
 </script>
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/Home-PUJfnV1T.js">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/SiteLayout-DKnyduE5.js">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/_plugin-vue_export-helper-1tPrXgE0.js">
-<link rel="stylesheet" crossorigin="" href="/build/assets/SiteLayout-dNJFhRS5.css">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/ProductCard-BSjt_v_N.js">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/WowButton-CFEh0Oz8.js">
-<link rel="stylesheet" crossorigin="" href="/build/assets/ProductCard-CWmZ0eZB.css">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/UltraSearchBar-BfOnvyJy.js">
-<link rel="modulepreload" as="script" crossorigin=""
-      href="/build/assets/UltraSearchBar.vue_vue_type_style_index_0_lang-DRm_99TD.js">
-<link rel="stylesheet" crossorigin="" href="/build/assets/UltraSearchBar-NUgbpZRO.css">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/ClassSchedule-CsCHxwuF.js">
-<link rel="stylesheet" crossorigin="" href="/build/assets/ClassSchedule-CH6Jm1u5.css">
-<link rel="stylesheet" crossorigin="" href="/build/assets/Home-DuBmdSoH.css">
+
 <style>
     #nprogress {
         pointer-events: none;

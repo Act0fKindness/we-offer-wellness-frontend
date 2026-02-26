@@ -165,12 +165,26 @@ document.addEventListener('DOMContentLoaded', () => {
       // Upsell loader
       try{
         var upsellLoaded = false;
+        var upsellPool = [];
+        var upsellIndex = 0;
         function esc(s){ return String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+        function sliceAndRender(pool){
+          // rotate 3 items each time
+          if (!Array.isArray(pool) || !pool.length) { renderUpsell([]); return; }
+          var idsInCart = (readLocalCart()||[]).map(function(it){ return String(it.id||''); });
+          var filtered = pool.filter(function(p){ return idsInCart.indexOf(String(p.id||''))===-1; });
+          if (!filtered.length) filtered = pool.slice();
+          var start = upsellIndex % filtered.length;
+          var view = [];
+          for (var i=0;i<Math.min(3, filtered.length);i++) view.push(filtered[(start+i)%filtered.length]);
+          upsellIndex = (upsellIndex + 3) % filtered.length;
+          renderUpsell(view);
+        }
         function renderUpsell(list){
           try{
             var wrapU = panel.querySelector('#cartdd-upsell'); if(!wrapU) return;
             if(!Array.isArray(list) || !list.length){ wrapU.innerHTML = ''; return; }
-            wrapU.innerHTML = list.slice(0,3).map(function(it){
+            wrapU.innerHTML = list.map(function(it){
               var p = Number(it.price_min ?? it.price ?? 0); if(p>=1000) p=p/100;
               var img = it.image || (it.images && it.images[0]) || '';
               var url = it.url || ('/therapies/'+it.id);
@@ -183,8 +197,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
           }catch(_){ }
         }
-        function loadUpsell(){ if(upsellLoaded) return; upsellLoaded=true; fetch('/api/products?limit=6&sort=popular', { headers:{ 'Accept':'application/json' }}).then(r=>r.json()).then(renderUpsell).catch(function(){ renderUpsell([]) }); }
-        wrap.addEventListener('mouseenter', loadUpsell, { once:true });
+        function deriveTypeFromCart(){
+          try{
+            var items = readLocalCart(); if(!items || !items.length) return '';
+            var url = String(items[0].url||'');
+            var m = url.match(/\/([a-z-]+)\//i); return m?m[1]:'';
+          }catch(_){ return ''; }
+        }
+        function loadUpsell(){ if(upsellLoaded) return; upsellLoaded=true;
+          var seg = deriveTypeFromCart();
+          var endpoint = seg ? ('/api/products?limit=12&sort=popular&type='+encodeURIComponent(seg)) : '/api/products?limit=12&sort=popular';
+          fetch(endpoint, { headers:{ 'Accept':'application/json' }})
+            .then(r=>r.json())
+            .then(function(list){ upsellPool = Array.isArray(list)?list:[]; sliceAndRender(upsellPool); })
+            .catch(function(){ renderUpsell([]); });
+        }
+        // Load on first open; on subsequent opens rotate the pool
+        wrap.addEventListener('mouseenter', function(){ if(!upsellLoaded) loadUpsell(); else sliceAndRender(upsellPool); });
       }catch(_){ }
     }
   } catch (e) {}
