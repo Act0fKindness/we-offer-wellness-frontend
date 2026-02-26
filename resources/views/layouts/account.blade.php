@@ -233,10 +233,6 @@
             $authReviewFeed = [$authReviewFallback];
         }
         $authReviewInitial = $authReviewFeed[0] ?? $authReviewFallback;
-        $authReviewInitialName = $authReviewInitial['name'] ?? 'Verified customer';
-        if (!empty($authReviewInitial['location'])) {
-            $authReviewInitialName .= ' • '.$authReviewInitial['location'];
-        }
     @endphp
     <aside class="account-auth-right" aria-label="Customer stories">
         <div class="account-auth-quote">
@@ -254,7 +250,11 @@
                 <p class="reviewTitle" id="authReviewTitle">{{ $authReviewInitial['title'] ?? 'Verified booking experience' }}</p>
                 <p class="reviewText" id="authReviewText">{{ $authReviewInitial['text'] ?? 'Clean site, clear pricing, and the booking took about a minute.' }}</p>
                 <div class="reviewMeta">
-                    <span id="authReviewName">{{ $authReviewInitialName }}</span>
+                    @php
+                        $locationSuffix = !empty($authReviewInitial['location']) ? ' • '.$authReviewInitial['location'] : '';
+                        $initialName = trim(($authReviewInitial['name'] ?? 'Verified customer').$locationSuffix);
+                    @endphp
+                    <span id="authReviewName">{{ $initialName }}</span>
                     <span id="authReviewWhen">{{ $authReviewInitial['when'] ?? 'Recently' }}</span>
                 </div>
             </div>
