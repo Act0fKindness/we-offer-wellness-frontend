@@ -210,6 +210,8 @@
   .search-layout.sr-map-only .col-results{ display:none }
   .search-layout.sr-list-only .col-map{ display:none }
   .col-map .map{ height: 60vh }
+  /* Hide view/mode segmented controls on mobile */
+  .search-controls{ display:none !important; }
 }
 /* Search-only overrides for legacy wow-card md sizing */
 .search-layout .wow-card.md{

@@ -211,7 +211,7 @@
     .wow-btn:hover{ background:#f7f7f7; border-color:rgba(16,24,40,.24); }
     @media (max-width: 1199.98px){ .wow-row-card{ --col1Min: 200px; --col2Min: 300px; --col3Min: 200px; --col1Flex: 0.8fr; --col2Flex: 3.0fr; --col3Flex: 1fr; } }
     @media (max-width: 991.98px){ .wow-row-card{ --col1Min: 200px; --col2Min: 300px; --col3Min: 200px; --col1Flex: 0.8fr; --col2Flex: 3.0fr; --col3Flex: 1fr; } }
-    @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; height:auto; } .wow-row-media{ grid-column:1; height:220px; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr; } }
+    @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; height:auto; } .wow-row-media{ grid-column:1; height:150px !important; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce){ .wow-row-card{ transition:none; } .wow-save{ transition:none; } }
 
     </style>
