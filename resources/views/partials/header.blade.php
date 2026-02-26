@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b"
+        <header class="fixed top-0 z-50 bg-white/90 backdrop-blur border-b"
                 style="border-bottom: 1px solid rgba(153, 153, 153, 0.4);">
             <div class="container-page h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
@@ -217,8 +217,8 @@
     z-index: 35; /* below header (40) and utility-bar (41), above content/search (30) */
     pointer-events: none;
 }
-/* Ensure utility bar sticks and sits above the overlay */
-.utility-bar{ position: sticky; top: 0; z-index: 41; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
+/* Utility bar: scrolls normally (header overlays it on desktop) */
+.utility-bar{ position: relative; z-index: 10; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
 /* Cart dropdown (desktop hover) */
 .cart-wrap{ position: relative; }
 .cart-dropdown2{ position:absolute; right:0; top:calc(100% + 10px); width: min(380px, 92vw); background:#fff; border:1px solid var(--ink-200); border-radius:14px; box-shadow: 0 24px 60px rgba(16,24,40,.16); overflow:hidden; z-index: 45; }

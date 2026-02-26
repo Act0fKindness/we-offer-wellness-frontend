@@ -5,7 +5,7 @@
 <body class="antialiased">
   <div class="text-ink-800">
       @include('partials.header')
-      <main class="">
+      <main class="" style="margin-top:64px;">
           @yield('content')
       </main>
       @include('partials.footer')
