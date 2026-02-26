@@ -288,7 +288,7 @@
 .utility-bar{ position: relative; z-index: 45; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
 /* Cart dropdown (desktop hover) */
 .cart-wrap{ position: relative; }
-.cart-dropdown2{ position:absolute; right:0; top:calc(100% + 10px); width: min(380px, 92vw); background:#fff; border:1px solid var(--ink-200); border-radius:14px; box-shadow: 0 24px 60px rgba(16,24,40,.16); overflow:hidden; z-index: 45; }
+.cart-dropdown2{ position:absolute; right:0; top:calc(100% + 10px); width: min(380px, 92vw); background:#fff; border:1px solid rgba(0,0,0,0.15); border-radius:3px; box-shadow: 0 24px 60px rgba(16,24,40,.16); overflow:hidden; z-index: 45; }
 .cartdd-head{ padding:10px 14px; font-weight:700; background: linear-gradient(180deg,#fff,#f8fafc); border-bottom:1px solid #eef2f7 }
 .cartdd-body{ max-height: 380px; overflow:auto }
 .cartdd-empty{ padding:18px; color: var(--ink-600); text-align:center }
