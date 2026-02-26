@@ -5,8 +5,11 @@ const COOKIE_KEY = 'wow_cart'
 
 function readCookie(name){
   try {
-    const m = document.cookie.split('; ').find(r => r.startsWith(name + '='))
-    return m ? decodeURIComponent(m.split('=')[1] || '') : ''
+    const match = document.cookie
+      .split(';')
+      .map(r => r.trim())
+      .find(r => r.startsWith(name + '='))
+    return match ? decodeURIComponent(match.slice(name.length + 1)) : ''
   } catch { return '' }
 }
 
@@ -43,9 +46,28 @@ function load() {
 
 const state = reactive(load())
 
-watch(state, () => {
+function persist(){
   try { localStorage.setItem(LS_KEY, JSON.stringify({ items: state.items })) } catch {}
-}, { deep: true })
+  if (typeof document === 'undefined') return
+  try {
+    const payload = {}
+    state.items.forEach(it => {
+      if (!it?.id) return
+      payload[String(it.id)] = {
+        id: it.id,
+        title: it.title || '',
+        price: Number(it.price) || 0,
+        qty: Number(it.qty) || 1,
+        image: it.image || null,
+        url: it.url || '#',
+      }
+    })
+    const maxAge = 30 * 24 * 60 * 60
+    document.cookie = `${COOKIE_KEY}=${encodeURIComponent(JSON.stringify(payload))}; Path=/; Max-Age=${maxAge}; SameSite=Lax`
+  } catch {}
+}
+
+watch(state, () => { persist() }, { deep: true })
 
 function normalizeItem(input) {
   const id = input?.id ?? input?.product_id
