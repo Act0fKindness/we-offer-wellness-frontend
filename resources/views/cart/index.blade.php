@@ -60,6 +60,14 @@
               <div class="hint"><span class="dot"></span>Secure checkout</div>
               <div class="hint"><span class="dot"></span>Free reschedule window</div>
             </div>
+
+            <div class="upsell" id="upsellFull">
+              <div class="upsell-head">
+                <strong>Complete your calm</strong>
+                <small>Frequently added</small>
+              </div>
+              <div class="upsell-list" id="upsellListFull"></div>
+            </div>
           </div>
 
           <div class="panel empty-wrap" id="emptyWrap" style="">
@@ -72,6 +80,14 @@
                   <a class="btn-wow btn-wow--cta" href="/search">Browse therapies</a>
                 </div>
               </div>
+            </div>
+
+            <div class="upsell" id="upsellEmpty">
+              <div class="upsell-head">
+                <strong>Recommended for you</strong>
+                <small>Quick add</small>
+              </div>
+              <div class="upsell-list" id="upsellListEmpty"></div>
             </div>
           </div>
         </div>
@@ -111,6 +127,9 @@
   var sumSubtotal = document.getElementById('sum-subtotal');
   var sumDiscount = document.getElementById('sum-discount');
   var sumTotal = document.getElementById('sum-total');
+  var upsellListFull = document.getElementById('upsellListFull');
+  var upsellListEmpty = document.getElementById('upsellListEmpty');
+  var upsellLoaded = false; var upsellPool = [];
 
   function subtotal(){ return cart.reduce(function(s,it){ return s + (Number(it.unit||0) * Number(it.qty||1)); }, 0); }
   function discountAmount(){ return subtotal() * (promo.pct||0); }
@@ -126,6 +145,43 @@
     checkoutBtn.style.cursor = cart.length === 0 ? 'not-allowed' : 'pointer';
   }
   function escapeHtml(str){ return String(str||"").replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
+  function renderUpsellTarget(target, list){
+    if(!target) return;
+    if(!Array.isArray(list) || !list.length){ target.innerHTML = ''; return; }
+    target.innerHTML = list.map(function(it){
+      var p = Number(it.price_min ?? it.price ?? 0); if(p>=1000) p=p/100;
+      var img = it.image || (it.images && it.images[0]) || '';
+      var url = it.url || ('/therapies/'+it.id);
+      var title = escapeHtml(it.title||'');
+      return '<div class="upsell-item" data-upsell="'+it.id+'">'
+        + (img?('<img src="'+img+'" alt="">'):'<div style="width:52px;height:52px;border-radius:14px;background:#f3f5f7;border:1px solid #eceff3"></div>')
+        + '<div><p class="upsell-title">'+title+'</p><div class="upsell-price">'+money(p)+'</div></div>'
+        + '<button class="upsell-add" type="button" data-add="'+it.id+'">Add</button>'
+      + '</div>';
+    }).join('');
+  }
+
+  function renderUpsells(){
+    if(!upsellLoaded) return;
+    var list = Array.isArray(upsellPool)?upsellPool.slice():[];
+    renderUpsellTarget(upsellListFull, list.slice(0,3));
+    renderUpsellTarget(upsellListEmpty, list.slice(3,6).length?list.slice(3,6):list.slice(0,3));
+  }
+
+  function deriveSegFromCart(){
+    try{ if(!cart || !cart.length) return ''; var url = String(cart[0].url||''); var m=url.match(/\/([a-z-]+)\//i); return m?m[1]:''; }catch(_){ return ''; }
+  }
+
+  function loadUpsell(){
+    if(upsellLoaded) return; upsellLoaded=true;
+    var seg = deriveSegFromCart();
+    var endpoint = seg ? ('/api/products?limit=12&sort=popular&type='+encodeURIComponent(seg)) : '/api/products?limit=12&sort=popular';
+    fetch(endpoint, { headers:{ 'Accept':'application/json' }})
+      .then(function(r){ return r.json(); })
+      .then(function(list){ upsellPool = Array.isArray(list)?list:[]; renderUpsells(); })
+      .catch(function(){ upsellPool=[]; renderUpsells(); });
+  }
+
   function renderCart(){
     var isEmpty = cart.length===0;
     grid.classList.toggle('is-empty', isEmpty);
@@ -159,6 +215,7 @@
       + '<div class="cart-amt">'+money(line)+'</div>'
     + '</div>' ); }).join('');
     renderSummary();
+    renderUpsells();
   }
 
   document.addEventListener('click', function(e){
@@ -167,9 +224,24 @@
     if(e.target.matches('[data-remove]')){ var id=e.target.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); try{ var raw=localStorage.getItem('wow_cart'); var data=raw?JSON.parse(raw):{}; var arr=Array.isArray(data.items)?data.items:[]; data.items=arr.filter(function(it){return String(it.id)!==String(id)}); localStorage.setItem('wow_cart', JSON.stringify(data)); }catch(_){ } renderCart(); post('/api/cart/remove',{id:id}); return; }
     if(e.target && e.target.id==='clearCartBtn'){ var ids=cart.map(function(x){return x.id}); cart=[]; renderCart(); ids.forEach(function(id){ post('/api/cart/remove',{id:id}) }); return; }
     if(e.target && e.target.id==='apply-promo'){ var code=(document.getElementById('promo-code')?.value||'').trim(); var msg=document.getElementById('promo-msg'); post('/api/cart/promo',{code:code}).then(function(){ msg.textContent=code?("Code '"+code+"' applied"):'Code cleared'; }).catch(function(){ msg.textContent='Could not apply code'; }); return; }
+
+    var add = e.target.closest('[data-add]');
+    if (add){
+      var uid = add.getAttribute('data-add');
+      var u = (upsellPool||[]).find(function(x){ return String(x.id)===String(uid) }); if(!u) return;
+      var pRaw = Number(u.price_min ?? u.price ?? 0); var unit = pRaw>=1000 ? pRaw/100 : pRaw;
+      var ex = cart.find(function(x){ return String(x.id)===String(uid) });
+      if(ex){ ex.qty = Math.max(1, Number(ex.qty||1)+1); }
+      else { cart.unshift({ id:String(uid), title:String(u.title||''), url:(u.url||('/therapies/'+uid)), img:(u.image||(u.images&&u.images[0])||''), unit:unit, qty:1 }); }
+      try{ post('/api/cart/add', { id: Number(uid)||uid, qty:1 }); }catch(_){}
+      add.classList.add('is-added'); add.textContent='Added'; setTimeout(function(){ add.textContent='Add'; add.classList.remove('is-added'); }, 700);
+      renderCart();
+      return;
+    }
   });
   document.addEventListener('input', function(e){ var inp=e.target.closest('.qty-input'); if(!inp) return; var row=e.target.closest('.cart-row'); if(!row) return; var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; var v=parseInt(inp.value||'1',10); if(!Number.isFinite(v)||v<1) v=1; item.qty=v; renderCart(); post('/api/cart/update',{id:id,qty:v}); });
 
+  loadUpsell();
   renderCart();
 })();
 </script>
@@ -183,7 +255,7 @@
 .cart-grid{ display:flex; align-items:flex-start; gap: var(--gap); --gap:14px; --sideBasis:34.5%; --ease:cubic-bezier(.2,.8,.2,1); --dur:.42s; transition: gap var(--dur) var(--ease); }
 .cart-main{ flex:1 1 auto; min-width:0; max-width:100%; opacity:1; transform: translateX(0) scale(1); transition:max-width var(--dur) var(--ease), transform var(--dur) var(--ease), opacity .22s var(--ease); }
 .cart-side{ flex:0 0 var(--sideBasis); min-width:0; position:sticky; top:14px; transition:flex-basis var(--dur) var(--ease), transform var(--dur) var(--ease); }
-.cart-grid.is-empty{ --gap:0px; }
+.cart-grid.is-empty{ --gap:0px; --sideBasis:100%; }
 .cart-grid.is-empty .cart-main{ max-width:0; opacity:0; transform: translateX(-10px) scale(.98); pointer-events:none; overflow:hidden; }
 @media (max-width: 991.98px){ .cart-grid{ flex-direction:column; gap:14px; } .cart-side{ position:static; } .cart-grid.is-empty .cart-main{ max-width:100%; opacity:1; transform:none; pointer-events:auto; overflow:visible; } }
 
