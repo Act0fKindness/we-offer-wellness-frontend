@@ -3,7 +3,7 @@
     @include('partials.head')
 </head>
 <body class="antialiased">
-  <div class="min-h-screen text-ink-800">
+  <div class="text-ink-800">
       @include('partials.header')
       <main class="">
           @yield('content')

@@ -111,23 +111,6 @@
         </div>
       </div>
     </div>
-      <!-- Controls moved under search bar -->
-      <div class="search-controls d-flex align-items-center justify-content-between gap-2 mb-3 mt-2">
-        <div class="d-flex align-items-center gap-2">
-          <span class="font-semibold text-ink-800">View</span>
-          <div class="seg-group" role="tablist" aria-label="List or Map">
-              <button class="seg active" role="tab" aria-selected="true" data-view="map">Map</button>
-              <button class="seg" role="tab" aria-selected="false" data-view="list">List</button>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="font-semibold text-ink-800">Mode</span>
-          <div class="seg-group" role="tablist" aria-label="Map Mode">
-            <button class="seg" role="tab" aria-selected="false" data-mode="2d">2D</button>
-            <button class="seg active" role="tab" aria-selected="true" data-mode="3d">3D</button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
