@@ -16,10 +16,50 @@ class CheckoutController extends Controller
     {
         $items = session('cart.items', []);
         if (empty($items)) {
-            $cookie = $request->cookie('wow_cart');
-            if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { $items = $restored; session(['cart.items' => $items]); } }
+            $cookieRaw = $request->cookie('wow_cart');
+            if ($cookieRaw) {
+                $restored = json_decode($cookieRaw, true) ?: [];
+                if (is_array($restored) && !empty($restored)) {
+                    $items = $restored;
+                    session(['cart.items' => $items]);
+                } else {
+                    Log::warning('checkout.cookie.decode_failed', [
+                        'len' => strlen($cookieRaw),
+                        'raw_sample' => substr($cookieRaw, 0, 120),
+                        'error' => json_last_error_msg(),
+                    ]);
+                }
+            }
         }
         if (empty($items)) {
+            $payload = $request->input('items');
+            if (is_array($payload) && !empty($payload)) {
+                $normalized = [];
+                $isList = array_is_list($payload);
+                foreach ($payload as $key => $entry) {
+                    if (!is_array($entry)) continue;
+                    $id = $entry['id'] ?? ($isList ? null : $key);
+                    if (!$id) continue;
+                    $normalized[(string)$id] = [
+                        'id' => $id,
+                        'title' => (string)($entry['title'] ?? ('Item '.$id)),
+                        'price' => (float)($entry['price'] ?? $entry['unit'] ?? 0),
+                        'qty' => max(1, (int)($entry['qty'] ?? $entry['quantity'] ?? 1)),
+                        'image' => $entry['image'] ?? $entry['img'] ?? null,
+                        'url' => $entry['url'] ?? '#',
+                    ];
+                }
+                if (!empty($normalized)) {
+                    $items = $normalized;
+                    session(['cart.items' => $items]);
+                }
+            }
+        }
+        if (empty($items)) {
+            Log::warning('checkout.empty_cart', [
+                'session_has' => session()->has('cart.items'),
+                'cookie_present' => (bool) $request->cookie('wow_cart'),
+            ]);
             return response()->json(['ok'=>false,'error'=>'empty_cart'], 400);
         }
 
@@ -99,4 +139,3 @@ class CheckoutController extends Controller
         }
     }
 }
-
