@@ -128,8 +128,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return items.map(function(x){ return { title:x.title||x.name, qty:Number(x.qty||x.quantity||1), price:x.price_min||x.price, image:x.image||x.img, url:x.url||x.href, id:x.id } });
       }catch(_){ return []; }
     }
-    function writeLocalCart(items){ try{ var bag={ items: items||[] }; (items||[]).forEach(function(it){ if(it && typeof it.id!=='undefined'){ bag[String(it.id)] = it; } }); localStorage.setItem('wow_cart', JSON.stringify(bag)); }catch(_){ } }
-    function removeFromLocalCart(id){ try{ var items=readLocalCart().filter(function(it){ return String(it.id)!==String(id); }); writeLocalCart(items); return items; }catch(_){ return []; } }
+    function writeLocalCart(items){
+      try{
+        var bag={ items: items||[] };
+        (items||[]).forEach(function(it){ if(it && typeof it.id!=='undefined'){ bag[String(it.id)] = it; } });
+        localStorage.setItem('wow_cart', JSON.stringify(bag));
+        try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items||[], source:'header:write' } })); } catch(_){ }
+      }catch(_){ }
+    }
+    function removeFromLocalCart(id){
+      try{
+        var items=readLocalCart().filter(function(it){ return String(it.id)!==String(id); });
+        writeLocalCart(items);
+        try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items||[], source:'header:remove' } })); } catch(_){ }
+        return items;
+      }catch(_){ return []; }
+    }
     function loadMini(){
       if (loaded) return; loaded = true;
       fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'text/html' }, credentials:'same-origin' })

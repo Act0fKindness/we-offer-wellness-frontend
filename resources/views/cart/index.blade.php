@@ -223,6 +223,13 @@
     renderUpsells();
   }
 
+  // Listen for cart changes from header dropdown/minicart and other add-to-cart actions
+  try{
+    window.addEventListener('wow:cart:change', function(){
+      try { cart = readLocalCart(); renderCart(); } catch(_){ }
+    });
+  }catch(_){ }
+
   document.addEventListener('click', function(e){
     var row = e.target.closest('.cart-row');
     if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){ var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; item.qty=Math.max(1,Number(item.qty||1)+(e.target.closest('.js-qinc')?1:-1)); renderCart(); post('/api/cart/update',{id:id,qty:item.qty}); return; }

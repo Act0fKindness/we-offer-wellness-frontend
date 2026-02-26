@@ -17,6 +17,10 @@
     const bag = { items: items||[] };
     (items||[]).forEach(it => { if(it && typeof it.id!=='undefined'){ bag[String(it.id)] = it; } });
     saveLS(bag);
+    try {
+      const detail = { items: getItems(), count: countItems(), source: 'mini:set' };
+      window.dispatchEvent(new CustomEvent('wow:cart:change', { detail }));
+    } catch(_){ }
   }
   function countItems(){ return getItems().reduce((sum,it)=> sum + (Number(it.qty||1)||1), 0); }
   function upsertItem(newItem){
@@ -73,6 +77,10 @@
     }).finally(()=>{
       if (isDesktop()) { renderDropdownFromLS(); showDropdown(); }
       else { /* mobile keep as is, icon navigates to /cart */ }
+      try {
+        const detail = { items: getItems(), count: countItems(), source: 'mini:add' };
+        window.dispatchEvent(new CustomEvent('wow:cart:change', { detail }));
+      } catch(_){ }
     });
   }
 
