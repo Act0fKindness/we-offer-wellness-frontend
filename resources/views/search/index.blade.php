@@ -225,18 +225,11 @@
   .wow-ultra{ padding-top: 74px; }
   /* When page is scrolled, compact the search bar upward to 80px */
   .search-compact .wow-ultra .bar{ top: 80px; }
-  /* Compact state: shrink width and softly hide Where/When/Who (no hard display:none) */
+  /* Compact state: shrink width and hide Where/When/Who */
   .search-compact .wow-ultra .bar{ width: 400px; }
-  .wow-ultra .seg{ transition: opacity .18s ease, max-width .22s ease, margin .22s ease; }
   .search-compact .wow-ultra #search-top-seg-where,
   .search-compact .wow-ultra #search-top-seg-when,
-  .search-compact .wow-ultra #search-top-seg-who{
-    opacity: 0;
-    max-width: 0;
-    margin-left: 0; margin-right: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
+  .search-compact .wow-ultra #search-top-seg-who{ display:none !important; }
   /* Expand back on hover or focus within (desktop) */
   .search-compact .wow-ultra:hover .bar,
   .search-compact .wow-ultra:focus-within .bar{ width: min(1200px, calc(100vw - 32px)); }
@@ -245,17 +238,11 @@
   .search-compact .wow-ultra:hover #search-top-seg-who,
   .search-compact .wow-ultra:focus-within #search-top-seg-where,
   .search-compact .wow-ultra:focus-within #search-top-seg-when,
-  .search-compact .wow-ultra:focus-within #search-top-seg-who{
-    opacity: 1;
-    max-width: 1000px;
-    margin-left: 10px; margin-right: 10px;
-    pointer-events: auto;
-  }
+  .search-compact .wow-ultra:focus-within #search-top-seg-who{ display:flex !important; }
   /* Hide the round Search button in compact; restore on hover/focus */
-  .wow-ultra .btn-wow.is-squarish.btn-xl{ transition: opacity .18s ease, transform .18s ease; }
-  .search-compact .wow-ultra .btn-wow.is-squarish.btn-xl{ opacity: 0; transform: scale(.9); pointer-events: none; }
+  .search-compact .wow-ultra .btn-wow.is-squarish.btn-xl{ display:none !important; }
   .search-compact .wow-ultra:hover .btn-wow.is-squarish.btn-xl,
-  .search-compact .wow-ultra:focus-within .btn-wow.is-squarish.btn-xl{ opacity: 1; transform: scale(1); pointer-events: auto; }
+  .search-compact .wow-ultra:focus-within .btn-wow.is-squarish.btn-xl{ display:inline-flex !important; }
 }
 /* Active teardrop pin removed per request */
   .wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
