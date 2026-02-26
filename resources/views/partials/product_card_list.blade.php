@@ -153,7 +153,7 @@
     @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; height:auto; } .wow-row-media{ grid-column:1; height:220px; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce){ .wow-row-card{ transition:none; } .wow-save{ transition:none; } }
 
-    .wow-row-card .btn--primary {
+    .wow-row-card .btn-primary-list {
         border-color: rgba(0, 0, 0, .10);
         color: #fff;
         background: #549483 !important;
@@ -256,8 +256,8 @@
       </div>
 
       <div class="actions">
-          <button type="button" class="btn js-add-to-cart js-open-cart" data-id="6959" data-title="Yoga Session For Hen/Stag" data-price="200.00" data-image="https://atease.weofferwellness.co.uk/storage/uploads/images/a1978c74-b8a9-4a99-957f-3f209850d1c0.jpg" data-url="https://v3.weofferwellness.co.uk/therapies/6959-yoga-session-for-henstag">Add to cart</button>
-          <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="6959">Book now</span>
+          <button type="button" class="open-cart-list" data-id="6959" data-title="Yoga Session For Hen/Stag" data-price="200.00" data-image="https://atease.weofferwellness.co.uk/storage/uploads/images/a1978c74-b8a9-4a99-957f-3f209850d1c0.jpg" data-url="https://v3.weofferwellness.co.uk/therapies/6959-yoga-session-for-henstag">Add to cart</button>
+          <span class="btn btn-primary-list">Book now</span>
         </div>
   </div>
 
