@@ -339,7 +339,7 @@
                 'fill-extrusion-opacity': 0.6
               }
             }, labelLayerId);
-            // Markers (grouped by product id for hover effects)
+            // Markers (grouped by product id for hover effects and navigation)
             window.__wowMarkersByPid = {};
             var bounds = new mapboxgl.LngLatBounds();
             var added = 0;
@@ -362,10 +362,31 @@
                     setTimeout(function(){ try{ item.classList.remove('is-active'); }catch(_){ } }, 1200);
                   }
                   try{ map.easeTo({ center: [Number(p.lng), Number(p.lat)], zoom: Math.max(map.getZoom(), 14), duration: 500 }); }catch(_e){}
+                  try {
+                    // Toggle marker active state
+                    Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){
+                      (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===pid); });
+                    });
+                  } catch(_e){}
                 });
               } catch(_e){}
               try { bounds.extend([Number(p.lng), Number(p.lat)]); added++; } catch(e){}
             });
+            // Expose map so other handlers can reference it
+            window.__wowMap = map;
+            // Helper: center map on pid's first marker
+            function centerOnPid(pid, opts){
+              try{
+                var group = (window.__wowMarkersByPid||{})[String(pid)]||[];
+                if (!group.length) return;
+                var ll = group[0].marker.getLngLat();
+                map.easeTo({ center: [ll.lng, ll.lat], zoom: Math.max(map.getZoom(), (opts&&opts.zoom)||14), duration: (opts&&opts.duration)||500 });
+                // toggle active state
+                Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){
+                  (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===String(pid)); });
+                });
+              }catch(_e){}
+            }
             try {
               if (added > 1) {
                 map.fitBounds(bounds, { padding: 100, maxZoom: 13, duration: 500 });
@@ -375,6 +396,11 @@
                 map.setZoom(14);
               }
             } catch(e){}
+            // After markers are added, center near the first product in the list
+            try{
+              var firstItem = document.querySelector('.results-scroll [data-pid]');
+              if (firstItem) { centerOnPid(firstItem.getAttribute('data-pid'), { zoom: 14, duration: 300 }); }
+            }catch(_e){}
           });
           // Mode toggle (2D/3D)
           document.querySelectorAll('[data-mode]')?.forEach(function(btn){
@@ -465,6 +491,41 @@
         group.forEach(function(m){ m.el.classList.remove('is-active'); });
       });
     }
+    // Track scroll: keep map focused on product at top of list
+    function bindScrollTracking(){
+      var cont = document.querySelector('.results-scroll');
+      if (!cont) return;
+      var ticking = false, lastPid = null;
+      function onScroll(){
+        if (ticking) return; ticking = true;
+        requestAnimationFrame(function(){
+          try{
+            var rect = cont.getBoundingClientRect();
+            var items = Array.from(cont.querySelectorAll('[data-pid]'));
+            var topItem = null; var topDelta = Infinity;
+            items.forEach(function(it){
+              var r = it.getBoundingClientRect();
+              var d = Math.abs(r.top - rect.top);
+              if (d < topDelta){ topDelta = d; topItem = it; }
+            });
+            if (topItem){
+              var pid = String(topItem.getAttribute('data-pid'));
+              if (pid !== lastPid){
+                lastPid = pid;
+                // Center map on this pid and mark active
+                try{ (window.centerOnPid||window.__centerOnPid||function(){
+                  var group=(window.__wowMarkersByPid||{})[pid]||[]; if(!group.length) return; var ll=group[0].marker.getLngLat(); var map=window.__wowMap; if(map){ map.easeTo({ center:[ll.lng,ll.lat], zoom: Math.max(map.getZoom(), 13), duration: 400 }); } Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){ (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===pid); }); });
+                })(); }catch(_e){}
+              }
+            }
+          }catch(_e){}
+          ticking = false;
+        });
+      }
+      cont.addEventListener('scroll', onScroll, { passive: true });
+      // Run once to sync
+      try{ onScroll(); }catch(_e){}
+    }
     // Initial state: Map active -> enable mode, show both columns
     setModeEnabled(true);
     setColsForView('map');
@@ -499,6 +560,7 @@
       })
     })
     bindHover();
+    bindScrollTracking();
   } catch {}
 })();
 </script>
