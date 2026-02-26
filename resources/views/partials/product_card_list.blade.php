@@ -155,12 +155,12 @@
     .wow-row-media img{ width:100%; height:100%; object-fit:cover; display:block; }
     .wow-row-body{ grid-column:2; min-width:0; display:flex; flex-direction:column; padding:var(--pad); gap:12px; }
     .wow-row-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; min-width:0; }
-    /* Use product_card badge styles (no absolute positioning) */
-    .badges{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; white-space:nowrap; overflow:hidden; min-width:0; }
-    .badge{ height: var(--badgeH); display:inline-flex; align-items:center; gap:4px; padding:0 var(--badgePx); border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size: var(--badgeFont); line-height:1; white-space:nowrap; flex:0 0 auto; }
-    .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
-    .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
-    .badge svg{ width: var(--badgeIcon); height: var(--badgeIcon); color:#d59d4c; transform: translateY(1px); }
+    /* Use product_card badge styles (scoped to the card to avoid clashing with Bootstrap .badge) */
+    .wow-row-card .badges{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; white-space:nowrap; overflow:hidden; min-width:0; }
+    .wow-row-card .badge{ height: var(--badgeH); display:inline-flex; align-items:center; gap:4px; padding:0 var(--badgePx); border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size: var(--badgeFont); line-height:1; white-space:nowrap; flex:0 0 auto; }
+    .wow-row-card .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
+    .wow-row-card .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
+    .wow-row-card .badge svg{ width: var(--badgeIcon); height: var(--badgeIcon); color:#d59d4c; transform: translateY(1px); }
     .wow-save{
         width: 34px;
          height: 34px;
