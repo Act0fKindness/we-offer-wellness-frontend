@@ -48,6 +48,9 @@ else
   chown -R "$WEB_USER:$WEB_GROUP" storage bootstrap/cache 2>/dev/null || true
 fi
 chmod -R ug+rwx storage bootstrap/cache || true
+# Ensure web server users not in the primary group also have write perms
+chmod -R o+rw storage bootstrap/cache 2>/dev/null || true
+find storage bootstrap/cache -type d -exec chmod +X {} + 2>/dev/null || true
 
 # Sanity checks for Blade partials that affect styling (avoid shipping a broken head)
 if [[ "$NO_VERIFY" != "true" ]]; then
