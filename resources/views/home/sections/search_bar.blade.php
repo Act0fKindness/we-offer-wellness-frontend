@@ -160,6 +160,13 @@
 .btn-wow.is-squarish.btn-xl .btn-label{ display:inline; }
 .btn-wow.is-squarish.btn-xl .btn-icon{ display:none; }
 @media (max-width: 991.98px){
+  /* Clamp What suggestions pane within viewport on mobile */
+  #home-template-what-pane{
+    left: auto !important;
+    right: 0 !important;
+    width: min(560px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+  }
   .wow-ultra .bar{
     background: rgba(255,255,255,.14);
     border-radius:40px;
