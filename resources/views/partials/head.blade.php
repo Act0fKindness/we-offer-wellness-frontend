@@ -28,7 +28,9 @@
 
 
 
-<meta name="csrf-token" content="{{ csrf_token() }}">
+@php $csrfToken = csrf_token(); @endphp
+<meta name="csrf-token" content="{{ $csrfToken }}">
+<script>window.__csrfToken = @js($csrfToken);</script>
 <link rel="canonical" href="{{ url()->current() }}">
 
 <!-- Fonts: Manrope (general text, buttons, product headings) and Playfair Display (section headings) -->
