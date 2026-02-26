@@ -3,11 +3,19 @@
 @section('content')
 @php
   $items = session('cart.items', []);
-  $subtotal = 0.0;
-  foreach ($items as $it) { $p=(float)($it['price']??0); if($p>=1000) $p=$p/100; $subtotal += $p * (int)($it['qty']??1); }
-  $discount = 0.0; // apply on promo code server-side later
-  $total = max(0, $subtotal - $discount);
-  $isEmpty = empty($items);
+  $serverCart = [];
+  foreach (($items ?? []) as $id => $it) {
+      $p = (float)($it['price'] ?? 0);
+      if ($p >= 1000) $p = $p / 100;
+      $serverCart[] = [
+          'id'    => (string)$id,
+          'title' => (string)($it['title'] ?? 'Item'),
+          'url'   => (string)($it['url'] ?? '#'),
+          'img'   => (string)($it['image'] ?? ''),
+          'unit'  => round($p, 2),
+          'qty'   => (int)($it['qty'] ?? 1),
+      ];
+  }
 @endphp
 
 <section class="section">
@@ -16,37 +24,12 @@
     <h1 class="mb-1">Ready to book</h1>
     <p class="lead-cart">Secure, safe and flexible — you can reschedule when needed.</p>
 
-    <div id="cartGrid" class="cart-grid {{ $isEmpty ? 'is-empty' : '' }}">
+    <div id="cartGrid" class="cart-grid is-empty">
       <div class="cart-main card glass" id="cartMain">
         <div class="cart-head" id="cartHead">
           <div>Item</div><div>Qty</div><div>Price</div>
         </div>
-        <div class="cart-body" id="cartBody">
-          @foreach($items as $id => $it)
-            @php $price = (float)($it['price'] ?? 0); if($price>=1000) $price=$price/100; $qty=(int)($it['qty']??1); @endphp
-            <div class="cart-row" data-id="{{ $id }}" data-unit="{{ number_format($price,2,'.','') }}">
-              <div class="cart-item">
-                <a class="cart-img" href="{{ $it['url'] ?? '#' }}">@if(!empty($it['image']))<img src="{{ $it['image'] }}" alt="{{ $it['title'] ?? '' }}" />@endif</a>
-                <div class="cart-info">
-                  <a class="title" href="{{ $it['url'] ?? '#' }}">{{ $it['title'] ?? 'Item' }}</a>
-                  <div class="meta">
-                    <span class="pill"><span class="dot"></span>Unit: £{{ number_format($price,2) }}</span>
-                    <span class="pill">Line: £{{ number_format($price*$qty,2) }}</span>
-                  </div>
-                  <button class="cart-remove" type="button" data-remove="{{ $id }}" aria-label="Remove">Remove</button>
-                </div>
-              </div>
-              <div class="cart-qty">
-                <div class="qty">
-                  <button type="button" class="js-qdec" aria-label="Decrease">−</button>
-                  <input type="number" class="qty-input" min="1" value="{{ $qty }}">
-                  <button type="button" class="js-qinc" aria-label="Increase">+</button>
-                </div>
-              </div>
-              <div class="cart-amt">£{{ number_format($price * $qty, 2) }}</div>
-            </div>
-          @endforeach
-        </div>
+        <div class="cart-body" id="cartBody"></div>
         <div class="cart-foot" id="cartFoot">
           <a href="/search" class="link-wow">Continue shopping</a>
           <button class="btn-wow btn-wow--outline" id="clearCartBtn" type="button">Clear cart</button>
@@ -54,14 +37,14 @@
       </div>
 
       <aside class="cart-side card glass" id="checkout">
-        <div class="sum-head" id="sumHeadTitle">{{ $isEmpty ? 'Your cart' : 'Order summary' }}</div>
+        <div class="sum-head" id="sumHeadTitle">Your cart</div>
         <div class="sum-body">
-          <div class="panel" id="summaryWrap" style="{{ $isEmpty ? 'display:none' : '' }}">
-            <div class="sum-row"><span>Subtotal</span><strong id="sum-subtotal">£{{ number_format($subtotal, 2) }}</strong></div>
-            <div class="sum-row"><span>Discounts</span><strong id="sum-discount">-£{{ number_format($discount, 2) }}</strong></div>
+          <div class="panel" id="summaryWrap" style="display:none">
+            <div class="sum-row"><span>Subtotal</span><strong id="sum-subtotal">£0.00</strong></div>
+            <div class="sum-row"><span>Discounts</span><strong id="sum-discount">-£0.00</strong></div>
             <div class="sum-row muted"><span>Taxes</span><span>Included where applicable</span></div>
             <div class="sum-sep"></div>
-            <div class="sum-row total"><span>Total</span><strong id="sum-total">£{{ number_format($total, 2) }}</strong></div>
+            <div class="sum-row total"><span>Total</span><strong id="sum-total">£0.00</strong></div>
 
             <div class="promo">
               <label for="promo-code">Promo code</label>
@@ -72,14 +55,14 @@
               <div id="promo-msg" class="promo-msg"></div>
             </div>
 
-            <button class="btn-wow btn-wow--cta w-100" id="checkoutBtn" {{ $isEmpty ? 'disabled' : '' }}>Continue to checkout</button>
+            <button class="btn-wow btn-wow--cta w-100" id="checkoutBtn" disabled>Continue to checkout</button>
             <div class="trust-hints">
               <div class="hint"><span class="dot"></span>Secure checkout</div>
               <div class="hint"><span class="dot"></span>Free reschedule window</div>
             </div>
           </div>
 
-          <div class="panel empty-wrap" id="emptyWrap" style="{{ $isEmpty ? '' : 'display:none' }}">
+          <div class="panel empty-wrap" id="emptyWrap" style="">
             <div class="empty-hero">
               <div class="empty-illu" aria-hidden="true">🛒</div>
               <div>
@@ -101,50 +84,93 @@
 (function(){
   function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(e){ return '' } }
   function post(url, data){ var token=decodeURIComponent(cookie('XSRF-TOKEN')||''); return fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest','X-XSRF-TOKEN':token }, body: JSON.stringify(data||{}), credentials:'same-origin' }).then(r=>r.json()); }
-  function money(n){ try{ return '£'+Number(n).toFixed(2) }catch(_){ return '£0.00' } }
+  function money(n){ try{ return '£'+Number(n||0).toFixed(2) }catch(_){ return '£0.00' } }
+  function readLocalCart(){
+    try{
+      var raw = localStorage.getItem('wow_cart');
+      if (raw){
+        var data = JSON.parse(raw);
+        var items = (data && (data.items||data.cart||data)) || [];
+        if (Array.isArray(items)) return items.map(function(x){ return { id:String(x.id), title:x.title||x.name, url:x.url||x.href||'#', img:x.image||x.img||'', unit: ((Number(x.price_min ?? x.price ?? 0)>=1000)? Number(x.price_min ?? x.price ?? 0)/100 : Number(x.price_min ?? x.price ?? 0)), qty: Number(x.qty||x.quantity||1) } });
+      }
+      var c = decodeURIComponent(cookie('wow_cart')||'');
+      if (c){ var obj = JSON.parse(c); var arr = Array.isArray(obj) ? obj : Object.values(obj||{}); return (arr||[]).filter(Boolean).map(function(x){ var p=Number(x.price||0); if(p>=1000) p=p/100; return { id:String(x.id), title:x.title||'Item', url:x.url||'#', img:x.image||'', unit:p, qty:Number(x.qty||1) } }); }
+    }catch(_){ }
+    return [];
+  }
 
-  function recalc(){
-    var rows = Array.from(document.querySelectorAll('.cart-row'));
-    var sub = 0; rows.forEach(function(r){ var u = parseFloat(r.getAttribute('data-unit')||'0')||0; var q = parseInt(r.querySelector('.qty-input')?.value||'1',10); if(!isFinite(q) || q<1) q=1; sub += u*q; r.querySelector('.cart-amt')?.replaceChildren(document.createTextNode(money(u*q))); });
-    document.getElementById('sum-subtotal')?.replaceChildren(document.createTextNode(money(sub)));
-    var discEl = document.getElementById('sum-discount'); var dValText = discEl?.textContent?.replace('£','').replace('-','')||'0'; var dVal = parseFloat(dValText)||0; var tot = Math.max(0, sub - dVal); document.getElementById('sum-total')?.replaceChildren(document.createTextNode(money(tot)));
-    var grid = document.getElementById('cartGrid'); var head=document.getElementById('sumHeadTitle'); var has = rows.length>0; grid.classList.toggle('is-empty', !has);
-    document.getElementById('summaryWrap').style.display = has ? '' : 'none';
-    document.getElementById('emptyWrap').style.display = has ? 'none' : '';
-    document.getElementById('cartHead').classList.toggle('hidden', !has);
-    document.getElementById('cartFoot').classList.toggle('hidden', !has);
-    document.getElementById('cartBody').classList.toggle('hidden', !has);
-    head.textContent = has ? 'Order summary' : 'Your cart';
-    var checkoutBtn = document.getElementById('checkoutBtn'); if(checkoutBtn){ checkoutBtn.disabled = !has; checkoutBtn.style.opacity = has? '1' : '.55'; checkoutBtn.style.cursor = has? 'pointer' : 'not-allowed'; }
+  var cart = readLocalCart();
+  try{ if(!cart.length){ cart = @json($serverCart) } }catch(_){ }
+  var promo = { code:"", pct:0 };
+
+  var grid = document.getElementById('cartGrid');
+  var cartBody = document.getElementById('cartBody');
+  var cartHead = document.getElementById('cartHead');
+  var cartFoot = document.getElementById('cartFoot');
+  var sumHeadTitle = document.getElementById('sumHeadTitle');
+  var sumSubtotal = document.getElementById('sum-subtotal');
+  var sumDiscount = document.getElementById('sum-discount');
+  var sumTotal = document.getElementById('sum-total');
+
+  function subtotal(){ return cart.reduce(function(s,it){ return s + (Number(it.unit||0) * Number(it.qty||1)); }, 0); }
+  function discountAmount(){ return subtotal() * (promo.pct||0); }
+  function total(){ return Math.max(0, subtotal() - discountAmount()); }
+
+  function renderSummary(){
+    sumSubtotal.textContent = money(subtotal());
+    sumDiscount.textContent = '-' + money(discountAmount());
+    sumTotal.textContent = money(total());
+    var checkoutBtn = document.getElementById('checkoutBtn');
+    checkoutBtn.disabled = cart.length === 0;
+    checkoutBtn.style.opacity = cart.length === 0 ? '.55' : '1';
+    checkoutBtn.style.cursor = cart.length === 0 ? 'not-allowed' : 'pointer';
+  }
+  function escapeHtml(str){ return String(str||"").replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
+  function renderCart(){
+    var isEmpty = cart.length===0;
+    grid.classList.toggle('is-empty', isEmpty);
+    cartHead.classList.toggle('hidden', isEmpty);
+    cartFoot.classList.toggle('hidden', isEmpty);
+    cartBody.classList.toggle('hidden', isEmpty);
+    document.getElementById('summaryWrap').style.display = isEmpty ? 'none' : '';
+    document.getElementById('emptyWrap').style.display = isEmpty ? '' : 'none';
+    sumHeadTitle.textContent = isEmpty ? 'Your cart' : 'Order summary';
+    if (isEmpty){ cartBody.innerHTML = ''; renderSummary(); return; }
+    cartBody.innerHTML = cart.map(function(it){ var line = Number(it.unit||0) * Number(it.qty||1); return (
+      '<div class="cart-row" data-id="'+escapeHtml(String(it.id))+'">'
+      + '<div class="cart-item">'
+        + '<a class="cart-img" href="'+escapeHtml(it.url||'#')+'">'+(it.img?('<img src="'+escapeHtml(it.img)+'" alt="">'):'')+'</a>'
+        + '<div class="cart-info">'
+          + '<a class="title" href="'+escapeHtml(it.url||'#')+'">'+escapeHtml(it.title||'')+'</a>'
+          + '<div class="meta">'
+            + '<span class="pill"><span class="dot"></span>Unit: '+money(it.unit)+'</span>'
+            + '<span class="pill">Line: '+money(line)+'</span>'
+          + '</div>'
+          + '<button class="cart-remove" type="button" data-remove="'+escapeHtml(String(it.id))+'" aria-label="Remove">Remove</button>'
+        + '</div>'
+      + '</div>'
+      + '<div class="cart-qty">'
+        + '<div class="qty">'
+          + '<button type="button" class="js-qdec" aria-label="Decrease">−</button>'
+          + '<input type="number" class="qty-input" min="1" value="'+Number(it.qty||1)+'">'
+          + '<button type="button" class="js-qinc" aria-label="Increase">+</button>'
+        + '</div>'
+      + '</div>'
+      + '<div class="cart-amt">'+money(line)+'</div>'
+    + '</div>' ); }).join('');
+    renderSummary();
   }
 
   document.addEventListener('click', function(e){
     var row = e.target.closest('.cart-row');
-    if(row && (e.target.closest('.js-qdec') || e.target.closest('.js-qinc'))){
-      var id = row.getAttribute('data-id'); var inp = row.querySelector('.qty-input'); var v = parseInt(inp.value||'1',10); v = isFinite(v)?v:1; v += (e.target.closest('.js-qinc')?1:-1); if(v<1) v=1; inp.value = v; recalc(); post('/api/cart/update', { id:id, qty:v }); return;
-    }
-    if(e.target.matches('[data-remove]')){
-      var id = e.target.getAttribute('data-remove');
-      try{ var raw = localStorage.getItem('wow_cart'); var data = raw?JSON.parse(raw):{}; var arr = Array.isArray(data.items)?data.items:[]; data.items = arr.filter(function(it){ return String(it.id)!==String(id) }); localStorage.setItem('wow_cart', JSON.stringify(data)); }catch(_){ }
-      post('/api/cart/remove', { id:id }).then(function(){ var r=document.querySelector('.cart-row[data-id="'+id+'"]'); if(r){ r.remove(); recalc(); } }); return;
-    }
-    if (e.target && e.target.id === 'clearCartBtn'){
-      var ids = Array.from(document.querySelectorAll('.cart-row')).map(function(r){ return r.getAttribute('data-id'); });
-      ids.forEach(function(id){ post('/api/cart/remove', { id:id }); });
-      document.getElementById('cartBody').innerHTML=''; recalc();
-    }
+    if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){ var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; item.qty=Math.max(1,Number(item.qty||1)+(e.target.closest('.js-qinc')?1:-1)); renderCart(); post('/api/cart/update',{id:id,qty:item.qty}); return; }
+    if(e.target.matches('[data-remove]')){ var id=e.target.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); try{ var raw=localStorage.getItem('wow_cart'); var data=raw?JSON.parse(raw):{}; var arr=Array.isArray(data.items)?data.items:[]; data.items=arr.filter(function(it){return String(it.id)!==String(id)}); localStorage.setItem('wow_cart', JSON.stringify(data)); }catch(_){ } renderCart(); post('/api/cart/remove',{id:id}); return; }
+    if(e.target && e.target.id==='clearCartBtn'){ var ids=cart.map(function(x){return x.id}); cart=[]; renderCart(); ids.forEach(function(id){ post('/api/cart/remove',{id:id}) }); return; }
+    if(e.target && e.target.id==='apply-promo'){ var code=(document.getElementById('promo-code')?.value||'').trim(); var msg=document.getElementById('promo-msg'); post('/api/cart/promo',{code:code}).then(function(){ msg.textContent=code?("Code '"+code+"' applied"):'Code cleared'; }).catch(function(){ msg.textContent='Could not apply code'; }); return; }
   });
+  document.addEventListener('input', function(e){ var inp=e.target.closest('.qty-input'); if(!inp) return; var row=e.target.closest('.cart-row'); if(!row) return; var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; var v=parseInt(inp.value||'1',10); if(!Number.isFinite(v)||v<1) v=1; item.qty=v; renderCart(); post('/api/cart/update',{id:id,qty:v}); });
 
-  document.addEventListener('input', function(e){
-    var inp = e.target.closest('.qty-input'); if(!inp) return; var row = e.target.closest('.cart-row'); if(!row) return; var id = row.getAttribute('data-id'); var v = parseInt(inp.value||'1',10); if(!isFinite(v)||v<1) v=1; inp.value=v; recalc(); post('/api/cart/update', { id:id, qty:v });
-  });
-
-  document.getElementById('apply-promo')?.addEventListener('click', function(){
-    var code = (document.getElementById('promo-code')?.value||'').trim(); var msg=document.getElementById('promo-msg');
-    post('/api/cart/promo', { code: code }).then(function(){ msg.textContent = code? ('Code \''+code+'\' applied') : 'Code cleared'; msg.className='promo-msg ok'; }).catch(function(){ msg.textContent='Could not apply code'; msg.className='promo-msg err'; });
-  });
-
-  recalc();
+  renderCart();
 })();
 </script>
 
@@ -215,4 +241,3 @@
 @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
 </style>
 @endsection
-
