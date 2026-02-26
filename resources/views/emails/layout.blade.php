@@ -26,15 +26,13 @@
     .muted { color:#6e6e80; }
 
     /* Footer */
-    .footer { padding:16px 20px 22px; text-align:center; border-top:1px solid #f0f1f4; }
-    .powered { display:inline-flex; align-items:center; gap:8px; color:#6e6e80; font-size:12px; }
-    .wow { height:auto; width:96px; }
+    .footer { padding:16px 20px 22px; text-align:center; border-top:1px solid #f0f1f4; color:#6e6e80; font-size:12px; }
 
     @media (max-width:480px){
       .wrapper { padding:16px 8px; }
       .content { padding:16px; font-size:14px; }
       .brand { width:140px; }
-      .wow { width:80px; }
+      .footer { font-size:11px; }
     }
   </style>
 </head>
@@ -57,9 +55,7 @@
           </tr>
           <tr>
             <td class="footer">
-              <span class="powered">Powered by
-                <img class="wow" src="https://cdn.shopify.com/s/files/1/0820/3947/2469/files/logo.png?v=1738109013" alt="We Offer Wellness" width="96" style="width:96px; height:auto;">
-              </span>
+              © {{ date('Y') }} AtEase by We Offer Wellness
             </td>
           </tr>
         </table>
