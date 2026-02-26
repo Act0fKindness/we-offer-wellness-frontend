@@ -146,7 +146,8 @@
       --from:12px; --priceNow:22px; --was:12px;
       --rowH: 230px;
     }
-    .wow-row-card{ background:var(--card); border:1px solid #eee; border-radius:4px; box-shadow:var(--shadow); overflow:hidden; display:grid; height: var(--rowH);
+    .wow-row-card{ background:var(--card); border:1px solid rgba(16, 24, 40, .18); border-radius:4px; box-shadow:var(--shadow); overflow:hidden; display:grid; height: var(--rowH);
+
       grid-template-columns: minmax(var(--col1Min), var(--col1Flex)) minmax(var(--col2Min), var(--col2Flex)) minmax(var(--col3Min), var(--col3Flex)); transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease; position:relative; }
     .wow-row-card:hover{ transform:translateY(-1px); box-shadow:0 22px 70px rgba(16,24,40,.14); border-color:rgba(16,24,40,.22); }
     .wow-row-card[data-url]{ cursor:pointer; }
