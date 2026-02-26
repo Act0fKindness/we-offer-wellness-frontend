@@ -85,6 +85,12 @@
 .auth-form{ display:grid; gap:12px; }
 .auth-form input[type="email"], .auth-form input[type="password"], .auth-form input[type="text"]{ border:1px solid var(--ink-200); border-radius:12px; padding:12px; font-size:16px; }
 .field-error{ color:#dc2626; font-weight:700; font-size:13px; }
+.auth-kicker{ text-transform:uppercase; font-size:12px; letter-spacing:.2em; color: var(--ink-500); margin-bottom:6px; font-weight:800; }
+.auth-subline{ color: var(--ink-600); margin:0 0 12px; }
+.auth-perks{ margin:0 0 16px 1.1rem; color: var(--ink-600); }
+.auth-perks li{ margin-bottom:6px; }
+.auth-switch{ text-align:center; margin-top:10px; color: var(--ink-600); }
+.auth-switch a{ font-weight:700; }
 /*!
 * Bootstrap  v5.3.8 (https://getbootstrap.com/)
 * Copyright 2011-2025 The Bootstrap Authors
