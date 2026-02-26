@@ -301,7 +301,7 @@
 .account-dropdown .btn{ height:38px; border-radius:4px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color: rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); text-decoration:none; flex:1 1 auto }
 .cart-dropdown2 .btn--primary,
 .account-dropdown .btn--primary{ border-color: rgba(0,0,0,.10); color:#fff; background:#549483 !important }
-.accountdd-logout{ margin-top:10px; }
+.accountdd-logout{ margin-top:15px; }
 .accountdd-logout__btn{ width:100%; }
 #visit-link{ font-weight:700; color:#2c6bed; text-decoration:none }
 #visit-link:hover{ text-decoration:underline }
