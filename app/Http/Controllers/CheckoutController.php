@@ -14,7 +14,34 @@ class CheckoutController extends Controller
 {
     public function createSession(Request $request)
     {
-        $items = session('cart.items', []);
+        $items = [];
+
+        $payload = $request->input('items');
+        if (is_array($payload) && !empty($payload)) {
+            $normalized = [];
+            $isList = array_is_list($payload);
+            foreach ($payload as $key => $entry) {
+                if (!is_array($entry)) continue;
+                $id = $entry['id'] ?? ($isList ? null : $key);
+                if (!$id) continue;
+                $normalized[(string)$id] = [
+                    'id' => $id,
+                    'title' => (string)($entry['title'] ?? ('Item '.$id)),
+                    'price' => (float)($entry['price'] ?? $entry['unit'] ?? 0),
+                    'qty' => max(1, (int)($entry['qty'] ?? $entry['quantity'] ?? 1)),
+                    'image' => $entry['image'] ?? $entry['img'] ?? null,
+                    'url' => $entry['url'] ?? '#',
+                ];
+            }
+            if (!empty($normalized)) {
+                $items = $normalized;
+                session(['cart.items' => $items]);
+            }
+        }
+
+        if (empty($items)) {
+            $items = session('cart.items', []);
+        }
         if (empty($items)) {
             $cookieRaw = $request->cookie('wow_cart');
             if ($cookieRaw) {
@@ -28,30 +55,6 @@ class CheckoutController extends Controller
                         'raw_sample' => substr($cookieRaw, 0, 120),
                         'error' => json_last_error_msg(),
                     ]);
-                }
-            }
-        }
-        if (empty($items)) {
-            $payload = $request->input('items');
-            if (is_array($payload) && !empty($payload)) {
-                $normalized = [];
-                $isList = array_is_list($payload);
-                foreach ($payload as $key => $entry) {
-                    if (!is_array($entry)) continue;
-                    $id = $entry['id'] ?? ($isList ? null : $key);
-                    if (!$id) continue;
-                    $normalized[(string)$id] = [
-                        'id' => $id,
-                        'title' => (string)($entry['title'] ?? ('Item '.$id)),
-                        'price' => (float)($entry['price'] ?? $entry['unit'] ?? 0),
-                        'qty' => max(1, (int)($entry['qty'] ?? $entry['quantity'] ?? 1)),
-                        'image' => $entry['image'] ?? $entry['img'] ?? null,
-                        'url' => $entry['url'] ?? '#',
-                    ];
-                }
-                if (!empty($normalized)) {
-                    $items = $normalized;
-                    session(['cart.items' => $items]);
                 }
             }
         }
