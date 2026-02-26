@@ -253,6 +253,11 @@
   width: auto;
   max-width: 309px;
 }
+/* Search result tags styled like product badges */
+#sr-tags{ display:flex; flex-wrap:wrap; gap:8px; }
+#sr-tags .badge{ height:32px; display:inline-flex; align-items:center; gap:4px; padding:0 10px; border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size:12px; line-height:1; white-space:nowrap; }
+#sr-tags .badge--warm{ background:#ffe7c2; color:#6b4b12 }
+#sr-tags .badge--cool{ background:#dfe9ff; color:#1f3a77 }
 </style>
 
 <script>
@@ -308,13 +313,23 @@
   try{
     var tagsEl = document.getElementById('sr-tags');
     function esc(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
-    var p = new URLSearchParams(window.location.search||''); var tags=[];
-    if(p.get('where')) tags.push(p.get('where'));
-    if(p.get('mode')) tags.push(p.get('mode').toLowerCase()==='online'?'Online only':'In person');
-    if(p.get('type')) tags.push(p.get('type'));
-    if(p.get('tag')) tags.push('#'+p.get('tag'));
-    if(p.get('price_max')) tags.push('Under £'+p.get('price_max'));
-    if(tagsEl) tagsEl.innerHTML = tags.map(t => '<span class="chip">'+esc(t)+'</span>').join('');
+    var p = new URLSearchParams(window.location.search||'');
+    var tags = [];
+    var where = (p.get('where')||'').trim();
+    var mode = (p.get('mode')||'').trim().toLowerCase();
+    // Prefer a single "Online only" badge when mode=online, avoid duplicate with where=Online
+    if (mode === 'online') {
+      tags.push('Online only');
+    } else if (where) {
+      tags.push(where);
+    }
+    if (p.get('type')) tags.push(p.get('type'));
+    if (p.get('tag')) tags.push('#' + p.get('tag'));
+    if (p.get('price_max')) tags.push('Under £' + p.get('price_max'));
+    // Dedupe ignoring case
+    var seen = new Set();
+    tags = tags.filter(function(t){ var k = String(t).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+    if (tagsEl) tagsEl.innerHTML = tags.map(function(t){ return '<span class="badge badge--cool">'+esc(t)+'</span>'; }).join('');
   }catch{}
 
   // Map (Mapbox GL JS with 3D buildings)
