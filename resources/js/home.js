@@ -54,7 +54,13 @@ function initMobileMenu() {
 }
 
 function setupUltraSearchBar(prefix) {
-  const root = document.querySelector(`#${prefix}-root`) || document;
+  // Find the specific ultra-search container for this prefix
+  const root = (
+    document.querySelector(`#${prefix}-root`) ||
+    document.querySelector(`#${prefix}-seg-what`)?.closest('.wow-ultra') ||
+    document.getElementById(`${prefix}-what`)?.closest('.wow-ultra') ||
+    null
+  );
   function byId(s){ return document.getElementById(prefix + '-' + s); }
   const panes = ['what-pane','where-pane','when-pane','who-pane'];
   function hideAll(){ panes.forEach((id) => { const el = byId(id); if (el) el.classList.add('d-none'); }); const what = byId('what'); if (what) what.setAttribute('aria-expanded','false'); }
@@ -63,7 +69,8 @@ function setupUltraSearchBar(prefix) {
   const whereEditor = byId('where-editor'); if(whereEditor){ whereEditor.addEventListener('focus', ()=>openPane('where')); whereEditor.addEventListener('click', ()=>openPane('where')); }
   const whenInput = byId('when'); if(whenInput){ whenInput.addEventListener('focus', ()=>openPane('when')); whenInput.addEventListener('click', ()=>openPane('when')); }
   const whoSeg = byId('seg-who'); if(whoSeg){ whoSeg.addEventListener('click', ()=>openPane('who')); }
-  document.addEventListener('click', (e)=>{ const container = document.querySelector('.wow-ultra'); if(container && !container.contains(e.target)) hideAll(); });
+  // Close only when clicking outside this specific bar
+  document.addEventListener('click', (e)=>{ if(root && !root.contains(e.target)) hideAll(); });
   document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hideAll(); });
   const whatList = byId('what-list'); if(whatList && byId('what')){ whatList.addEventListener('click', (e)=>{ const btn = e.target.closest('.item'); if(btn && btn.dataset.value){ byId('what').value = btn.dataset.value; hideAll(); byId('what').blur(); } }); }
   const whereHidden = byId('where'); if(byId('where-list') && whereEditor){ byId('where-list').addEventListener('click', (e)=>{ const btn = e.target.closest('.item'); if(btn && btn.dataset.value){ whereEditor.textContent = btn.dataset.value; if(whereHidden) whereHidden.value = btn.dataset.value; hideAll(); } }); }
