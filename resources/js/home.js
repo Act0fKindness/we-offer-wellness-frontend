@@ -33,7 +33,7 @@ function initMegaMenu() {
         try { if (overlay) overlay.style.display = 'none'; } catch(_){}
       });
     });
-  } catch {}
+  } catch (e) {}
   header.addEventListener('mouseleave', () => { panel.style.display = 'none'; if (overlay) overlay.style.display = 'none'; });
   document.addEventListener('click', (e) => {
     if (!header.contains(e.target)) { panel.style.display = 'none'; if (overlay) overlay.style.display = 'none'; }
@@ -71,9 +71,9 @@ function setupUltraSearchBar(prefix) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  try { initMegaMenu(); } catch {}
-  try { initMobileMenu(); } catch {}
-  try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch {}
+  try { initMegaMenu(); } catch (e) {}
+  try { initMobileMenu(); } catch (e) {}
+  try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {}
   try {
     // Cart dropdown: hover on desktop shows mini cart; mobile click navigates
     const wrap = document.querySelector('.cart-wrap');
@@ -187,5 +187,5 @@ document.addEventListener('DOMContentLoaded', () => {
         wrap.addEventListener('mouseenter', loadUpsell, { once:true });
       }catch(_){ }
     }
-  } catch {}
+  } catch (e) {}
 });
