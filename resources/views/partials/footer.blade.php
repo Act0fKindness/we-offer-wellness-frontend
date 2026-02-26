@@ -66,7 +66,7 @@
                 Read full guidance
             </a>
         </div>
-        <div class="links-col">
+        <div class="links-col links-col--three">
             <div class="col">
                 <div class="title">Explore</div>
                 <ul>
@@ -93,7 +93,7 @@
                            rel="noopener">Practitioner chats</a></li>
                 </ul>
             </div>
-            <div class="col col--full">
+            <div class="col">
                 <div class="title">Help Centre &amp; FAQ</div>
                 <ul>
                     <li><a href="/help">Help centre</a></li>
@@ -110,6 +110,10 @@
         </div>
     </div>
     <style>
+        .wow-footer .links-col { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        @media (min-width: 768px) {
+            .wow-footer .links-col.links-col--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
         .wow-footer .links-col .col--full { grid-column: 1 / -1; }
         .wow-footer .safety-card { display:flex; flex-direction:column; gap:10px; padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.15); text-align:left; margin-bottom:15px; }
         .wow-footer .safety-card .title { font-weight:700; margin-bottom:4px; }
