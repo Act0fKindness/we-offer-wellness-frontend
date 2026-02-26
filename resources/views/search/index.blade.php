@@ -155,7 +155,7 @@
   .results-scroll{ padding-right: 6px; }
   .map-wrap{ position: sticky; top: 80px; }
   /* Adjust height to account for increased sticky top */
-  .map{ width: 100%; height: calc(100vh - 80px - 24px); border: 1px solid var(--ink-200); border-radius: 12px; overflow: hidden; }
+  .map{ width: 100%; height: calc(100vh - 80px - 24px); border: 1px solid var(--ink-200); border-radius: 3px; overflow: hidden; }
 }
 /* Segmented controls (search controls only) */
 .search-controls .seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
@@ -404,7 +404,7 @@
               var firstItem = document.querySelector('.results-scroll [data-pid]');
               if (firstItem) { centerOnPid(firstItem.getAttribute('data-pid'), { zoom: 14, duration: 300 }); }
             }catch(_e){}
-            
+
           });
           // Mode toggle (2D/3D)
           document.querySelectorAll('[data-mode]')?.forEach(function(btn){
@@ -541,7 +541,7 @@
                 try{ (window.centerOnPid||window.__centerOnPid||function(){
                   var group=(window.__wowMarkersByPid||{})[pid]||[]; if(!group.length) return; var ll=group[0].marker.getLngLat(); var map=window.__wowMap; if(map){ map.easeTo({ center:[ll.lng,ll.lat], zoom: Math.max(map.getZoom(), 13), duration: 400 }); } Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){ (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===pid); }); });
                 })(); }catch(_e){}
-                
+
               }
             }
           }catch(_e){}
