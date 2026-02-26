@@ -84,6 +84,27 @@
     $lng = $product->lng ?? $product->longitude ?? ($product->geo_lng ?? null);
 @endphp
 
+<style>
+        .btn-primary-list {
+            border-color: rgba(0, 0, 0, .10);
+            color: #fff;
+            background: #549483 !important;
+            height: 38px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 400;
+            border: 1px solid rgba(16, 24, 40, .22);
+            background: #fff !important;
+            color: rgba(11, 18, 32, .82);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
+        }
+  </style>
+
+
 @once
   <style>
     /* Copy of template styling, scoped to .wow-row-card */
@@ -153,24 +174,8 @@
     @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; height:auto; } .wow-row-media{ grid-column:1; height:220px; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce){ .wow-row-card{ transition:none; } .wow-save{ transition:none; } }
 
-    .btn-primary-list {
-        border-color: rgba(0, 0, 0, .10);
-        color: #fff;
-        background: #549483 !important;
-        height: 38px;
-        border-radius: 4px;
-        font-size: 16px;
-        font-weight: 400;
-        border: 1px solid rgba(16, 24, 40, .22);
-        background: #fff !important;
-        color: rgba(11, 18, 32, .82);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
-    }
-  </style>
+    </style>
+
 @endonce
 
 <div class="wow-row-card"
