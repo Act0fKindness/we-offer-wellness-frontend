@@ -39,8 +39,3 @@ class CheckoutResultController extends Controller
         return hash_hmac('sha256', $order->id.'|'.$order->amount_total, config('app.key', 'secret'));
     }
 }
-
-class CheckoutResultController extends Controller
-{
-    //
-}
