@@ -14,6 +14,7 @@ Route::get('/cart/mini', [CartController::class, 'mini']);
 Route::post('/cart/add', [CartController::class, 'add']);
 Route::post('/cart/remove', [CartController::class, 'remove']);
 Route::post('/cart/update', [CartController::class, 'update']);
+Route::post('/cart/clear', [CartController::class, 'clear']);
 Route::post('/cart/gift', [CartController::class, 'gift']);
 
 // V3 subscriber opt-in API
