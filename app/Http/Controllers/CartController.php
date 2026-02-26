@@ -4,58 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
-
 class CartController extends Controller
 {
-    public function page(Request $request)
+    public function page()
     {
-        $success = $request->boolean('paid');
-        $failed = $request->boolean('cancel');
-        $clearCookie = false;
-
         $items = session('cart.items', []);
-        if ($success) {
-            $items = [];
-            session()->forget('cart.items');
-            session()->forget('cart_promo_code');
-            session()->forget('cart_gift_code');
-            $clearCookie = true;
-        } elseif (empty($items)) {
-            $cookie = $request->cookie('wow_cart');
-            if ($cookie) {
-                $restored = json_decode($cookie, true) ?: [];
-                if (is_array($restored)) {
-                    $items = $restored;
-                    session(['cart.items' => $restored]);
-                }
-            }
+        if (empty($items)) {
+            $cookie = request()->cookie('wow_cart');
+            if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { session(['cart.items' => $restored]); } }
         }
-
-        $serverCart = [];
-        foreach (($items ?? []) as $id => $it) {
-            $p = (float)($it['price'] ?? 0);
-            if ($p >= 1000) $p = $p / 100;
-            $serverCart[] = [
-                'id'    => (string)$id,
-                'title' => (string)($it['title'] ?? 'Item'),
-                'url'   => (string)($it['url'] ?? '#'),
-                'img'   => (string)($it['image'] ?? ''),
-                'unit'  => round($p, 2),
-                'qty'   => (int)($it['qty'] ?? 1),
-            ];
-        }
-
-        $response = response()->view('cart.index', [
-            'serverCart' => $serverCart,
-            'checkoutSuccess' => $success,
-            'checkoutFailed' => $failed,
-        ]);
-
-        if ($clearCookie) {
-            $response->withCookie(cookie('wow_cart', json_encode([]), 60*24*30));
-        }
-
-        return $response;
+        return view('cart.index');
     }
 
     public function promo(Request $request)

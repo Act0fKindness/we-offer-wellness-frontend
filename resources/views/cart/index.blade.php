@@ -2,24 +2,26 @@
 
 @section('content')
 @php
-  $serverCart = $serverCart ?? [];
-  $checkoutSuccess = $checkoutSuccess ?? false;
-  $checkoutFailed = $checkoutFailed ?? false;
+  $items = session('cart.items', []);
+  $serverCart = [];
+  foreach (($items ?? []) as $id => $it) {
+      $p = (float)($it['price'] ?? 0);
+      if ($p >= 1000) $p = $p / 100;
+      $serverCart[] = [
+          'id'    => (string)$id,
+          'title' => (string)($it['title'] ?? 'Item'),
+          'url'   => (string)($it['url'] ?? '#'),
+          'img'   => (string)($it['image'] ?? ''),
+          'unit'  => round($p, 2),
+          'qty'   => (int)($it['qty'] ?? 1),
+      ];
+  }
 @endphp
 
 <section class="section">
   <div class="container-page">
     <div class="kicker">Your cart</div>
     <h1 class="mb-1">Ready to book</h1>
-    @if($checkoutSuccess)
-      <div class="alert alert-success">
-        <strong>Payment confirmed.</strong> Thank you! Your booking is locked in and details are on their way to your inbox.
-      </div>
-    @elseif($checkoutFailed)
-      <div class="alert alert-warning">
-        <strong>Payment not completed.</strong> Your cart is still saved so you can try again or adjust your selection.
-      </div>
-    @endif
     <p class="lead-cart">Secure, safe and flexible — you can reschedule when needed.</p>
 
     <div id="cartGrid" class="cart-grid {{ empty($serverCart) ? 'is-empty' : '' }}">
@@ -101,7 +103,6 @@
 
 <script>
 (function(){
-  var checkoutSuccess = !!@json($checkoutSuccess ?? false);
   function cookie(name){
     try{
       var match = document.cookie.split(';').map(function(row){ return row.trim(); }).find(function(row){ return row.startsWith(name+'='); });
@@ -139,11 +140,7 @@
     return [];
   }
 
-  if (checkoutSuccess){
-    try { localStorage.removeItem('wow_cart'); } catch(_){ }
-  }
-
-  var cart = checkoutSuccess ? [] : readLocalCart();
+  var cart = readLocalCart();
   try{ if(!cart.length){ cart = @json($serverCart) } }catch(_){ }
   var promo = { code:"", pct:0 };
 
@@ -336,10 +333,7 @@
 </script>
 
 <style>
-.alert{ margin:14px 0; padding:14px; border-radius:14px; font-weight:700; }
-.alert-success{ background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
-.alert-warning{ background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
-.lead-cart{ margin:0 0 18px; color: var(--ink-600); font-size:14px; font-weight:600; }
+ .lead-cart{ margin:0 0 18px; color: var(--ink-600); font-size:14px; font-weight:600; }
 .card.glass{ position:relative; border-radius:16px; border:1px solid rgba(255,255,255,.55); background: rgba(255,255,255,.85); box-shadow: 0 18px 55px rgba(16,24,40,.10); overflow:hidden; }
 .card.glass:before{ content:""; position:absolute; inset:0; background: rgba(255,255,255,.35); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); pointer-events:none; }
 .card.glass > *{ position:relative; }

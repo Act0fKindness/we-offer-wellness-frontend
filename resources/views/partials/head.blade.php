@@ -67,6 +67,17 @@
 <!-- Daniel it goes here -->
 
 <style>@charset "UTF-8";
+.hero-card{ max-width:720px; margin:40px auto; padding:32px; border-radius:20px; background:#fff; border:1px solid var(--ink-100); box-shadow:0 20px 40px rgba(15,23,42,.12); text-align:center; }
+.hero-card--warn{ border-color:#fcd34d; background:#fff7ed; }
+.hero-card .hero-icon{ width:56px; height:56px; border-radius:50%; display:grid; place-items:center; margin:0 auto 16px; font-size:24px; font-weight:800; background:#ecfdf5; color:#047857; }
+.hero-card--warn .hero-icon{ background:#fef3c7; color:#b45309; }
+.hero-card h1{ margin-bottom:12px; font-size:clamp(24px,4vw,36px); font-weight:900; }
+.hero-card p{ margin:0 auto 12px; max-width:540px; color: var(--ink-700); font-size:16px; }
+.hero-card .order-card{ margin:18px auto; padding:16px; border-radius:16px; border:1px solid var(--ink-100); background:#f8fafc; text-align:left; }
+.hero-card .order-line{ display:flex; justify-content:space-between; gap:10px; margin-bottom:8px; font-weight:700; color: var(--ink-700); }
+.hero-card .order-line span:last-child{ color: var(--ink-900); }
+.cta-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:18px; }
+.cta-row .link-wow{ align-self:center; font-weight:700; }
 /*!
 * Bootstrap  v5.3.8 (https://getbootstrap.com/)
 * Copyright 2011-2025 The Bootstrap Authors

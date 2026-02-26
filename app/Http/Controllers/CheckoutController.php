@@ -130,14 +130,15 @@ class CheckoutController extends Controller
         // Create Stripe Checkout Session
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
+            $successToken = CheckoutResultController::tokenForOrder($order);
             $session = StripeSession::create([
                 'mode' => 'payment',
                 'payment_method_types' => ['card'],
                 'line_items' => $lineItems,
                 'metadata' => [ 'order_id' => (string)$order->id ],
                 'client_reference_id' => (string)$order->id,
-                'success_url' => url('/cart?paid=1'),
-                'cancel_url' => url('/cart?cancel=1'),
+                'success_url' => route('checkout.success', ['order' => $order->id, 'token' => $successToken], true),
+                'cancel_url' => route('checkout.cancel', ['order' => $order->id], true),
             ]);
 
             $order->stripe_session_id = $session->id ?? null;

@@ -18,6 +18,7 @@ use App\Models\ProductCategory;
 use App\Models\Review;
 use App\Http\Controllers\Api\V3SubscriberController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CheckoutResultController;
 use App\Http\Controllers\SafetyContraindicationsController;
 use App\Http\Controllers\HelpCentreController;
 use App\Http\Controllers\AboutController;
@@ -278,8 +279,8 @@ Route::get('/cart', [CartController::class, 'page']);
 
 // Checkout routes
 Route::post('/checkout', [CheckoutController::class, 'create']);
-Route::get('/checkout/success', [CheckoutController::class, 'success']);
-Route::get('/checkout/cancel', [CheckoutController::class, 'cancel']);
+Route::get('/checkout/success', [CheckoutResultController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/cancel', [CheckoutResultController::class, 'cancel'])->name('checkout.cancel');
 
 // API routes moved to routes/api.php
 
