@@ -484,6 +484,14 @@
         var pid = item.getAttribute('data-pid');
         var group = (window.__wowMarkersByPid||{})[String(pid)]||[];
         group.forEach(function(m){ m.el.classList.add('is-active'); });
+        // Center map on hovered product's marker
+        try{
+          var map = window.__wowMap;
+          if (map && group.length){
+            var ll = group[0].marker.getLngLat();
+            map.easeTo({ center: [ll.lng, ll.lat], zoom: Math.max(map.getZoom(), 13), duration: 300 });
+          }
+        }catch(_e){}
       });
       container.addEventListener('mouseout', function(e){
         var item = e.target.closest('[data-pid]');
