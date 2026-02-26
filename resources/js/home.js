@@ -83,11 +83,20 @@ document.addEventListener('DOMContentLoaded', () => {
       function isDesktop(){ try { return window.matchMedia('(min-width: 992px)').matches } catch { return true } }
       let loaded = false; let hideTimer = null;
       function money(n){ try{ var x=Number(n); if(x>=1000) x=x/100; return '£'+x.toFixed(2) }catch(_){ return '£0.00' } }
+      function updateTotals(items){
+        try{
+          var sub = 0, count = 0;
+          (items||[]).forEach(function(it){ var p = Number(it.price||0); if(p>=1000) p=p/100; var q = Number(it.qty||1)||1; sub += p*q; count += q; });
+          var subEl = panel.querySelector('#cartdd-subtotal'); if(subEl) subEl.textContent = money(sub);
+          var label = panel.querySelector('#cartCountLabel'); if(label) label.textContent = count>0 ? (count===1?'1 item':(count+' items')) : '';
+          var hint = panel.querySelector('#freeShipHint'); if(hint){ try{ var left = Math.max(0, 50 - sub); hint.textContent = left>0 ? ('Add '+money(left)+' more for free delivery*') : 'You\u2019ve unlocked free delivery*'; }catch(_e){} }
+        }catch(_){ }
+      }
       function renderItems(items){
         try{
           const body = panel.querySelector('#cartdd-body');
           if(!body) return;
-          if(!Array.isArray(items) || items.length===0){ body.innerHTML = '<div class="cartdd-empty">Your cart is empty</div>'; return; }
+          if(!Array.isArray(items) || items.length===0){ body.innerHTML = '<div class="cartdd-empty">Your cart is empty</div>'; updateTotals([]); return; }
           body.innerHTML = items.map(function(it){
             var img = it.image ? '<div class="cartdd-img"><img src="'+String(it.image).replace(/"/g,'&quot;')+'" alt=""></div>' : '<div class="cartdd-img"></div>';
             var title = String(it.title||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
@@ -96,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             var amt = (it.price!=null) ? money((Number(it.price)||0) * qty) : '';
             return '<div class="cartdd-item">'+ img +'<div class="cartdd-info"><a class="cartdd-title" href="'+(it.url||'#')+'">'+title+'</a><div class="cartdd-meta">Qty '+qty+(price?(' • '+price+' each'):'')+'</div></div><div class="cartdd-amt">'+amt+'</div></div>';
           }).join('');
+          updateTotals(items);
         }catch(_){ /* no-op */ }
       }
       function readLocalCart(){
@@ -135,6 +145,30 @@ document.addEventListener('DOMContentLoaded', () => {
       // Expose helpers for external triggers (e.g., add-to-cart)
       try { window.__cartDropdownShow = show; } catch(_){ }
       try { window.__cartDropdownRender = function(items){ try{ renderItems(items); panel.hidden=false; }catch(_){ } } } catch(_){ }
+      // Upsell loader
+      try{
+        var upsellLoaded = false;
+        function esc(s){ return String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+        function renderUpsell(list){
+          try{
+            var wrapU = panel.querySelector('#cartdd-upsell'); if(!wrapU) return;
+            if(!Array.isArray(list) || !list.length){ wrapU.innerHTML = ''; return; }
+            wrapU.innerHTML = list.slice(0,3).map(function(it){
+              var p = Number(it.price_min ?? it.price ?? 0); if(p>=1000) p=p/100;
+              var img = it.image || (it.images && it.images[0]) || '';
+              var url = it.url || ('/therapies/'+it.id);
+              var title = esc(it.title||'');
+              return '<div class="upsell-item">'
+                + (img?('<img src="'+img+'" alt="">'):'<div style="width:46px;height:46px;border-radius:8px;background:#f3f5f7;border:1px solid #eceff3"></div>')
+                + '<div><p class="upsell-title">'+title+'</p><div class="upsell-price">'+money(p)+'</div></div>'
+                + '<button class="btn-wow btn-wow--outline btn-sm js-add-to-cart" data-id="'+it.id+'" data-title="'+title+'" data-price="'+p.toFixed(2)+'" data-image="'+img+'" data-url="'+url+'">Add</button>'
+              + '</div>';
+            }).join('');
+          }catch(_){ }
+        }
+        function loadUpsell(){ if(upsellLoaded) return; upsellLoaded=true; fetch('/api/products?limit=6&sort=popular', { headers:{ 'Accept':'application/json' }}).then(r=>r.json()).then(renderUpsell).catch(function(){ renderUpsell([]) }); }
+        wrap.addEventListener('mouseenter', loadUpsell, { once:true });
+      }catch(_){ }
     }
   } catch {}
 });

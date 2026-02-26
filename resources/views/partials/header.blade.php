@@ -99,11 +99,19 @@
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge bg-danger" style="display:none">0</span>
                     </a>
                     <div id="cart-dropdown" class="cart-dropdown2" hidden>
-                        <div class="cartdd-head">Your cart</div>
+                        <div class="cartdd-head">
+                          <div>Your cart <small id="cartCountLabel" style="font-weight:600;color:var(--ink-600);margin-left:6px"></small></div>
+                          <small id="freeShipHint" style="font-weight:600;color:var(--ink-600)"></small>
+                        </div>
                         <div class="cartdd-body" id="cartdd-body">
                             <div class="cartdd-empty">Your cart is empty</div>
                         </div>
-                        <div class="cartdd-foot"><a href="/cart" class="visit-link">Visit cart</a></div>
+                        <div class="cartdd-subtotal"><span>Subtotal</span><strong id="cartdd-subtotal">£0.00</strong></div>
+                        <div class="cartdd-upsell" id="cartdd-upsell" style="padding:10px 12px 0"></div>
+                        <div class="cartdd-foot" style="gap:8px">
+                          <a href="/cart" class="btn-wow btn-wow--outline btn-sm visit-link" style="flex:1 1 auto; text-align:center">Visit cart</a>
+                          <a href="/checkout" class="btn-wow btn-wow--cta btn-sm checkout-link" style="flex:1.15 1 auto; text-align:center">Checkout</a>
+                        </div>
                     </div>
                     </div>
                 </div><!---->
@@ -222,6 +230,12 @@
 .cartdd-title{ font-weight:600; color:#0b1323; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-decoration:none }
 .cartdd-meta{ font-size:.9rem; color:#64748b }
 .cartdd-amt{ font-weight:700; color:#0b1323; white-space:nowrap }
+.cartdd-subtotal{ padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #eef2f7; border-bottom:1px solid #eef2f7; background:#fff }
+.cartdd-subtotal span{ font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:.02em }
+.cartdd-upsell .upsell-item{ display:grid; grid-template-columns:46px 1fr auto; gap:10px; align-items:center; padding:8px 10px; border:1px solid #eef2f7; border-radius:10px; background:#fff; margin-bottom:8px }
+.cartdd-upsell .upsell-item img{ width:46px; height:46px; object-fit:cover; border-radius:8px; border:1px solid #eceff3 }
+.cartdd-upsell .upsell-title{ margin:0; font-size:13px; font-weight:700; color:#0b1323; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
+.cartdd-upsell .upsell-price{ font-size:12px; color:#64748b; font-weight:700; margin-top:4px }
 .cartdd-foot{ padding:10px 14px; border-top:1px solid #eef2f7; background:#fff; text-align:right }
 .visit-link{ font-weight:700; color:#2c6bed; text-decoration:none }
 .visit-link:hover{ text-decoration:underline }
