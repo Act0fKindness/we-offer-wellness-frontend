@@ -133,8 +133,24 @@ document.addEventListener('DOMContentLoaded', () => {
         var bag={ items: items||[] };
         (items||[]).forEach(function(it){ if(it && typeof it.id!=='undefined'){ bag[String(it.id)] = it; } });
         localStorage.setItem('wow_cart', JSON.stringify(bag));
-        try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items||[], source:'header:write' } })); } catch(_){ }
       }catch(_){ }
+      try {
+        var cookieObj = {};
+        (items||[]).forEach(function(it){
+          if(!it || typeof it.id === 'undefined') return;
+          var id = String(it.id);
+          cookieObj[id] = {
+            id: it.id,
+            title: it.title || '',
+            price: Number(it.price || it.unit || 0),
+            qty: Number(it.qty || 1) || 1,
+            image: it.image || it.img || '',
+            url: it.url || '#'
+          };
+        });
+        document.cookie = 'wow_cart=' + encodeURIComponent(JSON.stringify(cookieObj)) + '; Path=/; Max-Age=' + (60*60*24*30) + '; SameSite=Lax';
+      } catch(_){ }
+      try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items||[], source:'header:write' } })); } catch(_){ }
     }
     function removeFromLocalCart(id){
       try{
