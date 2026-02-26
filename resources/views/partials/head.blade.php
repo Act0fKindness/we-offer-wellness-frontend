@@ -98,7 +98,7 @@
 .account-email{ color: var(--ink-600); margin-bottom:12px; font-size:14px; }
 .account-actions{ display:flex; flex-direction:column; gap:10px; }
 .account-actions .btn-wow{ width:100%; }
-.account-link{ color: var(--ink-700); font-weight:700; text-decoration:none; }
+.account-link{ color: var(--ink-700); font-weight:600; font-size:12px; text-decoration:none; text-align:right; margin-bottom:15px; margin-right:12px; }
 .account-link:hover{ text-decoration:underline; }
 .account-dropdown__header{ margin-bottom:12px; }
 .account-actions--authed{ gap:8px; }
