@@ -24,7 +24,7 @@
     <h1 class="mb-1">Ready to book</h1>
     <p class="lead-cart">Secure, safe and flexible — you can reschedule when needed.</p>
 
-    <div id="cartGrid" class="cart-grid is-empty">
+    <div id="cartGrid" class="cart-grid {{ empty($serverCart) ? 'is-empty' : '' }}">
       <div class="cart-main card glass" id="cartMain">
         <div class="cart-head" id="cartHead">
           <div>Item</div><div>Qty</div><div>Price</div>
@@ -39,7 +39,7 @@
       <aside class="cart-side card glass" id="checkout">
         <div class="sum-head" id="sumHeadTitle">Your cart</div>
         <div class="sum-body">
-          <div class="panel" id="summaryWrap" style="display:none">
+          <div class="panel" id="summaryWrap" style="{{ empty($serverCart) ? 'display:none' : '' }}">
             <div class="sum-row"><span>Subtotal</span><strong id="sum-subtotal">£0.00</strong></div>
             <div class="sum-row"><span>Discounts</span><strong id="sum-discount">-£0.00</strong></div>
             <div class="sum-row muted"><span>Taxes</span><span>Included where applicable</span></div>
@@ -70,7 +70,7 @@
             </div>
           </div>
 
-          <div class="panel empty-wrap" id="emptyWrap" style="">
+          <div class="panel empty-wrap" id="emptyWrap" style="{{ empty($serverCart) ? '' : 'display:none' }}">
             <div class="empty-hero">
               <div class="empty-illu" aria-hidden="true">🛒</div>
               <div>
