@@ -143,9 +143,14 @@
   function writeLocalFromCart(){
     try{
       var items = (cart||[]).map(function(it){ return { id:String(it.id), title:String(it.title||''), qty:Number(it.qty||1)||1, price:Number(it.unit||0), image:it.img||'', url:it.url||'#' }; });
+      // LocalStorage schema (array + keyed for convenience)
       var bag = { items: items };
       items.forEach(function(it){ bag[String(it.id)] = it; });
       localStorage.setItem('wow_cart', JSON.stringify(bag));
+      // Mirror cookie used by server to restore cart between requests
+      var cookieObj = {};
+      items.forEach(function(it){ cookieObj[String(it.id)] = { id: it.id, title: it.title, price: it.price, qty: it.qty, image: it.image, url: it.url }; });
+      try{ document.cookie = 'wow_cart='+encodeURIComponent(JSON.stringify(cookieObj))+'; Path=/; Max-Age='+(60*60*24*30)+'; SameSite=Lax'; }catch(_){ }
       try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items, source:'cart:page' } })); } catch(_){ }
     }catch(_){ }
   }
@@ -249,7 +254,10 @@
     if(e.target && e.target.id==='clearCartBtn'){
       cart = [];
       renderCart();
+      // Update server (best-effort)
       post('/api/cart/clear',{}).catch(function(_){});
+      // Also clear cookie immediately so refresh reflects empty state
+      try{ document.cookie = 'wow_cart='+encodeURIComponent(JSON.stringify({}))+'; Path=/; Max-Age='+(60*60*24*30)+'; SameSite=Lax'; }catch(_){ }
       return;
     }
     if(e.target && e.target.id==='apply-promo'){ var code=(document.getElementById('promo-code')?.value||'').trim(); var msg=document.getElementById('promo-msg'); post('/api/cart/promo',{code:code}).then(function(){ msg.textContent=code?("Code '"+code+"' applied"):'Code cleared'; }).catch(function(){ msg.textContent='Could not apply code'; }); return; }
