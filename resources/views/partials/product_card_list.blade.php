@@ -86,7 +86,6 @@
 
 <style>
         span.btn-primary-list {
-            border-color: rgba(0, 0, 0, .10);
             color: #fff;
             background: #549483 !important;
             height: 38px;
@@ -94,7 +93,6 @@
             font-size: 16px;
             font-weight: 400;
             border: 1px solid rgba(16, 24, 40, .22);
-            color: rgba(11, 18, 32, .82);
             cursor: pointer;
             display: flex;
             align-items: center;
