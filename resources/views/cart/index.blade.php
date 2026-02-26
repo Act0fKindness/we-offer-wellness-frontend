@@ -103,7 +103,7 @@
 
 <div id="guestCheckoutModal" class="guest-modal" aria-hidden="true">
   <div class="guest-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle">
-    <button type="button" class="guest-modal__close" aria-label="Close" data-guest-close>×</button>
+    <button type="button" class="btn-wow btn-wow--ghost is-square btn-sm guest-modal__close" aria-label="Close" data-guest-close>×</button>
     <h2 id="guestModalTitle">Almost there</h2>
     <p>Please tell us where to send your order confirmation. You can create an account later with the same email.</p>
     <form id="guestCheckoutForm">
@@ -234,7 +234,7 @@
       return '<div class="upsell-item" data-upsell="'+it.id+'">'
         + (img?('<img src="'+img+'" alt="">'):'<div style="width:52px;height:52px;border-radius:14px;background:#f3f5f7;border:1px solid #eceff3"></div>')
         + '<div><p class="upsell-title">'+title+'</p><div class="upsell-price">'+money(p)+'</div></div>'
-        + '<button class="upsell-add" type="button" data-add="'+it.id+'">Add</button>'
+        + '<button class="btn-wow btn-wow--ghost btn-sm upsell-add" type="button" data-add="'+it.id+'">Add</button>'
       + '</div>';
     }).join('');
   }
@@ -280,14 +280,14 @@
             + '<span class="pill"><span class="dot"></span>Unit: '+money(it.unit)+'</span>'
             + '<span class="pill">Line: '+money(line)+'</span>'
           + '</div>'
-          + '<button class="cart-remove" type="button" data-remove="'+escapeHtml(String(it.id))+'" aria-label="Remove">Remove</button>'
+          + '<button class="btn-wow btn-wow--ghost btn-sm cart-remove" type="button" data-remove="'+escapeHtml(String(it.id))+'" aria-label="Remove">Remove</button>'
         + '</div>'
       + '</div>'
       + '<div class="cart-qty">'
         + '<div class="qty">'
-          + '<button type="button" class="js-qdec" aria-label="Decrease">−</button>'
+          + '<button type="button" class="btn-wow btn-wow--ghost is-square btn-sm js-qdec" aria-label="Decrease">−</button>'
           + '<input type="number" class="qty-input" min="1" value="'+Number(it.qty||1)+'">'
-          + '<button type="button" class="js-qinc" aria-label="Increase">+</button>'
+          + '<button type="button" class="btn-wow btn-wow--ghost is-square btn-sm js-qinc" aria-label="Increase">+</button>'
         + '</div>'
       + '</div>'
       + '<div class="cart-amt">'+money(line)+'</div>'
@@ -436,12 +436,13 @@
 .meta{ margin-top:6px; font-size:12px; color: var(--ink-600); font-weight:650; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 .pill{ display:inline-flex; align-items:center; gap:6px; padding: 5px 10px; border-radius:999px; border:1px solid var(--ink-200); background: rgba(255,255,255,.9); box-shadow: 0 10px 18px rgba(16,24,40,.05); font-size:12px; font-weight:750; color: var(--ink-700); }
 .pill .dot{ width:8px;height:8px;border-radius:999px; background: var(--accent-600); }
-.cart-remove{ margin-top:8px; border:0; background:transparent; color: var(--ink-600); font-weight:750; font-size:12px; cursor:pointer; padding:0; text-decoration: underline; text-underline-offset: 3px; }
-.cart-remove:hover{ color: var(--ink-800); }
+.cart-remove{ margin-top:8px; }
+.cart-remove.btn-wow{ font-size:12px; font-weight:800; padding:6px 12px; }
 .cart-qty{ display:flex; justify-content:flex-start; }
 .qty{ display:inline-flex; align-items:center; border-radius:999px; border:1px solid var(--ink-200); background: rgba(255,255,255,.92); box-shadow: 0 10px 18px rgba(16,24,40,.06); overflow:hidden; height:38px; }
-.qty button{ width:36px; height:38px; border:0; background:transparent; cursor:pointer; font-weight:900; font-size:16px; color: var(--ink-800); }
-.qty button:hover{ background: rgba(16,24,40,.05); }
+.qty .btn-wow{ min-width:38px; height:38px; border-radius:0; padding:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px; }
+.qty .btn-wow:first-child{ border-top-left-radius:999px; border-bottom-left-radius:999px; }
+.qty .btn-wow:last-child{ border-top-right-radius:999px; border-bottom-right-radius:999px; }
 .qty input{ width:46px; height:38px; border:0; outline:0; text-align:center; font-weight:900; font-size:13px; background:transparent; color: var(--ink-900); -moz-appearance:textfield; }
 .qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 .cart-amt{ text-align:right; font-weight:900; letter-spacing:-.01em; font-size:14px; color: var(--ink-900); }
@@ -500,13 +501,13 @@
 .upsell-item img{ width:52px; height:52px; border-radius:14px; object-fit:cover; border:1px solid var(--ink-200); background:#f3f5f7; }
 .upsell-title{ font-size:13px; font-weight:900; margin:0; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .upsell-price{ font-size:12px; color: var(--ink-700); font-weight:900; margin-top:4px; }
-.upsell-add{ height:34px; border-radius:999px; border:1px solid var(--ink-200); background: rgba(255,255,255,.92); font-weight:950; font-size:12px; padding:0 12px; cursor:pointer; box-shadow: 0 10px 18px rgba(16,24,40,.06); white-space:nowrap; }
-.upsell-add:hover{ background: rgba(247,248,250,.95); border-color: var(--ink-300); }
+.upsell-add.btn-wow{ min-width:88px; justify-content:center; font-size:12px; font-weight:800; }
 .upsell-add.is-added{ background: color-mix(in srgb, var(--accent-600) 12%, white); border-color: color-mix(in srgb, var(--accent-600) 45%, transparent); }
 .guest-modal{ position:fixed; inset:0; background:rgba(15,23,42,.55); display:none; align-items:center; justify-content:center; padding:20px; z-index:200; }
 .guest-modal.show{ display:flex; }
 .guest-modal__dialog{ width:min(420px, 96vw); background:#fff; border-radius:20px; padding:24px; position:relative; box-shadow:0 20px 40px rgba(15,23,42,.25); }
-.guest-modal__close{ position:absolute; top:12px; right:12px; border:0; background:transparent; font-size:22px; cursor:pointer; }
+.guest-modal__close{ position:absolute; top:12px; right:12px; }
+.guest-modal__close.btn-wow{ font-size:18px; padding:0; }
 #guestCheckoutForm{ display:grid; gap:12px; margin-top:12px; }
 #guestCheckoutForm input{ border:1px solid var(--ink-200); border-radius:12px; padding:12px; font-size:16px; }
 .guest-modal__links{ display:flex; justify-content:space-between; font-weight:700; }
