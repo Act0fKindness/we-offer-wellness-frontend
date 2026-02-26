@@ -286,6 +286,17 @@
 #sr-tags .badge{ height:32px; display:inline-flex; align-items:center; gap:4px; padding:0 10px; border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size:12px; line-height:1; white-space:nowrap; margin-bottom:10px; }
 #sr-tags .badge--warm{ background:#ffe7c2; color:#6b4b12 }
 #sr-tags .badge--cool{ background:#dfe9ff; color:#1f3a77 }
+/* Unify search inputs typography to match "What" */
+.wow-ultra #search-top-what,
+.wow-ultra #search-top-where-editor,
+.wow-ultra #search-top-when,
+.wow-ultra #search-top-who-summary{
+  font-family: 'Manrope', var(--bs-font-sans-serif) !important;
+  font-weight: 500;
+  color: var(--ink-900);
+  font-size: 12px;
+  line-height: 1.25;
+}
 </style>
 
 <script>
