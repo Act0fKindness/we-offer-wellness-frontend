@@ -233,8 +233,6 @@
             $authReviewFeed = [$authReviewFallback];
         }
         $authReviewInitial = $authReviewFeed[0] ?? $authReviewFallback;
-        $authReviewInitialRating = max(1, min(5, (int) ($authReviewInitial['rating'] ?? 5)));
-        $authReviewInitialStars = str_repeat('★', $authReviewInitialRating).str_repeat('☆', 5 - $authReviewInitialRating);
         $authReviewInitialName = $authReviewInitial['name'] ?? 'Verified customer';
         if (!empty($authReviewInitial['location'])) {
             $authReviewInitialName .= ' • '.$authReviewInitial['location'];
@@ -250,7 +248,7 @@
             <img src="https://media.licdn.com/dms/image/v2/D4E22AQFMCdRaAjB9TA/feedshare-shrink_2048_1536/feedshare-shrink_2048_1536/0/1722597045741?e=1773878400&amp;v=beta&amp;t=OUshI77Gj0hHFK2_ClKBYaLdQrBoSxpZbhTfqH-5oUE" alt="We Offer Wellness marketplace preview" loading="lazy">
             <div class="review fadeIn" id="authReviewCard" aria-live="polite">
                 <div class="reviewTop">
-                    <div class="stars" id="authReviewStars">{{ $authReviewInitialStars }}</div>
+                    <div class="stars" id="authReviewStars">★★★★★</div>
                     <div class="pill">Verified booking</div>
                 </div>
                 <p class="reviewTitle" id="authReviewTitle">{{ $authReviewInitial['title'] ?? 'Verified booking experience' }}</p>
@@ -272,7 +270,7 @@
   const textEl = document.getElementById('authReviewText');
   const nameEl = document.getElementById('authReviewName');
   const whenEl = document.getElementById('authReviewWhen');
-  const reviews = @json($authReviewFeed);
+  const reviews = @json($authReviewFeed ?? []);
   if (!reviews.length) return;
   const starString = (n = 5) => Array.from({ length: 5 }).map((_, i) => (i < n ? '★' : '☆')).join('');
   const applyReview = (review) => {
