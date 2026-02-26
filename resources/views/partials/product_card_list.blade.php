@@ -154,6 +154,27 @@
     @media (max-width: 991.98px){ .wow-row-card{ --col1Min: 200px; --col2Min: 300px; --col3Min: 200px; --col1Flex: 0.8fr; --col2Flex: 3.0fr; --col3Flex: 1fr; } }
     @media (max-width: 767.98px){ .wow-row-card{ grid-template-columns: 1fr; height:auto; } .wow-row-media{ grid-column:1; height:220px; } .wow-row-body{ grid-column:1; } .wow-row-bottom{ grid-column:1; border-left:0; border-top:1px solid rgba(16,24,40,.10); } .wow-actions{ grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce){ .wow-row-card{ transition:none; } .wow-save{ transition:none; } }
+
+    .wow-therapy-card-scope .btn--primary {
+        border-color: rgba(0, 0, 0, .10);
+        color: #fff;
+        background: #549483 !important;
+    }
+
+    .wow-therapy-card-scope .btn {
+        height: var(--btnH);
+        border-radius: var(--btnR);
+        font-size: var(--btnFont);
+        font-weight: 400;
+        border: 1px solid rgba(16, 24, 40, .22);
+        background: #fff !important;
+        color: rgba(11, 18, 32, .82);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
+    }
   </style>
 @endonce
 
@@ -239,16 +260,10 @@
         @endif
       </div>
 
-      <div class="wow-actions">
-          <button type="button" class="btn js-add-to-cart js-open-cart"
-                  data-id="{{ $product->id }}"
-                  data-title="{{ e($titleFormatted) }}"
-                  data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
-                  data-image="{{ $image }}"
-                  data-url="{{ $url }}"
-          >Add to cart</button>
-          <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}">Book now</span>
-      </div>
+      <div class="actions">
+                  <button type="button" class="btn js-add-to-cart js-open-cart" data-id="6959" data-title="Yoga Session For Hen/Stag" data-price="200.00" data-image="https://atease.weofferwellness.co.uk/storage/uploads/images/a1978c74-b8a9-4a99-957f-3f209850d1c0.jpg" data-url="https://v3.weofferwellness.co.uk/therapies/6959-yoga-session-for-henstag">Add to cart</button>
+                  <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="6959">Book now</span>
+                </div>
   </div>
 
 </div>
