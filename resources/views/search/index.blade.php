@@ -146,7 +146,7 @@
   /* When page is scrolled, compact the search bar upward to 80px */
   .search-compact .wow-ultra .bar{ top: 80px; }
   /* Compact state: shrink width and softly fade Where/When/Who */
-  .search-compact .wow-ultra .bar{ width: 400px; height: 70px; }
+  .search-compact .wow-ultra .bar{ width: 400px; height: 70px; overflow: hidden; }
   .wow-ultra .seg{ transition: opacity .12s ease; }
   .search-compact .wow-ultra #search-top-seg-where,
   .search-compact .wow-ultra #search-top-seg-when,
