@@ -112,7 +112,7 @@
 .account-user-avatar{ width:48px; height:48px; font-size:1rem; margin-right:8px; }
 .account-avatar--profile{ width:74px; height:74px; font-size:1.1rem; }
 .profile-photo-field{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.account-trigger__avatar{ width:36px; height:36px; border-radius:999px; background:var(--ink-100); color:var(--ink-800); font-weight:700; display:inline-flex; align-items:center; justify-content:center; text-transform:uppercase; overflow:hidden; }
+.account-trigger__avatar{ width:28px; height:28px; border-radius:999px; background:var(--ink-100); color:var(--ink-800); font-weight:500; display:inline-flex; align-items:center; justify-content:center; text-transform:uppercase; overflow:hidden; border:1px solid #ddd; font-size:14px; }
 .account-trigger__avatar img{ width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block; }
 /*!
 * Bootstrap  v5.3.8 (https://getbootstrap.com/)
