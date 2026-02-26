@@ -108,7 +108,7 @@
 @once
   <style>
     /* Copy of template styling, scoped to .wow-row-card */
-    .wow-row-card{
+    span.btn-primary-list {
       --bg:#f4f5f7;
       --card:#fff;
       --shadow:0 18px 55px rgba(16,24,40,.10);
