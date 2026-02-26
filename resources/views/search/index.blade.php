@@ -188,6 +188,9 @@
 .wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); box-shadow: 0 14px 34px rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; transform-origin: bottom center; will-change: transform; cursor: pointer; }
 .mapboxgl-marker{ pointer-events: auto; z-index: 5; }
 .wow-marker::after{ content:""; width:10px; height:10px; border-radius:999px; background:#549483; box-shadow: 0 0 0 5px rgba(84,56,255,.18); }
+.wow-active-pin{ position: relative; width: 28px; height: 28px; z-index: 10; }
+.wow-active-pin::before{ content:""; position:absolute; inset:0; transform: rotate(-45deg); border-radius: 50% 50% 50% 0; background:#549483; box-shadow: 0 8px 18px rgba(84,148,131,.35); border:3px solid #fff; }
+.wow-active-pin::after{ content:""; position:absolute; left:50%; top:50%; width:8px; height:8px; transform: translate(-50%,-50%) rotate(-45deg); border-radius:999px; background:#fff; opacity:.85; }
   .wow-marker.is-active{ transform: scale(1.06); border-color: rgba(84,56,255,.45); box-shadow: 0 18px 54px rgba(84,56,255,.24); }
 /* Mobile: hide Where, When, Who segments; keep What + Search visible */
 @media (max-width: 991.98px){
@@ -342,6 +345,13 @@
             }, labelLayerId);
             // Markers (grouped by product id for hover effects and navigation)
             window.__wowMarkersByPid = {};
+            var activePinEl = document.createElement('div');
+            activePinEl.className = 'wow-active-pin';
+            activePinEl.style.display = 'none';
+            var activePin = new mapboxgl.Marker({ element: activePinEl, anchor: 'bottom' }).addTo(map);
+            window.__wowActivePin = activePin;
+            var lastActivePid = null;
+            var activePinMinZoom = 13;
             var bounds = new mapboxgl.LngLatBounds();
             var added = 0;
             data.forEach(function(p){
@@ -369,6 +379,13 @@
                     Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){
                       (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===pid); });
                     });
+                    // Show active teardrop pin on click
+                    try{
+                      var ll = [Number(p.lng), Number(p.lat)];
+                      activePin.setLngLat(ll);
+                      if (map.getZoom() >= activePinMinZoom) activePinEl.style.display = 'block';
+                      lastActivePid = pid;
+                    }catch(_ee){}
                   } catch(_e){}
                 });
               } catch(_e){}
@@ -401,7 +418,22 @@
             // After markers are added, center near the first product in the list
             try{
               var firstItem = document.querySelector('.results-scroll [data-pid]');
-              if (firstItem) { centerOnPid(firstItem.getAttribute('data-pid'), { zoom: 14, duration: 300 }); }
+              if (firstItem) {
+                var fpid = firstItem.getAttribute('data-pid');
+                centerOnPid(fpid, { zoom: 14, duration: 300 });
+                try{
+                  var group=(window.__wowMarkersByPid||{})[String(fpid)]||[];
+                  if (group.length){ var ll=group[0].marker.getLngLat(); activePin.setLngLat([ll.lng, ll.lat]); if (map.getZoom()>=activePinMinZoom) activePinEl.style.display='block'; lastActivePid=String(fpid); }
+                }catch(_ee){}
+              }
+            }catch(_e){}
+            try{
+              map.on('zoomend', function(){
+                try{
+                  if (map.getZoom() >= activePinMinZoom && lastActivePid){ activePinEl.style.display = 'block'; }
+                  else { activePinEl.style.display = 'none'; }
+                }catch(_e){}
+              });
             }catch(_e){}
           });
           // Mode toggle (2D/3D)
@@ -490,6 +522,9 @@
           if (map && group.length){
             var ll = group[0].marker.getLngLat();
             map.easeTo({ center: [ll.lng, ll.lat], zoom: Math.max(map.getZoom(), 13), duration: 300 });
+            // show active pin on hover
+            var ap = window.__wowActivePin; var apEl = document.querySelector('.wow-active-pin');
+            if (ap) { ap.setLngLat([ll.lng, ll.lat]); if (map.getZoom()>=13 && apEl) apEl.style.display='block'; }
           }
         }catch(_e){}
       });
@@ -539,6 +574,7 @@
                 try{ (window.centerOnPid||window.__centerOnPid||function(){
                   var group=(window.__wowMarkersByPid||{})[pid]||[]; if(!group.length) return; var ll=group[0].marker.getLngLat(); var map=window.__wowMap; if(map){ map.easeTo({ center:[ll.lng,ll.lat], zoom: Math.max(map.getZoom(), 13), duration: 400 }); } Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){ (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===pid); }); });
                 })(); }catch(_e){}
+                try{ var ap=window.__wowActivePin; var map=window.__wowMap; var group=(window.__wowMarkersByPid||{})[String(pid)]||[]; if(ap && group.length){ var ll=group[0].marker.getLngLat(); ap.setLngLat([ll.lng,ll.lat]); var apEl=document.querySelector('.wow-active-pin'); if(map && map.getZoom()>=13 && apEl) apEl.style.display='block'; } }catch(_e){}
               }
             }
           }catch(_e){}
