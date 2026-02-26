@@ -14,11 +14,15 @@ function cookieSet(name, value, days){
   const maxAge = days ? days*24*60*60 : 60*60*24*365*5
   document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`
 }
+function csrfToken(){
+  try { return document.querySelector('meta[name="csrf-token"]').content || window.__csrfToken || '' }
+  catch { return window.__csrfToken || '' }
+}
 
 async function save(data){
   status.value = 'saving'
   try {
-    const res = await fetch('/api/geo', { method:'POST', headers: { 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-CSRF-TOKEN': cookieGet('XSRF-TOKEN') }, body: JSON.stringify(data) })
+    const res = await fetch('/api/geo', { method:'POST', headers: { 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify(data) })
     if (!res.ok) throw new Error('geo '+res.status)
   } catch(e){ /* ignore */ }
   cookieSet('wow_geo_done','1', 365*5)
@@ -111,4 +115,3 @@ onMounted(() => {
 .muted{ color: var(--ink-500); font-size: .9rem }
 .error{ color: var(--danger); margin-top:.75rem }
 </style>
-

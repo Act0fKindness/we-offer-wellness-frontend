@@ -13,7 +13,7 @@
       @csrf
       <button type="submit" class="btn-wow btn-wow--cta">Resend verification email</button>
     </form>
-    <p class="auth-switch" style="margin-top:16px;">Wrong email? <a href="/profile">Update it in your account</a>.</p>
+    <p class="auth-switch" style="margin-top:16px;">Wrong email? <a href="{{ route('profile.edit') }}">Update it in your account</a>.</p>
   </div>
 </section>
 @endsection

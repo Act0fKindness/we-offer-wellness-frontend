@@ -20,6 +20,10 @@ class ProfileController extends Controller
         return view('auth.profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'current' => 'profile',
+            'eyebrow' => 'Profile & preferences',
+            'title' => 'Profile & contact details',
+            'intro' => 'Use the same email you checkout with so every booking lands in this account.',
         ]);
     }
 

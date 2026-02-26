@@ -102,10 +102,14 @@
                                 </svg>
                             </button>
                             <div class="account-dropdown" id="accountDropdown" hidden>
-                                <div class="account-name">{{ auth()->user()->name ?? 'Customer' }}</div>
-                                <div class="account-email">{{ auth()->user()->email }}</div>
-                                <div class="account-actions">
-                                    <a class="btn-wow btn-wow--outline" href="/customer/orders">View orders</a>
+                                <div class="account-dropdown__header">
+                                    <p class="account-name">{{ auth()->user()->name ?? 'Customer' }}</p>
+                                    <p class="account-email">{{ auth()->user()->email }}</p>
+                                </div>
+                                <div class="account-actions account-actions--authed">
+                                    <a class="account-link" href="{{ route('account.dashboard') }}">Account overview</a>
+                                    <a class="account-link" href="{{ route('account.orders') }}">Orders &amp; receipts</a>
+                                    <a class="account-link" href="{{ route('profile.edit') }}">Profile &amp; contact</a>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit" class="btn-wow btn-wow--cta">Log out</button>
@@ -122,8 +126,8 @@
                             <div class="account-dropdown" id="accountDropdown" hidden>
                                 <p class="account-email">Sign in to manage bookings faster.</p>
                                 <div class="account-actions">
-                                    <a class="btn-wow btn-wow--cta" href="{{ route('login', ['redirect' => '/cart']) }}">Log in</a>
-                                    <a class="btn-wow btn-wow--outline" href="{{ route('register', ['redirect' => '/cart']) }}">Create account</a>
+                                    <a class="btn-wow btn-wow--cta" href="{{ route('login', ['redirect' => '/account']) }}">Log in</a>
+                                    <a class="btn-wow btn-wow--outline" href="{{ route('register', ['redirect' => '/account']) }}">Create account</a>
                                     <a class="account-link" href="{{ route('password.request') }}">Forgot password?</a>
                                 </div>
                             </div>

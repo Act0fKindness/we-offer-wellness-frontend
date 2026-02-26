@@ -100,6 +100,10 @@
 .account-actions .btn-wow{ width:100%; }
 .account-link{ color: var(--ink-700); font-weight:700; text-decoration:none; }
 .account-link:hover{ text-decoration:underline; }
+.account-dropdown__header{ margin-bottom:12px; }
+.account-actions--authed{ gap:8px; }
+.account-actions--authed .account-link{ font-weight:600; color: var(--ink-800); }
+.account-actions--authed form{ margin-top:4px; }
 /*!
 * Bootstrap  v5.3.8 (https://getbootstrap.com/)
 * Copyright 2011-2025 The Bootstrap Authors

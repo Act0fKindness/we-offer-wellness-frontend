@@ -3,8 +3,17 @@
   function qs(sel, root){ return (root||document).querySelector(sel); }
   function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
   function isDesktop(){ try{ return window.matchMedia('(min-width: 992px)').matches }catch(_){ return true } }
-  function csrf(){ try{ return document.querySelector('meta[name="csrf-token"]').content || '' } catch(_){ return '' } }
-  function cookie(name){ try{ return document.cookie.split('; ').find(r=>r.startsWith(name+'='))?.split('=')[1]||'' }catch(_){ return '' } }
+  function csrf(){
+    try {
+      return document.querySelector('meta[name="csrf-token"]').content || window.__csrfToken || ''
+    } catch(_){ return window.__csrfToken || '' }
+  }
+  function cookie(name){
+    try{
+      const match = document.cookie.split(';').map(row => row.trim()).find(row => row.startsWith(name + '='));
+      return match ? match.slice(name.length + 1) : '';
+    }catch(_){ return '' }
+  }
   function money(n){ try{ var x=Number(n); if(x>=1000) x=x/100; return '£'+x.toFixed(2) }catch(_){ return '£0.00' } }
 
   const LS_KEY = 'wow_cart';
@@ -60,7 +69,7 @@
   function serverAdd(payload){
     return fetch('/api/cart/add', {
       method:'POST',
-      headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN': csrf() || decodeURIComponent(cookie('XSRF-TOKEN')||'') },
+      headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN': csrf() },
       credentials:'same-origin',
       body: JSON.stringify({ id: payload.id, qty: payload.qty||1 })
     }).then(r => r.json()).catch(()=>{ throw new Error('server failed'); });

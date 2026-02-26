@@ -77,10 +77,68 @@ function setupUltraSearchBar(prefix) {
   const whoDone = byId('who-done'); if(whoDone){ whoDone.addEventListener('click', ()=>hideAll()); }
 }
 
+function initAccountDropdown() {
+  const wrap = document.querySelector('.account-wrap');
+  const trigger = wrap?.querySelector('.account-trigger');
+  const panel = wrap?.querySelector('.account-dropdown');
+  if (!wrap || !trigger || !panel) return;
+
+  const isDesktop = () => {
+    try { return window.matchMedia('(min-width: 992px)').matches; } catch (_) { return true; }
+  };
+
+  let hideTimer = null;
+
+  function openPanel() {
+    panel.hidden = false;
+    panel.classList.add('show');
+    trigger.setAttribute('aria-expanded', 'true');
+  }
+
+  function closePanel() {
+    panel.hidden = true;
+    panel.classList.remove('show');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+
+  wrap.addEventListener('mouseenter', () => {
+    if (!isDesktop()) return;
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    openPanel();
+  });
+
+  wrap.addEventListener('mouseleave', () => {
+    if (!isDesktop()) return;
+    hideTimer = setTimeout(closePanel, 120);
+  });
+
+  trigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (isDesktop()) {
+      openPanel();
+    } else {
+      panel.hidden ? openPanel() : closePanel();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) {
+      closePanel();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closePanel();
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   try { initMegaMenu(); } catch (e) {}
   try { initMobileMenu(); } catch (e) {}
   try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {}
+  try { initAccountDropdown(); } catch (e) {}
 
   // Cart dropdown: hover on desktop shows mini cart; mobile click navigates
   const wrap = document.querySelector('.cart-wrap');
@@ -339,31 +397,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }catch(_){ }
   }
 
-  // Account dropdown toggle
-  try {
-    const accountTrigger = document.querySelector('.account-wrap .account-trigger');
-    const accountDropdown = document.getElementById('accountDropdown');
-    if (accountTrigger && accountDropdown) {
-      accountTrigger.addEventListener('click', (e) => {
-        e.preventDefault();
-        const isOpen = accountDropdown.hasAttribute('hidden') ? false : accountDropdown.classList.contains('show');
-        if (isOpen) {
-          accountDropdown.classList.remove('show');
-          accountDropdown.setAttribute('hidden', 'hidden');
-          accountTrigger.setAttribute('aria-expanded', 'false');
-        } else {
-          accountDropdown.removeAttribute('hidden');
-          accountDropdown.classList.add('show');
-          accountTrigger.setAttribute('aria-expanded', 'true');
-        }
-      });
-      document.addEventListener('click', (e) => {
-        if (!accountDropdown.contains(e.target) && !accountTrigger.contains(e.target)) {
-          accountDropdown.classList.remove('show');
-          accountDropdown.setAttribute('hidden', 'hidden');
-          accountTrigger.setAttribute('aria-expanded', 'false');
-        }
-      });
-    }
-  } catch (e) {}
 });
