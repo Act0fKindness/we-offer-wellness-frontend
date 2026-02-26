@@ -95,16 +95,37 @@
                     </a>
                     <div class="account-wrap">
                         @auth
+                            @php
+                                $headerUser = auth()->user();
+                                $headerRawName = trim((string) $headerUser?->name);
+                                $headerFirst = trim($headerUser?->first_name ?: \Illuminate\Support\Str::of($headerRawName)->before(' '));
+                                $headerDerivedLast = '';
+                                if ($headerRawName && str_contains($headerRawName, ' ')) {
+                                    $headerDerivedLast = trim(\Illuminate\Support\Str::of($headerRawName)->after(' '));
+                                }
+                                $headerLast = trim($headerUser?->last_name ?: $headerDerivedLast);
+                                $headerFullName = trim($headerFirst.' '.$headerLast) ?: ($headerRawName ?: 'Customer');
+                                $headerInitials = mb_strtoupper(mb_substr($headerFirst ?: $headerFullName, 0, 1).mb_substr($headerLast ?: '', 0, 1));
+                                $headerInitials = trim($headerInitials) !== '' ? $headerInitials : 'YOU';
+                                $headerAvatar = $headerUser?->profile_picture;
+                                if ($headerAvatar && !\Illuminate\Support\Str::startsWith($headerAvatar, ['http://', 'https://'])) {
+                                    $headerAvatar = \Illuminate\Support\Facades\Storage::disk('public')->url($headerAvatar);
+                                }
+                            @endphp
                             <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
-                                <span class="sr-only">Account</span>
-                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                                </svg>
+                                <span class="account-trigger__avatar" aria-hidden="true">
+                                    @if($headerAvatar)
+                                        <img src="{{ $headerAvatar }}" alt="">
+                                    @else
+                                        {{ $headerInitials }}
+                                    @endif
+                                </span>
+                                <span class="sr-only">Open account menu</span>
                             </button>
                             <div class="account-dropdown" id="accountDropdown" hidden>
                                 <div class="account-dropdown__header">
-                                    <p class="account-name">{{ auth()->user()->name ?? 'Customer' }}</p>
-                                    <p class="account-email">{{ auth()->user()->email }}</p>
+                                    <p class="account-name">{{ $headerFullName }}</p>
+                                    <p class="account-email">{{ $headerUser->email }}</p>
                                 </div>
                                 <div class="account-actions account-actions--authed">
                                     <a class="account-link" href="{{ route('account.dashboard') }}">Account overview</a>
@@ -118,7 +139,7 @@
                             </div>
                         @else
                             <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
-                                <span class="sr-only">Account</span>
+                                <span class="sr-only">Open account options</span>
                                 <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                                 </svg>

@@ -3,6 +3,12 @@
 @section('account-content')
 @php
     $status = $status ?? session('status');
+    $profileUser = auth()->user();
+    $firstName = trim($profileUser->first_name ?: \Illuminate\Support\Str::of($profileUser->name ?? '')->before(' '));
+    $avatarPath = $profileUser->profile_picture ?? null;
+    if ($avatarPath && !\Illuminate\Support\Str::startsWith($avatarPath, ['http://', 'https://'])) {
+        $avatarPath = \Illuminate\Support\Facades\Storage::disk('public')->url($avatarPath);
+    }
 @endphp
 
 <div class="account-card">
@@ -28,16 +34,33 @@
       @endif
     @endif
 
-    <form method="POST" action="{{ route('profile.update') }}" class="account-form">
+    <form method="POST" action="{{ route('profile.update') }}" class="account-form" enctype="multipart/form-data">
       @csrf
       @method('PATCH')
 
-      <label for="profile-name">Full name</label>
-      <input id="profile-name" type="text" name="name" value="{{ old('name', auth()->user()->name) }}" required>
-      @error('name')<p class="field-error">{{ $message }}</p>@enderror
+      <div class="profile-photo-field">
+        <div class="account-avatar account-avatar--profile" aria-hidden="true">
+          @if($avatarPath)
+            <img src="{{ $avatarPath }}" alt="">
+          @else
+            <span>{{ $firstName ?: 'You' }}</span>
+          @endif
+        </div>
+        <label class="btn-wow btn-wow--outline btn-sm" for="profile-picture-upload">Upload photo</label>
+        <input id="profile-picture-upload" type="file" name="profile_picture" accept="image/*" hidden>
+      </div>
+      @error('profile_picture')<p class="field-error">{{ $message }}</p>@enderror
+
+      <label for="profile-first-name">First name</label>
+      <input id="profile-first-name" type="text" name="first_name" value="{{ old('first_name', $profileUser->first_name) }}" required>
+      @error('first_name')<p class="field-error">{{ $message }}</p>@enderror
+
+      <label for="profile-last-name">Last name</label>
+      <input id="profile-last-name" type="text" name="last_name" value="{{ old('last_name', $profileUser->last_name) }}" required>
+      @error('last_name')<p class="field-error">{{ $message }}</p>@enderror
 
       <label for="profile-email">Email address</label>
-      <input id="profile-email" type="email" name="email" value="{{ old('email', auth()->user()->email) }}" required>
+      <input id="profile-email" type="email" name="email" value="{{ old('email', $profileUser->email) }}" required>
       @error('email')<p class="field-error">{{ $message }}</p>@enderror
 
       <button type="submit" class="btn-wow btn-wow--cta">Save changes</button>

@@ -1,18 +1,31 @@
 @php
-    $name = trim((string) optional($accountUser)->name);
-    $initials = collect(explode(' ', $name))
-        ->filter()
-        ->map(fn ($part) => mb_substr($part, 0, 1))
-        ->take(2)
-        ->implode('');
-    $initials = $initials !== '' ? mb_strtoupper($initials) : 'YOU';
+    $rawName = trim((string) optional($accountUser)->name);
+    $firstName = trim(optional($accountUser)->first_name ?: \Illuminate\Support\Str::of($rawName)->before(' '));
+    $derivedLast = '';
+    if ($rawName && str_contains($rawName, ' ')) {
+        $derivedLast = trim(\Illuminate\Support\Str::of($rawName)->after(' '));
+    }
+    $lastName = trim(optional($accountUser)->last_name ?: $derivedLast);
+    $fullName = trim($firstName.' '.$lastName) ?: ($rawName ?: 'Customer');
+    $initials = mb_strtoupper(mb_substr($firstName ?: $fullName, 0, 1).mb_substr($lastName ?: '', 0, 1));
+    $initials = trim($initials) !== '' ? $initials : 'YOU';
+    $profileImage = optional($accountUser)->profile_picture;
+    if ($profileImage && !\Illuminate\Support\Str::startsWith($profileImage, ['http://', 'https://'])) {
+        $profileImage = \Illuminate\Support\Facades\Storage::disk('public')->url($profileImage);
+    }
 @endphp
 
 <aside class="account-sidebar" aria-label="Customer account navigation">
   <div class="account-card account-user-card">
-    <div class="account-avatar" aria-hidden="true">{{ $initials }}</div>
+    <div class="account-avatar" aria-hidden="true">
+      @if($profileImage)
+        <img src="{{ $profileImage }}" alt="">
+      @else
+        <span>{{ $firstName ?: 'You' }}</span>
+      @endif
+    </div>
     <div>
-      <div class="account-user-name">{{ optional($accountUser)->name ?? 'Customer' }}</div>
+      <div class="account-user-name">{{ $fullName }}</div>
       <div class="account-user-email">{{ optional($accountUser)->email ?? '—' }}</div>
     </div>
   </div>

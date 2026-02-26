@@ -104,6 +104,12 @@
 .account-actions--authed{ gap:8px; }
 .account-actions--authed .account-link{ font-weight:600; color: var(--ink-800); }
 .account-actions--authed form{ margin-top:4px; }
+.account-avatar{ width:56px; height:56px; border-radius:999px; background: var(--brand-100); color: var(--brand-800); font-weight:700; display:inline-flex; align-items:center; justify-content:center; text-transform:capitalize; overflow:hidden; }
+.account-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+.account-avatar--profile{ width:74px; height:74px; font-size:1.1rem; }
+.profile-photo-field{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.account-trigger__avatar{ width:36px; height:36px; border-radius:999px; background:var(--ink-100); color:var(--ink-800); font-weight:700; display:inline-flex; align-items:center; justify-content:center; text-transform:uppercase; overflow:hidden; }
+.account-trigger__avatar img{ width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block; }
 /*!
 * Bootstrap  v5.3.8 (https://getbootstrap.com/)
 * Copyright 2011-2025 The Bootstrap Authors

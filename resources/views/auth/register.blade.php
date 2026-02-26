@@ -14,9 +14,13 @@
     <form method="POST" action="{{ route('register') }}" class="auth-form">
       @csrf
       <input type="hidden" name="redirect" value="{{ $redirect ?? '/cart' }}">
-      <label for="reg-name">Name</label>
-      <input id="reg-name" type="text" name="name" value="{{ old('name') }}" required autofocus>
-      @error('name')<div class="field-error">{{ $message }}</div>@enderror
+      <label for="reg-first-name">First name</label>
+      <input id="reg-first-name" type="text" name="first_name" value="{{ old('first_name') }}" required autofocus>
+      @error('first_name')<div class="field-error">{{ $message }}</div>@enderror
+
+      <label for="reg-last-name">Last name</label>
+      <input id="reg-last-name" type="text" name="last_name" value="{{ old('last_name') }}" required>
+      @error('last_name')<div class="field-error">{{ $message }}</div>@enderror
 
       <label for="reg-email">Email</label>
       <input id="reg-email" type="email" name="email" value="{{ old('email') }}" required>

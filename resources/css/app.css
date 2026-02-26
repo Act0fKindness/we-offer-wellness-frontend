@@ -204,7 +204,10 @@ a:hover { text-decoration: none; }
 .account-card__header h3 { margin: 0; font-size: 1.35rem; font-weight: 700; }
 .account-card__body { display: flex; flex-direction: column; gap: 1rem; }
 .account-user-card { display: flex; gap: 1rem; align-items: center; }
-.account-avatar { width: 48px; height: 48px; border-radius: 14px; background: var(--brand-100); color: var(--brand-700); font-weight: 700; display: grid; place-items: center; }
+.account-avatar { width: 56px; height: 56px; border-radius: 999px; background: var(--brand-100); color: var(--brand-800); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; text-transform: capitalize; overflow: hidden; }
+.account-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.account-avatar--profile { width: 74px; height: 74px; font-size: 1.1rem; }
+.profile-photo-field { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .account-user-name { font-weight: 700; color: var(--ink-900); }
 .account-user-email { color: var(--ink-600); font-size: .9rem; }
 .account-nav { display: flex; flex-direction: column; gap: .5rem; }
@@ -887,3 +890,5 @@ header .nav-item:hover > a::after, header .nav-item:focus-within > a::after{ tra
 .mobile-menu__link:hover{ background: var(--ink-100); color: var(--ink-900); }
 .mobile-menu__section{ margin-top: 10px; padding-top: 10px; border-top:1px solid var(--ink-200); }
 .mobile-menu__section-title{ font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-500); font-weight:700; margin-bottom:8px; }
+.account-trigger__avatar { width: 36px; height: 36px; border-radius: 999px; background: var(--ink-100); color: var(--ink-800); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; overflow: hidden; }
+.account-trigger__avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
