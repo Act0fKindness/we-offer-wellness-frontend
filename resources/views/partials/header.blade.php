@@ -20,9 +20,7 @@
   @media (min-width: 992px){
     header.is-fixed{ position:fixed; top:0; left:0; right:0; }
   }
-  /* Animate header box when mega menu is open */
-  header .header-inner{ transition: border-radius .2s ease, border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
-  header.header--mega-open .header-inner{ border-radius:40px; border:1px solid #bbb !important; box-shadow: 0 10px 32px rgba(16,24,40,.10); background: rgba(255,255,255,.92); overflow:hidden; }
+  /* (Removed hover animation for header mega state per request) */
 </style>
 <!-- Overlay shown behind header mega menu -->
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
@@ -228,7 +226,7 @@
     pointer-events: none;
 }
 /* Utility bar: scrolls normally (header overlays it on desktop) */
-.utility-bar{ position: relative; z-index: 5; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
+.utility-bar{ position: relative; z-index: 45; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
 /* Cart dropdown (desktop hover) */
 .cart-wrap{ position: relative; }
 .cart-dropdown2{ position:absolute; right:0; top:calc(100% + 10px); width: min(380px, 92vw); background:#fff; border:1px solid var(--ink-200); border-radius:14px; box-shadow: 0 24px 60px rgba(16,24,40,.16); overflow:hidden; z-index: 45; }
