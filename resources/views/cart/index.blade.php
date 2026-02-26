@@ -282,7 +282,7 @@
 
 .cart-grid{ display:flex; align-items:flex-start; gap: var(--gap); --gap:14px; --sideBasis:34.5%; --ease:cubic-bezier(.2,.8,.2,1); --dur:.42s; transition: gap var(--dur) var(--ease); }
 .cart-main{ flex:1 1 auto; min-width:0; max-width:100%; opacity:1; transform: translateX(0) scale(1); transition:max-width var(--dur) var(--ease), transform var(--dur) var(--ease), opacity .22s var(--ease); }
-.cart-side{ flex:0 1 auto; flex-basis: var(--sideBasis); min-width:0; position:sticky; top:14px; transition:flex-basis var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.cart-side{ flex:0 1 auto; flex-basis: var(--sideBasis); min-width:0; position:sticky; transition:flex-basis var(--dur) var(--ease), transform var(--dur) var(--ease); }
 .cart-grid.is-empty{ --gap:0px; --sideBasis:100%; }
 .cart-grid.is-empty .cart-main{ max-width:0; opacity:0; transform: translateX(-10px) scale(.98); pointer-events:none; overflow:hidden; }
 @media (max-width: 991.98px){ .cart-grid{ flex-direction:column; gap:14px; } .cart-side{ position:static; } .cart-grid.is-empty .cart-main{ max-width:100%; opacity:1; transform:none; pointer-events:auto; overflow:visible; } }
