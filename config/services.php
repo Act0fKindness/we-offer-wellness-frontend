@@ -19,9 +19,18 @@ return [
     ],
 
     'stripe' => [
-        'key' => env('STRIPE_KEY', 'pk_test_xxx'),
-        'secret' => env('STRIPE_SECRET', 'sk_test_xxx'),
-        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET', ''),
+        // Publishable key (pk_live_... / pk_test_...)
+        'key' => env('STRIPE_KEY'),
+
+        // Secret key (sk_live_... / sk_test_...)
+        'secret' => env('STRIPE_SECRET'),
+
+        // Webhook signing secret (whsec_...)
+        // Keep both keys for compatibility with different codebases/packages.
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'webhook' => [
+            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+        ],
     ],
 
     'resend' => [
