@@ -227,11 +227,13 @@
     var mq = window.matchMedia('(max-width: 991.98px)');
     function initMobileBar(){
       if (!mq.matches) return;
-      // Open the What suggestions panel
-      var what = document.getElementById('search-top-what');
-      var pane = document.getElementById('search-top-what-pane');
-      if (what) what.setAttribute('aria-expanded','true');
-      if (pane) pane.classList.remove('d-none');
+      // Ensure the What suggestions panel is closed by default on mobile
+      try{
+        var what = document.getElementById('search-top-what');
+        var pane = document.getElementById('search-top-what-pane');
+        if (what) what.setAttribute('aria-expanded','false');
+        if (pane) pane.classList.add('d-none');
+      }catch(_e){}
       // Default Where to Online if empty
       var whereEd = document.getElementById('search-top-where-editor');
       var whereInp = document.getElementById('search-top-where');
@@ -244,6 +246,27 @@
     initMobileBar();
     // Re-evaluate on viewport changes
     try{ mq.addEventListener ? mq.addEventListener('change', initMobileBar) : mq.addListener(initMobileBar); }catch(e){}
+    // Close What pane on outside click (mobile)
+    try{
+      document.addEventListener('click', function(e){
+        if (!mq.matches) return;
+        var seg = document.getElementById('search-top-seg-what');
+        var pane = document.getElementById('search-top-what-pane');
+        var input = document.getElementById('search-top-what');
+        if (!seg || !pane) return;
+        if (!seg.contains(e.target)){
+          // click outside -> close
+          pane.classList.add('d-none');
+          if (input) input.setAttribute('aria-expanded','false');
+        }
+      });
+      // Open on focus
+      var input = document.getElementById('search-top-what');
+      var pane = document.getElementById('search-top-what-pane');
+      if (input && pane){
+        input.addEventListener('focus', function(){ if (!mq.matches) return; pane.classList.remove('d-none'); input.setAttribute('aria-expanded','true'); });
+      }
+    }catch(_e){}
   }catch(e){}
   // Tags from query for visual context
   try{
