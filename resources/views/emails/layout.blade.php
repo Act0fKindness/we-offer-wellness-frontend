@@ -21,7 +21,6 @@
     .hero-top { position:relative; padding:28px 32px 48px; background:linear-gradient(140deg,#0b1220,#1f5448); color:#fff; }
     .hero-top::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 20% 20%, rgba(255,255,255,.12), transparent 55%); opacity:.9; pointer-events:none; }
     .brand { position:relative; z-index:1; width:170px; height:auto; display:block; }
-    .pill { display:inline-flex; align-items:center; padding:6px 14px; border-radius:999px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); margin-top:22px; }
     .hero-heading { position:relative; z-index:1; font-size:30px; margin:12px 0 0; letter-spacing:-.02em; }
     .hero-sub { position:relative; z-index:1; font-size:15px; margin-top:8px; color:rgba(255,255,255,.82); }
 
@@ -57,7 +56,6 @@
               <a href="https://weofferwellness.co.uk" target="_blank" rel="noopener">
                 <img class="brand" src="https://cdn.shopify.com/s/files/1/0820/3947/2469/files/logo.png?v=1738109013" alt="We Offer Wellness" width="170" style="width:170px;max-width:80%;height:auto;">
               </a>
-              <div class="pill">We Offer Wellness</div>
               <div class="hero-heading">@yield('title', 'We Offer Wellness')</div>
               <p class="hero-sub">Calm technology for your rituals, ready in under a minute.</p>
             </td>
