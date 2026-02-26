@@ -137,9 +137,30 @@
                         </div>
                     </div>
                 </div><!---->
-                <button class="btn-wow is-squarish btn-xl" data-loader-init="1"><span class="btn-label">Search</span><span
-                    class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></button>
+                <button class="btn-wow is-squarish btn-xl" data-loader-init="1">
+                    <span class="btn-label">Search</span>
+                    <span class="btn-icon" aria-hidden="true">
+                        <svg class="icon-search" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                          <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
+                        </svg>
+                    </span>
+                    <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
+                </button>
             </form>
         </div>
     </div>
 </section><!---->
+
+<style>
+@media (max-width: 991.98px){
+  .wow-ultra .bar{ background:#fff; border-radius:40px; position: relative; }
+  .wow-ultra .seg{ border-radius:40px; }
+  .btn-wow.is-squarish.btn-xl{
+    border-radius:40px;
+    position:absolute; right:8px; top:50%; transform: translateY(-50%);
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .btn-wow.is-squarish.btn-xl .btn-label{ display:none; }
+  .btn-wow.is-squarish.btn-xl .icon-search{ width:24px; height:24px; color:#fff; }
+}
+</style>
