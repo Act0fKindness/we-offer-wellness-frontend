@@ -160,10 +160,11 @@
   #home-template-seg-when,
   #home-template-seg-who{ display:none !important; }
   .btn-wow.is-squarish.btn-xl{
-    border-radius:40px;
+    border-radius:50% !important;
     position:absolute; right:11px; top:50%; transform: translateY(-50%);
     display:inline-flex; align-items:center; justify-content:center;
     width:45px; height:45px; min-width:45px; min-height:45px; max-width:45px; max-height:45px;
+    padding:0 !important; line-height:45px; overflow:hidden;
   }
   .btn-wow.is-squarish.btn-xl .btn-label{ display:none; }
   .btn-wow.is-squarish.btn-xl .icon-search{ width:24px; height:24px; color:#fff; }
