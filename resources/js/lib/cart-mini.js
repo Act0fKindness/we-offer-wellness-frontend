@@ -70,20 +70,24 @@
     });
   }
 
-  // Delegate add-to-cart clicks
-  document.addEventListener('click', function(e){
-    const btn = e.target.closest('.js-add-to-cart');
-    if(!btn) return;
-    e.preventDefault();
+  function handleAddFromBtn(btn, ev){
+    if (ev){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(_){} }
     const id = btn.getAttribute('data-id');
     const title = btn.getAttribute('data-title')||'';
     const price = Number(btn.getAttribute('data-price')||'0');
     const image = btn.getAttribute('data-image')||'';
     const url = btn.getAttribute('data-url')||'';
     addToCart({ id, title, price, image, url, qty:1 });
-  });
+  }
+  // Delegate add-to-cart clicks (capture to beat anchor navigation)
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('.js-add-to-cart');
+    if(!btn) return;
+    handleAddFromBtn(btn, e);
+  }, true);
+  // Expose global helper for inline fallbacks
+  try{ window.WOW_addToCart = function(el){ handleAddFromBtn(el); return false; }; }catch(_){ }
 
   // On load, set badge from server or LS
   fetchCountAndUpdateBadge();
 })();
-
