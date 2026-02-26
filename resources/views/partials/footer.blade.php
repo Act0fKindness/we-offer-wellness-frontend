@@ -92,7 +92,7 @@
                            rel="noopener">Practitioner chats</a></li>
                 </ul>
             </div>
-            <div class="col">
+            <div class="col col--full">
                 <div class="title">Help Centre &amp; FAQ</div>
                 <ul>
                     <li><a href="/help">Help centre</a></li>
@@ -109,12 +109,14 @@
         </div>
     </div>
     <style>
+        .wow-footer .links-col .col--full { grid-column: 1 / -1; }
         @media (max-width: 640px) {
             .wow-footer .footer-hero { text-align: center; }
             .wow-footer .subscribe-card { text-align: center; margin-left: 0; }
             .wow-footer .subscribe { flex-direction: column; width: 100%; }
             .wow-footer .sub-btn { width: 100%; justify-content: center; }
             .wow-footer .sub-note { text-align: center; }
+            .wow-footer .links-col .col--full { text-align: center; }
         }
     </style>
 </footer>
