@@ -94,7 +94,6 @@
             font-size: 16px;
             font-weight: 400;
             border: 1px solid rgba(16, 24, 40, .22);
-            background: #fff !important;
             color: rgba(11, 18, 32, .82);
             cursor: pointer;
             display: flex;
@@ -269,8 +268,8 @@
       </div>
 
       <div class="actions">
-          <button type="button" class="open-cart-list" data-id="6959" data-title="Yoga Session For Hen/Stag" data-price="200.00" data-image="https://atease.weofferwellness.co.uk/storage/uploads/images/a1978c74-b8a9-4a99-957f-3f209850d1c0.jpg" data-url="https://v3.weofferwellness.co.uk/therapies/6959-yoga-session-for-henstag">Add to cart</button>
-          <span class="btn-primary-list">Book now</span>
+          <span class="btn-primary-list" style="margin-bottom: 5px;">Add to cart</span>
+          <span class="btn-primary-list" style="">Book now</span>
         </div>
   </div>
 
