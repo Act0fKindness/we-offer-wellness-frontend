@@ -203,8 +203,10 @@
     border: none;
     border-top: 1px solid rgba(255,255,255,.50);
     border-bottom: 1px solid rgba(0,0,0,.08);
-    position: sticky; top: 80px; z-index: 30;
-    border-radius: 0;
+    position: fixed; top: 80px; z-index: 30;
+    border-radius: 18px;
+    left: 50%; transform: translateX(-50%);
+    width: min(1200px, calc(100vw - 32px));
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     box-shadow: 0 14px 40px rgba(16,24,40,.14);
@@ -255,7 +257,8 @@
     border:none;
     border-top: 1px solid rgba(255,255,255,0.5);
     border-bottom: 1px solid rgba(0,0,0,0.08);
-    position: sticky; top:50px; z-index: 30;
+    position: fixed; top:50px; z-index: 30;
+    left: 12px; right: 12px;
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     box-shadow: 0 14px 40px rgba(16,24,40,.14);
