@@ -29,7 +29,7 @@
             </div>
         </div>
         <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b"
-                style="border-bottom: 1px solid rgb(153, 153, 153);">
+                style="border-bottom: 1px solid rgba(153, 153, 153, 0.4);">
             <div class="container-page h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
                     <!-- Inline SVG logo -->
@@ -96,6 +96,7 @@
                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"></path>
                         </svg>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge bg-danger" style="display:none">0</span>
                     </a>
                     <div id="cart-dropdown" class="cart-dropdown2" hidden>
                         <div class="cartdd-head">Your cart</div>

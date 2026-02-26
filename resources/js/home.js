@@ -132,6 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
       wrap.addEventListener('mouseleave', () => { hideTimer = setTimeout(hide, 120); });
       // Prevent default on desktop clicks to keep dropdown open; on mobile it navigates
       link.addEventListener('click', (e) => { if (isDesktop()) { e.preventDefault(); show(); } });
+      // Expose helpers for external triggers (e.g., add-to-cart)
+      try { window.__cartDropdownShow = show; } catch(_){ }
+      try { window.__cartDropdownRender = function(items){ try{ renderItems(items); panel.hidden=false; }catch(_){ } } } catch(_){ }
     }
   } catch {}
 });

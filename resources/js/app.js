@@ -20,6 +20,7 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { initDrawRandomUnderline } from './lib/wow-links';
 import { initClickLoaders } from './lib/wow-buttons';
 import './lib/cart-shortcuts';
+import './lib/cart-mini';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

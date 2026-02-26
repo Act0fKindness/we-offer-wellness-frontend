@@ -470,6 +470,43 @@
     (function(){ var n = getAdults(); updateGroupByAdults(n); updateSummary(n); })();
   }catch{}
 
+  // Apply query params into What/Where/When/Who fields so state is retained on load
+  try{
+    var qp = new URLSearchParams(window.location.search||'');
+    var qWhat = qp.get('what');
+    var qWhere = qp.get('where');
+    var qWhen = qp.get('when');
+    var qGroup = (qp.get('group_type')||'').toLowerCase(); // solo|couple|group
+    var qAdults = qp.get('adults');
+
+    var elWhat = document.getElementById('search-top-what');
+    if (elWhat && qWhat) elWhat.value = qWhat;
+    var edWhere = document.getElementById('search-top-where-editor');
+    var hidWhere = document.getElementById('search-top-where');
+    if (qWhere && (edWhere||hidWhere)){
+      if (edWhere) edWhere.textContent = qWhere;
+      if (hidWhere) hidWhere.value = qWhere;
+    }
+    var elWhen = document.getElementById('search-top-when');
+    if (elWhen && qWhen) elWhen.value = qWhen;
+
+    // Sync Who (adults + group type)
+    (function(){
+      var adultsEl = document.getElementById('search-top-adults-val');
+      var groupList = document.getElementById('search-top-group-type-list');
+      var summaryEl = document.getElementById('search-top-who-summary');
+      function selectGroup(name){
+        if(!groupList) return;
+        Array.from(groupList.querySelectorAll('[data-group]')).forEach(function(btn){ btn.setAttribute('aria-selected', String(btn.getAttribute('data-group')===name)); });
+      }
+      function updateSummary(n){ if(!summaryEl) return; var label = n<=1?'Solo':(n===2?'Couple':'Group'); summaryEl.textContent = (n + ' ' + (n===1?'adult':'adults') + ' · ' + label); }
+      var n = null;
+      if (qAdults && isFinite(Number(qAdults))) n = Math.max(1, parseInt(qAdults,10));
+      else if (qGroup==='solo') n = 1; else if (qGroup==='couple') n = 2; else if (qGroup==='group') n = 3;
+      if (n != null){ if (adultsEl) adultsEl.textContent = String(n); selectGroup(n<=1?'Solo':(n===2?'Couple':'Group')); updateSummary(n); }
+    })();
+  }catch(_e){}
+
   // Map (Mapbox GL JS with 3D buildings)
   try {
     @php
