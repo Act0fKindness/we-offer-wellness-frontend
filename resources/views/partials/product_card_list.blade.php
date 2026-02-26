@@ -99,7 +99,7 @@
             justify-content: center;
             box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
         }
-        .btn-cart-list {
+        button.btn-cart-list {
             height: 38px;
             border-radius: 4px;
             font-size: 16px;
