@@ -77,10 +77,18 @@ class CheckoutController extends Controller
             // Normalise to integer minor units (pence)
             $unit = $raw >= 1000 ? (int)round($raw) : (int)round($raw * 100);
             $amountTotal += ($unit * $qty);
+            $image = $it['image'] ?? $it['img'] ?? null;
+            if ($image && !str_starts_with($image, 'http')) {
+                $image = url($image);
+            }
+            $productData = [ 'name' => $title ];
+            if ($image) {
+                $productData['images'] = [$image];
+            }
             $lineItems[] = [
                 'price_data' => [
                     'currency' => $currency,
-                    'product_data' => [ 'name' => $title ],
+                    'product_data' => $productData,
                     'unit_amount' => $unit,
                 ],
                 'quantity' => $qty,
@@ -109,7 +117,7 @@ class CheckoutController extends Controller
                     'sku' => (string)$id,
                     'unit_amount' => $unit,
                     'quantity' => $qty,
-                    'meta' => [ 'url' => $it['url'] ?? null, 'image' => $it['image'] ?? null ],
+                    'meta' => [ 'url' => $it['url'] ?? null, 'image' => $image ?? null ],
                 ]);
             }
             DB::commit();
