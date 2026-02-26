@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>@yield('title', 'AtEase')</title>
+  <title>@yield('title', 'We Offer Wellness')</title>
   <style>
     /* Reset + base */
     body { margin:0; padding:0; background:#f6f6f6; color:#202123; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; }
@@ -43,8 +43,8 @@
         <table role="presentation" class="card" cellpadding="0" cellspacing="0">
           <tr>
             <td class="header">
-              <a href="https://atease.weofferwellness.co.uk" target="_blank" rel="noopener">
-                <img class="brand" src="https://cdn.shopify.com/s/files/1/0820/3947/2469/files/atease-v3-logo.png?v=1757545036" alt="AtEase" width="160" style="width:160px; max-width:70%; height:auto;">
+              <a href="https://weofferwellness.co.uk" target="_blank" rel="noopener">
+                <img class="brand" src="https://cdn.shopify.com/s/files/1/0820/3947/2469/files/logo.png?v=1738109013" alt="We Offer Wellness" width="160" style="width:160px; max-width:70%; height:auto;">
               </a>
             </td>
           </tr>
@@ -55,7 +55,7 @@
           </tr>
           <tr>
             <td class="footer">
-              © {{ date('Y') }} AtEase by We Offer Wellness®
+              © {{ date('Y') }} We Offer Wellness®
             </td>
           </tr>
         </table>
