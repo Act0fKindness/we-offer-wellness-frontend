@@ -8,6 +8,8 @@
         'prefix' => 'search-top',
         'stickyTopDesktop' => '115px',
         'stickyTopMobile' => '84px',
+        'reserveDesktop' => '0px',
+        'reserveMobile' => '0px',
     ])
       <!-- Controls moved under search bar -->
       <div class="search-controls d-flex align-items-center justify-content-between gap-2 mb-3 mt-2">
@@ -139,8 +141,8 @@
     opacity:.55;
   }
   .wow-ultra .bar > *{ position: relative; z-index: 1; }
-  /* Reserve space so content sits in original position under fixed bar */
-  .wow-ultra{ padding-top: 74px; }
+  /* Optional reserve space below fixed bar (configurable via CSS var) */
+  .wow-ultra{ padding-top: var(--ultra-reserve-desktop, 0px); }
   /* When page is scrolled, compact the search bar upward to 80px */
   .search-compact .wow-ultra .bar{ top: 80px; }
   /* Compact state: shrink width and softly fade Where/When/Who */

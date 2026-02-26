@@ -2,9 +2,11 @@
   $prefix = $prefix ?? 'search-top';
   $stickyTopDesktop = $stickyTopDesktop ?? '115px';
   $stickyTopMobile = $stickyTopMobile ?? '84px';
+  $reserveDesktop = $reserveDesktop ?? '0px';
+  $reserveMobile = $reserveMobile ?? '0px';
 @endphp
 
-<div class="wow-ultra" style="--ultra-top-desktop: {{ $stickyTopDesktop }}; --ultra-top-mobile: {{ $stickyTopMobile }};">
+<div class="wow-ultra" style="--ultra-top-desktop: {{ $stickyTopDesktop }}; --ultra-top-mobile: {{ $stickyTopMobile }}; --ultra-reserve-desktop: {{ $reserveDesktop }}; --ultra-reserve-mobile: {{ $reserveMobile }};">
   <form class="bar" role="search">
     <div class="seg" id="{{ $prefix }}-seg-what">
       <i class="bi bi-stars fs-5 text-muted"></i>
@@ -109,4 +111,3 @@
     </button>
   </form>
 </div>
-
