@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         var upsellLoaded = false;
         var upsellPool = [];
         var upsellIndex = 0;
+        var headlineIndex = 0;
         function esc(s){ return String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
         function sliceAndRender(pool){
           // rotate 3 items each time
@@ -204,16 +205,65 @@ document.addEventListener('DOMContentLoaded', () => {
             var m = url.match(/\/([a-z-]+)\//i); return m?m[1]:'';
           }catch(_){ return ''; }
         }
+        function cartComposition(){
+          try{
+            var items = readLocalCart(); if(!items || !items.length) return 'unknown';
+            var flags = items.map(function(it){ var t=(it.title||'')+ ' '+ (it.url||''); return /online/i.test(t); });
+            var anyOnline = flags.some(Boolean); var anyOffline = flags.some(function(f){ return !f; });
+            if (anyOnline && !anyOffline) return 'online-only';
+            if (!anyOnline && anyOffline) return 'in-person-only';
+            if (anyOnline && anyOffline) return 'mixed';
+            return 'unknown';
+          }catch(_){ return 'unknown'; }
+        }
+        function chooseHeadline(){
+          var mode = cartComposition();
+          var sets = {
+            'online-only': [
+              'Popular online picks right now',
+              'Instant calm, no travel required',
+              'More online favourites you’ll actually use',
+              'Pair it with a quick reset',
+              'Top-rated online sessions',
+              'Online best-sellers this week',
+              'Most booked online experiences',
+              'Finish strong: add an online upgrade'
+            ],
+            'in-person-only': [
+              'Popular near you',
+              'Most booked in your area',
+              'Wellness people nearby love',
+              'Nearby favourites to match your booking',
+              'Make a day of it',
+              'Limited spots near you',
+              'New in your area',
+              'Top-rated nearby practitioners'
+            ],
+            'mixed': [
+              'Complete the set: online + in-person',
+              'Balance your week',
+              'Before & after: prep online, go in-person',
+              'Your calm, but smarter',
+              'Most paired with what’s in your basket'
+            ],
+            'unknown': [ 'Complete your calm' ]
+          };
+          var list = sets[mode] || sets['unknown'];
+          var text = list[ headlineIndex % list.length ];
+          headlineIndex = (headlineIndex + 1) % list.length;
+          return text;
+        }
+        function setHeadline(){ try{ var h = panel.querySelector('#cartdd-upsell-headline'); if(h){ h.textContent = chooseHeadline(); } }catch(_){} }
         function loadUpsell(){ if(upsellLoaded) return; upsellLoaded=true;
           var seg = deriveTypeFromCart();
           var endpoint = seg ? ('/api/products?limit=12&sort=popular&type='+encodeURIComponent(seg)) : '/api/products?limit=12&sort=popular';
           fetch(endpoint, { headers:{ 'Accept':'application/json' }})
             .then(r=>r.json())
-            .then(function(list){ upsellPool = Array.isArray(list)?list:[]; sliceAndRender(upsellPool); })
+            .then(function(list){ upsellPool = Array.isArray(list)?list:[]; setHeadline(); sliceAndRender(upsellPool); })
             .catch(function(){ renderUpsell([]); });
         }
-        // Load on first open; on subsequent opens rotate the pool
-        wrap.addEventListener('mouseenter', function(){ if(!upsellLoaded) loadUpsell(); else sliceAndRender(upsellPool); });
+        // Load on first open; on subsequent opens rotate the pool and headline
+        wrap.addEventListener('mouseenter', function(){ if(!upsellLoaded) loadUpsell(); else { setHeadline(); sliceAndRender(upsellPool); } });
       }catch(_){ }
     }
   } catch (e) {}
