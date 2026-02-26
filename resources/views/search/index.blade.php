@@ -260,7 +260,7 @@
 }
 /* Search result tags styled like product badges */
 #sr-tags{ display:flex; flex-wrap:wrap; gap:8px; }
-#sr-tags .badge{ height:32px; display:inline-flex; align-items:center; gap:4px; padding:0 10px; border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size:12px; line-height:1; white-space:nowrap; }
+#sr-tags .badge{ height:32px; display:inline-flex; align-items:center; gap:4px; padding:0 10px; border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size:12px; line-height:1; white-space:nowrap; margin-bottom:10px; }
 #sr-tags .badge--warm{ background:#ffe7c2; color:#6b4b12 }
 #sr-tags .badge--cool{ background:#dfe9ff; color:#1f3a77 }
 </style>
