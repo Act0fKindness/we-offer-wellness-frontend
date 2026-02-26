@@ -128,12 +128,14 @@
                                     <p class="account-email">{{ $headerUser->email }}</p>
                                 </div>
                                 <div class="account-actions account-actions--authed">
-                                    <a class="account-link" href="{{ route('account.dashboard') }}">Account overview</a>
-                                    <a class="account-link" href="{{ route('account.orders') }}">Orders &amp; receipts</a>
+                                    <div class="cartdd-foot accountdd-foot">
+                                        <a class="btn visit-cart-btn" href="{{ route('account.dashboard') }}">Account overview</a>
+                                        <a class="btn btn--primary checkout-btn" href="{{ route('account.orders') }}">Orders &amp; receipts</a>
+                                    </div>
                                     <a class="account-link" href="{{ route('profile.edit') }}">Profile &amp; contact</a>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="btn-wow btn-wow--cta">Log out</button>
+                                        <button type="submit" class="account-link account-link--logout">Log out</button>
                                     </form>
                                 </div>
                             </div>
@@ -147,8 +149,10 @@
                             <div class="account-dropdown" id="accountDropdown" hidden>
                                 <p class="account-email">Sign in to manage bookings faster.</p>
                                 <div class="account-actions">
-                                    <a class="btn-wow btn-wow--cta" href="{{ route('login', ['redirect' => '/account']) }}">Log in</a>
-                                    <a class="btn-wow btn-wow--outline" href="{{ route('register', ['redirect' => '/account']) }}">Create account</a>
+                                    <div class="cartdd-foot accountdd-foot">
+                                        <a class="btn visit-cart-btn" href="{{ route('login', ['redirect' => '/account']) }}">Log in</a>
+                                        <a class="btn btn--primary checkout-btn" href="{{ route('register', ['redirect' => '/account']) }}">Create account</a>
+                                    </div>
                                     <a class="account-link" href="{{ route('password.request') }}">Forgot password?</a>
                                 </div>
                             </div>

@@ -104,6 +104,9 @@
 .account-actions--authed{ gap:8px; }
 .account-actions--authed .account-link{ font-weight:600; color: var(--ink-800); }
 .account-actions--authed form{ margin-top:4px; }
+.accountdd-foot{ display:flex; gap:10px; margin-top:4px; }
+.accountdd-foot .btn{ flex:1; font-weight:700; border-radius:999px; }
+.account-link--logout{ background:none; border:0; padding:0; font:inherit; color:inherit; text-align:left; cursor:pointer; }
 .account-avatar{ width:56px; height:56px; border-radius:999px; background: var(--brand-100); color: var(--brand-800); font-weight:700; display:inline-flex; align-items:center; justify-content:center; text-transform:capitalize; overflow:hidden; }
 .account-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 .account-avatar--profile{ width:74px; height:74px; font-size:1.1rem; }
