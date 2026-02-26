@@ -18,11 +18,11 @@
     .wrapper { width:100%; padding:32px 16px; background:radial-gradient(900px 320px at 20% 0%, rgba(74,136,120,.18), transparent 60%),radial-gradient(900px 240px at 80% 0%, rgba(15,23,42,.12), transparent 60%),#edf2f5; }
     .card { width:100%; max-width:640px; border-radius:24px; overflow:hidden; background:#ffffff; box-shadow:0 50px 80px rgba(12,19,34,.17); border:1px solid rgba(255,255,255,.8); }
 
-    .hero-top { position:relative; padding:28px 32px 48px; background:linear-gradient(140deg,#0b1220,#1f5448); color:#fff; }
-    .hero-top::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 20% 20%, rgba(255,255,255,.12), transparent 55%); opacity:.9; pointer-events:none; }
+    .hero-top { position:relative; padding:28px 32px 48px; background-image:url('https://images.pexels.com/photos/5208298/pexels-photo-5208298.jpeg'); background-size:cover; background-position:center; color:#0b1220; }
+    .hero-top::after { content:""; position:absolute; inset:0; background:rgba(255,255,255,.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
     .brand { position:relative; z-index:1; width:170px; height:auto; display:block; }
-    .hero-heading { position:relative; z-index:1; font-size:30px; margin:12px 0 0; letter-spacing:-.02em; }
-    .hero-sub { position:relative; z-index:1; font-size:15px; margin-top:8px; color:rgba(255,255,255,.82); }
+    .hero-heading { position:relative; z-index:1; font-size:30px; margin:12px 0 0; letter-spacing:-.02em; color:#0b1220; }
+    .hero-sub { position:relative; z-index:1; font-size:15px; margin-top:8px; color:#4f566c; }
 
     .content { padding:32px; font-size:15px; line-height:1.6; background:#ffffff; }
     h1 { font-size:26px; margin:0 0 12px; letter-spacing:-.01em; }
