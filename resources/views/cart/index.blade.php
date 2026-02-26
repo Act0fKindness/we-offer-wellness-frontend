@@ -336,9 +336,19 @@
     checkoutBusy = true;
     guestSubmitBtn.disabled=true;
     guestSubmitBtn.textContent='Redirecting…';
-    post('/checkout/session', { items: serializeCartForCheckout(), email: email })
-      .then(function(res){ if(res && res.url){ window.location.assign(res.url); return; } throw new Error('no url'); })
-      .catch(function(){ guestError.textContent='Could not start checkout. Try again.'; guestSubmitBtn.disabled=false; guestSubmitBtn.textContent='Continue as guest'; checkoutBusy=false; });
+      post('/checkout/session', { items: serializeCartForCheckout(), email: email })
+      .then(function(res){
+        if(res && res.url){ window.location.assign(res.url); return; }
+        if(res && res.error){ throw new Error(res.error); }
+        throw new Error('no url');
+      })
+      .catch(function(err){
+        var code = err?.message || '';
+        if(code==='invalid_email'){ guestError.textContent='That email looks invalid. Please try again.'; }
+        else if(code==='email_required'){ guestError.textContent='We need an email to send your receipt.'; }
+        else { guestError.textContent='Could not start checkout. Try again.'; }
+        guestSubmitBtn.disabled=false; guestSubmitBtn.textContent='Continue as guest'; checkoutBusy=false;
+      });
   });
 
   document.addEventListener('click', function(e){
@@ -366,8 +376,18 @@
       }
       var btn = e.target; var prev = btn.textContent; btn.disabled = true; btn.style.opacity='.65'; btn.textContent = 'Redirecting…';
       post('/checkout/session', { items: serializeCartForCheckout() })
-        .then(function(res){ if(res && res.url){ window.location.assign(res.url); return; } throw new Error('no url'); })
-        .catch(function(){ alert('Could not start checkout. Please try again.'); btn.disabled=false; btn.style.opacity='1'; btn.textContent=prev; });
+        .then(function(res){
+          if(res && res.url){ window.location.assign(res.url); return; }
+          if(res && res.error){ throw new Error(res.error); }
+          throw new Error('no url');
+        })
+        .catch(function(err){
+          const msg = err?.message === 'email_required'
+            ? 'Please update your account email before checking out.'
+            : 'Could not start checkout. Please try again.';
+          alert(msg);
+          btn.disabled=false; btn.style.opacity='1'; btn.textContent=prev;
+        });
       return;
     }
 

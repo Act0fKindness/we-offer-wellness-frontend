@@ -101,11 +101,15 @@ class CheckoutController extends Controller
         if ($guestEmail !== '' && !filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) {
             return response()->json(['ok'=>false,'error'=>'invalid_email'], 422);
         }
+        $resolvedEmail = optional($request->user())->email ?: $guestEmail;
+        if (!$resolvedEmail) {
+            return response()->json(['ok'=>false,'error'=>'email_required'], 422);
+        }
         DB::beginTransaction();
         try {
             $order = Order::create([
                 'user_id' => optional($request->user())->id,
-                'email' => optional($request->user())->email ?: ($guestEmail ?: null),
+                'email' => $resolvedEmail,
                 'currency' => strtoupper($currency),
                 'amount_total' => $amountTotal,
                 'status' => 'pending',
@@ -141,6 +145,7 @@ class CheckoutController extends Controller
                 'line_items' => $lineItems,
                 'metadata' => [ 'order_id' => (string)$order->id ],
                 'client_reference_id' => (string)$order->id,
+                'customer_email' => $resolvedEmail,
                 'success_url' => route('checkout.success', ['order' => $order->id, 'token' => $successToken], true),
                 'cancel_url' => route('checkout.cancel', ['order' => $order->id], true),
             ]);
