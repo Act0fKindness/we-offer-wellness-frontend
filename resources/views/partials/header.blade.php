@@ -15,6 +15,12 @@
     .burgermenu.opened span::after{ transform: translateY(-8px) rotate(-45deg) }
     /* hover state inherit existing bg hover */
 </style>
+<style>
+  /* When header becomes fixed after hitting top on desktop */
+  @media (min-width: 992px){
+    header.is-fixed{ position:fixed; top:0; left:0; right:0; }
+  }
+</style>
 <!-- Overlay shown behind header mega menu -->
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
 <div class="pointer-events-none fixed inset-0 -z-10"></div>
@@ -28,7 +34,8 @@
                 </div>
             </div>
         </div>
-        <header class="fixed top-0 z-50 bg-white/90 backdrop-blur border-b"
+        <div id="header-sentinel" style="position:relative;height:1px;width:1px"></div>
+        <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b"
                 style="border-bottom: 1px solid rgba(153, 153, 153, 0.4);">
             <div class="container-page h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">

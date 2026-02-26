@@ -205,6 +205,27 @@
     }
   } catch {}
 
+  // Header sticky-then-fixed behavior (desktop): becomes fixed once it touches top; reverses on scroll up
+  try{
+    var sentinel = document.getElementById('header-sentinel');
+    var header = document.querySelector('header');
+    if (sentinel && header){
+      function enableObserver(){
+        if (!window.matchMedia('(min-width: 992px)').matches){ header.classList.remove('is-fixed'); return; }
+        try{ if (window.__hdrObs) { window.__hdrObs.disconnect(); } }catch(_){ }
+        window.__hdrObs = new IntersectionObserver(function(entries){
+          var e = entries[0];
+          // When sentinel scrolls out above viewport, header has reached top
+          if (e && e.boundingClientRect && e.boundingClientRect.top < 0 && e.intersectionRatio === 0){ header.classList.add('is-fixed'); }
+          else { header.classList.remove('is-fixed'); }
+        }, { threshold: [0, 1] });
+        window.__hdrObs.observe(sentinel);
+      }
+      enableObserver();
+      window.addEventListener('resize', enableObserver);
+    }
+  }catch(_){ }
+
   // Mobile menu toggle
   try {
     var burger = document.querySelector('button[aria-label="Toggle menu"]');
