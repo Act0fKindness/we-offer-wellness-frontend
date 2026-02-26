@@ -144,7 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
       function show(){ if(!isDesktop()) return; loadMini(); try{ var hint = panel.querySelector('#freeShipHint'); if(hint) hint.textContent = 'Instant delivery'; }catch(_){} panel.hidden = false; }
     function hide(){ panel.hidden = true; }
-    wrap.addEventListener('mouseenter', () => { if (hideTimer) { clearTimeout(hideTimer); hideTimer=null; } show(); });
+    // Defer showing/rotation to the upsell-aware handler below
+    wrap.addEventListener('mouseenter', () => { if (hideTimer) { clearTimeout(hideTimer); hideTimer=null; } });
     wrap.addEventListener('mouseleave', () => { hideTimer = setTimeout(hide, 120); });
     // Prevent default on desktop clicks to keep dropdown open; on mobile it navigates
     link.addEventListener('click', (e) => { if (isDesktop()) { e.preventDefault(); show(); } });
@@ -283,8 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
           .then(function(list){ upsellPool = Array.isArray(list)?list:[]; setHeadline(); sliceAndRender(upsellPool); })
           .catch(function(){ renderUpsell([]); });
       }
-      // Load on first open; on subsequent opens rotate the pool and headline
-      wrap.addEventListener('mouseenter', function(){ if(!upsellLoaded) loadUpsell(); else { setHeadline(); sliceAndRender(upsellPool); } });
+      // Only rotate when dropdown transitions from closed -> open.
+      wrap.addEventListener('mouseenter', function(){
+        var wasClosed = !!panel.hidden;
+        show();
+        if(!upsellLoaded){ loadUpsell(); return; }
+        if (wasClosed) { setHeadline(); sliceAndRender(upsellPool); }
+      });
     }catch(_){ }
   }
 });
