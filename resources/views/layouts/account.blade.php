@@ -184,6 +184,27 @@
         @yield('auth-form')
         @yield('auth-meta')
     </section>
+    @php
+        $authReviewFeed = $authReviews ?? [];
+        $authReviewFallback = [
+            'rating' => 5,
+            'title' => 'Genuinely effortless',
+            'text' => 'The filters actually helped. Booked an online session in under two minutes.',
+            'name' => 'Hannah',
+            'location' => 'Manchester',
+            'when' => 'Today',
+        ];
+        if (empty($authReviewFeed)) {
+            $authReviewFeed = [$authReviewFallback];
+        }
+        $authReviewInitial = $authReviewFeed[0] ?? $authReviewFallback;
+        $authReviewInitialRating = max(1, min(5, (int) ($authReviewInitial['rating'] ?? 5)));
+        $authReviewInitialStars = str_repeat('★', $authReviewInitialRating).str_repeat('☆', 5 - $authReviewInitialRating);
+        $authReviewInitialName = $authReviewInitial['name'] ?? 'Verified customer';
+        if (!empty($authReviewInitial['location'])) {
+            $authReviewInitialName .= ' • '.$authReviewInitial['location'];
+        }
+    @endphp
     <aside class="account-auth-right" aria-label="Customer stories">
         <div class="account-auth-quote">
             <p>“The easiest way to book a proper reset — without the endless scrolling and decision fatigue.”</p>
@@ -194,14 +215,14 @@
             <img src="https://media.licdn.com/dms/image/v2/D4E22AQFMCdRaAjB9TA/feedshare-shrink_2048_1536/feedshare-shrink_2048_1536/0/1722597045741?e=1773878400&amp;v=beta&amp;t=OUshI77Gj0hHFK2_ClKBYaLdQrBoSxpZbhTfqH-5oUE" alt="We Offer Wellness marketplace preview" loading="lazy">
             <div class="review fadeIn" id="authReviewCard" aria-live="polite">
                 <div class="reviewTop">
-                    <div class="stars" id="authReviewStars">★★★★★</div>
+                    <div class="stars" id="authReviewStars">{{ $authReviewInitialStars }}</div>
                     <div class="pill">Verified booking</div>
                 </div>
-                <p class="reviewTitle" id="authReviewTitle">Genuinely effortless</p>
-                <p class="reviewText" id="authReviewText">The filters actually helped. Booked an online session in under two minutes.</p>
+                <p class="reviewTitle" id="authReviewTitle">{{ $authReviewInitial['title'] ?? 'Verified booking experience' }}</p>
+                <p class="reviewText" id="authReviewText">{{ $authReviewInitial['text'] ?? 'Clean site, clear pricing, and the booking took about a minute.' }}</p>
                 <div class="reviewMeta">
-                    <span id="authReviewName">Hannah • Manchester</span>
-                    <span id="authReviewWhen">Today</span>
+                    <span id="authReviewName">{{ $authReviewInitialName }}</span>
+                    <span id="authReviewWhen">{{ $authReviewInitial['when'] ?? 'Recently' }}</span>
                 </div>
             </div>
         </div>
@@ -216,28 +237,27 @@
   const textEl = document.getElementById('authReviewText');
   const nameEl = document.getElementById('authReviewName');
   const whenEl = document.getElementById('authReviewWhen');
-  const reviews = [
-    { rating:5, title:'Genuinely effortless', text:'The filters actually helped. Booked an online session in under two minutes.', name:'Hannah', location:'Manchester', when:'Today' },
-    { rating:5, title:'Premium experience', text:'Clean layout, clear pricing, and no weird surprises at checkout.', name:'James', location:'Kent', when:'1 day ago' },
-    { rating:5, title:'Found the right thing fast', text:'I didn’t have to open 14 tabs to compare. That alone deserves 5 stars.', name:'Aisha', location:'London', when:'3 days ago' },
-    { rating:4, title:'Loved the selection', text:'So many great options nearby — and the reviews helped me choose with confidence.', name:'Ella', location:'Bristol', when:'This week' },
-    { rating:5, title:'Booked as a gift', text:'Bought for my partner and it went down extremely well. I look thoughtful now.', name:'Tom', location:'Leeds', when:'Last week' }
-  ];
-  const starString = (n) => Array.from({length:5}).map((_,i)=> i < n ? '★' : '☆').join('');
+  const reviews = @json($authReviewFeed);
+  if (!reviews.length) return;
+  const starString = (n = 5) => Array.from({ length: 5 }).map((_, i) => (i < n ? '★' : '☆')).join('');
   const applyReview = (review) => {
-    starsEl.textContent = starString(review.rating);
-    titleEl.textContent = review.title;
-    textEl.textContent = review.text;
-    nameEl.textContent = `${review.name} • ${review.location}`;
-    whenEl.textContent = review.when;
+    if (!review) return;
+    const rating = Math.max(1, Math.min(5, parseInt(review.rating || 5, 10))); 
+    starsEl.textContent = starString(rating);
+    titleEl.textContent = review.title || 'Verified booking';
+    textEl.textContent = review.text || '';
+    const location = review.location ? ` • ${review.location}` : '';
+    nameEl.textContent = `${review.name || 'Verified customer'}${location}`;
+    whenEl.textContent = review.when || 'Recently';
   };
-  applyReview(reviews[0]);
+  if (reviews.length === 1) return;
+  let index = 0;
   setInterval(() => {
+    index = (index + 1) % reviews.length;
     card.classList.remove('fadeIn');
     card.classList.add('fadeOut');
     setTimeout(() => {
-      const next = reviews[Math.floor(Math.random() * reviews.length)];
-      applyReview(next);
+      applyReview(reviews[index]);
       card.classList.remove('fadeOut');
       card.classList.add('fadeIn');
     }, 220);
