@@ -3,6 +3,7 @@
 function initMegaMenu() {
   const header = document.querySelector('header');
   const panel = document.getElementById('mega-panel');
+  const overlay = document.getElementById('mega-overlay');
   if (!header || !panel) return;
   const navLinks = header.querySelectorAll('[data-mega-menu]');
   navLinks.forEach((a) => {
@@ -10,16 +11,18 @@ function initMegaMenu() {
       const which = a.getAttribute('data-mega-menu');
       panel.setAttribute('data-active', which || '');
       panel.style.display = 'block';
+      if (overlay) overlay.style.display = 'block';
     });
     a.addEventListener('focus', () => {
       const which = a.getAttribute('data-mega-menu');
       panel.setAttribute('data-active', which || '');
       panel.style.display = 'block';
+      if (overlay) overlay.style.display = 'block';
     });
   });
-  header.addEventListener('mouseleave', () => { panel.style.display = 'none'; });
+  header.addEventListener('mouseleave', () => { panel.style.display = 'none'; if (overlay) overlay.style.display = 'none'; });
   document.addEventListener('click', (e) => {
-    if (!header.contains(e.target)) panel.style.display = 'none';
+    if (!header.contains(e.target)) { panel.style.display = 'none'; if (overlay) overlay.style.display = 'none'; }
   });
 }
 

@@ -15,7 +15,8 @@
     .burgermenu.opened span::after{ transform: translateY(-8px) rotate(-45deg) }
     /* hover state inherit existing bg hover */
 </style>
-
+<!-- Overlay shown behind header mega menu -->
+<div id="mega-overlay" class="mega-overlay" style="display:none"></div>
 <div class="pointer-events-none fixed inset-0 -z-10"></div>
         <div class="utility-bar hidden md:block">
             <div class="container-page">
@@ -240,6 +241,8 @@
 </script>
 <style>
 .cart-dropdown{ position:absolute; right:0; top:100%; margin-top:8px; z-index:1000; min-width:280px; }
+/* Backdrop for mega menu (below header z-40, above content) */
+.mega-overlay{ position: fixed; inset: 0; background: rgba(27,99,168,.10); z-index: 39; pointer-events: none; }
 </style>
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">
