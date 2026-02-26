@@ -198,7 +198,7 @@ a:hover { text-decoration: none; }
 .account-card--primary { border-color: var(--brand-100); border: 1px solid rgba(16,24,40,.18); border-radius: 4px; box-shadow: var(--shadow); }
 .account-card--secondary { background: #f8fafc; border: 1px solid rgba(16,24,40,.18); border-radius: 4px; box-shadow: var(--shadow); }
 .account-card--danger { border-color: rgba(239,68,68,0.4); }
-.account-card__header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.account-card__header { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: .4rem; margin-bottom: 1rem; }
 .account-card__header .eyebrow { text-transform: uppercase; font-size: 11px; letter-spacing: .2em; color: var(--ink-500); margin: 0 0 .35rem; font-weight: 800; }
 .account-card__header h2,
 .account-card__header h3 { margin: 0; font-size: 1.35rem; font-weight: 700; }
