@@ -1,12 +1,12 @@
 <section data-v-cad6ed7c="" data-v-f43bb09d="" class="section" aria-labelledby="schedule-title">
     <div data-v-cad6ed7c="" class="container-page">
-        <div data-v-cad6ed7c="" class="mb-6 flex items-end justify-between">
+        <div data-v-cad6ed7c="" class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div data-v-cad6ed7c="">
                 <div data-v-cad6ed7c="" class="kicker">Classes</div>
                 <h2 data-v-cad6ed7c="" id="schedule-title">Book Your Class</h2>
                 <p data-v-cad6ed7c="" class="schedule-sub">3 simple steps to book a gentle gong bath, Yoga
                     Nidra and more…</p></div>
-            <a href="/classes" class="btn-wow btn-wow--outline btn-sm btn-arrow" data-v-cad6ed7c=""
+            <a href="/classes" class="btn-wow btn-wow--outline btn-sm btn-arrow w-full sm:w-auto" data-v-cad6ed7c=""
                data-loader-init="1"><span class="btn-label" data-v-cad6ed7c="">View all classes</span><span
                 class="btn-icon-wrap" aria-hidden="true" data-v-cad6ed7c=""><svg class="btn-icon-hover"
                                                                                  xmlns="http://www.w3.org/2000/svg"
