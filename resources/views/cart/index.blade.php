@@ -262,6 +262,16 @@
     }
     if(e.target && e.target.id==='apply-promo'){ var code=(document.getElementById('promo-code')?.value||'').trim(); var msg=document.getElementById('promo-msg'); post('/api/cart/promo',{code:code}).then(function(){ msg.textContent=code?("Code '"+code+"' applied"):'Code cleared'; }).catch(function(){ msg.textContent='Could not apply code'; }); return; }
 
+    // Checkout via Stripe Checkout Session
+    if(e.target && e.target.id==='checkoutBtn'){
+      if (cart.length === 0) return;
+      var btn = e.target; var prev = btn.textContent; btn.disabled = true; btn.style.opacity='.65'; btn.textContent = 'Redirecting…';
+      post('/api/checkout/session', {})
+        .then(function(res){ if(res && res.url){ window.location.assign(res.url); return; } throw new Error('no url'); })
+        .catch(function(){ alert('Could not start checkout. Please try again.'); btn.disabled=false; btn.style.opacity='1'; btn.textContent=prev; });
+      return;
+    }
+
     var add = e.target.closest('[data-add]');
     if (add){
       var uid = add.getAttribute('data-add');
