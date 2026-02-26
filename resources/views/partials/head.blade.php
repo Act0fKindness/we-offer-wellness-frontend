@@ -100,7 +100,7 @@
 .account-actions .btn-wow{ width:100%; }
 .account-link{ color: var(--ink-700); font-weight:600; font-size:12px; text-decoration:none; text-align:right; margin-bottom:15px; margin-right:12px; }
 .account-link:hover{ text-decoration:underline; }
-.account-dropdown__header{ margin-bottom:12px; }
+.account-dropdown__header{ margin-bottom:12px; text-align:left; font-size:14px; }
 .account-actions--authed{ gap:8px; }
 .account-actions--authed .account-link{ font-weight:600; color: var(--ink-800); }
 .account-actions--authed form{ margin-top:4px; }
