@@ -91,16 +91,11 @@
                               d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
                     </svg>
                 </a>
-                    <button class="icon-btn position-relative cart-trigger" aria-label="Open cart" aria-expanded="false">
-                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
-                             height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"></path>
+                    <a class="icon-btn position-relative" aria-label="Open cart" href="/cart">
+                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"></path>
                         </svg>
-                        <span
-                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge bg-danger">0</span>
-                    </button>
-                    <div id="cart-dropdown" class="cart-dropdown" hidden></div>
+                    </a>
                 </div><!---->
                 <button
                     class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100 burgermenu"
@@ -190,57 +185,8 @@
                     </div>
                 </div>
             </div>
-        </header>
-<script>
-// Rebuilt cart dropdown JS (new classes, minimal dependencies)
-(function(){
-  var btn = document.querySelector('.cart-trigger');
-  var panel = document.getElementById('cart-dropdown');
-  if (!btn || !panel) return;
-
-  function show(){
-    if (isMobile()) { window.location.href = '/cart'; return }
-    render();
-    position();
-    panel.hidden = false;
-    btn.setAttribute('aria-expanded','true');
-  }
-  function hide(){ panel.hidden = true; btn.setAttribute('aria-expanded','false'); }
-  function toggle(){ panel.hidden ? show() : hide() }
-  function isMobile(){ try{ return window.matchMedia('(max-width: 767px)').matches }catch(_){ return false } }
-  function position(){ try{ var rect = btn.getBoundingClientRect(); panel.style.position='absolute'; panel.style.top = (btn.offsetTop + btn.offsetHeight + 8)+'px'; panel.style.right = '0' }catch(_){} }
-  function outside(e){ if (!panel) return; if (panel.contains(e.target) || btn.contains(e.target)) return; hide() }
-  function htmlError(){ return '<div class="p-3 text-muted">Cart unavailable</div>' }
-  function render(){ fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'text/html' }, credentials:'same-origin' })
-    .then(r=>r.text()).then(html => { panel.innerHTML = html; updateBadge() }).catch(()=>{ panel.innerHTML = htmlError() }) }
-  function updateBadge(){ fetch('/api/cart/count', { credentials:'same-origin' }).then(r=>r.json()).then(function(j){ var b=document.querySelector('.cart-badge'); if(b){ var c=Number(j.count||0); b.textContent=String(c); b.style.display=c>0?'inline-block':'none' } }).catch(function(){}) }
-
-  document.addEventListener('click', function(e){ if(e.target.closest('.cart-trigger')){ e.preventDefault(); toggle() } else { outside(e) } })
-  window.addEventListener('resize', position)
-  window.addEventListener('wow:open-cart', function(){ show() })
-  updateBadge()
-
-  // Add-to-cart: delegate clicks and post to API, then open + refresh mini cart
-  document.addEventListener('click', function(e){
-    var t = e.target.closest('.js-add-to-cart');
-    if (!t) return;
-    e.preventDefault();
-    try{
-      var id = parseInt(t.getAttribute('data-id')||'0',10);
-      var qty = parseInt(t.getAttribute('data-qty')||'1',10); if(!isFinite(qty) || qty<1) qty=1;
-      var token = document.querySelector('meta[name="csrf-token"]')?.content || '';
-      fetch('/api/cart/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token?{'X-CSRF-TOKEN':token}:{}) },
-        credentials: 'same-origin',
-        body: JSON.stringify({ id:id, qty:qty })
-      }).then(function(r){ return r.json().catch(function(){ return {} }) }).then(function(){ updateBadge(); show(); }).catch(function(){ show(); });
-    }catch(_){ show(); }
-  });
-})();
-</script>
+ </header>
 <style>
-.cart-dropdown{ position:absolute; right:0; top:100%; margin-top:8px; z-index:1000; min-width:280px; }
 /* Backdrop for mega menu (below header/utility, above content) */
 .mega-overlay{
     position: fixed; inset: 0;
