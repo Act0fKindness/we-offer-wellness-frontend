@@ -152,10 +152,10 @@
 </section><!---->
 
 <style>
-/* Ensure search suggestion panes overlay nearby content on homepage */
-.wow-ultra{ position: relative; z-index: 50; }
-.wow-ultra .pane{ z-index: 60; }
-.wow-ultra .pane.narrow{ z-index: 60; }
+/* Ensure search suggestion panes overlay content but stay under the header */
+.wow-ultra{ position: relative; z-index: 30; }
+.wow-ultra .pane{ z-index: 39; }
+.wow-ultra .pane.narrow{ z-index: 39; }
 /* Desktop default: show text label, hide icon on Search button */
 .btn-wow.is-squarish.btn-xl .btn-label{ display:inline; }
 .btn-wow.is-squarish.btn-xl .btn-icon{ display:none; }
