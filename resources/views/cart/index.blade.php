@@ -72,7 +72,12 @@
 
           <div class="panel empty-wrap" id="emptyWrap" style="{{ empty($serverCart) ? '' : 'display:none' }}">
             <div class="empty-hero">
-              <div class="empty-illu" aria-hidden="true">🛒</div>
+              <div class="empty-illu" aria-hidden="true">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                  <path d="M7 8V7a5 5 0 0 1 10 0v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                  <path d="M6.5 8h11l1 12.5a2 2 0 0 1-2 2H7.5a2 2 0 0 1-2-2L6.5 8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                </svg>
+              </div>
               <div>
                 <h2>Your cart is empty</h2>
                 <p>Add a therapy and you’re good to go.</p>
@@ -304,7 +309,18 @@
 
 .empty-wrap{ padding:6px 0 0; display:grid; grid-template-columns: 1fr; gap:14px; }
 .empty-hero{ padding:16px; border-radius:22px; border:1px solid var(--ink-200); background: rgba(255,255,255,.86); box-shadow: 0 12px 26px rgba(16,24,40,.06); display:flex; gap:14px; align-items:flex-start; }
-.empty-illu{ width:54px; height:54px; border-radius:18px; display:grid; place-items:center; background: linear-gradient(180deg, color-mix(in srgb, var(--accent-600) 18%, white), #fff); border: 1px solid color-mix(in srgb, var(--accent-600) 35%, transparent); box-shadow: 0 14px 30px color-mix(in srgb, var(--accent-600) 25%, transparent); flex:0 0 auto; color: var(--ink-800); }
+.empty-illu{
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(84, 148, 131, .18), rgba(84, 148, 131, .06));
+  border: 1px solid rgba(84, 148, 131, .22);
+  box-shadow: 0 14px 30px rgba(84, 148, 131, .14);
+  flex: 0 0 auto;
+  color: rgba(11, 18, 32, .85);
+}
 .empty-hero h2{ margin:0; font-size:18px; letter-spacing:-.02em; font-weight:900; font-family:'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; }
 .sum-head, .title, .upsell-title{ font-family:'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; }
 .empty-hero p{ margin:6px 0 0; color: var(--ink-600); font-weight:650; font-size:13px; line-height:1.45; }
