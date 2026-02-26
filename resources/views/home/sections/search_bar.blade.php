@@ -196,4 +196,10 @@
   .btn-wow.is-squarish.btn-xl .btn-icon{ display:inline-flex; }
   .btn-wow.is-squarish.btn-xl .icon-search{ width:24px; height:24px; color:#fff; }
 }
+
+@media (min-width: 992px){
+  .wow-ultra .bar{
+    border: none;
+  }
+}
 </style>
