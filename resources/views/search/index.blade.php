@@ -153,7 +153,7 @@
   .search-compact .wow-ultra #search-top-seg-who{ opacity: 0; pointer-events: none; }
   /* Expand back on hover or focus within (desktop) */
   .search-compact .wow-ultra:hover .bar,
-  .search-compact .wow-ultra:focus-within .bar{ width: min(1200px, calc(100vw - 32px)); }
+  .search-compact .wow-ultra:focus-within .bar{ width: min(1200px, calc(100vw - 32px)); overflow: visible; }
   .search-compact .wow-ultra:hover #search-top-seg-where,
   .search-compact .wow-ultra:hover #search-top-seg-when,
   .search-compact .wow-ultra:hover #search-top-seg-who,
