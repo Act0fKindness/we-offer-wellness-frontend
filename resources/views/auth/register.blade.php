@@ -75,7 +75,7 @@
         <input type="checkbox" id="reg-terms" name="terms" {{ old('terms') ? 'checked' : '' }} required>
         <span>I agree to the <a href="/terms" style="color:inherit;">Terms</a> and <a href="/privacy" style="color:inherit;">Privacy Policy</a>.</span>
       </label>
-      <a href="{{ route('login', ['redirect' => $redirect ?? '/cart']) }}">Already have an account?</a>
+      <a href="{{ route('login', ['redirect' => $redirect ?? '/cart']) }}">Login</a>
     </div>
 
     <button class="account-auth-btn primary" id="registerSubmit" type="submit">
@@ -85,7 +85,7 @@
 
     <div class="account-auth-inline account-auth-inline--center">
       Already have an account?
-      <a href="{{ route('login', ['redirect' => $redirect ?? '/cart']) }}">Sign in</a>
+      <a href="{{ route('login', ['redirect' => $redirect ?? '/cart']) }}">Login</a>
     </div>
 
     <div class="account-auth-fine">

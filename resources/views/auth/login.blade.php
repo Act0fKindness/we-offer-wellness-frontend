@@ -1,8 +1,8 @@
 @extends('layouts.account')
 
-@section('page-title', 'Sign in — We Offer Wellness™')
-@section('auth-heading', 'Sign in')
-@section('auth-subheading', 'Sign in to manage bookings, save favourites, and checkout faster.')
+@section('page-title', 'Customer Login — We Offer Wellness™')
+@section('auth-heading', 'Customer Login')
+@section('auth-subheading', 'Log in to manage bookings, save favourites, and checkout faster.')
 
 @php($status = session('status'))
 
@@ -50,7 +50,7 @@
 
     <button class="account-auth-btn primary" id="loginSubmit" type="submit">
       <span class="spinner" aria-hidden="true"></span>
-      Sign in
+      Log in
     </button>
   </form>
 @endsection
@@ -58,7 +58,7 @@
 @section('auth-meta')
   <div class="account-auth-inline">
     Don’t have an account?
-    <a href="{{ route('register', ['redirect' => $redirect ?? '/cart']) }}">Sign up</a>
+    <a href="{{ route('register', ['redirect' => $redirect ?? '/cart']) }}">Create account</a>
   </div>
   <div class="account-auth-fine">
     By continuing, you agree to our <a href="/terms" style="color:inherit;">Terms</a> and <a href="/privacy" style="color:inherit;">Privacy Policy</a>.
