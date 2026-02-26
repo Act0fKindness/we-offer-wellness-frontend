@@ -22,6 +22,27 @@
   }
   /* (Removed hover animation for header mega state per request) */
 </style>
+@php
+    $headerUser = auth()->user();
+    $headerProfile = null;
+    if ($headerUser) {
+        $headerRawName = trim((string) $headerUser?->name);
+        $headerFirst = trim($headerUser?->first_name ?: \Illuminate\Support\Str::of($headerRawName)->before(' '));
+        $headerDerivedLast = '';
+        if ($headerRawName && str_contains($headerRawName, ' ')) {
+            $headerDerivedLast = trim(\Illuminate\Support\Str::of($headerRawName)->after(' '));
+        }
+        $headerLast = trim($headerUser?->last_name ?: $headerDerivedLast);
+        $headerFullName = trim($headerFirst.' '.$headerLast) ?: ($headerRawName ?: 'Customer');
+        $headerInitials = mb_strtoupper(mb_substr($headerFirst ?: $headerFullName, 0, 1).mb_substr($headerLast ?: '', 0, 1));
+        $headerInitials = trim($headerInitials) !== '' ? $headerInitials : 'YOU';
+        $headerProfile = [
+            'full_name' => $headerFullName,
+            'initials' => $headerInitials,
+            'email' => $headerUser?->email,
+        ];
+    }
+@endphp
 <!-- Overlay shown behind header mega menu -->
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
 <div class="pointer-events-none fixed inset-0 -z-10"></div>
@@ -96,17 +117,8 @@
                     <div class="account-wrap">
                         @auth
                             @php
-                                $headerUser = auth()->user();
-                                $headerRawName = trim((string) $headerUser?->name);
-                                $headerFirst = trim($headerUser?->first_name ?: \Illuminate\Support\Str::of($headerRawName)->before(' '));
-                                $headerDerivedLast = '';
-                                if ($headerRawName && str_contains($headerRawName, ' ')) {
-                                    $headerDerivedLast = trim(\Illuminate\Support\Str::of($headerRawName)->after(' '));
-                                }
-                                $headerLast = trim($headerUser?->last_name ?: $headerDerivedLast);
-                                $headerFullName = trim($headerFirst.' '.$headerLast) ?: ($headerRawName ?: 'Customer');
-                                $headerInitials = mb_strtoupper(mb_substr($headerFirst ?: $headerFullName, 0, 1).mb_substr($headerLast ?: '', 0, 1));
-                                $headerInitials = trim($headerInitials) !== '' ? $headerInitials : 'YOU';
+                                $headerFullName = $headerProfile['full_name'] ?? 'Customer';
+                                $headerInitials = $headerProfile['initials'] ?? 'YOU';
                             @endphp
                             <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
                                 <span class="account-trigger__avatar" aria-hidden="true">{{ $headerInitials }}</span>
@@ -308,6 +320,21 @@
 .account-links-stack .account-link{ font-weight:700; color:var(--ink-800); font-size:14px; }
 .accountdd-logout{ margin-top:15px; }
 .accountdd-logout__btn{ width:100%; }
+.mobile-menu__account{ margin-top:16px; padding-top:16px; border-top:1px solid var(--ink-200); display:flex; flex-direction:column; gap:12px; }
+.mobile-account-card{ display:flex; align-items:center; gap:12px; padding:12px; border-radius:14px; border:1px solid rgba(16,24,40,.08); background:#f8fafc; }
+.mobile-account-card--guest{ flex-direction:column; align-items:flex-start; }
+.mobile-account-avatar{ width:44px; height:44px; border-radius:50%; background:#105b4b; color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.mobile-account-name{ margin:0; font-size:15px; font-weight:700; color:var(--ink-900); }
+.mobile-account-email{ display:block; font-size:13px; color:var(--ink-600); }
+.mobile-account-manage{ font-size:13px; font-weight:600; color:var(--wow-green); text-decoration:none; }
+.mobile-account-manage:hover{ text-decoration:underline; }
+.mobile-account-links{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.mobile-account-links a{ display:block; padding:10px 12px; border-radius:10px; background:#f5f7fa; text-decoration:none; color:var(--ink-800); font-weight:600; }
+.mobile-account-links a:hover{ background:#e8eef7; color:var(--ink-900); }
+.mobile-account-buttons{ display:flex; flex-direction:column; gap:10px; }
+.mobile-account-logout button{ width:100%; }
+.mobile-account-guest-title{ margin:0; font-weight:800; letter-spacing:-.01em; color:var(--ink-900); }
+.mobile-account-guest-text{ margin:4px 0 0; color:var(--ink-700); font-size:13px; }
 </style>
         <!-- Mobile menu (drawer) -->
         <div id="mobile-menu" class="mobile-menu" style="display:none">
@@ -327,6 +354,42 @@
                         <li><a class="mobile-menu__link" href="/help">Help Centre</a></li>
                         <li><a class="mobile-menu__link" href="/safety-and-contraindications">Safety &amp; Contraindications</a></li>
                     </ul>
+                </div>
+                <div class="mobile-menu__account">
+                    @auth
+                        @php
+                            $mobileFullName = $headerProfile['full_name'] ?? 'Customer';
+                            $mobileInitials = $headerProfile['initials'] ?? 'YOU';
+                        @endphp
+                        <div class="mobile-account-card">
+                            <span class="mobile-account-avatar" aria-hidden="true">{{ $mobileInitials }}</span>
+                            <div class="mobile-account-copy">
+                                <p class="mobile-account-name">{{ $mobileFullName }}</p>
+                                @if(!empty($headerProfile['email']))
+                                    <span class="mobile-account-email">{{ $headerProfile['email'] }}</span>
+                                @endif
+                                <a class="mobile-account-manage" href="{{ route('account.dashboard') }}">View account</a>
+                            </div>
+                        </div>
+                        <ul class="mobile-account-links">
+                            <li><a href="{{ route('account.dashboard') }}">Overview</a></li>
+                            <li><a href="{{ route('account.orders') }}">Orders &amp; receipts</a></li>
+                            <li><a href="{{ route('profile.edit') }}">Profile &amp; contact</a></li>
+                        </ul>
+                        <form method="POST" action="{{ route('logout') }}" class="mobile-account-logout">
+                            @csrf
+                            <button type="submit" class="btn btn--primary">Log out</button>
+                        </form>
+                    @else
+                        <div class="mobile-account-card mobile-account-card--guest">
+                            <p class="mobile-account-guest-title">Account</p>
+                            <p class="mobile-account-guest-text">Save favourites, manage bookings, and checkout faster.</p>
+                        </div>
+                        <div class="mobile-account-buttons">
+                            <a class="btn" href="{{ route('login', ['redirect' => '/account']) }}">Log in</a>
+                            <a class="btn btn--primary" href="{{ route('register', ['redirect' => '/account']) }}">Create account</a>
+                        </div>
+                    @endauth
                 </div>
             </nav>
         </div>
