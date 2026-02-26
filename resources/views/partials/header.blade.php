@@ -114,7 +114,6 @@
                             <div class="account-dropdown" id="accountDropdown" hidden>
                                 <div class="account-dropdown__header">
                                     <p class="account-name">{{ $headerFullName }}</p>
-                                    <p class="account-email">{{ $headerUser->email }}</p>
                                 </div>
                                 <div class="account-actions account-actions--authed">
                                     <div class="account-links-stack">

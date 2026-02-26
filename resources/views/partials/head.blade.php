@@ -94,7 +94,7 @@
 .account-wrap{ position:relative; }
 .account-dropdown{ position:absolute; right:0; top:calc(100% + 8px); width:280px; background:#fff; border:1px solid rgba(0,0,0,0.15); border-radius:3px; box-shadow:0 20px 40px rgba(15,23,42,.15); padding:16px 16px 0; display:none; z-index:70; }
 .account-dropdown.show{ display:block; }
-.account-name{ font-weight:800; margin-bottom:4px; }
+.account-name{ font-weight:600; font-size:18px; margin-bottom:4px; }
 .account-email{ color: var(--ink-600); margin-bottom:12px; font-size:14px; }
 .account-actions{ display:flex; flex-direction:column; gap:10px; }
 .account-actions .btn-wow{ width:100%; }
