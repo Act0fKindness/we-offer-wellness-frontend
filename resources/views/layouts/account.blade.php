@@ -122,7 +122,7 @@
         .account-auth-quote b { display:block; margin-top: 10px; font-size: 12px; color: rgba(11,18,32,.70); }
         .account-auth-quote span { display:block; font-size: 12px; color: rgba(11,18,32,.52); margin-top: 2px; }
         .media { position:relative; border-radius: 18px; border: 1px solid rgba(16,24,40,.10); background: radial-gradient(900px 500px at 30% 10%, rgba(74,136,120,.16), transparent 60%), linear-gradient(180deg, #ffffff, rgba(255,255,255,.85)); box-shadow: var(--shadow2); overflow:hidden; aspect-ratio: 16/11; display:flex; align-items:center; justify-content:center; padding: 16px; }
-        .mediaPlaceholder { width:100%; height:100%; border-radius: 14px; border: 1px dashed rgba(16,24,40,.18); background: linear-gradient(135deg, rgba(74,136,120,.10), rgba(74,136,120,0)), linear-gradient(180deg, rgba(11,18,32,.06), rgba(11,18,32,0)); display:flex; align-items:center; justify-content:center; text-align:center; padding: 18px; color: rgba(11,18,32,.62); font-family: var(--ui); font-size: 13px; line-height:1.45; }
+        .media img { width:100%; height:100%; border-radius: 14px; object-fit: cover; display:block; box-shadow: inset 0 0 0 1px rgba(16,24,40,.06); }
         .review { position:absolute; left: 33px; bottom: 33px; width: min(360px, calc(100% - 36px)); border-radius: 16px; border: 1px solid rgba(16,24,40,.12); background: rgba(255,255,255,.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 18px 34px rgba(16,24,40,.12); padding: 12px; display:flex; flex-direction:column; gap: 8px; transform: translateZ(0); }
         .reviewTop { display:flex; align-items:flex-start; justify-content:space-between; gap: 10px; }
         .stars { display:flex; gap: 4px; color: rgba(11,18,32,.82); letter-spacing: .06em; font-size: 12px; font-family: var(--ui); }
@@ -180,12 +180,7 @@
             <span>Verified bookings • Real reviews</span>
         </div>
         <div class="media" aria-label="Preview image">
-            <div class="mediaPlaceholder">
-                <div>
-                    <b style="display:block; font-weight:800; color:rgba(11,18,32,.85); margin-bottom:6px;">Drop your image here</b>
-                    Replace this placeholder with a marketplace screenshot (right panel). Reviews will overlay automatically.
-                </div>
-            </div>
+            <img src="https://media.licdn.com/dms/image/v2/D4E22AQFMCdRaAjB9TA/feedshare-shrink_2048_1536/feedshare-shrink_2048_1536/0/1722597045741?e=1773878400&amp;v=beta&amp;t=OUshI77Gj0hHFK2_ClKBYaLdQrBoSxpZbhTfqH-5oUE" alt="We Offer Wellness marketplace preview" loading="lazy">
             <div class="review fadeIn" id="authReviewCard" aria-live="polite">
                 <div class="reviewTop">
                     <div class="stars" id="authReviewStars">★★★★★</div>
