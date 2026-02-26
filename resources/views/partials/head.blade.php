@@ -22949,6 +22949,9 @@ a:hover {
     padding-right: 1rem;
 }
 
+/* Header full-width content */
+header .container-page{ max-width: none; padding-left: 16px; padding-right: 16px; }
+
 @media (min-width: 640px) {
     .container-page {
         padding-left: 1.5rem;
