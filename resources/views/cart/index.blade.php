@@ -254,7 +254,7 @@
 
 .cart-grid{ display:flex; align-items:flex-start; gap: var(--gap); --gap:14px; --sideBasis:34.5%; --ease:cubic-bezier(.2,.8,.2,1); --dur:.42s; transition: gap var(--dur) var(--ease); }
 .cart-main{ flex:1 1 auto; min-width:0; max-width:100%; opacity:1; transform: translateX(0) scale(1); transition:max-width var(--dur) var(--ease), transform var(--dur) var(--ease), opacity .22s var(--ease); }
-.cart-side{ flex:0 0 var(--sideBasis); min-width:0; position:sticky; top:14px; transition:flex-basis var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.cart-side{ flex:0 1 auto; flex-basis: var(--sideBasis); min-width:0; position:sticky; top:14px; transition:flex-basis var(--dur) var(--ease), transform var(--dur) var(--ease); }
 .cart-grid.is-empty{ --gap:0px; --sideBasis:100%; }
 .cart-grid.is-empty .cart-main{ max-width:0; opacity:0; transform: translateX(-10px) scale(.98); pointer-events:none; overflow:hidden; }
 @media (max-width: 991.98px){ .cart-grid{ flex-direction:column; gap:14px; } .cart-side{ position:static; } .cart-grid.is-empty .cart-main{ max-width:100%; opacity:1; transform:none; pointer-events:auto; overflow:visible; } }
@@ -305,7 +305,8 @@
 .empty-wrap{ padding:6px 0 0; display:grid; grid-template-columns: 1fr; gap:14px; }
 .empty-hero{ padding:16px; border-radius:22px; border:1px solid var(--ink-200); background: rgba(255,255,255,.86); box-shadow: 0 12px 26px rgba(16,24,40,.06); display:flex; gap:14px; align-items:flex-start; }
 .empty-illu{ width:54px; height:54px; border-radius:18px; display:grid; place-items:center; background: linear-gradient(180deg, color-mix(in srgb, var(--accent-600) 18%, white), #fff); border: 1px solid color-mix(in srgb, var(--accent-600) 35%, transparent); box-shadow: 0 14px 30px color-mix(in srgb, var(--accent-600) 25%, transparent); flex:0 0 auto; color: var(--ink-800); }
-.empty-hero h2{ margin:0; font-size:18px; letter-spacing:-.02em; font-weight:900; }
+.empty-hero h2{ margin:0; font-size:18px; letter-spacing:-.02em; font-weight:900; font-family:'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; }
+.sum-head, .title, .upsell-title{ font-family:'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; }
 .empty-hero p{ margin:6px 0 0; color: var(--ink-600); font-weight:650; font-size:13px; line-height:1.45; }
 .empty-actions{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
 
