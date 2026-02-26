@@ -154,13 +154,18 @@
 <style>
 @media (max-width: 991.98px){
   .wow-ultra .bar{
-    background: rgba(0,0,0,0.1);
+    background: rgba(255,255,255,.14);
     border-radius:40px;
     border:none;
     border-top: 1px solid rgba(255,255,255,0.5);
     border-bottom: 1px solid rgba(0,0,0,0.08);
     position: relative;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 14px 40px rgba(16,24,40,.14);
   }
+  .wow-ultra .bar::before{ content:""; position:absolute; inset:0; border-radius: inherit; pointer-events:none; background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.08)); opacity:.55; }
+  .wow-ultra .bar > *{ position: relative; z-index: 1; }
   .wow-ultra .seg{ border-radius:40px; }
   /* Hide Where/When/Who on mobile */
   #home-template-seg-where,
