@@ -307,6 +307,12 @@
 }
 /* Nudge Where label down slightly */
 #search-top-seg-where .seg-label{ margin-top: 5px; }
+/* Ensure Who pane never overflows right edge and has constrained height */
+.wow-ultra #search-top-who-pane{ left:auto !important; right:0 !important; width: min(560px, 96vw); max-width:96vw; height:auto; max-height:300px; overflow:auto; }
+/* Requested narrow pane sizing */
+.wow-ultra .pane.narrow{ width: min(560px, 96vw); right:auto; height:auto; max-height:300px; }
+/* Constrain scrollable list */
+.wow-ultra .listy{ max-height: 300px; overflow:auto; }
 </style>
 
 <script>
@@ -379,6 +385,40 @@
     var seen = new Set();
     tags = tags.filter(function(t){ var k = String(t).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
     if (tagsEl) tagsEl.innerHTML = tags.map(function(t){ return '<span class="badge badge--cool">'+esc(t)+'</span>'; }).join('');
+  }catch{}
+
+  // Sync Who: adults count <-> group selection (Solo/Couple/Group)
+  try{
+    var whoPane = document.getElementById('search-top-who-pane');
+    var adultsValEl = document.getElementById('search-top-adults-val');
+    var groupList = document.getElementById('search-top-group-type-list');
+    var summaryEl = document.getElementById('search-top-who-summary');
+    function getAdults(){ return Math.max(1, parseInt((adultsValEl?.textContent||'1').trim(), 10) || 1); }
+    function setAdults(n){ n = Math.max(1, Math.min(20, Number(n)||1)); if(adultsValEl) adultsValEl.textContent = String(n); updateGroupByAdults(n); updateSummary(n); }
+    function selectGroup(name){
+      if(!groupList) return;
+      Array.from(groupList.querySelectorAll('[data-group]')).forEach(function(btn){ btn.setAttribute('aria-selected', String(btn.getAttribute('data-group')===name)); });
+    }
+    function updateGroupByAdults(n){ if(n<=1){ selectGroup('Solo'); } else if(n===2){ selectGroup('Couple'); } else { selectGroup('Group'); } }
+    function updateSummary(n){ if(!summaryEl) return; var label = n<=1?'Solo':(n===2?'Couple':'Group'); summaryEl.textContent = (n + ' ' + (n===1?'adult':'adults') + ' · ' + label); }
+    // Counter handlers
+    if(whoPane){
+      whoPane.addEventListener('click', function(e){
+        var dec = e.target.closest('[data-dec="adults"]');
+        var inc = e.target.closest('[data-inc="adults"]');
+        if(dec || inc){ e.preventDefault(); var cur = getAdults(); setAdults(cur + (inc?1:-1)); }
+      });
+    }
+    // Group button handlers
+    if(groupList){
+      groupList.addEventListener('click', function(e){
+        var btn = e.target.closest('[data-group]'); if(!btn) return;
+        var g = btn.getAttribute('data-group');
+        if(g==='Solo') setAdults(1); else if(g==='Couple') setAdults(2); else setAdults(Math.max(3, getAdults()));
+      });
+    }
+    // Initial sync on load
+    (function(){ var n = getAdults(); updateGroupByAdults(n); updateSummary(n); })();
   }catch{}
 
   // Map (Mapbox GL JS with 3D buildings)
