@@ -122,9 +122,10 @@
     .wow-save:hover{ transform:translateY(-1px); box-shadow:0 14px 28px rgba(16,24,40,.12); }
     .wow-save:active{ transform:translateY(0) scale(.99); }
     .wow-save svg{ width:var(--saveIcon); height:var(--saveIcon); color:rgba(11,18,32,.72); }
-    .wow-row-title{ font-size:var(--title); line-height:1.12; letter-spacing:-.015em; font-weight:900; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family: 'Manrope', var(--bs-font-sans-serif); }
-    .wow-row-provider{ margin:6px 0 0; color:var(--muted); font-size:var(--provider); }
-    .wow-rating{ display:flex; align-items:center; gap:10px; color:rgba(11,18,32,.84); font-size:var(--rating); margin-top:8px; }
+    /* Title styling to match product_card */
+    .wow-row-title{ font-size:var(--title); line-height:1.12; letter-spacing:-.015em; font-weight:400 !important; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family: 'Manrope', var(--bs-font-sans-serif); text-transform: capitalize; }
+    .wow-row-provider{ margin:6px 0 8px; color:var(--muted); font-size:var(--provider); font-weight:400; }
+    .wow-rating{ display:flex; align-items:center; gap:8px; color:rgba(11,18,32,.80); font-size:var(--rating); margin-top:8px; margin-bottom:10px; font-weight:400; }
     .wow-stars{ display:inline-flex; align-items:center; gap:3px; transform:translateY(1px); }
     .wow-star{ width:var(--star); height:var(--star); display:inline-block; position:relative; background:currentColor;
       -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
@@ -133,10 +134,10 @@
       mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2 .556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702 .557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat; }
     .wow-star--empty{ background:transparent; }
     .wow-star--empty::after{ background:#333; opacity:.55; }
-    .wow-meta{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; color:rgba(11,18,32,.62); font-size:var(--meta); margin-top:6px; }
+    .wow-meta{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; color:rgba(11,18,32,.62); font-size:var(--meta); margin-top:6px; font-weight:400; }
     .wow-meta .item{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
     .wow-meta svg{ width:var(--metaIcon); height:var(--metaIcon); color:rgba(11,18,32,.58); }
-    .wow-meta .label{ max-width:320px; overflow:hidden; text-overflow:ellipsis; }
+    .wow-meta .label{ display:inline-block; max-width:140px; letter-spacing:normal; margin-left:0; font-size:12px; padding-left:0; font-weight:400; text-transform:capitalize; overflow:hidden; text-overflow:ellipsis; }
     .wow-row-bottom{ grid-column:3; padding:var(--pad); border-left:1px solid rgba(16,24,40,.10); background:#fff; display:flex; flex-direction:column; justify-content:space-between; gap:14px; }
     .wow-fomo{ margin:0 0 6px; font-size:12px; font-weight:800; color:rgba(11,18,32,.84); }
     .wow-price{ display:flex; align-items:baseline; gap:8px; margin:0; }
