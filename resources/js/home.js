@@ -83,15 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function isDesktop(){ try { return window.matchMedia('(min-width: 992px)').matches } catch(_) { return true } }
     let loaded = false; let hideTimer = null;
     function money(n){ try{ var x=Number(n); if(x>=1000) x=x/100; return '£'+x.toFixed(2) }catch(_){ return '£0.00' } }
-    function updateTotals(items){
-      try{
-        var sub = 0, count = 0;
-        (items||[]).forEach(function(it){ var p = Number(it.price||0); if(p>=1000) p=p/100; var q = Number(it.qty||1)||1; sub += p*q; count += q; });
-        var subEl = panel.querySelector('#cartdd-subtotal'); if(subEl) subEl.textContent = money(sub);
-        var label = panel.querySelector('#cartCountLabel'); if(label) label.textContent = count>0 ? (count===1?'1 item':(count+' items')) : '';
-        var hint = panel.querySelector('#freeShipHint'); if(hint){ try{ var left = Math.max(0, 50 - sub); hint.textContent = left>0 ? ('Add '+money(left)+' more for free delivery*') : 'You\u2019ve unlocked free delivery*'; }catch(_e){} }
-      }catch(_){ }
-    }
+      function updateTotals(items){
+        try{
+          var sub = 0, count = 0;
+          (items||[]).forEach(function(it){ var p = Number(it.price||0); if(p>=1000) p=p/100; var q = Number(it.qty||1)||1; sub += p*q; count += q; });
+          var subEl = panel.querySelector('#cartdd-subtotal'); if(subEl) subEl.textContent = money(sub);
+          var label = panel.querySelector('#cartCountLabel'); if(label) label.textContent = count>0 ? (count===1?'1 item':(count+' items')) : '';
+          var hint = panel.querySelector('#freeShipHint'); if(hint){ try{ hint.textContent = 'Instant delivery'; }catch(_e){} }
+        }catch(_){ }
+      }
     function renderItems(items){
       try{
         const body = panel.querySelector('#cartdd-body');
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(() => { renderItems(readLocalCart()); });
     }
-    function show(){ if(!isDesktop()) return; loadMini(); panel.hidden = false; }
+      function show(){ if(!isDesktop()) return; loadMini(); try{ var hint = panel.querySelector('#freeShipHint'); if(hint) hint.textContent = 'Instant delivery'; }catch(_){} panel.hidden = false; }
     function hide(){ panel.hidden = true; }
     wrap.addEventListener('mouseenter', () => { if (hideTimer) { clearTimeout(hideTimer); hideTimer=null; } show(); });
     wrap.addEventListener('mouseleave', () => { hideTimer = setTimeout(hide, 120); });
