@@ -181,7 +181,15 @@ document.addEventListener('DOMContentLoaded', () => {
         var id = btn.getAttribute('data-remove') || btn.dataset.remove || btn.getAttribute('data-id'); if(!id) return;
         var next = removeFromLocalCart(id); renderItems(next);
         // server remove in background
-        try { var token=(document.querySelector('meta[name="csrf-token"]')?.content)||decodeURIComponent((document.cookie.split('; ').find(r=>r.startsWith('XSRF-TOKEN='))||'').split('=')[1]||''); fetch('/api/cart/remove', { method:'POST', headers:{ 'Content-Type':'application/json','X-CSRF-TOKEN':token }, credentials:'same-origin', body: JSON.stringify({ id:id }) }); } catch(_){ }
+        try {
+          var token=(document.querySelector('meta[name="csrf-token"]')?.content)||window.__csrfToken||'';
+          fetch('/api/cart/remove', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json','X-CSRF-TOKEN':token },
+            credentials:'same-origin',
+            body: JSON.stringify({ id:id })
+          }).then(() => fetchCountAndUpdateBadge()).catch(()=>{});
+        } catch(_){ }
       });
     }catch(_){ }
     // Upsell loader
