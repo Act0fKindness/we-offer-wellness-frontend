@@ -142,7 +142,7 @@
     .wow-fomo{ margin:0 0 6px; font-size:12px; font-weight:800; color:rgba(11,18,32,.84); }
     .wow-price{ display:flex; align-items:baseline; gap:8px; margin:0; }
     .wow-price .from{ font-size:var(--from); color:rgba(11,18,32,.70); }
-    .wow-price .now{ font-size:var(--priceNow); font-weight:900; letter-spacing:-.02em; }
+    .wow-price .now{ font-size:var(--priceNow); font-weight:600; letter-spacing:-.02em; }
     .wow-price .was{ font-size:var(--was); color:rgba(11,18,32,.75); }
     .wow-actions{ display:grid; grid-template-columns: 1fr 1.15fr; gap:10px; width:100%; min-width:0; }
     /* Button styles to match product_card */
