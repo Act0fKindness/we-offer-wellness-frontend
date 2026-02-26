@@ -244,7 +244,8 @@
   document.addEventListener('click', function(e){
     var row = e.target.closest('.cart-row');
     if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){ var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; item.qty=Math.max(1,Number(item.qty||1)+(e.target.closest('.js-qinc')?1:-1)); renderCart(); post('/api/cart/update',{id:id,qty:item.qty}); return; }
-    if(e.target.matches('[data-remove]')){ var id=e.target.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); renderCart(); post('/api/cart/remove',{id:id}); return; }
+    var rem = e.target.closest('[data-remove]');
+    if(rem){ var id=rem.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); renderCart(); post('/api/cart/remove',{id:id}); return; }
     if(e.target && e.target.id==='clearCartBtn'){
       cart = [];
       renderCart();
