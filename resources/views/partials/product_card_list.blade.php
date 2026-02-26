@@ -84,6 +84,12 @@
     $lng = $product->lng ?? $product->longitude ?? ($product->geo_lng ?? null);
 @endphp
 
+@php
+    // Hide zero-priced products globally (temporary request)
+    $__priceVal = is_numeric($priceMin) ? (float)$priceMin : null;
+    if ($__priceVal === null || $__priceVal <= 0.0) { return; }
+@endphp
+
 <style>
         span.btn-primary-list {
             color: #fff;

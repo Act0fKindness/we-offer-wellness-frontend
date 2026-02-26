@@ -138,6 +138,12 @@
     if (is_numeric($compareMin) && $compareMin > 1000 && $compareMin % 100 === 0) { $compareMin = $compareMin / 100; }
 @endphp
 
+@php
+    // Hide zero-priced products globally (temporary request)
+    $__priceVal = is_numeric($priceMin) ? (float)$priceMin : null;
+    if ($__priceVal === null || $__priceVal <= 0.0) { return; }
+@endphp
+
 @once
   <style>
   /* Scoped EXACT card styles (prefixed with .wow-therapy-card-scope to avoid global bleed) */

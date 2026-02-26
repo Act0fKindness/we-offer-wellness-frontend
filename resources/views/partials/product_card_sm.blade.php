@@ -25,6 +25,12 @@
     $reviewCount = (int) ($product->reviews_count ?? 0);
 @endphp
 
+@php
+    // Hide zero-priced products globally (temporary request)
+    $__priceVal = is_numeric($priceMin) ? (float)$priceMin : null;
+    if ($__priceVal === null || $__priceVal <= 0.0) { return; }
+@endphp
+
 @once
   @push('head')
     <style>
