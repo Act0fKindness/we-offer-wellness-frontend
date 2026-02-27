@@ -241,6 +241,8 @@
         }
         $authReviewInitial = $authReviewFeed[0] ?? $authReviewFallback;
     @endphp
+    @hasSection('auth-no-right')
+    @else
     <aside class="account-auth-right" aria-label="Customer stories">
         <div class="account-auth-quote">
             <p>“The easiest way to book a proper reset — without the endless scrolling and decision fatigue.”</p>
@@ -267,6 +269,7 @@
             </div>
         </div>
     </aside>
+    @endif
 </main>
 <script>
 (function(){
