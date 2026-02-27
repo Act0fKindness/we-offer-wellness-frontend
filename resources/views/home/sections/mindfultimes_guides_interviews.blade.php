@@ -23,10 +23,11 @@
 
   <style>
     /* Section header layout */
-    #mindful-times .mindful-times__heading{ display:flex; flex-direction:column; gap:16px; align-items:flex-start; }
+    #mindful-times .mindful-times__heading{ display:flex; flex-direction:column; gap:16px; align-items:stretch; text-align:left; }
+    #mindful-times .mindful-times__heading > *{ text-align:left; }
     #mindful-times .mindful-times__cta{ width:100%; align-self:stretch; }
     @media (min-width:768px){
-      #mindful-times .mindful-times__heading{ flex-direction:row; align-items:flex-end; justify-content:space-between; }
+      #mindful-times .mindful-times__heading{ flex-direction:row; align-items:flex-start; justify-content:flex-start; }
       #mindful-times .mindful-times__cta{ width:auto; align-self:flex-start; flex:0 0 auto; margin-left:auto; }
     }
 
