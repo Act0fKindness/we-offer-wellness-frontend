@@ -81,6 +81,7 @@
   .glow-signs{
     position: absolute;
     left: 24px;
+    right: 24px;
     top: 110px;
     z-index: 3;
     pointer-events: none;
@@ -99,7 +100,13 @@
   }
   /* stack on top of each other with slight offset for depth */
   .glow-signs .glow-sign--1{ top: 40px; }
-  .glow-signs .glow-sign--2{ top: -100px; left: 10px; opacity: .98; }
+  .glow-signs .glow-sign--2{
+    top: -80px;
+    left: auto;
+    right: 0;
+    width: clamp(70px, 8vw, 120px);
+    opacity: .98;
+  }
 
   /* Hide glow signs on tablet/mobile */
   @media (max-width: 991px){
@@ -272,12 +279,9 @@
       font-size: 30px;
       box-shadow: none;
   }
-.glow-signs .glow-sign--2 {
-    top: -100px;
-    left: calc(100vw - 400px);
-    right: auto;
-    opacity: .98;
-}
+  @media (max-width: 1200px){
+    .glow-signs .glow-sign--2{ right: 6px; }
+  }
 </style>
 
 <section data-v-f43bb09d="" class="whero whero--s2">
