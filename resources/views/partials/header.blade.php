@@ -299,10 +299,10 @@
 .cartdd-title{ display:block; max-width:100%; font-weight:600; color:#0b1323; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-decoration:none }
 .cartdd-meta{ font-size:.9rem; color:#64748b }
 .cartdd-amt{ font-weight:700; color:#0b1323; white-space:nowrap; flex:0 0 auto }
-.cartdd-remove{ position:absolute; top:10px; right:14px; width:34px; height:34px; border-radius:50%; border:0; background:#dc2626; color:#fff; display:flex; align-items:center; justify-content:center; opacity:0; transform:translateX(10px); transition:opacity .2s ease, transform .2s ease; cursor:pointer; box-shadow:0 12px 24px rgba(220,38,38,.35); pointer-events:none; }
+.cartdd-remove{ position:absolute; top:50%; right:14px; width:34px; height:34px; border-radius:50%; border:0; background:#dc2626; color:#fff; display:flex; align-items:center; justify-content:center; opacity:0; transform:translate(10px,-50%); transition:opacity .2s ease, transform .2s ease; cursor:pointer; pointer-events:none; }
 .cartdd-remove svg{ width:18px; height:18px; }
 .cartdd-item:hover .cartdd-remove,
-.cartdd-remove:focus-visible{ opacity:1; transform:translateX(0); pointer-events:auto; }
+.cartdd-remove:focus-visible{ opacity:1; transform:translate(0,-50%); pointer-events:auto; }
 .cartdd-remove:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
 .cartdd-subtotal{ padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #eef2f7; border-bottom:1px solid #eef2f7; background:#fff }
 .cartdd-subtotal span{ font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:.02em }
