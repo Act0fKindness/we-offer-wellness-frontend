@@ -1,5 +1,5 @@
 <section class="mt-strip" aria-label="Mindful Times updates">
-    <div class="mt-inner">
+    <div class="container mt-inner">
         <span class="mt-pill">Mindful Times</span>
         <p class="mt-copy">New stories, guides and practitioner advice every week.</p>
         <nav class="mt-actions" aria-label="Mindful Times links">
