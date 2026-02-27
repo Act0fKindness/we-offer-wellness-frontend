@@ -1,6 +1,35 @@
 @extends('account.base')
 
 @section('account-content')
+<style>
+  .account-card.account-card--danger{ margin-top:20px; }
+  .account-card--collapsible .account-card__header{ margin-bottom:0; }
+  .account-card__toggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    gap:12px;
+    background:none;
+    border:0;
+    padding:0;
+    cursor:pointer;
+    text-align:left;
+  }
+  .account-card__toggle:focus-visible{ outline:2px solid var(--ink-900); outline-offset:4px; }
+  .account-card__toggle-icon{
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    background:rgba(0,0,0,.08);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .2s ease;
+  }
+  .account-card--collapsible.is-open .account-card__toggle-icon{ transform:rotate(180deg); }
+  .account-card--collapsible .account-card__body[hidden]{ display:none; }
+</style>
 @php
     $status = $status ?? session('status');
     $profileUser = auth()->user();
@@ -68,12 +97,21 @@
   </div>
 </div>
 
-<div class="account-card account-card--danger">
+<div class="account-card account-card--danger account-card--collapsible" data-collapsible>
   <div class="account-card__header">
-    <p class="eyebrow">Danger zone</p>
-    <h2>Delete account</h2>
+    <button type="button" class="account-card__toggle" data-collapsible-toggle aria-expanded="false">
+      <div>
+        <p class="eyebrow">Danger zone</p>
+        <h2>Delete account</h2>
+      </div>
+      <span class="account-card__toggle-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </span>
+    </button>
   </div>
-  <div class="account-card__body">
+  <div class="account-card__body" data-collapsible-body hidden>
     <p>Deleting your account removes upcoming bookings, saved preferences, and receipts. This action is permanent.</p>
     <form method="POST" action="{{ route('profile.destroy') }}" class="account-form" onsubmit="return confirm('Delete your account? This cannot be undone');">
       @csrf
@@ -196,6 +234,24 @@
       reader.readAsDataURL(file);
     }
     uploadFile(file, previousUrl);
+  });
+})();
+
+(function(){
+  const cards = document.querySelectorAll('[data-collapsible]');
+  if(!cards.length) return;
+  cards.forEach(function(card){
+    const toggle = card.querySelector('[data-collapsible-toggle]');
+    const body = card.querySelector('[data-collapsible-body]');
+    if(!toggle || !body) return;
+    body.hidden = true;
+    card.classList.remove('is-open');
+    toggle.setAttribute('aria-expanded','false');
+    toggle.addEventListener('click', function(){
+      const isOpen = card.classList.toggle('is-open');
+      body.hidden = !isOpen;
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
   });
 })();
 </script>
