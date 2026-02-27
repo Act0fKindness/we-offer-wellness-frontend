@@ -8,7 +8,7 @@
 
 @section('auth-alert')
   @if(session('status') === 'verification-link-sent')
-    <div class="account-auth-alert show" role="alert">A fresh verification email is on its way.</div>
+    <div class="account-auth-alert account-auth-alert--success show" role="alert">We’ve sent a fresh verification email to {{ auth()->user()->email }}.</div>
   @endif
 @endsection
 

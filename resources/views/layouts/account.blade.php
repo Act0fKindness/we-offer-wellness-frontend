@@ -154,6 +154,7 @@
         .account-auth-inline a:hover { text-decoration:underline; }
         .account-auth-fine { margin-top: 10px; font-family: var(--ui); font-size: 12px; color: rgba(11,18,32,.56); line-height:1.45; }
         .account-auth-alert { display:none; border-radius: 12px; border: 1px solid rgba(217,45,32,.20); background: rgba(217,45,32,.08); color: rgba(160,28,19,.95); padding: 10px 12px; font-family: var(--ui); font-size: 13px; line-height:1.35; max-width: 420px; }
+        .account-auth-alert--success { border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.12); color:#065f46; }
         .account-auth-alert.show { display:block; }
         .account-auth-btn.is-loading { pointer-events:none; opacity:.85; }
         .account-auth-btn .spinner { width: 16px; height: 16px; border-radius: 999px; border: 2px solid rgba(255,255,255,.45); border-top-color: rgba(255,255,255,1); display:none; animation: spin .75s linear infinite; }

@@ -8,7 +8,7 @@
 
 @section('auth-alert')
   @if($status)
-    <div class="account-auth-alert show" role="alert">{{ $status }}</div>
+    <div class="account-auth-alert account-auth-alert--success show" role="alert">Check your inbox — if that email exists with us, you’ll get a reset link shortly.</div>
   @endif
 @endsection
 
