@@ -253,6 +253,10 @@
     .ourvibe-mid img{ max-height: 48vh; }
   }
 
+  @media (max-width: 768px){
+    img.ourvibe-poster{ max-height: 34vh; }
+  }
+
   @media (max-width: 575px){
     .ourvibe-top .present{ letter-spacing: .30em; }
     .ourvibe-box{ border-width: 5px; padding: 14px 14px; }
