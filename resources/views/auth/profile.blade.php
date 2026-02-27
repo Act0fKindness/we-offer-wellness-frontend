@@ -8,6 +8,9 @@
     $lastName = trim($profileUser->last_name ?: \Illuminate\Support\Str::of($profileUser->name ?? '')->after(' '));
     $initials = mb_strtoupper(mb_substr($firstName ?: 'You', 0, 1).mb_substr($lastName ?: '', 0, 1));
     $initials = trim($initials) !== '' ? $initials : 'YOU';
+    $profilePhoto = $profileUser->profile_picture
+        ? \Illuminate\Support\Facades\Storage::disk('public')->url($profileUser->profile_picture)
+        : null;
 @endphp
 
 <div class="account-card">
@@ -38,10 +41,14 @@
       @method('PATCH')
 
       <div class="profile-photo-field">
-        <div class="account-avatar account-avatar--profile" aria-hidden="true"><span>{{ $initials }}</span></div>
+        <div class="account-avatar account-avatar--profile" id="profileAvatar" aria-hidden="true">
+          <img id="profileAvatarImg" src="{{ $profilePhoto ?? '' }}" alt="Profile photo" data-current="{{ $profilePhoto ?? '' }}" @unless($profilePhoto) hidden @endunless>
+          <span id="profileAvatarInitials" @if($profilePhoto) hidden @endif>{{ $initials }}</span>
+        </div>
         <label class="btn-wow btn-wow--outline btn-sm" for="profile-picture-upload">Upload photo</label>
         <input id="profile-picture-upload" type="file" name="profile_picture" accept="image/*" hidden>
       </div>
+      <p class="text-sm" id="profile-photo-status" role="status" aria-live="polite" style="margin:4px 0 0;color:var(--ink-600);"></p>
       @error('profile_picture')<p class="field-error">{{ $message }}</p>@enderror
 
       <label for="profile-first-name">First name</label>
@@ -79,3 +86,117 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+  const input = document.getElementById('profile-picture-upload');
+  if (!input) return;
+  const avatarImg = document.getElementById('profileAvatarImg');
+  const initials = document.getElementById('profileAvatarInitials');
+  const statusEl = document.getElementById('profile-photo-status');
+  const uploadLabel = document.querySelector('label[for="profile-picture-upload"]');
+  const uploadUrl = @json(route('profile.photo'));
+  let lastServerUrl = (avatarImg && avatarImg.dataset.current) ? avatarImg.dataset.current : '';
+
+  function showImage(url){
+    if (!avatarImg) return;
+    if (url) {
+      avatarImg.src = url;
+      avatarImg.hidden = false;
+      if (initials) initials.hidden = true;
+    } else {
+      avatarImg.hidden = true;
+      if (initials) initials.hidden = false;
+    }
+  }
+
+  function setStatus(message, isError){
+    if (!statusEl) return;
+    statusEl.textContent = message || '';
+    statusEl.style.color = isError ? '#dc2626' : 'var(--ink-600)';
+  }
+
+  function toggleUploading(isUploading){
+    if (!uploadLabel) return;
+    if (!uploadLabel.dataset.originalText) {
+      uploadLabel.dataset.originalText = uploadLabel.textContent || '';
+    }
+    uploadLabel.textContent = isUploading ? 'Uploading…' : uploadLabel.dataset.originalText;
+    uploadLabel.style.opacity = isUploading ? '0.7' : '';
+    uploadLabel.style.pointerEvents = isUploading ? 'none' : '';
+  }
+
+  function uploadFile(file, fallbackUrl){
+    if (!file || !window.fetch) {
+      setStatus('', false);
+      return;
+    }
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    toggleUploading(true);
+    setStatus('Uploading photo…');
+    fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': token,
+        'Accept': 'application/json'
+      },
+      body: formData
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        const error = await response.json().catch(() => ({}));
+        const message = error?.message || error?.errors?.profile_picture?.[0] || 'Upload failed.';
+        throw new Error(message);
+      })
+      .then((data) => {
+        if (data?.url) {
+          lastServerUrl = data.url;
+          if (avatarImg) {
+            avatarImg.dataset.current = data.url;
+          }
+          showImage(data.url);
+        }
+        setStatus('Photo saved.');
+      })
+      .catch((error) => {
+        setStatus(error?.message || 'Upload failed.', true);
+        if (fallbackUrl) {
+          showImage(fallbackUrl);
+        } else {
+          showImage('');
+        }
+      })
+      .finally(() => {
+        toggleUploading(false);
+        input.value = '';
+      });
+  }
+
+  input.addEventListener('change', function(){
+    const file = this.files && this.files[0];
+    if (!file) return;
+    if (file.type && !/^image\//i.test(file.type)) {
+      setStatus('Please upload an image file.', true);
+      this.value = '';
+      return;
+    }
+    const previousUrl = lastServerUrl;
+    if (window.FileReader) {
+      const reader = new FileReader();
+      reader.onload = function(evt){
+        if (evt.target?.result) {
+          showImage(evt.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    uploadFile(file, previousUrl);
+  });
+})();
+</script>
+@endpush

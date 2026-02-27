@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\File;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -78,5 +80,38 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Handle asynchronous profile photo uploads.
+     */
+    public function uploadPhoto(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'profile_picture' => ['required', File::image()->max(4096)],
+        ]);
+
+        $user = $request->user();
+
+        if (!$request->hasFile('profile_picture')) {
+            return response()->json([
+                'message' => 'No photo received.',
+            ], 422);
+        }
+
+        $path = $request->file('profile_picture')->store('profile-photos', 'public');
+
+        if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        $user->profile_picture = $path;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile photo updated.',
+            'path' => $path,
+            'url' => Storage::disk('public')->url($path),
+        ]);
     }
 }
