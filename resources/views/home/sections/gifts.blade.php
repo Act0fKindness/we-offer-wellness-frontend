@@ -1,11 +1,24 @@
 
-<section data-v-f43bb09d="" class="section">
+<style>
+  #home-gifts .gifts-heading{ display:flex; flex-direction:column; gap:16px; align-items:flex-start; }
+  #home-gifts .gifts-heading__actions{ display:flex; flex-direction:column; gap:12px; width:100%; }
+  #home-gifts .gifts-heading__controls{ display:flex; align-items:center; gap:8px; }
+  #home-gifts .gifts-heading__cta{ width:100%; }
+  @media (min-width:768px){
+    #home-gifts .gifts-heading{ flex-direction:row; align-items:flex-end; }
+    #home-gifts .gifts-heading__actions{ flex-direction:row; align-items:center; justify-content:flex-end; gap:12px; margin-left:auto; width:auto; }
+    #home-gifts .gifts-heading__cta{ width:auto; }
+  }
+</style>
+
+<section id="home-gifts" data-v-f43bb09d="" class="section">
     <div class="container-page">
-        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="mb-6 gifts-heading">
             <div>
                 <div class="kicker">Thoughtful ways to nourish someone you love</div>
                 <h2>Gifts that glow (under £50)</h2></div>
-            <div class="flex items-center gap-2 justify-end">
+            <div class="gifts-heading__actions">
+              <div class="gifts-heading__controls">
                 <button class="hidden sm:inline-flex carousel-arrow" id="gifts-prev" aria-label="Previous">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2">
@@ -18,8 +31,9 @@
                         <path d="M9 6l6 6-6 6"></path>
                     </svg>
                 </button>
+              </div>
                 <a href="/search?tag=Gift&amp;price_max=50"
-                   class="btn-wow btn-wow--outline btn-sm btn-arrow" data-loader-init="1"><span
+                   class="btn-wow btn-wow--outline btn-sm btn-arrow gifts-heading__cta" data-loader-init="1"><span
                     class="btn-label">Find a thoughtful gift</span><span class="btn-icon-wrap"
                                                                          aria-hidden="true"><svg
                     class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path
@@ -31,7 +45,7 @@
                                                                                               stroke-linecap="round"
                                                                                               stroke-linejoin="round"
                                                                                               stroke-width="2"
-                                                                                              d="M15 12l-4 4m4-4-4-4"></path></svg></span><span
+                                                                                             d="M15 12l-4 4m4-4-4-4"></path></svg></span><span
                     class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a></div>
         </div>
         <div id="gifts-cards" class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent">
