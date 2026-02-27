@@ -27,8 +27,8 @@
     #mindful-times .mindful-times__heading > *{ text-align:left; }
     #mindful-times .mindful-times__cta{ width:100%; align-self:stretch; }
     @media (min-width:768px){
-      #mindful-times .mindful-times__heading{ flex-direction:row; align-items:flex-start; justify-content:flex-start; }
-      #mindful-times .mindful-times__cta{ width:auto; align-self:flex-start; flex:0 0 auto; margin-left:auto; }
+      #mindful-times .mindful-times__heading{ flex-direction:row; align-items:flex-end; justify-content:flex-start; }
+      #mindful-times .mindful-times__cta{ width:auto; align-self:auto; flex:0 0 auto; margin-left:auto; }
     }
 
     /* Scoped styles for the tabloid layout within #mindful-times */
