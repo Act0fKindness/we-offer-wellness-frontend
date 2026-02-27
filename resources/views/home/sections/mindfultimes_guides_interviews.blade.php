@@ -5,7 +5,7 @@
         <div class="kicker">Mindful Times</div>
         <h2>Guides, practitioner interviews and tools to help you feel better</h2>
       </div>
-      <a class="btn-wow btn-wow--outline btn-sm btn-arrow w-full sm:w-auto"
+      <a class="btn-wow btn-wow--outline btn-sm btn-arrow"
          href="https://times.weofferwellness.co.uk" data-loader-init="1">
         <span class="btn-label">Visit Mindful Times</span>
         <span class="btn-icon-wrap" aria-hidden="true">

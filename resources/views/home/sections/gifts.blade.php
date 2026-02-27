@@ -5,7 +5,7 @@
             <div>
                 <div class="kicker">Thoughtful ways to nourish someone you love</div>
                 <h2>Gifts that glow (under £50)</h2></div>
-            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:flex-nowrap sm:justify-end">
+            <div class="flex items-center gap-2 justify-end">
                 <button class="hidden sm:inline-flex carousel-arrow" id="gifts-prev" aria-label="Previous">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2">
@@ -19,7 +19,7 @@
                     </svg>
                 </button>
                 <a href="/search?tag=Gift&amp;price_max=50"
-                   class="btn-wow btn-wow--outline btn-sm btn-arrow w-full sm:w-auto" data-loader-init="1"><span
+                   class="btn-wow btn-wow--outline btn-sm btn-arrow" data-loader-init="1"><span
                     class="btn-label">Find a thoughtful gift</span><span class="btn-icon-wrap"
                                                                          aria-hidden="true"><svg
                     class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path
