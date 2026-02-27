@@ -244,5 +244,6 @@
   } catch {}
 })();
 </script>
+@stack('scripts')
 </body>
 </html>
