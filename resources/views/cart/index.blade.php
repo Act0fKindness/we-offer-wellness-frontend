@@ -78,9 +78,11 @@
                   <path d="M6.5 8h11l1 12.5a2 2 0 0 1-2 2H7.5a2 2 0 0 1-2-2L6.5 8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
                 </svg>
               </div>
-              <div>
-                <h2>Your cart is empty</h2>
-                <p>Add a therapy and you’re good to go.</p>
+              <div class="empty-hero__body">
+                <div class="empty-copy">
+                  <h2>Your cart is empty</h2>
+                  <p>Add a therapy and you’re good to go.</p>
+                </div>
                 <div class="empty-actions">
                   <a class="btn-wow btn-wow--cta" href="/search">Browse therapies</a>
                 </div>
@@ -475,6 +477,7 @@
 
 .empty-wrap{ padding:6px 0 0; display:grid; grid-template-columns: 1fr; gap:14px; }
 .empty-hero{ padding:16px; border-radius:22px; border:1px solid var(--ink-200); background: rgba(255,255,255,.86); box-shadow: 0 12px 26px rgba(16,24,40,.06); display:flex; gap:14px; align-items:flex-start; }
+.empty-hero__body{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex:1 1 auto; flex-wrap:wrap; }
 .empty-illu{
   width: 54px;
   height: 54px;
@@ -487,10 +490,16 @@
   flex: 0 0 auto;
   color: rgba(11, 18, 32, .85);
 }
+.empty-copy{ flex:1 1 220px; }
 .empty-hero h2{ margin:0; font-size:18px; letter-spacing:-.02em; font-weight:900; font-family:'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; }
 .sum-head, .title, .upsell-title{ font-family:'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; }
 .empty-hero p{ margin:6px 0 0; color: var(--ink-600); font-weight:650; font-size:13px; line-height:1.45; }
-.empty-actions{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
+.empty-actions{ margin-top:0; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; flex:0 0 auto; }
+
+@media (max-width: 576px){
+  .empty-hero__body{ flex-direction:column; align-items:flex-start; }
+  .empty-actions{ width:100%; justify-content:flex-start; }
+}
 
 @media (max-width: 767.98px){ .cart-head{ display:none; } .cart-row{ grid-template-columns: 1fr; gap:10px; } .cart-amt{ text-align:left; } .cart-qty{ justify-content:flex-start; } .cart-item{ grid-template-columns: 70px 1fr; } .cart-img{ width:70px;height:70px; } }
 @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
