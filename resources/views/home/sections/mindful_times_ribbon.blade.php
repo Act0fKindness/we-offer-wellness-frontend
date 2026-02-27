@@ -47,7 +47,7 @@
     --ui: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
     --body: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
-.mt-strip { position:relative; border-radius: var(--radius); overflow:hidden; border:1px solid var(--stroke); box-shadow: var(--shadow); background: var(--card); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); margin-bottom: 18px; }
+.mt-strip { position:relative; border-radius: var(--radius); overflow:hidden; border:1px solid var(--stroke); box-shadow: var(--shadow); background: var(--card); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); margin-bottom: 18px; margin-top:-1px; }
 .mt-strip::before { content:""; position:absolute; inset:0; background:radial-gradient(800px 220px at 18% -10%, rgba(74,136,120,.10), transparent 60%), radial-gradient(700px 240px at 100% 50%, rgba(74,136,120,.07), transparent 65%); pointer-events:none; }
 .mt-inner { position:relative; display:flex; align-items:center; gap:12px; padding:10px 12px; min-height:54px; }
 .mt-pill { flex:0 0 auto; font-family: var(--ui); font-weight:500; letter-spacing:.08em; text-transform:uppercase; font-size:12px; padding:7px 10px; border-radius:999px; color:rgba(11,18,32,.85); background:rgba(74,136,120,.12); border:1px solid rgba(74,136,120,.18); white-space:nowrap; }
