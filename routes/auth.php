@@ -20,20 +20,15 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
-    // TODO: build local forgot-password flow; temporarily redirect
     Route::get('forgot-password', function () {
-        $url = 'https://atease.weofferwellness.co.uk/forgot-password';
-        return redirect()->away($url);
+        return view('auth.forgot-password');
     })->name('password.request');
 
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
         ->name('password.email');
 
-    Route::get('reset-password/{token}', function (Request $request, $token) {
-        $qs = http_build_query(array_filter($request->only('email')));
-        $url = 'https://atease.weofferwellness.co.uk/reset-password/'.rawurlencode($token).($qs ? ('?'.$qs) : '');
-        return request()->header('X-Inertia') ? Inertia::location($url) : redirect()->away($url);
-    })->name('password.reset');
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->name('password.reset');
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
