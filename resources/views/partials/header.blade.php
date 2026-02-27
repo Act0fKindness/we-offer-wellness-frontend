@@ -291,7 +291,7 @@
 .cartdd-head{ padding:10px 14px; font-weight:700; background: linear-gradient(180deg,#fff,#f8fafc); border-bottom:1px solid #eef2f7 }
 .cartdd-body{ max-height: 380px; overflow:auto }
 .cartdd-empty{ padding:18px; color: var(--ink-600); text-align:center }
-.cartdd-item{ display:flex; gap:10px; align-items:center; padding:12px 14px; border-bottom:1px solid #f1f5f9; }
+.cartdd-item{ display:flex; gap:10px; align-items:center; padding:12px 14px; padding-right:60px; border-bottom:1px solid #f1f5f9; position:relative; }
 .cartdd-item:last-child{ border-bottom:0 }
 .cartdd-img{ width:54px; height:54px; border-radius:10px; overflow:hidden; border:1px solid #eceff3; background:#fafafa }
 .cartdd-img img{ width:100%; height:100%; object-fit:cover; display:block }
@@ -299,6 +299,11 @@
 .cartdd-title{ display:block; max-width:100%; font-weight:600; color:#0b1323; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-decoration:none }
 .cartdd-meta{ font-size:.9rem; color:#64748b }
 .cartdd-amt{ font-weight:700; color:#0b1323; white-space:nowrap; flex:0 0 auto }
+.cartdd-remove{ position:absolute; top:10px; right:14px; width:34px; height:34px; border-radius:50%; border:0; background:#dc2626; color:#fff; display:flex; align-items:center; justify-content:center; opacity:0; transform:translateX(10px); transition:opacity .2s ease, transform .2s ease; cursor:pointer; box-shadow:0 12px 24px rgba(220,38,38,.35); pointer-events:none; }
+.cartdd-remove svg{ width:18px; height:18px; }
+.cartdd-item:hover .cartdd-remove,
+.cartdd-remove:focus-visible{ opacity:1; transform:translateX(0); pointer-events:auto; }
+.cartdd-remove:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
 .cartdd-subtotal{ padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #eef2f7; border-bottom:1px solid #eef2f7; background:#fff }
 .cartdd-subtotal span{ font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:.02em }
 .cartdd-upsell .upsell-item{ display:grid; grid-template-columns:46px 1fr auto; gap:10px; align-items:center; padding:8px 10px; border:1px solid #eef2f7; border-radius:10px; background:#fff; margin-bottom:8px }
