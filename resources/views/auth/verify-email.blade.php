@@ -12,15 +12,13 @@
   @endif
 @endsection
 
-@section('auth-no-right', true)
-
 @section('auth-form')
   <form id="verifyEmailForm" method="POST" action="{{ route('verification.send') }}" class="account-auth-form">
     @csrf
     <div class="account-auth-field-group">
-      <div class="account-auth-field" style="flex-direction:column; align-items:flex-start; gap:10px; background:rgba(11,18,32,.03); border:1px dashed rgba(11,18,32,.18);">
-        <span class="account-auth-label" style="margin-bottom:0; font-size:13px; text-transform:uppercase; letter-spacing:.18em; color:rgba(11,18,32,.55);">Didn’t get the email?</span>
-        <p class="account-auth-inline" style="margin:0; color:rgba(11,18,32,.82); font-size:14px;">Check spam or tap below to resend the verification link.</p>
+      <div class="account-auth-field" style="flex-direction:column; align-items:flex-start; gap:6px;">
+        <span class="account-auth-label" style="margin-bottom:0;">Didn’t get the email?</span>
+        <p class="account-auth-inline" style="margin:0; color:rgba(11,18,32,.7);">Check spam or tap below to resend the verification link.</p>
       </div>
     </div>
     <button class="btn btn--primary account-auth-btn" id="verifyEmailSubmit" type="submit">
