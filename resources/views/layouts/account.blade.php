@@ -93,7 +93,9 @@
         .account-auth-form { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
         .account-auth-field-group { display:flex; flex-direction:column; gap:6px; }
         .account-auth-field { position: relative; border-radius: 3px; border: 1px solid rgba(16,24,40,.14); background: #fff; box-shadow: 0 10px 18px rgba(16,24,40,.06); transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease; }
-        .account-auth-field--note { flex-direction:column; align-items:flex-start; gap:6px; background: rgba(11,18,32,.03); border-style:dashed; }
+        .account-auth-field--note { flex-direction:column; align-items:flex-start; gap:6px; padding:20px; background: rgba(11,18,32,.03); border-style:dashed; }
+        .account-auth-field--note .account-auth-label { margin-bottom:0; font-size:13px; text-transform:uppercase; letter-spacing:.18em; color:rgba(11,18,32,.55); }
+        .account-auth-field--note p { margin:0; color:rgba(11,18,32,.82); font-size:14px; }
         .account-auth-field:focus-within { border-color: rgba(74,136,120,.35); box-shadow: var(--focus), 0 12px 22px rgba(16,24,40,.08); transform: translateY(-1px); }
         .account-auth-label { display:block; font-family: var(--ui); font-size: 12px; color: rgba(11,18,32,.62); margin: 0 0 6px; }
         .account-auth-input { width:100%; border:0; outline:0; background:transparent; padding: 12px 42px 12px 12px; font-family: var(--ui); font-size: 14px; border-radius:3px; color: var(--ink); }
