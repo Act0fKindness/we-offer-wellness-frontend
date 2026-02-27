@@ -399,6 +399,23 @@ class User extends Authenticatable implements MustVerifyEmail
         );
     }
 
+    /**
+     * Send the password reset notification using the custom Brevo template.
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $url = url(route('password.reset', ['token' => $token, 'email' => $this->email], false));
+        MailService::send(
+            $this->email,
+            'Reset your We Offer Wellness password',
+            'emails.reset-password',
+            [
+                'user' => $this,
+                'url' => $url,
+            ]
+        );
+    }
+
     public function userBio()
     {
         return $this->hasOne(UserBio::class, 'user_id');
