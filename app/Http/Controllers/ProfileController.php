@@ -111,7 +111,18 @@ class ProfileController extends Controller
         return response()->json([
             'message' => 'Profile photo updated.',
             'path' => $path,
-            'url' => Storage::disk('public')->url($path),
+            'url' => $this->profilePhotoUrl($path),
         ]);
+    }
+
+    protected function profilePhotoUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+        $host = config('app.asset_url') ?: config('services.asset_host') ?: 'https://atease.weofferwellness.co.uk';
+        $host = rtrim($host, '/');
+        $storagePath = '/storage/'.ltrim($path, '/');
+        return $host.$storagePath;
     }
 }

@@ -37,8 +37,9 @@
     $lastName = trim($profileUser->last_name ?: \Illuminate\Support\Str::of($profileUser->name ?? '')->after(' '));
     $initials = mb_strtoupper(mb_substr($firstName ?: 'You', 0, 1).mb_substr($lastName ?: '', 0, 1));
     $initials = trim($initials) !== '' ? $initials : 'YOU';
+    $assetHost = rtrim(config('app.asset_url') ?: config('services.asset_host') ?: 'https://atease.weofferwellness.co.uk', '/');
     $profilePhoto = $profileUser->profile_picture
-        ? \Illuminate\Support\Facades\Storage::disk('public')->url($profileUser->profile_picture)
+        ? $assetHost.'/storage/'.ltrim($profileUser->profile_picture, '/')
         : null;
 @endphp
 
