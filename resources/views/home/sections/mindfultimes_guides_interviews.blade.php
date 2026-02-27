@@ -1,11 +1,11 @@
 <section id="mindful-times" class="section">
   <div class="container-page">
-    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="mb-8 mindful-times__heading">
       <div>
         <div class="kicker">Mindful Times</div>
         <h2>Guides, practitioner interviews and tools to help you feel better</h2>
       </div>
-      <a class="btn-wow btn-wow--outline btn-sm btn-arrow"
+      <a class="btn-wow btn-wow--outline btn-sm btn-arrow mindful-times__cta"
          href="https://times.weofferwellness.co.uk" data-loader-init="1">
         <span class="btn-label">Visit Mindful Times</span>
         <span class="btn-icon-wrap" aria-hidden="true">
@@ -22,6 +22,14 @@
   </div>
 
   <style>
+    /* Section header layout */
+    #mindful-times .mindful-times__heading{ display:flex; flex-direction:column; gap:16px; align-items:flex-start; }
+    #mindful-times .mindful-times__cta{ width:100%; align-self:stretch; }
+    @media (min-width:768px){
+      #mindful-times .mindful-times__heading{ flex-direction:row; align-items:flex-end; justify-content:space-between; }
+      #mindful-times .mindful-times__cta{ width:auto; align-self:flex-start; flex:0 0 auto; margin-left:auto; }
+    }
+
     /* Scoped styles for the tabloid layout within #mindful-times */
     #mindful-times .tabloid-wrap{ display:grid; gap:16px; }
     #mindful-times .tabloid-hero{ position:relative; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,.18); background:#0b1220; box-shadow:0 18px 50px rgba(16,24,40,.22); min-height:360px; }
