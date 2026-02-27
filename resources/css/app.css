@@ -854,7 +854,7 @@ header .nav-item:hover > a::after, header .nav-item:focus-within > a::after{ tra
 
 /* Ultra search bar */
 .wow-ultra{ --wow-blue:#1737c5; --wow-gold:#ffb300; --gold:#ffb300; --ink:#0f172a; --muted:#6b7280; --bg:#f6f8fb; --ring:0 0 0 3px rgba(23,55,197,.16); --shadow:0 14px 40px rgba(10,22,70,.14); --radius:14px; --soft-border:#e6e9f2; --brand-accent:#2c6bed; --accent-600:#e3572f; }
-.wow-ultra .bar{ background:#fff; border-radius:18px; padding:5px; box-shadow:var(--shadow); display:flex; gap:5px; flex-wrap:wrap; }
+.wow-ultra .bar{ background:#fff; border-radius:20px; padding:5px; box-shadow:var(--shadow); display:flex; gap:5px; flex-wrap:wrap; }
 .wow-ultra .bar-compact{ gap:4px; padding:4px }
 .wow-ultra .seg{ flex:1 1 220px; display:flex; gap:10px; align-items:center; background:#fff; border:1px solid rgba(15,23,42,.12); border-radius:var(--radius); padding:14px 16px; position:relative; max-height:58px; }
 .wow-ultra .seg:focus-within{ box-shadow:var(--ring); border-color:transparent }
