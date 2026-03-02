@@ -312,14 +312,6 @@
                             <li><a class="menu-link" href="/needs/trauma-and-nervous-system">Nervous system &amp; trauma support</a></li>
                         </ul>
                     </div>
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">Help me choose</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/help/which-therapy">Match me to a therapy (quiz)</a></li>
-                            <li><a class="menu-link" href="/therapies?tag=gentle-beginner">Gentle &amp; beginner‑friendly options</a></li>
-                            <li><a class="menu-link" href="/needs">View all needs</a></li>
-                        </ul>
-                    </div>
                 </div>
                 <!-- Therapies -->
                 <div data-menu="therapies" class="grid md:grid-cols-3 gap-6">
@@ -357,13 +349,13 @@
                         <div class="mega-kicker mb-2">Explore</div>
                         <ul class="list-unstyled m-0 p-0">
                             <li><a class="menu-link" href="/online-near-me">Online &amp; near me</a></li>
-                            <li><a class="menu-link" href="/help">Help centre</a></li>
                         </ul>
                     </div>
                     <div class="menu-col">
                         <div class="mega-kicker mb-2">Guides</div>
                         <ul class="list-unstyled m-0 p-0">
                             <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
+                            <li><a class="menu-link menu-link--disabled" href="/help" aria-disabled="true" tabindex="-1">Help centre</a></li>
                         </ul>
                     </div>
                 </div>
@@ -411,6 +403,11 @@
 .cartdd-upsell .upsell-price{ font-size:12px; color:#64748b; font-weight:700; margin-top:4px }
 .cartdd-upsell-head{ font-weight:800; letter-spacing:-.01em; margin:0 0 8px; color:#0b1323 }
 .cartdd-foot{ display:flex; gap:10px; align-items:center; justify-content:space-between; background:#fff; padding:10px 12px 14px }
+.menu-link--disabled{
+    pointer-events: none;
+    opacity: .5;
+    cursor: default;
+}
 /* Buttons styled like product card actions */
 .cart-dropdown2 .btn,
 .account-dropdown .btn{ height:38px; border-radius:4px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color: rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); text-decoration:none; flex:1 1 auto }
