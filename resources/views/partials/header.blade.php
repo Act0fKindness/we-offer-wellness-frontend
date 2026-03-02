@@ -21,6 +21,10 @@
         color:#0b1320;
         cursor:pointer;
     }
+    .hamburger:hover,
+    .hamburger:focus,
+    .hamburger:active{ background:none; box-shadow:none; }
+    .hamburger:focus-visible{ outline:2px solid currentColor; outline-offset:3px; }
     .hamburger span,
     .hamburger::before,
     .hamburger::after{
@@ -264,7 +268,7 @@
                     </a>
                     <button
                         type="button"
-                        class="inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100 hamburger"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-ink-700 hamburger"
                         aria-label="Toggle menu" aria-expanded="false">
                         <span aria-hidden="true"></span>
                     </button>

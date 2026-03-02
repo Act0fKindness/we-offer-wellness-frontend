@@ -295,13 +295,14 @@
           if (window.__WOWHamburger && typeof window.__WOWHamburger.set === 'function') {
             window.__WOWHamburger.set(state);
           } else {
-            window.__WOWHamburgerQueue = [state];
+            window.__WOWHamburgerQueue = window.__WOWHamburgerQueue || [];
+            window.__WOWHamburgerQueue.push(state);
           }
         }catch(_err){}
       }
       var open = false;
-      function closeMobile(){ mobile.style.display = 'none'; burger.setAttribute('aria-expanded','false'); setBodyScroll(false); syncHamburger(false); open = false; }
-      function openMobile(){ mobile.style.display = 'block'; burger.setAttribute('aria-expanded','true'); setBodyScroll(true); syncHamburger(true); open = true; }
+      function closeMobile(){ mobile.style.display = 'none'; burger.classList.remove('opened'); burger.setAttribute('aria-expanded','false'); setBodyScroll(false); syncHamburger(false); open = false; }
+      function openMobile(){ mobile.style.display = 'block'; burger.classList.add('opened'); burger.setAttribute('aria-expanded','true'); setBodyScroll(true); syncHamburger(true); open = true; }
       burger.addEventListener('click', function(){ open ? closeMobile() : openMobile(); });
       document.addEventListener('keydown', function(e){ if(e.key==='Escape' && open){ closeMobile(); }});
       mobile.addEventListener('click', function(e){ var a = e.target.closest('a'); if(a){ closeMobile(); }});

@@ -103,20 +103,8 @@ function initMegaMenu() {
 
 function initMobileMenu() {
   const toggle = document.querySelector('header button[aria-label="Toggle menu"]');
-  const drawer = document.getElementById('mobile-menu');
-  if (!toggle || !drawer) return;
-  const hamburgerController = setupHamburgerController(toggle);
-  if (hamburgerController && drawer.style.display === 'block') {
-    hamburgerController.set(true);
-  }
-  toggle.addEventListener('click', () => {
-    const isOpen = drawer.style.display === 'block';
-    const nextOpen = !isOpen;
-    drawer.style.display = nextOpen ? 'block' : 'none';
-    toggle.classList.toggle('opened', nextOpen);
-    toggle.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
-    hamburgerController?.set(nextOpen);
-  });
+  if (!toggle) return;
+  setupHamburgerController(toggle);
 }
 
 function setupUltraSearchBar(prefix) {
