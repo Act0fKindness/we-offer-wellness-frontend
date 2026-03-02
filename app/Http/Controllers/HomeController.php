@@ -4,14 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\View\View;
 use App\Models\Product;
 use App\Models\Review;
 
 class HomeController extends Controller
 {
-    public function index(): View
+    public function index()
     {
+        if (request()->boolean('fresh')) {
+            Cache::forget('home:index:v1');
+            Cache::forget('home:index:html:v1');
+        }
+
         $payload = Cache::remember('home:index:v1', now()->addMinutes(10), function () {
             $giftsUnder50 = collect();
             $onlineUnder50 = collect();
@@ -181,6 +185,15 @@ class HomeController extends Controller
             ];
         });
 
-        return view('home.index', $payload);
+        if (app()->environment('local')) {
+            return view('home.index', $payload);
+        }
+
+        $html = Cache::remember('home:index:html:v1', now()->addMinutes(10), function () use ($payload) {
+            return view('home.index', $payload)->render();
+        });
+
+        return response($html)
+            ->header('Cache-Control', 'public, max-age=600');
     }
 }
