@@ -71,7 +71,7 @@
   .wow-cookie-banner__panel{ background:#fff; color:#0b1220; border-radius:3px; border:1px solid rgba(15,23,42,.12); box-shadow:0 30px 80px rgba(15,23,42,.18); padding:24px; }
   .wow-cookie-banner__eyebrow{ text-transform:uppercase; letter-spacing:.24em; font-size:11px; color:#64748b; margin:0 0 8px; }
   .wow-cookie-banner__simple h2{ margin:0 0 8px; font-size:1.35rem; }
-  .wow-cookie-banner__simple p{ margin:0 0 16px; color:#475569; }
+  .wow-cookie-banner__simple p{ margin:0 0 16px; font-size:12px; color:#475569; }
   .wow-cookie-banner__actions.actions,
   .wow-cookie-banner__advanced-actions.actions{ display:flex; gap:10px; flex-wrap:wrap; }
   .wow-cookie-banner__actions .btn,
