@@ -147,3 +147,28 @@
   </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+  const slug = @json($slug ?? null);
+  const title = @json($need['title'] ?? 'Need');
+  if (!slug) return;
+  const entry = { slug: slug, title: title, url: @json(url('/needs/'.$slug)) };
+  const key = 'wow_need_history';
+  try {
+    const raw = localStorage.getItem(key);
+    let items = [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) items = parsed;
+    }
+    items = items.filter(item => item && item.slug !== entry.slug);
+    items.unshift(entry);
+    items = items.slice(0, 6);
+    localStorage.setItem(key, JSON.stringify(items));
+    document.dispatchEvent(new CustomEvent('wow:need-history', { detail: items }));
+  } catch (_err) {}
+})();
+</script>
+@endpush

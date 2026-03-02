@@ -296,21 +296,45 @@
                         <div class="mega-kicker mb-2">How are you feeling?</div>
                         <ul class="list-unstyled m-0 p-0">
                             <li><a class="menu-link" href="/needs/stress-and-anxiety">Stress &amp; anxiety</a></li>
-                            <li><a class="menu-link" href="/needs/sleep-issues">Trouble sleeping</a></li>
+                            <li><a class="menu-link" href="/needs/sleep-issues">Sleep issues</a></li>
                             <li><a class="menu-link" href="/needs/low-mood-burnout">Low mood &amp; burnout</a></li>
-                            <li><a class="menu-link" href="/needs/overwhelm">Overwhelmed &amp; frazzled</a></li>
+                            <li><a class="menu-link" href="/needs/overwhelm">Overwhelm &amp; frazzled feelings</a></li>
                             <li><a class="menu-link" href="/needs/worry">Worry &amp; racing thoughts</a></li>
+                            <li><a class="menu-link" href="/needs/pain-management">Pain, tension &amp; tightness</a></li>
                         </ul>
                     </div>
                     <div class="menu-col">
                         <div class="mega-kicker mb-2">What do you want?</div>
                         <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/needs/mens-health">Men’s health</a></li>
-                            <li><a class="menu-link" href="/needs/digestive-health">Digestive &amp; gut health</a></li>
-                            <li><a class="menu-link" href="/needs/fertility-pregnancy">Fertility &amp; pregnancy</a></li>
-                            <li><a class="menu-link" href="/needs/pain-relief">Pain relief &amp; tension</a></li>
-                            <li><a class="menu-link" href="/needs/trauma-and-nervous-system">Nervous system &amp; trauma support</a></li>
+                            <li><a class="menu-link" href="/needs/mens-wellbeing">Men’s wellbeing</a></li>
+                            <li><a class="menu-link" href="/needs/digestive-health">Gut health &amp; digestion</a></li>
+                            <li><a class="menu-link" href="/needs/fertility-pregnancy">Fertility &amp; pregnancy support</a></li>
+                            <li><a class="menu-link" href="/needs/pain-management">Pain relief &amp; tension release</a></li>
+                            <li><a class="menu-link" href="/needs/nervous-system">Nervous system &amp; trauma support</a></li>
                         </ul>
+                    </div>
+                    <div class="menu-col menu-col--foryou">
+                        <div class="mega-kicker mb-2">For you</div>
+                        <div data-need-default-block>
+                            <p class="mega-label">Popular this week</p>
+                            <ul class="list-unstyled m-0 p-0" data-need-default-popular></ul>
+                            <p class="mega-label">Trending online</p>
+                            <ul class="list-unstyled m-0 p-0" data-need-default-trending></ul>
+                        </div>
+                        <div data-need-personalized-block hidden aria-hidden="true">
+                            <p class="mega-label">Continue browsing</p>
+                            <ul class="list-unstyled m-0 p-0" data-need-continue></ul>
+                            <p class="mega-label">Recommended next</p>
+                            <ul class="list-unstyled m-0 p-0" data-need-recommended></ul>
+                        </div>
+                        <div class="mega-quick-links mt-3">
+                            <p class="mega-label">Quick links</p>
+                            <ul class="list-unstyled m-0 p-0">
+                                <li><a class="menu-link" href="/online">Book online therapy</a></li>
+                                <li><a class="menu-link" href="/online-near-me">Book near you</a></li>
+                                <li><a class="menu-link" href="/gifts">View gift options</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <!-- Therapies -->
@@ -407,6 +431,13 @@
     pointer-events: none;
     opacity: .5;
     cursor: default;
+}
+.menu-col--foryou .mega-label{
+    text-transform:uppercase;
+    letter-spacing:.24em;
+    font-size:11px;
+    color:var(--ink-500);
+    margin:12px 0 6px;
 }
 /* Buttons styled like product card actions */
 .cart-dropdown2 .btn,

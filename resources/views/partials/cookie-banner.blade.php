@@ -148,6 +148,7 @@
         marketing: !!payload.marketing,
       })) + '; Path=/; Max-Age=' + (60*60*24*365) + '; SameSite=Lax';
     } catch (_err) {}
+    try { document.dispatchEvent(new CustomEvent('wow:cookie-preferences', { detail: payload })); } catch (_err) {}
     return payload;
   }
 

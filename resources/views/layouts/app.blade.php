@@ -292,6 +292,102 @@
   } catch {}
 })();
 </script>
+<script>
+(function(){
+  const defaultPopularList = document.querySelector('[data-need-default-popular]');
+  if (!defaultPopularList) return;
+
+  const defaultBlock = document.querySelector('[data-need-default-block]');
+  const personalizedBlock = document.querySelector('[data-need-personalized-block]');
+  const defaultTrendingList = document.querySelector('[data-need-default-trending]');
+  const continueList = document.querySelector('[data-need-continue]');
+  const recommendedList = document.querySelector('[data-need-recommended]');
+
+  const defaultPopular = [
+    { slug: 'stress-and-anxiety', title: 'Stress & anxiety', url: '/needs/stress-and-anxiety' },
+    { slug: 'sleep-issues', title: 'Sleep issues', url: '/needs/sleep-issues' },
+    { slug: 'low-mood-burnout', title: 'Low mood & burnout', url: '/needs/low-mood-burnout' },
+    { slug: 'overwhelm', title: 'Overwhelm & frazzled feelings', url: '/needs/overwhelm' },
+    { slug: 'worry', title: 'Worry & racing thoughts', url: '/needs/worry' },
+    { slug: 'pain-management', title: 'Pain, tension & tightness', url: '/needs/pain-management' },
+  ];
+
+  const defaultTrending = [
+    { slug: 'online-breathwork', title: 'Trending: Online breathwork', url: '/needs/breathwork' },
+    { slug: 'guided-meditation', title: 'Guided meditation & sound', url: '/needs/guided-meditation' },
+    { slug: 'corporate-wellbeing', title: 'Corporate wellbeing boosters', url: '/needs/corporate-wellbeing' },
+  ];
+
+  const HISTORY_KEY = 'wow_need_history';
+  const COOKIE_KEY = 'wow_cookie_preferences';
+
+  function renderList(el, items) {
+    if (!el) return;
+    if (!items || !items.length) {
+      el.innerHTML = '<li><span class="menu-link menu-link--disabled">No suggestions yet</span></li>';
+      return;
+    }
+    el.innerHTML = items.map((item) => `<li><a class="menu-link" href="${item.url}">${item.title}</a></li>`).join('');
+  }
+
+  function readHistory() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      const data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    } catch (_err) {
+      return [];
+    }
+  }
+
+  function readCookiePrefs() {
+    try {
+      const raw = localStorage.getItem(COOKIE_KEY);
+      const data = raw ? JSON.parse(raw) : null;
+      return (data && typeof data === 'object') ? data : null;
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function canPersonalize() {
+    const prefs = readCookiePrefs();
+    return !!(prefs && prefs.personalization === true);
+  }
+
+  function updateNeedColumn() {
+    renderList(defaultPopularList, defaultPopular);
+    renderList(defaultTrendingList, defaultTrending);
+    const history = readHistory();
+    const allowPersonalization = canPersonalize() && history.length;
+    if (!allowPersonalization) {
+      if (defaultBlock) defaultBlock.hidden = false;
+      if (personalizedBlock) {
+        personalizedBlock.hidden = true;
+        personalizedBlock.setAttribute('aria-hidden', 'true');
+      }
+      return;
+    }
+
+    if (defaultBlock) defaultBlock.hidden = true;
+    if (personalizedBlock) {
+      personalizedBlock.hidden = false;
+      personalizedBlock.setAttribute('aria-hidden', 'false');
+    }
+
+    const continueItems = history.slice(0, 3);
+    renderList(continueList, continueItems);
+    const recommendedPool = defaultPopular.concat(defaultTrending);
+    const recommended = recommendedPool.filter(item => continueItems.every(entry => entry.slug !== item.slug)).slice(0, 3);
+    renderList(recommendedList, (recommended.length ? recommended : defaultPopular.slice(0, 3)));
+  }
+
+  document.addEventListener('wow:cookie-preferences', updateNeedColumn);
+  document.addEventListener('wow:need-history', updateNeedColumn);
+  window.addEventListener('focus', updateNeedColumn);
+  updateNeedColumn();
+})();
+</script>
 @stack('scripts')
 
 </body>
