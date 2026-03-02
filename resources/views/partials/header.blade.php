@@ -62,7 +62,7 @@
         transform: scaleX(var(--after-scale)) rotate(var(--after-rot));
     }
     /* hover state inherit existing bg hover */
-    .utility-links__secondary .wow-practitioner-trigger{ border:none; background:rgba(16,91,75,.08); padding:6px 16px; border-radius:999px; font-weight:600; color:#0b1320; cursor:pointer; transition:background .2s ease, box-shadow .2s ease, color .2s ease; }
+    .utility-links__secondary .wow-practitioner-trigger{ border:none; background:rgba(16,91,75,.05); padding:6px 16px; border-radius:4px; font-weight:600; color:#0b1320; cursor:pointer; transition:background .2s ease, box-shadow .2s ease, color .2s ease; }
     .utility-links__secondary .wow-practitioner-trigger:hover{ background:#105b4b; color:#fff; box-shadow:0 10px 25px rgba(16,91,75,.25); }
     .utility-links__secondary .wow-practitioner-trigger:focus-visible{ outline:2px solid #105b4b; outline-offset:2px; }
     .practitioner-modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:20px; z-index:1300; }
