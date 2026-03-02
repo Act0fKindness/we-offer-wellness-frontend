@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Api\ArticleController as ApiArticleController;
+use App\Http\Controllers\Api\ProductController as ApiProductController;
 use App\Models\V3Subscriber;
 use App\Services\TransactionalMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class SubscriberController extends Controller
 {
@@ -61,6 +63,8 @@ class SubscriberController extends Controller
             'subscriber' => $subscriber,
             'preferences' => $subscriber->preferences ?? [],
             'token' => $subscriber->manage_token,
+            'upsellProducts' => $this->preferenceUpsells(),
+            'mindfulArticles' => $this->mindfulTimesArticles(),
         ]);
     }
 
@@ -143,6 +147,60 @@ class SubscriberController extends Controller
             'Update preferences',
             route('subscribe.preferences', ['token' => $subscriber->manage_token])
         );
+    }
+
+    protected function mindfulTimesArticles(int $limit = 4): array
+    {
+        try {
+            $controller = app(ApiArticleController::class);
+            $request = Request::create('/api/articles', 'GET', ['limit' => $limit]);
+            $response = $controller->index($request);
+            $data = $response->getData(true);
+            if (is_array($data)) {
+                return array_slice($data, 0, $limit);
+            }
+        } catch (\Throwable $e) {
+            logger()->warning('preferences.articles_failed', ['error' => $e->getMessage()]);
+        }
+
+        return [];
+    }
+
+    protected function preferenceUpsells(int $limit = 3): array
+    {
+        try {
+            $controller = app(ApiProductController::class);
+            $request = Request::create('/api/products', 'GET', [
+                'limit' => max(6, $limit * 2),
+                'sort' => 'popular',
+            ]);
+            $response = $controller->index($request);
+            $data = $response->getData(true);
+            if (!is_array($data)) {
+                return [];
+            }
+
+            $slice = array_slice($data, 0, max($limit, 3));
+
+            return array_values(array_map(function (array $item) {
+                $price = $item['price_min'] ?? $item['price'] ?? 0;
+
+                return [
+                    'id' => $item['id'] ?? null,
+                    'title' => $item['title'] ?? 'Featured experience',
+                    'price' => is_numeric($price) ? (float) $price : 0.0,
+                    'image' => $item['image'] ?? null,
+                    'tag' => $item['type'] ?? ($item['category']['name'] ?? null),
+                    'mode' => $item['mode'] ?? null,
+                    'location' => $item['location'] ?? null,
+                    'url' => $item['url'] ?? null,
+                ];
+            }, $slice));
+        } catch (\Throwable $e) {
+            logger()->warning('preferences.upsells_failed', ['error' => $e->getMessage()]);
+        }
+
+        return [];
     }
 
     protected function messageView(string $title, string $body, ?string $cta = null, ?string $ctaUrl = null): View
