@@ -91,18 +91,22 @@
           </div>
 
           <div class="pref-fieldset">
-            <div class="pref-fieldset__legend">Where should we look?</div>
-            <input type="text" name="location" class="pref-input" placeholder="e.g., East London or UK-wide" value="{{ $prefLocation }}">
+            <div class="field-group">
+              <label for="prefLocation">Where should we look?</label>
+              <input id="prefLocation" type="text" name="location" class="pref-input" placeholder="e.g., East London or UK-wide" value="{{ $prefLocation }}">
+            </div>
             <small class="pref-hint">Leave blank for UK-wide discoveries.</small>
           </div>
 
           <div class="pref-fieldset">
-            <div class="pref-fieldset__legend">Travel radius</div>
-            <select name="radius" class="pref-input">
-              @foreach([10, 25, 50, 100, 200] as $radius)
-                <option value="{{ $radius }}" {{ $prefRadius === $radius ? 'selected' : '' }}>{{ $radius }} km</option>
-              @endforeach
-            </select>
+            <div class="field-group">
+              <label for="prefRadius">Travel radius</label>
+              <select id="prefRadius" name="radius" class="pref-input">
+                @foreach([10, 25, 50, 100, 200] as $radius)
+                  <option value="{{ $radius }}" {{ $prefRadius === $radius ? 'selected' : '' }}>{{ $radius }} km</option>
+                @endforeach
+              </select>
+            </div>
           </div>
 
           <div class="pref-fieldset">
@@ -245,6 +249,8 @@
   .pref-card__header h2,.pref-card__header h3{ margin-top:0; }
   .pref-form{ display:flex; flex-direction:column; gap:22px; }
   .pref-fieldset{ display:flex; flex-direction:column; gap:12px; }
+  .pref-form .field-group{ display:flex; flex-direction:column; gap:6px; }
+  .pref-form .field-group label{ font-weight:700; color:#0f172a; }
   .pref-fieldset__legend{ font-weight:700; font-size:1rem; color:#0f172a; }
   .pref-checkbox{ display:flex; gap:12px; padding:14px 16px; border:1px solid var(--ink-200,#e2e8f0); border-radius:18px; background:#f8fafc; align-items:flex-start; font-size:.95rem; }
   .pref-checkbox input{ margin-top:4px; }
