@@ -23,5 +23,5 @@
       <td style="border-top:1px solid #eceff4; padding-top:10px; font-weight:700; text-align:right;">{{ $money($order->amount_total) }}</td>
     </tr>
   </table>
-  <p style="margin-bottom:0;">Need adjustments? <a href="{{ $supportUrl }}" target="_blank" rel="noopener">Visit the Help Centre</a> or reply to this email.</p>
+  <p style="margin-bottom:0;">Need adjustments? Email <a href="mailto:support@weofferwellness.co.uk">support@weofferwellness.co.uk</a>. This email address is no-reply.</p>
 @endsection

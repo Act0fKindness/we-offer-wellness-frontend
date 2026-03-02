@@ -23,5 +23,5 @@
       @endforeach
     </table>
   @endif
-  <p style="margin-bottom:0;">Please retry checkout or use a different card. If this keeps happening, reply to this email and we’ll help.</p>
+  <p style="margin-bottom:0;">Please retry checkout or use a different card. If this keeps happening, email <a href="mailto:support@weofferwellness.co.uk">support@weofferwellness.co.uk</a>; replies to this message aren’t monitored.</p>
 @endsection

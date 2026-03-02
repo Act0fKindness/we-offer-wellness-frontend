@@ -12,5 +12,5 @@
       <p style="margin:0;">Reason: {{ $context['reason'] }}</p>
     @endif
   </div>
-  <p style="margin-bottom:0;">Questions? Reply to this email or visit <a href="https://weofferwellness.co.uk/help" target="_blank" rel="noopener">the Help Centre</a>.</p>
+  <p style="margin-bottom:0;">Questions? Email <a href="mailto:support@weofferwellness.co.uk">support@weofferwellness.co.uk</a>. Replies to this message aren’t monitored.</p>
 @endsection

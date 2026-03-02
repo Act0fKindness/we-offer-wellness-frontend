@@ -15,5 +15,5 @@
       <p style="margin:0;">Stripe review ends {{ \Illuminate\Support\Carbon::createFromTimestamp($context['due_by'])->format('d M Y') }}</p>
     @endif
   </div>
-  <p style="margin-bottom:0;">Have questions? Reply to this email or head to <a href="https://weofferwellness.co.uk/help" target="_blank" rel="noopener">the Help Centre</a>.</p>
+  <p style="margin-bottom:0;">Have questions? Email <a href="mailto:support@weofferwellness.co.uk">support@weofferwellness.co.uk</a>; this notification address is no-reply.</p>
 @endsection

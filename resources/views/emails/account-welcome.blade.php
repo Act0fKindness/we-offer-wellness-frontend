@@ -14,5 +14,5 @@
       <li>Update your profile and contact preferences</li>
     </ul>
   </div>
-  <p style="margin-bottom:0;">Need help? <a href="{{ $helpUrl }}" target="_blank" rel="noopener">Visit the Help Centre</a> or reply to this email.</p>
+  <p style="margin-bottom:0;">Need help? Email <a href="mailto:support@weofferwellness.co.uk">support@weofferwellness.co.uk</a>. This email can’t receive replies.</p>
 @endsection
