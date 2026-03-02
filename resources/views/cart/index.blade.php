@@ -465,7 +465,7 @@
 .sum-sep{ height:1px; background: rgba(16,24,40,.10); margin: 2px 0; }
 .sum-row.total{ font-size:14px; font-weight:900; letter-spacing:-.01em; }
 .sum-row.total strong{ font-size:18px; }
-.promo{ margin-top:4px; padding:12px; border-radius:18px; border:1px solid var(--ink-200); background: rgba(255,255,255,.86); box-shadow: 0 12px 26px rgba(16,24,40,.06); }
+.promo{ margin:16px 9px; padding:12px; border-radius:18px; border:1px solid var(--ink-200); background: rgba(255,255,255,.86); box-shadow: 0 12px 26px rgba(16,24,40,.06); }
 .promo label{ display:block; font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color: var(--ink-600); margin-bottom:8px; }
 .promo-inline{ display:flex; gap:10px; align-items:center; }
 .promo-inline input{ flex:1 1 auto; height:42px; border-radius:14px; border:1px solid var(--ink-200); background: rgba(255,255,255,.95); padding:0 12px; font-weight:800; outline:none; }
