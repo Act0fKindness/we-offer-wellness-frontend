@@ -1,11 +1,15 @@
 const SESSION_TOKEN_KEY = 'wow_subscriber_session_token';
 const SESSION_START_KEY = 'wow_subscriber_session_started_at';
+const DEFAULT_SUCCESS_MESSAGE = 'Thank you! We will keep you updated.';
 
 let sessionStart = loadNumber(SESSION_START_KEY);
 if (!sessionStart) {
   sessionStart = Date.now();
   storeNumber(SESSION_START_KEY, sessionStart);
 }
+
+let toastEl = null;
+let toastTimer = null;
 
 function loadNumber(key) {
   try {
@@ -123,12 +127,62 @@ function ensureFeedbackEl(form) {
   return el;
 }
 
-function showMessage(el, text, isSuccess) {
-  if (!el) return;
-  el.textContent = text || '';
-  el.hidden = !text;
-  el.classList.toggle('is-success', !!isSuccess);
-  el.classList.toggle('is-error', !isSuccess);
+function ensureToast() {
+  if (toastEl && document.body.contains(toastEl)) return toastEl;
+  toastEl = document.createElement('div');
+  toastEl.className = 'subscriber-toast';
+  toastEl.setAttribute('role', 'status');
+  toastEl.setAttribute('aria-live', 'polite');
+  toastEl.hidden = true;
+  document.body.appendChild(toastEl);
+  return toastEl;
+}
+
+function showToast(message) {
+  const el = ensureToast();
+  const text = message || DEFAULT_SUCCESS_MESSAGE;
+  el.textContent = text;
+  el.hidden = false;
+  el.classList.add('is-visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.classList.remove('is-visible');
+    el.hidden = true;
+  }, 3200);
+}
+
+function showMessage(el, text = '', isSuccess) {
+  if (!el) {
+    if (isSuccess === true) showToast(text);
+    return;
+  }
+
+  if (typeof isSuccess !== 'boolean') {
+    el.textContent = '';
+    el.hidden = true;
+    el.classList.remove('is-success', 'is-error');
+    return;
+  }
+
+  if (isSuccess) {
+    const msg = text || DEFAULT_SUCCESS_MESSAGE;
+    el.textContent = msg;
+    el.hidden = true;
+    el.classList.add('is-success');
+    el.classList.remove('is-error');
+    showToast(msg);
+    return;
+  }
+
+  const message = text || '';
+  el.textContent = message;
+  el.hidden = !message;
+  el.classList.remove('is-success');
+  if (message) {
+    el.classList.add('is-error');
+  } else {
+    el.classList.remove('is-error');
+  }
 }
 
 function setLoading(form, loading) {
@@ -152,7 +206,7 @@ function initSubscriberForms() {
     const feedback = ensureFeedbackEl(form);
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      showMessage(feedback, '', true);
+      showMessage(feedback);
       const email = input.value.trim();
       if (!email) {
         showMessage(feedback, 'Please enter your email address.', false);
@@ -167,7 +221,7 @@ function initSubscriberForms() {
       try {
         await submitSubscriber(Object.assign(basePayload(source), { email }));
         form.reset();
-        showMessage(feedback, 'Thank you! We will keep you updated.', true);
+        showMessage(feedback, DEFAULT_SUCCESS_MESSAGE, true);
       } catch (error) {
         showMessage(feedback, error.message || 'Something went wrong. Please try again.', false);
       } finally {

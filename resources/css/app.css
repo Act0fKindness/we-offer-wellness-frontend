@@ -906,5 +906,33 @@ header .nav-item:hover > a::after, header .nav-item:focus-within > a::after{ tra
 .mobile-menu__section{ margin-top: 10px; padding-top: 10px; border-top:1px solid var(--ink-200); }
 .mobile-menu__section-title{ font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-500); font-weight:700; margin-bottom:8px; }
 .cartdd-empty{ padding:18px; color: var(--ink-600); text-align:center; }
+.subscriber-toast{
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translate(-50%,20px);
+  padding:14px 18px;
+  background:#0b1320;
+  color:#fff;
+  border-radius:999px;
+  font-weight:600;
+  box-shadow:0 12px 30px rgba(11,19,32,.25);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+  z-index:1200;
+  max-width:min(420px, 90vw);
+}
+.subscriber-toast.is-visible{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+@media (max-width: 640px){
+  .subscriber-toast{
+    border-radius:16px;
+    text-align:center;
+    width: calc(100vw - 32px);
+  }
+}
 .account-trigger__avatar { width: 28px; height: 28px; border-radius: 999px; background: var(--ink-100); color: var(--ink-800); font-weight: 500; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; overflow: hidden; border: 1px solid #ddd; font-size: 14px; }
 .account-trigger__avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
