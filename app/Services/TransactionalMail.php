@@ -299,6 +299,29 @@ class TransactionalMail
         );
     }
 
+    public static function paymentCancelled(?CheckoutAttempt $attempt = null, ?Order $order = null, int $holdHours = 48): void
+    {
+        $order?->loadMissing('items');
+        $email = $attempt->email ?? $order->email ?? null;
+        if (!$email) {
+            return;
+        }
+
+        MailService::send(
+            $email,
+            'We saved your We Offer Wellness cart',
+            'emails.payment-cancelled',
+            [
+                'items' => self::emailItems($order, $attempt),
+                'resumeUrl' => url('/cart'),
+                'holdHours' => $holdHours,
+            ],
+            null,
+            null,
+            ['tags' => ['order', 'abandoned']]
+        );
+    }
+
     public static function refundNotification(Order $order, array $context = []): void
     {
         $order->loadMissing('items');

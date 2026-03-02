@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CheckoutAttempt;
 use App\Models\Order;
 use App\Services\CheckoutOrderService;
+use App\Services\TransactionalMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session as StripeSession;
@@ -99,10 +100,20 @@ class CheckoutResultController extends Controller
             if ($attempt && $attempt->status === 'pending') {
                 $attempt->status = 'cancelled';
                 $attempt->save();
+                TransactionalMail::paymentCancelled($attempt, $order);
+            } elseif ($order && $order->status === 'pending') {
+                $order->status = 'cancelled';
+                $order->save();
+                TransactionalMail::paymentCancelled(null, $order);
             }
         } else {
             $orderId = (int) $request->query('order');
             $order = $orderId ? Order::with('items')->find($orderId) : null;
+            if ($order && $order->status === 'pending') {
+                $order->status = 'cancelled';
+                $order->save();
+                TransactionalMail::paymentCancelled(null, $order);
+            }
         }
 
         return view('checkout.cancel', compact('order'));
