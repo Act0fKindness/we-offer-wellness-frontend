@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\CheckoutAttempt;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
@@ -95,8 +93,8 @@ class CheckoutController extends Controller
             ];
         }
 
-        // Create an Order record
-        $order = null;
+        // Prepare checkout attempt (used to create the order only after payment succeeds)
+        $attempt = null;
         $guestEmail = trim((string)$request->input('email', ''));
         if ($guestEmail !== '' && !filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) {
             return response()->json(['ok'=>false,'error'=>'invalid_email'], 422);
@@ -105,57 +103,48 @@ class CheckoutController extends Controller
         if (!$resolvedEmail) {
             return response()->json(['ok'=>false,'error'=>'email_required'], 422);
         }
-        DB::beginTransaction();
         try {
-            $order = Order::create([
+            $attempt = CheckoutAttempt::create([
                 'user_id' => optional($request->user())->id,
                 'email' => $resolvedEmail,
                 'currency' => strtoupper($currency),
                 'amount_total' => $amountTotal,
+                'items' => $items,
                 'status' => 'pending',
+                'meta' => [
+                    'ip' => $request->ip(),
+                    'user_agent' => substr((string)$request->userAgent(), 0, 255),
+                ],
             ]);
-            foreach ($items as $id => $it) {
-                $title = (string)($it['title'] ?? ('Item '.$id));
-                $qty = max(1, (int)($it['qty'] ?? 1));
-                $raw = (float)($it['price'] ?? 0);
-                $unit = $raw >= 1000 ? (int)round($raw) : (int)round($raw * 100);
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'name' => $title,
-                    'sku' => (string)$id,
-                    'unit_amount' => $unit,
-                    'quantity' => $qty,
-                    'meta' => [ 'url' => $it['url'] ?? null, 'image' => $image ?? null ],
-                ]);
-            }
-            DB::commit();
         } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('checkout.create.order_failed', ['e' => $e->getMessage()]);
+            Log::error('checkout.create.attempt_failed', ['e' => $e->getMessage()]);
             return response()->json(['ok'=>false,'error'=>'order_failed'], 500);
         }
 
         // Create Stripe Checkout Session
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
-            $successToken = CheckoutResultController::tokenForOrder($order);
             $session = StripeSession::create([
                 'mode' => 'payment',
                 'payment_method_types' => ['card'],
                 'line_items' => $lineItems,
-                'metadata' => [ 'order_id' => (string)$order->id ],
-                'client_reference_id' => (string)$order->id,
+                'metadata' => [ 'attempt_id' => (string)$attempt->id ],
+                'client_reference_id' => (string)$attempt->id,
                 'customer_email' => $resolvedEmail,
-                'success_url' => route('checkout.success', ['order' => $order->id, 'token' => $successToken], true),
-                'cancel_url' => route('checkout.cancel', ['order' => $order->id], true),
+                'success_url' => route('checkout.success', [], true).'?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('checkout.cancel', [], true).'?session_id={CHECKOUT_SESSION_ID}',
             ]);
 
-            $order->stripe_session_id = $session->id ?? null;
-            $order->save();
+            $attempt->stripe_session_id = $session->id ?? null;
+            $attempt->save();
 
             return response()->json(['ok'=>true,'url'=>$session->url]);
         } catch (\Throwable $e) {
             Log::error('checkout.create.stripe_failed', ['e' => $e->getMessage()]);
+            if ($attempt) {
+                $attempt->status = 'failed';
+                $attempt->save();
+            }
             return response()->json(['ok'=>false,'error'=>'stripe_failed'], 500);
         }
     }

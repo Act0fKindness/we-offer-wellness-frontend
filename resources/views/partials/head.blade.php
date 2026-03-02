@@ -56,6 +56,85 @@
 <link rel="stylesheet" crossorigin="" href="/build/assets/ClassSchedule-CH6Jm1u5.css">
 <link rel="stylesheet" crossorigin="" href="/build/assets/Home-DuBmdSoH.css">
 
+<link rel="manifest" href="/manifest.json?v=3">
+<meta name="theme-color" content="#90b9a9">
+
+<!-- Preload the boot logo so it appears ASAP (reduces “white screen” time) -->
+<link rel="preload" as="image"
+      href="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/fef435d7-4888-4cbe-b961-ba7e31bc183d.png?v=3">
+
+<style>
+  /* PWA boot/splash overlay */
+  #pwa-boot{
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    display: grid;
+    place-items: center;
+    z-index: 2147483647; /* always on top */
+    opacity: 1;
+    transition: opacity 180ms ease;
+  }
+
+  .boot-wrap{
+    text-align: center;
+    padding: 18px;
+  }
+
+  /* Thumb-sized logo */
+  .boot-logo{
+    width: 76px;          /* ~thumb size */
+    height: 76px;
+    border-radius: 18px;  /* app-ish rounding */
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(11,18,32,.10);
+    margin: 0 auto;
+    display: grid;
+    place-items: center;
+  }
+
+  .boot-logo img{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;  /* keep logo intact */
+    display: block;
+    background: #ffffff;
+  }
+
+  /* Fallback text if the image fails to load */
+  .boot-fallback{
+    display: none;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    font: 700 12px system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
+    letter-spacing: .08em;
+    color: #90b9a9;
+  }
+
+  /* Subtle spinner under the logo */
+  .boot-spinner{
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    border: 3px solid rgba(11,18,32,.12);
+    border-top-color: #90b9a9; /* match theme */
+    animation: boot-spin .9s linear infinite;
+    margin: 16px auto 0;
+  }
+
+  @keyframes boot-spin{
+    to { transform: rotate(360deg); }
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    .boot-spinner{ animation: none; }
+    #pwa-boot{ transition: none; }
+  }
+</style>
+
 <!-- Built assets via Vite (JS only here; keep inline <style> below intact) -->
 @php $manifest = public_path('build/manifest.json'); @endphp
 @if (file_exists($manifest))

@@ -36,4 +36,9 @@ class VendorDetail extends Model
     {
         return $this->hasMany(VendorLocation::class, 'vendor_id');
     }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'vendor_id');
+    }
 }

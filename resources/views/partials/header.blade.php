@@ -50,7 +50,7 @@
             <div class="container-page">
                 <div class="utility-links">
                     <div class="utility-links__primary"><a href="/reset" style="display:none">Free 7-Day Reset</a><a href="/about">About We
-                        Offer Wellness®</a><a href="/help">Help Centre</a><a href="/safety-and-contraindications">Safety
+                        Offer Wellness®</a><a href="/help" style="display:none;">Help Centre</a><a href="/safety-and-contraindications">Safety
                         &amp; Contraindications</a></div>
                     <div class="utility-links__secondary"><a href="/for-business" style="display:none">For Business</a><a href="https://studio.weofferwellness.co.uk" style="display:none">Become a Practitioner</a></div>
                 </div>

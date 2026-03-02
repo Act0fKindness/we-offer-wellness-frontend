@@ -10,6 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="manifest" href="/manifest.json?v=2">
+    <meta name="theme-color" content="#90b9a9">  
+
     <style>
         :root {
             --wow-green:#4A8878;

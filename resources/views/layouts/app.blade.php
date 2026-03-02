@@ -3,6 +3,36 @@
     @include('partials.head')
 </head>
 <body class="antialiased">
+
+<div id="pwa-boot"
+     style="position:fixed;inset:0;display:grid;place-items:center;background:#fff;z-index:2147483647;">
+  <div style="text-align:center;padding:18px;">
+    <div style="width:76px;height:76px;border-radius:18px;overflow:hidden;background:#fff;
+                box-shadow:0 10px 30px rgba(11,18,32,.10);margin:0 auto;">
+      <img
+        src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/fef435d7-4888-4cbe-b961-ba7e31bc183d.png?v=3"
+        alt="We Offer Wellness Studio"
+        width="76" height="76"
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+        style="width:100%;height:100%;object-fit:contain;display:block;background:#fff;"
+        onerror="this.style.display='none';document.getElementById('pwa-boot-fallback').style.display='block';"
+      />
+      <!-- fallback if image fails -->
+      <div id="pwa-boot-fallback"
+           style="display:none;width:100%;height:100%;display:grid;place-items:center;font:600 12px system-ui;color:#5438ff;">
+        WOW
+      </div>
+    </div>
+
+    <div aria-hidden="true"
+         style="width:26px;height:26px;border-radius:999px;border:3px solid rgba(11,18,32,.12);
+                border-top-color:#5438ff;margin:16px auto 0;animation:bootSpin .9s linear infinite;">
+    </div>
+  </div>
+</div>
+
   <div class="text-ink-800">
       @include('partials.header')
       <main>
@@ -10,6 +40,34 @@
       </main>
       @include('partials.footer')
   </div>
+
+
+<script>
+  (function () {
+    const boot = document.getElementById('pwa-boot');
+    if (!boot) return;
+
+    let hidden = false;
+
+    const hide = () => {
+      if (hidden) return;
+      hidden = true;
+
+      boot.style.opacity = '0';
+      boot.style.transition = 'opacity 180ms ease';
+      setTimeout(() => boot.remove(), 220);
+    };
+
+    // Hide as soon as HTML is parsed (much quicker than window.load)
+    window.addEventListener('DOMContentLoaded', hide, { once: true });
+
+    // Backup: hide when everything finishes loading
+    window.addEventListener('load', hide, { once: true });
+
+    // Failsafe: never trap the user behind it
+    setTimeout(hide, 6000);
+  })();
+</script>
 
 <script>
   window.WOW_MAPS_KEY = window.WOW_MAPS_KEY || @json(env('MAPBOX_API_KEY'));
@@ -245,5 +303,7 @@
 })();
 </script>
 @stack('scripts')
+
 </body>
 </html>
+

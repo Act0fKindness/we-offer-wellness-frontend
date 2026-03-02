@@ -14,7 +14,7 @@
     display: flex;
     align-items: stretch;
 
-    background-image: url('https://testing.studio.weofferwellness.co.uk/storage/uploads/images/127a52bb-264f-4246-8e1d-52fda86ecddb.jpg');
+    background-image: url('https://testing.studio.weofferwellness.co.uk/storage/uploads/images/49cffc83-fd62-4d3b-9a52-d093ec4af644.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -325,10 +325,10 @@
       {{-- Glow signs (desktop only, left, stacked) --}}
       <div class="glow-signs" aria-hidden="true">
         <div class="glow-sign glow-sign--1">
-          <img src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/0f843692-6f17-48ca-9944-726e1e0bcd69.png" alt="">
+          <img src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/426ec3fd-94dd-4290-ac63-c709d5f6f973.png" alt="">
         </div>
         <div class="glow-sign glow-sign--2">
-          <img src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/6b12e6e9-c88c-4490-91a3-9e4cfcb4498a.png" alt="">
+          <img src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/0d44f25d-33f5-42b9-960d-d1f291070898.png" alt="">
         </div>
       </div>
 
@@ -336,7 +336,7 @@
       <div class="ourvibe-mid">
           <a class="ourvibe-buy" href="https://testing.link.weofferwellness.co.uk/OURVIBE-website">
             <img
-              src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/3c759f8e-fa97-43eb-bed0-41652086adf9.png"
+              src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/c9105287-1fb0-4e96-86fb-ebd90487c098.png"
               alt="OUR VIBE — Sound Healing & Meditation Festival" class="ourvibe-poster"
               loading="eager"
             >

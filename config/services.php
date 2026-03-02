@@ -58,4 +58,14 @@ return [
         'key' => env('BREVO_API_KEY'),
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+    ],
+
+    'google_maps' => [
+        'key' => env('GOOGLE_MAPS_API_KEY'),
+        'region' => env('GOOGLE_REGION', 'uk'),
+    ],
+
 ];
