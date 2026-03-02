@@ -256,7 +256,8 @@
   .pref-checkbox input{ margin-top:4px; }
   .pref-checkbox strong{ display:block; font-size:1rem; }
   .pref-checkbox small{ display:block; color:#475569; }
-  .pref-input{ width:100%; border-radius:18px; border:1px solid var(--ink-200,#e2e8f0); padding:14px 16px; font-size:1rem; background:#fff; }
+  .pref-input{ width:100%; border:1px solid #d7dee7; border-radius:14px; padding:11px 14px; font-size:1rem; transition:border-color .2s ease, box-shadow .2s ease; background:#fff; }
+  .pref-input:focus{ outline:none; border-color:#0f766e; box-shadow:0 0 0 3px rgba(15,118,110,.15); }
   .pref-chip-grid{ display:flex; flex-wrap:wrap; gap:12px; }
   .pref-chip{ border:1px solid var(--ink-200,#e2e8f0); border-radius:999px; padding:8px 14px; font-weight:600; cursor:pointer; display:inline-flex; gap:8px; align-items:center; }
   .pref-chip input{ accent-color:#0b1220; }
