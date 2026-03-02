@@ -341,23 +341,34 @@
                 <div data-menu="therapies" class="grid md:grid-cols-3 gap-6">
                     <div class="menu-col">
                         <div class="mega-kicker mb-2">Popular therapies</div>
+                        <ul class="list-unstyled m-0 p-0" data-therapy-popular-list></ul>
+                    </div>
+                    <div class="menu-col">
+                        <div class="mega-kicker mb-2">Browse</div>
                         <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/therapy/massage">Massage therapy</a></li>
-                            <li><a class="menu-link" href="/therapy/reiki">Reiki</a></li>
-                            <li><a class="menu-link" href="/therapy/reflexology">Reflexology</a></li>
-                            <li><a class="menu-link" href="/therapy/acupuncture">Acupuncture</a></li>
-                            <li><a class="menu-link" href="/therapy/breathwork">Breathwork (1:1)</a></li>
-                            <li><a class="menu-link" href="/therapy/hypnotherapy">Hypnotherapy</a></li>
-                            <li><a class="menu-link" href="/therapy/coaching-and-counselling">Coaching &amp; counselling</a></li>
+                            <li><a class="menu-link" href="/therapies">All therapies</a></li>
+                            <li><a class="menu-link" href="/online">Online therapies</a></li>
+                            <li><a class="menu-link" href="/online-near-me">In-person therapies</a></li>
+                            <li><a class="menu-link" href="/events-workshops">Group sessions</a></li>
+                            <li><a class="menu-link" href="/search?format=online">1:1 sessions</a></li>
                         </ul>
                     </div>
-
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">Guides</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
-                            <li><a class="menu-link" href="/help">Help centre</a></li>
-                        </ul>
+                    <div class="menu-col menu-col--foryou">
+                        <div class="mega-kicker mb-2">For you</div>
+                        <div data-therapy-default-block>
+                            <p class="mega-label">Popular this week</p>
+                            <ul class="list-unstyled m-0 p-0" data-therapy-default-popular></ul>
+                            <p class="mega-label">Need help?</p>
+                            <ul class="list-unstyled m-0 p-0">
+                                <li><a class="menu-link" href="/help">Help centre</a></li>
+                            </ul>
+                        </div>
+                        <div data-therapy-personalized-block hidden aria-hidden="true">
+                            <p class="mega-label">Recently viewed</p>
+                            <ul class="list-unstyled m-0 p-0" data-therapy-recent></ul>
+                            <p class="mega-label">Saved therapies</p>
+                            <ul class="list-unstyled m-0 p-0" data-therapy-saved></ul>
+                        </div>
                     </div>
                 </div>
                 <!-- Events & Workshops -->
@@ -431,6 +442,26 @@
     pointer-events: none;
     opacity: .5;
     cursor: default;
+}
+.menu-col--foryou .mega-label{
+    text-transform:uppercase;
+    letter-spacing:.24em;
+    font-size:11px;
+    color:var(--ink-500);
+    margin:12px 0 6px;
+}
+.menu-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-left:8px;
+    padding:0 6px;
+    font-size:10px;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    border-radius:999px;
+    background:#0b1220;
+    color:#fff;
 }
 .menu-col--foryou .mega-label{
     text-transform:uppercase;

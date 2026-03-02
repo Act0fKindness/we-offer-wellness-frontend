@@ -147,3 +147,31 @@
   </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+  const entry = {
+    slug: @json($slug ?? null),
+    title: @json($therapy['title'] ?? 'Therapy'),
+    url: @json(url('/therapies/'.$slug)),
+    id: @json($therapy['id'] ?? null)
+  };
+  if (!entry.slug) return;
+  const KEY = 'wow_therapy_history';
+  try {
+    const raw = localStorage.getItem(KEY);
+    let list = [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) list = parsed;
+    }
+    list = list.filter(item => item && item.slug !== entry.slug);
+    list.unshift(entry);
+    list = list.slice(0, 6);
+    localStorage.setItem(KEY, JSON.stringify(list));
+    document.dispatchEvent(new CustomEvent('wow:therapy-history', { detail: list }));
+  } catch (_err) {}
+})();
+</script>
+@endpush

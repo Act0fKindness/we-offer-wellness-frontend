@@ -294,45 +294,74 @@
 </script>
 <script>
 (function(){
-  const defaultPopularList = document.querySelector('[data-need-default-popular]');
-  if (!defaultPopularList) return;
-
-  const defaultBlock = document.querySelector('[data-need-default-block]');
-  const personalizedBlock = document.querySelector('[data-need-personalized-block]');
-  const defaultTrendingList = document.querySelector('[data-need-default-trending]');
-  const continueList = document.querySelector('[data-need-continue]');
-  const recommendedList = document.querySelector('[data-need-recommended]');
-
-  const defaultPopular = [
-    { slug: 'stress-and-anxiety', title: 'Stress & anxiety', url: '/needs/stress-and-anxiety' },
-    { slug: 'sleep-issues', title: 'Sleep issues', url: '/needs/sleep-issues' },
-    { slug: 'low-mood-burnout', title: 'Low mood & burnout', url: '/needs/low-mood-burnout' },
-    { slug: 'overwhelm', title: 'Overwhelm & frazzled feelings', url: '/needs/overwhelm' },
-    { slug: 'worry', title: 'Worry & racing thoughts', url: '/needs/worry' },
-    { slug: 'pain-management', title: 'Pain, tension & tightness', url: '/needs/pain-management' },
-  ];
-
-  const defaultTrending = [
-    { slug: 'online-breathwork', title: 'Trending: Online breathwork', url: '/needs/breathwork' },
-    { slug: 'guided-meditation', title: 'Guided meditation & sound', url: '/needs/guided-meditation' },
-    { slug: 'corporate-wellbeing', title: 'Corporate wellbeing boosters', url: '/needs/corporate-wellbeing' },
-  ];
-
-  const HISTORY_KEY = 'wow_need_history';
   const COOKIE_KEY = 'wow_cookie_preferences';
+  const NEED_HISTORY_KEY = 'wow_need_history';
+  const THERAPY_HISTORY_KEY = 'wow_therapy_history';
+  const THERAPY_SAVED_KEY = 'wow_saved_therapies';
 
-  function renderList(el, items) {
-    if (!el) return;
-    if (!items || !items.length) {
-      el.innerHTML = '<li><span class="menu-link menu-link--disabled">No suggestions yet</span></li>';
-      return;
-    }
-    el.innerHTML = items.map((item) => `<li><a class="menu-link" href="${item.url}">${item.title}</a></li>`).join('');
-  }
+  const needNodes = {
+    popular: document.querySelector('[data-need-default-popular]'),
+    trending: document.querySelector('[data-need-default-trending]'),
+    defaultBlock: document.querySelector('[data-need-default-block]'),
+    personalizedBlock: document.querySelector('[data-need-personalized-block]'),
+    continueList: document.querySelector('[data-need-continue]'),
+    recommendedList: document.querySelector('[data-need-recommended]')
+  };
 
-  function readHistory() {
+  const therapyNodes = {
+    popular: document.querySelector('[data-therapy-popular-list]'),
+    defaultBlock: document.querySelector('[data-therapy-default-block]'),
+    personalizedBlock: document.querySelector('[data-therapy-personalized-block]'),
+    defaultPopular: document.querySelector('[data-therapy-default-popular]'),
+    recentList: document.querySelector('[data-therapy-recent]'),
+    savedList: document.querySelector('[data-therapy-saved]')
+  };
+
+  const needDefaults = {
+    popular: [
+      { slug: 'stress-and-anxiety', title: 'Stress & anxiety', url: '/needs/stress-and-anxiety' },
+      { slug: 'sleep-issues', title: 'Sleep issues', url: '/needs/sleep-issues' },
+      { slug: 'low-mood-burnout', title: 'Low mood & burnout', url: '/needs/low-mood-burnout' },
+      { slug: 'overwhelm', title: 'Overwhelm & frazzled feelings', url: '/needs/overwhelm' },
+      { slug: 'worry', title: 'Worry & racing thoughts', url: '/needs/worry' },
+      { slug: 'pain-management', title: 'Pain, tension & tightness', url: '/needs/pain-management' },
+    ],
+    trending: [
+      { slug: 'online-breathwork', title: 'Trending: Online breathwork', url: '/needs/breathwork' },
+      { slug: 'guided-meditation', title: 'Guided meditation & sound', url: '/needs/guided-meditation' },
+      { slug: 'corporate-wellbeing', title: 'Corporate wellbeing boosters', url: '/needs/corporate-wellbeing' },
+    ]
+  };
+
+  const therapyDefaults = {
+    pinned: [
+      { title: 'Massage therapy', url: '/therapy/massage', id: null },
+      { title: 'Reiki', url: '/therapy/reiki', id: null },
+      { title: 'Reflexology', url: '/therapy/reflexology', id: null },
+      { title: 'Acupuncture', url: '/therapy/acupuncture', id: null },
+      { title: 'Breathwork (1:1)', url: '/therapy/breathwork', id: null },
+      { title: 'Hypnotherapy', url: '/therapy/hypnotherapy', id: null },
+      { title: 'Coaching & counselling', url: '/therapy/coaching-and-counselling', id: null },
+      { title: 'Sound healing', url: '/therapy/sound-healing', id: null },
+    ],
+    rotation: [
+      { title: 'Somatic experiencing', url: '/therapy/somatic-experiencing', id: null },
+      { title: 'Craniosacral therapy', url: '/therapy/craniosacral-therapy', id: null },
+      { title: 'Lymphatic drainage', url: '/therapy/lymphatic-drainage', id: null },
+      { title: 'Corporate desk reset', url: '/therapy/corporate-wellness', id: null },
+    ],
+    defaultColumn: [
+      { title: 'Massage therapy', url: '/therapy/massage', id: null },
+      { title: 'Reiki', url: '/therapy/reiki', id: null },
+      { title: 'Reflexology', url: '/therapy/reflexology', id: null },
+      { title: 'Acupuncture', url: '/therapy/acupuncture', id: null },
+      { title: 'Breathwork (1:1)', url: '/therapy/breathwork', id: null },
+    ]
+  };
+
+  function readStorageArray(key) {
     try {
-      const raw = localStorage.getItem(HISTORY_KEY);
+      const raw = localStorage.getItem(key);
       const data = raw ? JSON.parse(raw) : [];
       return Array.isArray(data) ? data : [];
     } catch (_err) {
@@ -355,37 +384,138 @@
     return !!(prefs && prefs.personalization === true);
   }
 
+  function renderLinks(target, items, options = {}) {
+    if (!target) return;
+    const fallback = options.fallback || 'No suggestions yet';
+    if (!items || !items.length) {
+      target.innerHTML = `<li><span class="menu-link menu-link--disabled">${fallback}</span></li>`;
+      return;
+    }
+    const cartIds = options.cartIds || new Set();
+    target.innerHTML = items.map((item) => {
+      if (!item || !item.title) return '';
+      const id = deriveId(item);
+      const badge = (options.showBasket && id && cartIds.has(id)) ? '<span class="menu-pill">In basket</span>' : '';
+      return `<li><a class="menu-link" href="${item.url}">${item.title}${badge}</a></li>`;
+    }).join('');
+  }
+
+  function deriveId(entry) {
+    if (!entry) return null;
+    if (entry.id) return String(entry.id);
+    if (entry.url) {
+      const match = entry.url.match(/\/([0-9]+)-/);
+      if (match) return match[1];
+    }
+    return null;
+  }
+
+  function readCartIds() {
+    try {
+      const cookie = document.cookie.split(';').map(row => row.trim()).find(row => row.startsWith('wow_cart='));
+      if (!cookie) return new Set();
+      const payload = JSON.parse(decodeURIComponent(cookie.split('=')[1] || '[]'));
+      const ids = new Set();
+      if (Array.isArray(payload)) {
+        payload.forEach((item) => {
+          if (item && item.id) ids.add(String(item.id));
+        });
+      } else if (payload && typeof payload === 'object') {
+        Object.keys(payload).forEach((key) => {
+          const line = payload[key];
+          const id = line && (line.id || key);
+          if (id) ids.add(String(id));
+        });
+      }
+      return ids;
+    } catch (_err) {
+      return new Set();
+    }
+  }
+
   function updateNeedColumn() {
-    renderList(defaultPopularList, defaultPopular);
-    renderList(defaultTrendingList, defaultTrending);
-    const history = readHistory();
+    if (!needNodes.popular) return;
+    renderLinks(needNodes.popular, needDefaults.popular);
+    renderLinks(needNodes.trending, needDefaults.trending);
+    const history = readStorageArray(NEED_HISTORY_KEY);
     const allowPersonalization = canPersonalize() && history.length;
     if (!allowPersonalization) {
-      if (defaultBlock) defaultBlock.hidden = false;
-      if (personalizedBlock) {
-        personalizedBlock.hidden = true;
-        personalizedBlock.setAttribute('aria-hidden', 'true');
+      if (needNodes.defaultBlock) needNodes.defaultBlock.hidden = false;
+      if (needNodes.personalizedBlock) {
+        needNodes.personalizedBlock.hidden = true;
+        needNodes.personalizedBlock.setAttribute('aria-hidden', 'true');
       }
       return;
     }
 
-    if (defaultBlock) defaultBlock.hidden = true;
-    if (personalizedBlock) {
-      personalizedBlock.hidden = false;
-      personalizedBlock.setAttribute('aria-hidden', 'false');
+    if (needNodes.defaultBlock) needNodes.defaultBlock.hidden = true;
+    if (needNodes.personalizedBlock) {
+      needNodes.personalizedBlock.hidden = false;
+      needNodes.personalizedBlock.setAttribute('aria-hidden', 'false');
     }
 
     const continueItems = history.slice(0, 3);
-    renderList(continueList, continueItems);
-    const recommendedPool = defaultPopular.concat(defaultTrending);
+    renderLinks(needNodes.continueList, continueItems);
+    const recommendedPool = needDefaults.popular.concat(needDefaults.trending);
     const recommended = recommendedPool.filter(item => continueItems.every(entry => entry.slug !== item.slug)).slice(0, 3);
-    renderList(recommendedList, (recommended.length ? recommended : defaultPopular.slice(0, 3)));
+    renderLinks(needNodes.recommendedList, (recommended.length ? recommended : needDefaults.popular.slice(0, 3)));
   }
 
-  document.addEventListener('wow:cookie-preferences', updateNeedColumn);
-  document.addEventListener('wow:need-history', updateNeedColumn);
-  window.addEventListener('focus', updateNeedColumn);
-  updateNeedColumn();
+  function buildTherapyPopular() {
+    const list = therapyNodes.popular;
+    if (!list) return;
+    const base = therapyDefaults.pinned.slice(0, 6);
+    const pool = therapyDefaults.rotation.length ? therapyDefaults.rotation : therapyDefaults.pinned.slice(6);
+    const seed = pool.length ? Math.floor(Date.now() / (1000 * 60 * 60 * 24)) : 0;
+    const rotation = [];
+    for (let i = 0; i < 2; i++) {
+      if (!pool.length) break;
+      rotation.push(pool[(seed + i) % pool.length]);
+    }
+    const combined = base.concat(rotation);
+    renderLinks(list, combined, { cartIds: readCartIds(), showBasket: true });
+  }
+
+  function updateTherapyColumn() {
+    if (!therapyNodes.defaultBlock) return;
+    buildTherapyPopular();
+    renderLinks(therapyNodes.defaultPopular, therapyDefaults.defaultColumn, { cartIds: readCartIds(), showBasket: true });
+    const history = readStorageArray(THERAPY_HISTORY_KEY);
+    const saved = readStorageArray(THERAPY_SAVED_KEY).slice(0, 4);
+    const allowPersonalization = canPersonalize() && (history.length || saved.length);
+    if (!allowPersonalization) {
+      if (therapyNodes.defaultBlock) therapyNodes.defaultBlock.hidden = false;
+      if (therapyNodes.personalizedBlock) {
+        therapyNodes.personalizedBlock.hidden = true;
+        therapyNodes.personalizedBlock.setAttribute('aria-hidden', 'true');
+      }
+      return;
+    }
+
+    if (therapyNodes.defaultBlock) therapyNodes.defaultBlock.hidden = true;
+    if (therapyNodes.personalizedBlock) {
+      therapyNodes.personalizedBlock.hidden = false;
+      therapyNodes.personalizedBlock.setAttribute('aria-hidden', 'false');
+    }
+
+    const cartIds = readCartIds();
+    renderLinks(therapyNodes.recentList, history.slice(0, 4), { cartIds, showBasket: true, fallback: 'No history yet' });
+    renderLinks(therapyNodes.savedList, saved.slice(0, 4), { cartIds, showBasket: true, fallback: 'No saved therapies' });
+  }
+
+  function runAll(){
+    updateNeedColumn();
+    updateTherapyColumn();
+  }
+
+  document.addEventListener('wow:cookie-preferences', runAll);
+  document.addEventListener('wow:need-history', runAll);
+  document.addEventListener('wow:therapy-history', runAll);
+  document.addEventListener('wow:saved-therapies', runAll);
+  document.addEventListener('wow:cart-updated', runAll);
+  window.addEventListener('storage', runAll);
+  window.addEventListener('focus', runAll);
+  runAll();
 })();
 </script>
 @stack('scripts')
