@@ -4,11 +4,14 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     build: {
-        minify: false,
-        cssMinify: false,
+        minify: 'esbuild',
+        cssMinify: true,
         sourcemap: false,
         emptyOutDir: true,
         chunkSizeWarningLimit: 2000,
+        esbuild: {
+            drop: ['console', 'debugger'],
+        },
     },
     plugins: [
         laravel({

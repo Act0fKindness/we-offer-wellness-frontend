@@ -1,6 +1,16 @@
 import { gsap } from 'gsap';
 import { initSubscriberForms } from './lib/subscriber-forms';
 
+function runIdle(fn) {
+  try {
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      window.requestIdleCallback(fn, { timeout: 300 });
+      return;
+    }
+  } catch (_err) {}
+  setTimeout(fn, 1);
+}
+
 // Minimal interactivity for header mega menu, mobile menu, and ultra search bar panes
 
 function createHamburgerTimeline(button){
@@ -190,11 +200,11 @@ function initAccountDropdown() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  try { initMegaMenu(); } catch (e) {}
-  try { initMobileMenu(); } catch (e) {}
-  try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {}
-  try { initAccountDropdown(); } catch (e) {}
-  try { initSubscriberForms(); } catch (e) {}
+  runIdle(() => { try { initMegaMenu(); } catch (e) {} });
+  runIdle(() => { try { initMobileMenu(); } catch (e) {} });
+  runIdle(() => { try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {} });
+  runIdle(() => { try { initAccountDropdown(); } catch (e) {} });
+  runIdle(() => { try { initSubscriberForms(); } catch (e) {} });
 
   // Cart dropdown: hover on desktop shows mini cart; mobile click navigates
   const wrap = document.querySelector('.cart-wrap');
