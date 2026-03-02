@@ -5,9 +5,9 @@
       <h2 id="wowCookieTitle">We use cookies to keep things calm</h2>
       <p>Cookies help us keep your account secure, understand what’s working and personalise rituals. Pick what suits you.</p>
       <div class="wow-cookie-banner__actions actions">
-        <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-accept>Accept</button>
+        <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-cookie-open-preferences>Cookie preferences</span>
         <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-reject>Decline</button>
-        <span class="btn btn--primary" role="button" tabindex="0" data-cookie-open-preferences>Cookie preferences</span>
+        <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-accept>Accept</button>
       </div>
     </div>
 
@@ -57,8 +57,8 @@
         </article>
       </div>
       <div class="wow-cookie-banner__advanced-actions actions">
+        <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-cookie-save>Save choices</span>
         <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-reject>Reject non-essential</button>
-        <span class="btn btn--primary" role="button" tabindex="0" data-cookie-save>Save choices</span>
         <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-accept>Accept all</button>
       </div>
     </div>
@@ -72,9 +72,10 @@
   .wow-cookie-banner__eyebrow{ text-transform:uppercase; letter-spacing:.24em; font-size:11px; color:#64748b; margin:0 0 8px; }
   .wow-cookie-banner__simple h2{ margin:0 0 8px; font-size:1.35rem; }
   .wow-cookie-banner__simple p{ margin:0 0 16px; color:#475569; }
-  .wow-cookie-banner__actions.actions{ display:flex; flex-wrap:wrap; gap:10px; }
+  .wow-cookie-banner__actions.actions,
+  .wow-cookie-banner__advanced-actions.actions{ display:flex; gap:10px; flex-wrap:wrap; }
   .wow-cookie-banner__actions .btn,
-  .wow-cookie-banner__advanced-actions .btn{ flex:1 1 auto; justify-content:center; min-width:120px; }
+  .wow-cookie-banner__advanced-actions .btn{ flex:1 1 auto; min-width:110px; }
   .wow-cookie-banner__advanced{ display:flex; flex-direction:column; gap:18px; }
   .wow-cookie-banner__advanced[hidden]{ display:none !important; }
   .wow-cookie-banner__head{ display:flex; gap:12px; justify-content:space-between; align-items:flex-start; }
@@ -91,6 +92,8 @@
   .wow-cookie-switch[aria-pressed="true"]{ background:#c1f0cb; border-color:#22c55e; }
   .wow-cookie-switch[aria-pressed="true"] .wow-cookie-switch__handle{ transform:translateX(28px); }
   .wow-cookie-banner__advanced-actions{ display:flex; flex-wrap:wrap; gap:10px; }
+  .wow-cookie-banner .btn{ height:48px; border-radius:3px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color:rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); padding:0 18px; }
+  .wow-cookie-banner .btn--primary{ background:#0b1220 !important; color:#fff; border-color:#0b1220; box-shadow:0 12px 28px rgba(11,18,32,.18); }
   @media (max-width:640px){
     .wow-cookie-banner{ left:16px; right:16px; width:auto; }
   }
