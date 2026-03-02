@@ -118,11 +118,9 @@
         ];
     }
 @endphp
-<header>
-    <!-- Overlay shown behind header mega menu -->
-    <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
-    <div class="pointer-events-none fixed inset-0 -z-10"></div>
-
+<!-- Overlay shown behind header mega menu -->
+<div id="mega-overlay" class="mega-overlay" style="display:none"></div>
+<div class="pointer-events-none fixed inset-0 -z-10"></div>
         <div class="utility-bar hidden md:block">
             <div class="container-page">
                 <div class="utility-links">
@@ -134,8 +132,8 @@
             </div>
         </div>
         <div id="header-sentinel" style="position:relative;height:1px;width:1px"></div>
-        <nav class="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur border-b"
-             style="border-bottom: 1px solid rgba(153, 153, 153, 0.4); margin-top: -1px;">
+        <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b"
+                style="border-bottom: 1px solid rgba(153, 153, 153, 0.4); margin-top: -1px;">
             <div class="container container-page header-inner h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
                     <!-- Inline SVG logo -->
@@ -182,7 +180,6 @@
                         <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/mindful-times">Mindful
                             Times</a></div>
                     </nav>
-        </div>
                 </div>
                 <div class="hidden md:flex items-center gap-2 position-relative">
                     <a class="icon-btn" aria-label="Search" href="/search">
@@ -359,10 +356,7 @@
                     </div>
                 </div>
             </div>
-                </div>
-        </nav>
-        <div class="header-spacer" aria-hidden="true"></div>
-</header>
+ </header>
 <style>
 /* Backdrop for mega menu (below header/utility, above content) */
 .mega-overlay{
@@ -375,8 +369,6 @@
 }
 /* Utility bar: scrolls normally (header overlays it on desktop) */
 .utility-bar{ position: relative; z-index: 45; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
-.header-spacer{ height:120px; }
-@media (min-width:768px){ .header-spacer{ height:168px; } }
 /* Cart dropdown (desktop hover) */
 .cart-wrap{ position: relative; }
 .cart-dropdown2{ position:absolute; right:0; top:calc(100% + 10px); width: min(380px, 92vw); background:#fff; border:1px solid rgba(0,0,0,0.15); border-radius:3px; box-shadow: 0 24px 60px rgba(16,24,40,.16); overflow:hidden; z-index: 45; }
