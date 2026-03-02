@@ -30,8 +30,16 @@
         $typeRaw = $typeMap[$seg] ?? 'Experience';
     }
     $typeLabel = $ucWords($toLower($typeRaw));
-    $category = $product->category?->name;
-    $categoryLabel = $category ? $ucWords($toLower($category)) : $typeLabel;
+
+    $categoryRaw = $product->category?->name
+        ?? ($product->category_name ?? null)
+        ?? ($product->category_label ?? null)
+        ?? ((is_string($product->category ?? null)) ? $product->category : null);
+    if (is_array($categoryRaw)) {
+        $categoryRaw = $categoryRaw['name'] ?? reset($categoryRaw) ?? null;
+    }
+    $categoryLabel = $categoryRaw ? $ucWords($toLower(str_replace(['_', '-'], ' ', $categoryRaw))) : null;
+    $categoryBadgeLabel = $categoryLabel ?? $typeLabel;
     $priceMin = $product->variants_min_price ?? ($product->price ?? null);
     // Normalise pennies to pounds where needed
     if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) { $priceMin = $priceMin / 100; }
@@ -123,7 +131,7 @@
     if ($primary === null) { $primary = $physicalShort[0] ?? null; }
     $remainingCount = max(0, count($physicalShort) - ($primary ? 1 : 0));
     $mode = $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null);
-    $locBadge = $mode ?: ($category ?: null);
+    $locBadge = $mode ?: ($categoryLabel ?? null);
 
 
     // Additional fields for exact card details
@@ -351,7 +359,7 @@
               <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.122 17.645a7.185 7.185 0 0 1-2.656 2.495 7.06 7.06 0 0 1-3.52.853 6.617 6.617 0 0 1-3.306-.718 6.73 6.73 0 0 1-2.54-2.266c-2.672-4.57.287-8.846.887-9.668A4.448 4.448 0 0 0 8.07 6.31 4.49 4.49 0 0 0 7.997 4c1.284.965 6.43 3.258 5.525 10.631 1.496-1.136 2.7-3.046 2.846-6.216 1.43 1.061 3.985 5.462 1.754 9.23Z"/>
               </svg>
-              {{ $categoryLabel }}
+              {{ $categoryBadgeLabel }}
             </span>
             <span class="badge badge--cool">{{ $typeLabel }}</span>
           </div>
