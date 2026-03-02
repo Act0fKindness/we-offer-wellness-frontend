@@ -420,6 +420,9 @@
 .mobile-account-links{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
 .mobile-account-links a{ display:block; padding:10px 12px; border-radius:10px; background:#f5f7fa; text-decoration:none; color:var(--ink-800); font-weight:600; }
 .mobile-account-links a:hover{ background:#e8eef7; color:var(--ink-900); }
+.mobile-menu__link--button{ display:block; width:100%; text-align:left; border:none; background:none; padding:10px 12px; border-radius:10px; font-weight:600; color:var(--ink-800); cursor:pointer; }
+.mobile-menu__link--button:hover{ background: var(--ink-100); color: var(--ink-900); }
+.mobile-menu__link--button:focus-visible{ outline:2px solid currentColor; outline-offset:2px; }
 .mobile-account-buttons{ display:flex; flex-direction:column; gap:10px; }
 .mobile-account-logout button{ width:100%; }
 .mobile-account-guest-title{ margin:0; font-weight:800; letter-spacing:-.01em; color:var(--ink-900); }
@@ -440,8 +443,10 @@
                     <div class="mobile-menu__section-title">Help &amp; Info</div>
                     <ul class="mobile-menu__list">
                         <li><a class="mobile-menu__link" href="/about">About We Offer Wellness®</a></li>
-                        <li><a class="mobile-menu__link" href="/help">Help Centre</a></li>
                         <li><a class="mobile-menu__link" href="/safety-and-contraindications">Safety &amp; Contraindications</a></li>
+                        <li>
+                            <button type="button" class="mobile-menu__link mobile-menu__link--button wow-practitioner-trigger" data-practitioner-trigger aria-haspopup="dialog" aria-controls="wowPractitionerModal">Become WOW Practitioner</button>
+                        </li>
                     </ul>
                 </div>
                 <div class="mobile-menu__account">
