@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try{
         const body = panel.querySelector('#cartdd-body');
         if(!body) return;
-        if(!Array.isArray(items) || items.length===0){ body.innerHTML = '<div class="cartdd-empty">Your cart is empty</div>'; updateTotals([]); updateBadgeFrom([]); return; }
+        if(!Array.isArray(items) || items.length===0){ body.innerHTML = '<div class="cartdd-empty mini-cart__empty">Your cart is empty</div>'; updateTotals([]); updateBadgeFrom([]); return; }
         body.innerHTML = items.map(function(it){
           var img = it.image ? '<div class="cartdd-img"><img src="'+String(it.image).replace(/"/g,'&quot;')+'" alt=""></div>' : '<div class="cartdd-img"></div>';
           var title = String(it.title||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));

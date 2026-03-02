@@ -245,7 +245,7 @@
                           <small id="freeShipHint" style="font-weight:600;color:var(--ink-600)"></small>
                         </div>
                         <div class="cartdd-body" id="cartdd-body">
-                            <div class="cartdd-empty">Your cart is empty</div>
+                            <div class="cartdd-empty mini-cart__empty">Your cart is empty</div>
                         </div>
                         <div class="cartdd-subtotal"><span>Subtotal</span><strong id="cartdd-subtotal">£0.00</strong></div>
                         <div class="cartdd-upsell-section" style="padding:10px 12px 0">
