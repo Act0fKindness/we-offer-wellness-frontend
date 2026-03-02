@@ -185,7 +185,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }catch(_){ /* no-op */ }
     }
     function updateBadgeFrom(items){
-      try{ var b=document.querySelector('.cart-badge'); if(!b) return; var c=0; (items||[]).forEach(function(it){ c += Number(it.qty||1)||1; }); b.textContent=String(c); b.style.display=c>0?'inline-block':'none'; }catch(_){ }
+      try{
+        var badges = document.querySelectorAll('.cart-badge');
+        if(!badges.length) return;
+        var c=0; (items||[]).forEach(function(it){ c += Number(it.qty||1)||1; });
+        badges.forEach(function(b){
+          try{
+            b.textContent=String(c);
+            b.style.display=c>0?'inline-block':'none';
+          }catch(_inner){}
+        });
+      }catch(_){ }
     }
     function readLocalCart(){
       try{

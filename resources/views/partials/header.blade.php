@@ -14,6 +14,47 @@
     .burgermenu.opened span::before{ transform: translateY(8px) rotate(45deg) }
     .burgermenu.opened span::after{ transform: translateY(-8px) rotate(-45deg) }
     /* hover state inherit existing bg hover */
+    .utility-links__secondary .wow-practitioner-trigger{ border:none; background:rgba(16,91,75,.08); padding:6px 16px; border-radius:999px; font-weight:600; color:#0b1320; cursor:pointer; transition:background .2s ease, box-shadow .2s ease, color .2s ease; }
+    .utility-links__secondary .wow-practitioner-trigger:hover{ background:#105b4b; color:#fff; box-shadow:0 10px 25px rgba(16,91,75,.25); }
+    .utility-links__secondary .wow-practitioner-trigger:focus-visible{ outline:2px solid #105b4b; outline-offset:2px; }
+    .practitioner-modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:20px; z-index:1300; }
+    .practitioner-modal::backdrop{ background:rgba(11,19,32,.72); }
+    .practitioner-modal.is-visible{ display:flex; }
+    .practitioner-modal[aria-hidden="true"]{ pointer-events:none; }
+    .practitioner-modal__backdrop{ position:absolute; inset:0; background:rgba(11,19,32,.72); backdrop-filter:blur(6px); }
+    .practitioner-modal__panel{ position:relative; background:#fff; border-radius:3px; width:min(560px, 100%); max-height:96vh; overflow-y:auto; padding:32px; box-shadow:0 24px 70px rgba(11,19,32,.25); animation:practitionerModalFade .25s ease; }
+    @keyframes practitionerModalFade{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+    .practitioner-modal__close{ position:absolute; top:16px; right:16px; border:none; background:#f1f5f9; width:36px; height:36px; border-radius:50%; font-size:20px; color:#0f172a; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .practitioner-modal__close:hover{ background:#e2e8f0; }
+    .practitioner-modal__eyebrow{ font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:#0f766e; font-weight:700; margin-bottom:8px; }
+    .practitioner-modal__subtitle{ color:var(--ink-600); margin-top:8px; }
+    .practitioner-form{ display:flex; flex-direction:column; gap:18px; margin-top:20px; }
+    .practitioner-form .field-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:16px; }
+    .practitioner-form .field-group{ display:flex; flex-direction:column; }
+    .practitioner-form label{ font-size:14px; font-weight:600; color:var(--ink-700); margin-bottom:6px; display:block; }
+    .practitioner-form input[type="text"],
+    .practitioner-form input[type="email"]{ width:100%; border:1px solid #d7dee7; border-radius:14px; padding:11px 14px; font-size:16px; transition:border-color .2s ease, box-shadow .2s ease; }
+    .practitioner-form input:focus{ outline:none; border-color:#0f766e; box-shadow:0 0 0 3px rgba(15,118,110,.15); }
+    .practice-mode{ display:flex; flex-wrap:wrap; gap:12px; }
+    .practice-mode__option{ display:flex; align-items:center; gap:10px; border:1px solid transparent; border-radius:18px; padding:10px 16px; background:#f8fafc; font-weight:600; color:var(--ink-700); cursor:pointer; transition:all .2s ease; }
+    .practice-mode__option input{ appearance:none; width:16px; height:16px; border:2px solid #0f766e; border-radius:4px; display:inline-block; position:relative; margin:0; flex-shrink:0; }
+    .practice-mode__option span{ line-height:1; display:inline-block; }
+    .practice-mode__option input:checked{ background:#0f766e; }
+    .practice-mode__option input:checked::after{ content:""; position:absolute; inset:3px; background:#fff; border-radius:1px; }
+    .practice-mode__option.is-active{ background:rgba(15,118,110,.1); border-color:#0f766e; color:#0b1320; }
+    .practice-mode__legend{ font-weight:700; color:var(--ink-800); margin-bottom:8px; }
+    .practitioner-form__hint{ font-size:13px; color:var(--ink-500); margin-top:4px; }
+    .practitioner-form__message{ border-radius:14px; padding:12px 14px; font-weight:600; font-size:14px; display:none; }
+    .practitioner-form__message.is-visible{ display:block; }
+    .practitioner-form__message.is-success{ background:#ecfdf5; color:#047857; }
+    .practitioner-form__message.is-error{ background:#fef2f2; color:#b91c1c; }
+    .practitioner-form__submit{ width:100%; display:inline-flex; justify-content:center; }
+    .practitioner-modal__panel h2{ font-size:28px; margin:0; color:var(--ink-900); }
+    .practitioner-modal__panel p{ margin:0; }
+    @media (max-width: 480px){
+        .practice-mode{ flex-direction:column; }
+        .practitioner-form .field-row{ grid-template-columns:1fr; }
+    }
 </style>
 <style>
   /* When header becomes fixed after hitting top on desktop */
@@ -52,7 +93,7 @@
                     <div class="utility-links__primary"><a href="/reset" style="display:none">Free 7-Day Reset</a><a href="/about">About We
                         Offer Wellness®</a><a href="/help" style="display:none;">Help Centre</a><a href="/safety-and-contraindications">Safety
                         &amp; Contraindications</a></div>
-                    <div class="utility-links__secondary"><a href="/for-business" style="display:none">For Business</a><a href="https://studio.weofferwellness.co.uk" style="display:none">Become a Practitioner</a></div>
+                    <div class="utility-links__secondary"><a href="/for-business" style="display:none">For Business</a><button type="button" class="wow-practitioner-trigger" data-practitioner-trigger aria-haspopup="dialog" aria-controls="wowPractitionerModal">Become WOW Practitioner</button></div>
                 </div>
             </div>
         </div>
@@ -184,11 +225,19 @@
                     </div>
                     </div>
                 </div><!---->
-                <button
-                    class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100 burgermenu"
-                    aria-label="Toggle menu" aria-expanded="false">
-                    <span></span>
-                </button>
+                <div class="flex items-center gap-3 md:hidden">
+                    <a class="icon-btn position-relative cart-link" aria-label="View cart" href="/cart">
+                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"></path>
+                        </svg>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge bg-danger" style="display:none">0</span>
+                    </a>
+                    <button
+                        class="inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100 burgermenu"
+                        aria-label="Toggle menu" aria-expanded="false">
+                        <span></span>
+                    </button>
+                </div>
             </div><!----><!---->
             <!-- Static mega panel (desktop) -->
             <div id="mega-panel" class="mega-panel" style="display:none">
@@ -398,3 +447,295 @@
                 </div>
             </nav>
         </div>
+
+        <div id="wowPractitionerModal" class="practitioner-modal" aria-hidden="true">
+            <div class="practitioner-modal__backdrop" data-practitioner-dismiss></div>
+            <div class="practitioner-modal__panel" role="dialog" aria-modal="true" aria-labelledby="wowPractitionerTitle" tabindex="-1">
+                <button type="button" class="practitioner-modal__close" data-practitioner-dismiss aria-label="Close form">&times;</button>
+                <p class="practitioner-modal__eyebrow">For practitioners</p>
+                <h2 id="wowPractitionerTitle">Become a WOW Practitioner</h2>
+                <p class="practitioner-modal__subtitle">Share a few details so we can keep you updated on onboarding windows, perks and support.</p>
+                <form id="wowPractitionerForm" class="practitioner-form" novalidate>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label for="wowPractitionerFirst">First name</label>
+                            <input id="wowPractitionerFirst" name="first_name" type="text" autocomplete="given-name" required>
+                        </div>
+                        <div class="field-group">
+                            <label for="wowPractitionerLast">Last name</label>
+                            <input id="wowPractitionerLast" name="last_name" type="text" autocomplete="family-name" required>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label for="wowPractitionerEmail">Email</label>
+                        <input id="wowPractitionerEmail" name="email" type="email" autocomplete="email" required>
+                    </div>
+                    <div class="field-group">
+                        <label for="wowPractitionerBusiness">Business name</label>
+                        <input id="wowPractitionerBusiness" name="business_name" type="text" required placeholder="Enter your solo practice or business name">
+                        <p class="practitioner-form__hint">We'll use this as your business name on WOW.</p>
+                    </div>
+                    <div class="field-group">
+                        <div class="practice-mode__legend">How do you currently hold sessions?</div>
+                        <div class="practice-mode">
+                            <label class="practice-mode__option">
+                                <input type="checkbox" name="practice_online" value="1">
+                                <span>Online</span>
+                            </label>
+                            <label class="practice-mode__option">
+                                <input type="checkbox" name="practice_in_person" value="1">
+                                <span>In-person</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="field-group" id="wowPractitionerLocationGroup" hidden>
+                        <label for="wowPractitionerLocation">Where do you host in-person? (general area)</label>
+                        <input id="wowPractitionerLocation" name="in_person_locations" type="text" placeholder="e.g. Bristol, East Sussex or Hampstead">
+                        <p class="practitioner-form__hint">Just provide the general location like county or town/city. We will not share this with anyone.</p>
+                    </div>
+                    <div id="wowPractitionerMessage" class="practitioner-form__message" role="alert" aria-live="polite" hidden></div>
+                    <button type="submit" class="btn-wow btn-wow--cta btn-arrow practitioner-form__submit" data-loader-init="1">
+                        <span class="btn-label">Send details</span>
+                        <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            (function(){
+                if (typeof window === 'undefined') return;
+                const modal = document.getElementById('wowPractitionerModal');
+                const form = document.getElementById('wowPractitionerForm');
+                if (!modal || !form) return;
+                const triggers = document.querySelectorAll('[data-practitioner-trigger]');
+                if (!triggers.length) return;
+                const closeTargets = modal.querySelectorAll('[data-practitioner-dismiss]');
+                const locationGroup = document.getElementById('wowPractitionerLocationGroup');
+                const locationInput = document.getElementById('wowPractitionerLocation');
+                const inPersonCheckbox = form.querySelector('input[name="practice_in_person"]');
+                const onlineCheckbox = form.querySelector('input[name="practice_online"]');
+                const messageEl = document.getElementById('wowPractitionerMessage');
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const body = document.body;
+                const sessionTokenKey = 'wow_practitioner_session_token';
+                const sessionStartKey = 'wow_practitioner_session_started_at';
+                const overlay = modal.querySelector('.practitioner-modal__backdrop');
+                let sessionStart = loadNumber(sessionStartKey);
+                if (!sessionStart){
+                    sessionStart = Date.now();
+                    storeNumber(sessionStartKey, sessionStart);
+                }
+
+                const toggleLocation = () => {
+                    if (!locationGroup) return;
+                    const show = inPersonCheckbox?.checked;
+                    locationGroup.hidden = !show;
+                    if (!show && locationInput){
+                        locationInput.value = '';
+                    }
+                };
+
+                const updateModeClasses = () => {
+                    form.querySelectorAll('.practice-mode__option').forEach(option => {
+                        const input = option.querySelector('input[type="checkbox"]');
+                        option.classList.toggle('is-active', !!input?.checked);
+                    });
+                };
+
+                const openModal = () => {
+                    modal.classList.add('is-visible');
+                    modal.setAttribute('aria-hidden', 'false');
+                    body.style.overflow = 'hidden';
+                    setTimeout(() => {
+                        const firstInput = form.querySelector('input[name="first_name"]');
+                        firstInput?.focus();
+                    }, 10);
+                };
+
+                const closeModal = () => {
+                    modal.classList.remove('is-visible');
+                    modal.setAttribute('aria-hidden', 'true');
+                    body.style.overflow = '';
+                    clearMessage();
+                };
+
+                const clearMessage = () => {
+                    if (!messageEl) return;
+                    messageEl.textContent = '';
+                    messageEl.classList.remove('is-visible', 'is-success', 'is-error');
+                    messageEl.hidden = true;
+                };
+
+                const showMessage = (text, isSuccess) => {
+                    if (!messageEl) return;
+                    messageEl.textContent = text;
+                    messageEl.classList.add('is-visible');
+                    messageEl.hidden = false;
+                    messageEl.classList.toggle('is-success', !!isSuccess);
+                    messageEl.classList.toggle('is-error', !isSuccess);
+                };
+
+                const loadToken = () => {
+                    try { return sessionStorage.getItem(sessionTokenKey); } catch (_) { return null; }
+                };
+
+                const storeToken = (token) => {
+                    if (!token) return;
+                    try { sessionStorage.setItem(sessionTokenKey, token); } catch (_) {}
+                };
+
+                const collectMeta = () => {
+                    const nav = typeof navigator !== 'undefined' ? navigator : {};
+                    const scr = typeof window !== 'undefined' ? (window.screen || {}) : {};
+                    let timezone = null;
+                    try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (_) {}
+                    const languages = Array.isArray(nav.languages) ? nav.languages.join(',') : (nav.language || null);
+                    return {
+                        timezone,
+                        locale: nav.language || null,
+                        languages,
+                        platform: nav.platform || null,
+                        user_agent: nav.userAgent || null,
+                        device_memory: typeof nav.deviceMemory === 'number' ? String(nav.deviceMemory) : null,
+                        hardware_concurrency: typeof nav.hardwareConcurrency === 'number' ? String(nav.hardwareConcurrency) : null,
+                        screen_width: scr.width || null,
+                        screen_height: scr.height || null,
+                    };
+                };
+
+                const durationSeconds = () => {
+                    return Math.max(0, Math.round((Date.now() - (sessionStart || Date.now())) / 1000));
+                };
+
+                triggers.forEach(btn => {
+                    btn.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        clearMessage();
+                        openModal();
+                    });
+                });
+
+                closeTargets.forEach(btn => btn.addEventListener('click', closeModal));
+                overlay?.addEventListener('click', closeModal);
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && modal.classList.contains('is-visible')) {
+                        closeModal();
+                    }
+                });
+
+                inPersonCheckbox?.addEventListener('change', () => {
+                    toggleLocation();
+                    updateModeClasses();
+                });
+                form.querySelectorAll('.practice-mode__option input').forEach(input => {
+                    input.addEventListener('change', updateModeClasses);
+                });
+                toggleLocation();
+                updateModeClasses();
+
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    clearMessage();
+                    if (!form.reportValidity()) return;
+                    const formData = new FormData(form);
+                    const online = !!onlineCheckbox?.checked;
+                    const inPerson = !!inPersonCheckbox?.checked;
+                    if (!online && !inPerson) {
+                        showMessage('Select online, in-person or both.', false);
+                        return;
+                    }
+                    let locationValue = '';
+                    if (inPerson && locationInput) {
+                        locationValue = locationInput.value.trim();
+                        if (!locationValue) {
+                            showMessage('Share a general in-person location.', false);
+                            locationInput.focus();
+                            return;
+                        }
+                    }
+
+                    const firstName = (formData.get('first_name') || '').toString().trim();
+                    const lastName = (formData.get('last_name') || '').toString().trim();
+                    const email = (formData.get('email') || '').toString().trim();
+                    const business = (formData.get('business_name') || '').toString().trim();
+                    const name = [firstName, lastName].filter(Boolean).join(' ').trim();
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                    const payload = Object.assign({
+                        practitioner_interest: true,
+                        first_name: firstName,
+                        last_name: lastName,
+                        name: name || null,
+                        email,
+                        business_name: business || null,
+                        offers_online: online,
+                        offers_in_person: inPerson,
+                        in_person_locations: inPerson ? locationValue : null,
+                        landing_path: 'header:become-wow-practitioner',
+                        referrer: document.referrer ? document.referrer.substring(0, 2048) : null,
+                        session_token: loadToken(),
+                        session_started_at: new Date(sessionStart || Date.now()).toISOString(),
+                        session_duration_seconds: durationSeconds(),
+                    }, collectMeta());
+
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('is-loading');
+                    submitBtn.setAttribute('aria-busy', 'true');
+                    try {
+                        const response = await fetch('/api/v3-subscribers', {
+                            method: 'POST',
+                            headers: Object.assign({
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            }, csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                            credentials: 'same-origin',
+                            body: JSON.stringify(payload),
+                        });
+                        const bodyJson = await response.json().catch(() => ({}));
+                        if (!response.ok || bodyJson.error) {
+                            const message = extractError(bodyJson) || 'Something went wrong. Please try again in a moment.';
+                            throw new Error(message);
+                        }
+                        if (bodyJson.session_token) {
+                            storeToken(bodyJson.session_token);
+                        }
+                        form.reset();
+                        toggleLocation();
+                        updateModeClasses();
+                        showMessage('Thank you - we will be in touch very soon.', true);
+                    } catch (error) {
+                        showMessage(error.message || 'Something went wrong. Please try again.', false);
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('is-loading');
+                        submitBtn.removeAttribute('aria-busy');
+                    }
+                });
+
+                function extractError(body){
+                    if (!body) return null;
+                    if (body.errors) {
+                        const first = Object.values(body.errors)[0];
+                        if (Array.isArray(first) && first.length) {
+                            return first[0];
+                        }
+                    }
+                    return body.error || null;
+                }
+
+                function loadNumber(key){
+                    try {
+                        const raw = sessionStorage.getItem(key);
+                        return raw ? Number(raw) : null;
+                    } catch (_) {
+                        return null;
+                    }
+                }
+
+                function storeNumber(key, value){
+                    try { sessionStorage.setItem(key, String(value)); } catch (_) {}
+                }
+            })();
+        </script>

@@ -43,11 +43,15 @@
 
   function updateBadgeUI(n){
     try{
-      const b = qs('.cart-badge');
-      if(!b) return;
+      const badges = qsa('.cart-badge');
+      if(!badges.length) return;
       const c = Number(n||0);
-      b.textContent = String(c);
-      b.style.display = c>0 ? 'inline-block' : 'none';
+      badges.forEach((b) => {
+        try{
+          b.textContent = String(c);
+          b.style.display = c>0 ? 'inline-block' : 'none';
+        }catch(_inner){}
+      });
     }catch(_){ }
   }
   function fetchCountAndUpdateBadge(){
