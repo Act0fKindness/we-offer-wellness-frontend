@@ -134,9 +134,9 @@
             </div>
         </div>
         <div id="header-sentinel" style="position:relative;height:1px;width:1px"></div>
-        <nav class="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur border-b"
-                style="border-bottom: 1px solid rgba(153, 153, 153, 0.4); margin-top: -1px;">
-            <div class="container container-page header-inner h-16 flex items-center justify-between">
+        <div class="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur border-b"
+             style="border-bottom: 1px solid rgba(153, 153, 153, 0.4); margin-top: -1px;">
+                <nav class="container container-page header-inner h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
                     <!-- Inline SVG logo -->
                     <span class="block" style="height:28px; display:inline-flex; align-items:center">
@@ -182,6 +182,7 @@
                         <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/mindful-times">Mindful
                             Times</a></div>
                     </nav>
+        </div>
                 </div>
                 <div class="hidden md:flex items-center gap-2 position-relative">
                     <a class="icon-btn" aria-label="Search" href="/search">
