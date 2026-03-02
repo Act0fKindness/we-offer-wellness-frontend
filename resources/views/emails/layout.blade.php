@@ -54,7 +54,7 @@
           <tr>
             <td class="hero-top">
               <a href="https://weofferwellness.co.uk" target="_blank" rel="noopener">
-                <img src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/6a14bf2a-e619-45ba-b63f-42e660ab3b0c.png" alt="We Offer Wellness" height="33" style="height:33px; width:auto; display:block;">
+                <img src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/35492c96-eb24-42d7-a913-e9e0775f2f17.png" alt="We Offer Wellness" height="33" style="height:33px; width:auto; display:block;">
               </a>
               <div class="hero-heading">@yield('title', 'We Offer Wellness')</div>
               <p class="hero-sub">Calm technology for your rituals, ready in under a minute.</p>
