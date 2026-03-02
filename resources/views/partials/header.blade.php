@@ -119,7 +119,7 @@
 <!-- Overlay shown behind header mega menu -->
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
 <div class="pointer-events-none fixed inset-0 -z-10"></div>
-<header>
+<header id="wow-header-container">
     <div class="utility-bar hidden md:block">
         <div class="container-page">
             <div class="utility-links">
