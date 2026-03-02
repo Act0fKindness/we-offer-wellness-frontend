@@ -230,7 +230,7 @@
 </div>
 
 <style>
-  .pref-page{ background:#f6f7fb; }
+  .pref-page{ background:none; }
   .pref-hero{ padding-top:3rem; padding-bottom:1rem; }
   .pref-hero__grid{ display:grid; gap:32px; align-items:center; }
   @media (min-width:900px){ .pref-hero__grid{ grid-template-columns:1.1fr .9fr; } }
