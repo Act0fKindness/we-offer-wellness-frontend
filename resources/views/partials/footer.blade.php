@@ -113,6 +113,7 @@
         </div>
         <div class="footer-bottom mb-3"><p>© 2026 We Offer Wellness</p>
             <div class="legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookies</a>
+                <button type="button" class="footer-cookie-btn" data-cookie-preferences-trigger>Cookie preferences</button>
             </div>
         </div>
     </div>
@@ -135,5 +136,7 @@
             .wow-footer .safety-card { align-items: center; text-align: center; }
             .wow-footer .safety-card a { width: 100%; justify-content: center; }
         }
+        .footer-cookie-btn{ border:none; background:none; color:#fff; font:inherit; text-decoration:underline; cursor:pointer; padding:0; margin-left:12px; }
+        .footer-cookie-btn:hover{ opacity:.85; }
     </style>
 </footer>
