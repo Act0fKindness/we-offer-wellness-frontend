@@ -87,10 +87,10 @@
   .wow-cookie-toggle__title{ margin:0 0 4px; font-weight:600; }
   .wow-cookie-toggle__copy{ margin:0; color:#475569; font-size:.9rem; }
   .wow-cookie-toggle__badge{ align-self:center; font-size:.75rem; letter-spacing:.2em; text-transform:uppercase; color:#16a34a; border:1px solid rgba(22,163,74,.35); border-radius:999px; padding:3px 10px; }
-  .wow-cookie-switch{ width:64px; height:34px; border-radius:999px; border:1px solid rgba(15,23,42,.2); background:#e2e8f0; position:relative; cursor:pointer; transition:background .2s ease,border-color .2s ease; flex-shrink:0; }
-  .wow-cookie-switch__handle{ position:absolute; inset:4px auto 4px 4px; width:24px; height:24px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.2); transition:transform .2s ease; display:block; }
+  .wow-cookie-switch{ width:46px; height:24px; border-radius:999px; border:1px solid rgba(15,23,42,.2); background:#e2e8f0; position:relative; cursor:pointer; transition:background .2s ease,border-color .2s ease; flex-shrink:0; }
+  .wow-cookie-switch__handle{ position:absolute; inset:2px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.2); transition:transform .2s ease; display:block; }
   .wow-cookie-switch[aria-pressed="true"]{ background:#c1f0cb; border-color:#22c55e; }
-  .wow-cookie-switch[aria-pressed="true"] .wow-cookie-switch__handle{ transform:translateX(28px); }
+  .wow-cookie-switch[aria-pressed="true"] .wow-cookie-switch__handle{ transform:translateX(22px); }
   .wow-cookie-banner__advanced-actions{ display:flex; flex-wrap:wrap; gap:10px; }
   .wow-cookie-banner .btn{ height:36px; border-radius:3px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color:rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); padding:0 18px; transition:background .2s ease, color .2s ease, border-color .2s ease; }
   .wow-cookie-banner .btn:hover,
