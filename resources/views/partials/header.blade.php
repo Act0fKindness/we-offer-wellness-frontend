@@ -375,8 +375,8 @@
 }
 /* Utility bar: scrolls normally (header overlays it on desktop) */
 .utility-bar{ position: relative; z-index: 45; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
-.header-spacer{ height:88px; }
-@media (min-width:768px){ .header-spacer{ height:120px; } }
+.header-spacer{ height:120px; }
+@media (min-width:768px){ .header-spacer{ height:168px; } }
 /* Cart dropdown (desktop hover) */
 .cart-wrap{ position: relative; }
 .cart-dropdown2{ position:absolute; right:0; top:calc(100% + 10px); width: min(380px, 92vw); background:#fff; border:1px solid rgba(0,0,0,0.15); border-radius:3px; box-shadow: 0 24px 60px rgba(16,24,40,.16); overflow:hidden; z-index: 45; }
