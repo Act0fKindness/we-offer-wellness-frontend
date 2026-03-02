@@ -22,8 +22,10 @@
     if (empty($interestBadges)) { $interestBadges[] = 'Launch alerts & new drops'; }
     $goalLabels = array_intersect_key($goalOptions, array_flip($prefGoals));
     $goalSummary = $goalLabels ? implode(' · ', $goalLabels) : 'Curated calm & launches';
-    $upsells = $upsellProducts ?? [];
-    $articles = $mindfulArticles ?? [];
+    $upsells = $upsellProducts instanceof \Illuminate\Support\Collection
+        ? $upsellProducts
+        : collect($upsellProducts ?? []);
+    $articles = collect($mindfulArticles ?? []);
 @endphp
 
 @section('title', 'Update email preferences | We Offer Wellness®')
@@ -153,7 +155,7 @@
     </div>
   </section>
 
-  @if(!empty($upsells))
+  @if($upsells->isNotEmpty())
     <section class="section pref-upsell">
       <div class="container-page">
         <div class="pref-upsell__head">
@@ -161,44 +163,27 @@
             <p class="kicker">Don’t miss these</p>
             <h2>Experiences pairing well with your picks</h2>
           </div>
-          <a href="/therapies" class="btn-wow btn-wow--outline btn-sm">Browse all</a>
+          <a href="/therapies" class="btn-wow btn-wow--outline btn-sm btn-arrow" data-loader-init="1">
+            <span class="btn-label">Browse all experiences</span>
+            <span class="btn-icon-wrap" aria-hidden="true">
+              <svg class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg>
+              <svg class="btn-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg>
+            </span>
+            <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
+          </a>
         </div>
         <div class="pref-upsell__grid">
           @foreach($upsells as $product)
-            <article class="pref-upsell-card">
-              @if(!empty($product['image']))
-                <div class="pref-upsell-card__media">
-                  <img src="{{ $product['image'] }}" alt="{{ $product['title'] }}">
-                </div>
-              @endif
-              <div class="pref-upsell-card__body">
-                @if(!empty($product['tag']))
-                  <span class="pref-tag">{{ $product['tag'] }}</span>
-                @endif
-                <h3>{{ $product['title'] }}</h3>
-                <p class="pref-upsell-card__meta">
-                  @if(!empty($product['mode']))
-                    <span>{{ $product['mode'] }}</span>
-                  @endif
-                  @if(!empty($product['location']))
-                    <span>{{ $product['location'] }}</span>
-                  @endif
-                </p>
-                <div class="pref-upsell-card__cta">
-                  <div class="pref-price">£{{ number_format($product['price'] ?? 0, 2) }}</div>
-                  @if(!empty($product['url']))
-                    <a href="{{ $product['url'] }}" target="_blank" rel="noopener" class="btn-wow btn-wow--ghost btn-sm">View</a>
-                  @endif
-                </div>
-              </div>
-            </article>
+            <div class="pref-upsell__item wow-therapy-card-scope">
+              @include('partials.product_card', ['product' => $product])
+            </div>
           @endforeach
         </div>
       </div>
     </section>
   @endif
 
-  @if(!empty($articles))
+  @if($articles->isNotEmpty())
     <section class="section pref-articles">
       <div class="container-page">
         <div class="pref-articles__head">
@@ -207,7 +192,14 @@
             <h2>Don’t miss out on fresh reads</h2>
             <p class="lead">Stories, interviews, and practical tools from the Mindful Times desk.</p>
           </div>
-          <a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener" class="btn-wow btn-wow--outline btn-sm">Visit Mindful Times</a>
+          <a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener" class="btn-wow btn-wow--outline btn-sm btn-arrow" data-loader-init="1">
+            <span class="btn-label">Visit Mindful Times</span>
+            <span class="btn-icon-wrap" aria-hidden="true">
+              <svg class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg>
+              <svg class="btn-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg>
+            </span>
+            <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
+          </a>
         </div>
         <div class="pref-articles__grid">
           @foreach($articles as $article)
@@ -221,7 +213,7 @@
                 <span class="pref-tag">{{ $article['tag'] ?? 'MindfulTimes' }}</span>
                 <h3><a href="{{ $article['href'] ?? '#' }}" target="_blank" rel="noopener">{{ $article['title'] }}</a></h3>
                 @if(!empty($article['excerpt']))
-                  <p>{{ Str::limit(strip_tags($article['excerpt']), 140) }}</p>
+                  <p>{{ \Illuminate\Support\Str::limit(strip_tags($article['excerpt']), 140) }}</p>
                 @endif
                 <a href="{{ $article['href'] ?? '#' }}" target="_blank" rel="noopener" class="pref-article-card__link">Read story →</a>
               </div>
@@ -234,7 +226,7 @@
 </div>
 
 <style>
-  .pref-page{ background:radial-gradient(900px 320px at 20% 0%, rgba(74,136,120,.12), transparent 60%),radial-gradient(900px 240px at 80% 0%, rgba(15,23,42,.08), transparent 60%),#f6f7fb; }
+  .pref-page{ background:#f6f7fb; }
   .pref-hero{ padding-top:3rem; padding-bottom:1rem; }
   .pref-hero__grid{ display:grid; gap:32px; align-items:center; }
   @media (min-width:900px){ .pref-hero__grid{ grid-template-columns:1.1fr .9fr; } }
@@ -248,7 +240,7 @@
   .pref-manage{ padding-top:0; padding-bottom:3rem; }
   .pref-manage__grid{ display:grid; gap:32px; }
   @media (min-width:1024px){ .pref-manage__grid{ grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items:start; } }
-  .pref-card{ background:#fff; border-radius:32px; padding:32px; box-shadow:0 40px 90px rgba(15,23,42,.08); border:1px solid rgba(15,23,42,.06); }
+  .pref-card{ background:#fff; border-radius:3px; padding:32px; border:1px solid rgba(15,23,42,.06); box-shadow:none; }
   .pref-card__header .kicker{ text-transform:uppercase; letter-spacing:.2em; font-size:12px; color:var(--ink-500, #6b7280); margin-bottom:6px; }
   .pref-card__header h2,.pref-card__header h3{ margin-top:0; }
   .pref-form{ display:flex; flex-direction:column; gap:22px; }
@@ -276,14 +268,11 @@
   @media (min-width:800px){ .pref-upsell__head,.pref-articles__head{ flex-direction:row; align-items:center; justify-content:space-between; }
     .pref-upsell__head > div,.pref-articles__head > div{ max-width:640px; }
   }
-  .pref-upsell__grid{ display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
-  .pref-upsell-card{ border:1px solid rgba(15,23,42,.08); border-radius:28px; overflow:hidden; background:#fff; box-shadow:0 30px 70px rgba(15,23,42,.08); display:flex; flex-direction:column; }
-  .pref-upsell-card__media img{ width:100%; height:200px; object-fit:cover; display:block; }
-  .pref-upsell-card__body{ padding:24px; display:flex; flex-direction:column; gap:10px; flex:1; }
+  .pref-upsell__grid{ display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+  @media (min-width:1200px){ .pref-upsell__grid{ grid-template-columns:repeat(4,1fr); } }
+  .pref-upsell__item{ display:block; }
+  .pref-upsell__item .therapy-card{ height:100%; }
   .pref-tag{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:.75rem; text-transform:uppercase; letter-spacing:.12em; border:1px solid rgba(15,23,42,.2); color:#475569; }
-  .pref-upsell-card__meta{ display:flex; flex-direction:column; gap:6px; color:#475569; font-size:.9rem; margin:0; }
-  .pref-upsell-card__cta{ display:flex; justify-content:space-between; align-items:center; margin-top:auto; gap:12px; flex-wrap:wrap; }
-  .pref-price{ font-size:1.4rem; font-weight:800; }
   .pref-articles__grid{ display:grid; gap:24px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
   .pref-article-card{ border:1px solid rgba(15,23,42,.08); border-radius:26px; overflow:hidden; background:#fff; box-shadow:0 28px 60px rgba(15,23,42,.08); display:flex; flex-direction:column; }
   .pref-article-card__media img{ width:100%; height:200px; object-fit:cover; display:block; }

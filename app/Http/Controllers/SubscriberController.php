@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Api\ArticleController as ApiArticleController;
 use App\Http\Controllers\Api\ProductController as ApiProductController;
+use App\Models\Product;
 use App\Models\V3Subscriber;
 use App\Services\TransactionalMail;
 use Illuminate\Http\RedirectResponse;
@@ -166,41 +167,29 @@ class SubscriberController extends Controller
         return [];
     }
 
-    protected function preferenceUpsells(int $limit = 3): array
+    protected function preferenceUpsells(int $limit = 4)
     {
         try {
-            $controller = app(ApiProductController::class);
-            $request = Request::create('/api/products', 'GET', [
-                'limit' => max(6, $limit * 2),
-                'sort' => 'popular',
-            ]);
-            $response = $controller->index($request);
-            $data = $response->getData(true);
-            if (!is_array($data)) {
-                return [];
-            }
+            $query = Product::query()
+                ->with(['media', 'options.values', 'category', 'status'])
+                ->withCount('reviews')
+                ->withAvg('reviews', 'rating')
+                ->where(function ($q) {
+                    $q->whereHas('status', function ($qs) {
+                        $qs->whereIn('status', ['live', 'approved']);
+                    })->orWhereNull('product_status_id');
+                })
+                ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
+                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+                ->orderByRaw('COALESCE(reviews_count, 0) DESC')
+                ->limit(max($limit, 4));
 
-            $slice = array_slice($data, 0, max($limit, 3));
-
-            return array_values(array_map(function (array $item) {
-                $price = $item['price_min'] ?? $item['price'] ?? 0;
-
-                return [
-                    'id' => $item['id'] ?? null,
-                    'title' => $item['title'] ?? 'Featured experience',
-                    'price' => is_numeric($price) ? (float) $price : 0.0,
-                    'image' => $item['image'] ?? null,
-                    'tag' => $item['type'] ?? ($item['category']['name'] ?? null),
-                    'mode' => $item['mode'] ?? null,
-                    'location' => $item['location'] ?? null,
-                    'url' => $item['url'] ?? null,
-                ];
-            }, $slice));
+            return $query->get();
         } catch (\Throwable $e) {
             logger()->warning('preferences.upsells_failed', ['error' => $e->getMessage()]);
         }
 
-        return [];
+        return collect();
     }
 
     protected function messageView(string $title, string $body, ?string $cta = null, ?string $ctaUrl = null): View
