@@ -306,20 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function loadMini(){
       if (loaded) return; loaded = true;
-      fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'text/html' }, credentials:'same-origin' })
-        .then(r=>r.ok?r.text():Promise.reject())
-        .then(html => {
-          // Heuristic: if server returned a full page/shell, ignore and render from local cart
-          var bad = !html || html.length>50000 || /<html|<head|<meta\s|<header[\s>]/i.test(html);
-          if (bad) { renderItems(readLocalCart()); return; }
-          // Try to extract just the mini-cart fragment if the response wrapped it
-          var frag = html;
-          try{
-            var tmp = document.createElement('div'); tmp.innerHTML = html;
-            var mini = tmp.querySelector('[data-mini-cart], .mini-cart, #mini-cart, .cartdd-body');
-            if (mini) { frag = mini.innerHTML; }
-          }catch(_e){}
-          var body = panel.querySelector('#cartdd-body'); if(body) body.innerHTML = frag;
+      fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'application/json' }, credentials:'same-origin' })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          var items = Array.isArray(data?.items) ? data.items : [];
+          writeLocalCart(items);
+          renderItems(items);
         })
         .catch(() => { renderItems(readLocalCart()); });
     }

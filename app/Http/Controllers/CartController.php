@@ -34,14 +34,57 @@ class CartController extends Controller
         return response()->json(['count'=>$count])->header('Cache-Control','no-store, no-cache, must-revalidate')->header('Pragma','no-cache')->header('Vary','Cookie');
     }
 
-    public function mini()
+    public function mini(Request $request)
     {
         $items = session('cart.items', []);
         if (empty($items)) {
             $cookie = request()->cookie('wow_cart');
-            if ($cookie) { $restored = json_decode($cookie, true) ?: []; if (is_array($restored)) { session(['cart.items' => $restored]); } }
+            if ($cookie) {
+                $restored = json_decode($cookie, true) ?: [];
+                if (is_array($restored)) {
+                    $items = $restored;
+                    session(['cart.items' => $items]);
+                }
+            }
         }
-        return response(view('partials.mini_cart')->render(), 200)
+
+        $normalized = [];
+        $count = 0;
+        $total = 0.0;
+        foreach ($items as $id => $row) {
+            $price = (float) ($row['price'] ?? 0);
+            if ($price >= 1000) {
+                $price = $price / 100;
+            }
+            $qty = max(1, (int) ($row['qty'] ?? 1));
+            $normalized[] = [
+                'id' => (string) $id,
+                'title' => $row['title'] ?? 'Item',
+                'price' => $price,
+                'qty' => $qty,
+                'image' => $row['image'] ?? null,
+                'url' => $row['url'] ?? '#',
+            ];
+            $count += $qty;
+            $total += $price * $qty;
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'items' => $normalized,
+                'count' => $count,
+                'total' => $total,
+                'currency' => 'GBP',
+            ])->header('Cache-Control','no-store, no-cache, must-revalidate')
+              ->header('Pragma','no-cache')
+              ->header('Vary','Cookie');
+        }
+
+        return response(view('partials.mini_cart', [
+            'items' => $normalized,
+            'count' => $count,
+            'total' => $total,
+        ])->render(), 200)
             ->header('Content-Type','text/html')
             ->header('Cache-Control','no-store, no-cache, must-revalidate')
             ->header('Pragma','no-cache')
