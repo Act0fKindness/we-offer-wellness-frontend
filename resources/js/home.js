@@ -1,4 +1,65 @@
+import { gsap } from 'gsap';
+
 // Minimal interactivity for header mega menu, mobile menu, and ultra search bar panes
+
+function createHamburgerTimeline(button){
+  if (!button || typeof window === 'undefined') return null;
+  try {
+    const timeline = gsap.timeline({ paused: true });
+    timeline.set(button, { '--origin': 'right center' });
+    timeline.to(button, {
+      '--before-scale': 1,
+      '--after-scale': 1,
+      duration: 0.1,
+      ease: 'power2.out'
+    });
+    timeline.to(button, {
+      '--span-scale': 0,
+      '--before-top': '12px',
+      '--after-top': '12px',
+      duration: 0.15,
+      ease: 'power2.inOut'
+    }, '<0.1');
+    timeline.set(button, { '--origin': 'center center' });
+    timeline.to(button, {
+      '--before-rot': '45deg',
+      '--after-rot': '-45deg',
+      duration: 0.15,
+      ease: 'power3.out'
+    }, '>0.1');
+    return timeline;
+  } catch(_err) {
+    return null;
+  }
+}
+
+function setupHamburgerController(button){
+  const timeline = createHamburgerTimeline(button);
+  if (!timeline) return null;
+  let state = false;
+  const controller = {
+    set(open){
+      const next = Boolean(open);
+      if (next === state) return;
+      state = next;
+      if (next) { timeline.play(); }
+      else { timeline.reverse(); }
+    },
+    toggle(){ this.set(!state); },
+    isOpen(){ return state; }
+  };
+  try {
+    window.__WOWHamburger = controller;
+    if (Array.isArray(window.__WOWHamburgerQueue) && window.__WOWHamburgerQueue.length) {
+      window.__WOWHamburgerQueue.forEach((queuedState) => {
+        try { controller.set(queuedState); } catch(_inner){}
+      });
+      window.__WOWHamburgerQueue = [];
+    }
+    window.dispatchEvent(new CustomEvent('wow:hamburger-ready', { detail: controller }));
+  } catch(_){ }
+  return controller;
+}
 
 function initMegaMenu() {
   const header = document.querySelector('header');
@@ -44,12 +105,17 @@ function initMobileMenu() {
   const toggle = document.querySelector('header button[aria-label="Toggle menu"]');
   const drawer = document.getElementById('mobile-menu');
   if (!toggle || !drawer) return;
+  const hamburgerController = setupHamburgerController(toggle);
+  if (hamburgerController && drawer.style.display === 'block') {
+    hamburgerController.set(true);
+  }
   toggle.addEventListener('click', () => {
     const isOpen = drawer.style.display === 'block';
     const nextOpen = !isOpen;
     drawer.style.display = nextOpen ? 'block' : 'none';
     toggle.classList.toggle('opened', nextOpen);
     toggle.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+    hamburgerController?.set(nextOpen);
   });
 }
 

@@ -2,17 +2,47 @@
     button.md\:hidden.inline-flex.items-center.justify-center.p-2.rounded-md.text-ink-700.hover\:bg-ink-100 {
         border-radius: 40px !important;
     }
-    /* Burger menu button (mobile) */
-    .burgermenu{ border:none; background:none; width:34px; height:26px; position:relative; padding:0; color:#0b1320; }
-    .burgermenu span,
-    .burgermenu span::before,
-    .burgermenu span::after{ content:""; position:absolute; left:0; right:0; height:2px; background: currentColor; transition: transform .35s ease, opacity .25s ease; }
-    .burgermenu span{ top:50%; transform: translateY(-50%); }
-    .burgermenu span::before{ top:-8px }
-    .burgermenu span::after{ top:8px }
-    .burgermenu.opened span{ opacity:0 }
-    .burgermenu.opened span::before{ transform: translateY(8px) rotate(45deg) }
-    .burgermenu.opened span::after{ transform: translateY(-8px) rotate(-45deg) }
+    /* GSAP-powered hamburger (mobile) */
+    .hamburger{
+        --before-scale: 0.6;
+        --span-scale: 1;
+        --after-scale: 0.6;
+        --before-rot: 0deg;
+        --after-rot: 0deg;
+        --before-top: 0px;
+        --after-top: 22px;
+        --origin: right;
+        border:none;
+        background:none;
+        width:40px;
+        height:24px;
+        position:relative;
+        padding:0;
+        color:#0b1320;
+        cursor:pointer;
+    }
+    .hamburger span,
+    .hamburger::before,
+    .hamburger::after{
+        content:"";
+        position:absolute;
+        right:0;
+        width:30px;
+        height:2px;
+        background: currentColor;
+        border-radius:1px;
+        transform-origin: var(--origin);
+        pointer-events:none;
+    }
+    .hamburger span{ top:50%; transform: translateY(-50%) scaleX(var(--span-scale)); }
+    .hamburger::before{
+        top: var(--before-top);
+        transform: scaleX(var(--before-scale)) rotate(var(--before-rot));
+    }
+    .hamburger::after{
+        top: var(--after-top);
+        transform: scaleX(var(--after-scale)) rotate(var(--after-rot));
+    }
     /* hover state inherit existing bg hover */
     .utility-links__secondary .wow-practitioner-trigger{ border:none; background:rgba(16,91,75,.08); padding:6px 16px; border-radius:999px; font-weight:600; color:#0b1320; cursor:pointer; transition:background .2s ease, box-shadow .2s ease, color .2s ease; }
     .utility-links__secondary .wow-practitioner-trigger:hover{ background:#105b4b; color:#fff; box-shadow:0 10px 25px rgba(16,91,75,.25); }
@@ -233,9 +263,10 @@
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge bg-danger" style="display:none">0</span>
                     </a>
                     <button
-                        class="inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100 burgermenu"
+                        type="button"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-ink-700 hover:bg-ink-100 hamburger"
                         aria-label="Toggle menu" aria-expanded="false">
-                        <span></span>
+                        <span aria-hidden="true"></span>
                     </button>
                 </div>
             </div><!----><!---->

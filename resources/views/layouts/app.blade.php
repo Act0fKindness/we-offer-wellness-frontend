@@ -290,14 +290,23 @@
     var mobile = document.getElementById('mobile-menu');
     if (burger && mobile){
       function setBodyScroll(disabled){ try{ document.body.style.overflow = disabled ? 'hidden' : ''; }catch{} }
-      function closeMobile(){ mobile.style.display = 'none'; burger.setAttribute('aria-expanded','false'); setBodyScroll(false); }
-      function openMobile(){ mobile.style.display = 'block'; burger.setAttribute('aria-expanded','true'); setBodyScroll(true); }
+      function syncHamburger(state){
+        try{
+          if (window.__WOWHamburger && typeof window.__WOWHamburger.set === 'function') {
+            window.__WOWHamburger.set(state);
+          } else {
+            window.__WOWHamburgerQueue = [state];
+          }
+        }catch(_err){}
+      }
       var open = false;
-      burger.addEventListener('click', function(){ open ? closeMobile() : openMobile(); open = !open; });
-      document.addEventListener('keydown', function(e){ if(e.key==='Escape' && open){ closeMobile(); open=false; }});
-      mobile.addEventListener('click', function(e){ var a = e.target.closest('a'); if(a){ closeMobile(); open=false; }});
+      function closeMobile(){ mobile.style.display = 'none'; burger.setAttribute('aria-expanded','false'); setBodyScroll(false); syncHamburger(false); open = false; }
+      function openMobile(){ mobile.style.display = 'block'; burger.setAttribute('aria-expanded','true'); setBodyScroll(true); syncHamburger(true); open = true; }
+      burger.addEventListener('click', function(){ open ? closeMobile() : openMobile(); });
+      document.addEventListener('keydown', function(e){ if(e.key==='Escape' && open){ closeMobile(); }});
+      mobile.addEventListener('click', function(e){ var a = e.target.closest('a'); if(a){ closeMobile(); }});
       // Close if window resized to desktop
-      window.addEventListener('resize', function(){ if(window.innerWidth >= 768 && open){ closeMobile(); open=false; }});
+      window.addEventListener('resize', function(){ if(window.innerWidth >= 768 && open){ closeMobile(); }});
     }
   } catch {}
 })();
@@ -306,4 +315,3 @@
 
 </body>
 </html>
-
