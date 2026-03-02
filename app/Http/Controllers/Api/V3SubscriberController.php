@@ -193,6 +193,10 @@ class V3SubscriberController extends Controller
             $message = 'You’re all set — you’re already confirmed.';
         }
 
+        if ($isPractitioner === true) {
+            TransactionalMail::subscriberPractitionerInterest($subscriber);
+        }
+
         return response()->json([
             'ok' => true,
             'session_token' => $subscriber->session_token,

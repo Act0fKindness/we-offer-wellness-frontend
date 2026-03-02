@@ -136,6 +136,27 @@ class TransactionalMail
         );
     }
 
+    public static function subscriberPractitionerInterest(V3Subscriber $subscriber): void
+    {
+        if (!$subscriber->email) {
+            return;
+        }
+
+        MailService::send(
+            $subscriber->email,
+            'Thanks for your interest in becoming a WOW Practitioner',
+            'emails.subscriber-practitioner-interest',
+            [
+                'subscriber' => $subscriber,
+                'providersUrl' => url('/providers'),
+                'helpUrl' => url('/help'),
+            ],
+            null,
+            null,
+            ['tags' => ['marketing', 'practitioner', 'wow-subscribe']]
+        );
+    }
+
     public static function accountWelcome(User $user): void
     {
         if (!$user->email) {
