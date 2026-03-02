@@ -92,7 +92,7 @@
   .wow-cookie-switch[aria-pressed="true"]{ background:#c1f0cb; border-color:#22c55e; }
   .wow-cookie-switch[aria-pressed="true"] .wow-cookie-switch__handle{ transform:translateX(28px); }
   .wow-cookie-banner__advanced-actions{ display:flex; flex-wrap:wrap; gap:10px; }
-  .wow-cookie-banner .btn{ height:48px; border-radius:3px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color:rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); padding:0 18px; transition:background .2s ease, color .2s ease, border-color .2s ease; }
+  .wow-cookie-banner .btn{ height:36px; border-radius:3px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color:rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); padding:0 18px; transition:background .2s ease, color .2s ease, border-color .2s ease; }
   .wow-cookie-banner .btn:hover,
   .wow-cookie-banner .btn:focus-visible{ background:#000 !important; color:#fff; border-color:#000; outline:none; }
   .wow-cookie-banner .btn--primary{ background:#0b1220 !important; color:#fff; border-color:#0b1220; box-shadow:0 12px 28px rgba(11,18,32,.18); }
