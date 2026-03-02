@@ -134,9 +134,9 @@
             </div>
         </div>
         <div id="header-sentinel" style="position:relative;height:1px;width:1px"></div>
-        <div class="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur border-b"
+        <nav class="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur border-b"
              style="border-bottom: 1px solid rgba(153, 153, 153, 0.4); margin-top: -1px;">
-                <nav class="container container-page header-inner h-16 flex items-center justify-between">
+            <div class="container container-page header-inner h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
                     <!-- Inline SVG logo -->
                     <span class="block" style="height:28px; display:inline-flex; align-items:center">
@@ -359,6 +359,7 @@
                     </div>
                 </div>
             </div>
+                </div>
         </nav>
         <div class="header-spacer" aria-hidden="true"></div>
 </header>
