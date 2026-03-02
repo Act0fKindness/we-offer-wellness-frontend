@@ -16,6 +16,19 @@
     $toLower = function($s){ return function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s); };
     $ucWords = function($s){ return function_exists('mb_convert_case') ? mb_convert_case($s, MB_CASE_TITLE, 'UTF-8') : ucwords($s); };
     $titleFormatted = $ucWords($toLower($title));
+    $typeMap = [
+        'therapies' => 'Therapy',
+        'workshops' => 'Workshop',
+        'events' => 'Event',
+        'classes' => 'Class',
+        'retreats' => 'Retreat',
+        'gifts' => 'Gift',
+    ];
+    $typeRaw = trim((string) ($product->product_type ?? ''));
+    if ($typeRaw === '') {
+        $typeRaw = $typeMap[$seg] ?? 'Experience';
+    }
+    $typeLabel = $ucWords($toLower($typeRaw));
 
     $priceMin = $product->variants_min_price ?? ($product->price ?? null);
     if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) { $priceMin = $priceMin / 100; }
@@ -240,7 +253,7 @@
                 </svg>
                 Filling Fast
               </span>
-              <span class="badge badge--cool">Top Rated</span>
+              <span class="badge badge--cool">{{ $typeLabel }}</span>
           </div>
 
           <button class="wow-save" type="button" aria-label="Save" aria-pressed="false" title="Save">
