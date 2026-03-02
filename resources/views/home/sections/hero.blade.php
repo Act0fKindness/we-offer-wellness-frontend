@@ -156,10 +156,10 @@
                     stress, sleep, energy, digestion, and calm all thread through one another. <span
                         data-v-f43bb09d="" class="whero-subline">Therapies, classes, and workshops curated by practitioners you can trust so you can feel better, faster.</span>
                 </p>
-                <form data-v-f43bb09d="" class="whero-cta mt-4" action="#" method="post"
-                      onsubmit="return false;"><input data-v-f43bb09d="" class="whero-cta-input"
-                                                      type="email" placeholder="Email address"
-                                                      aria-label="Email address">
+                <form data-v-f43bb09d="" class="whero-cta mt-4" data-subscriber-form="hero-main" data-subscriber-source="hero:community" novalidate>
+                    <input data-v-f43bb09d="" class="whero-cta-input" name="email"
+                           type="email" placeholder="Email address"
+                           aria-label="Email address" required>
                     <button data-v-f43bb09d="" type="submit" class="btn-wow btn-md btn-arrow"
                             data-loader-init="1"><span class="btn-label">Join our Community</span><span
                         class="btn-icon-wrap" aria-hidden="true"><svg class="btn-icon-hover"
@@ -171,6 +171,7 @@
                         fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"
                         stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg></span><span
                         class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></button>
+                    <p class="whero-cta-feedback" data-subscriber-feedback aria-live="polite" hidden></p>
                 </form>
             </div>
             <div data-v-f43bb09d="" class="col-12 col-lg-5">

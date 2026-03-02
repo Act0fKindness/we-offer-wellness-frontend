@@ -1,4 +1,5 @@
 import { gsap } from 'gsap';
+import { initSubscriberForms } from './lib/subscriber-forms';
 
 // Minimal interactivity for header mega menu, mobile menu, and ultra search bar panes
 
@@ -193,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initMobileMenu(); } catch (e) {}
   try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {}
   try { initAccountDropdown(); } catch (e) {}
+  try { initSubscriberForms(); } catch (e) {}
 
   // Cart dropdown: hover on desktop shows mini cart; mobile click navigates
   const wrap = document.querySelector('.cart-wrap');

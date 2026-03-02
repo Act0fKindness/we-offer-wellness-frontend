@@ -558,8 +558,8 @@
                 const messageEl = document.getElementById('wowPractitionerMessage');
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const body = document.body;
-                const sessionTokenKey = 'wow_practitioner_session_token';
-                const sessionStartKey = 'wow_practitioner_session_started_at';
+                const sessionTokenKey = 'wow_subscriber_session_token';
+                const sessionStartKey = 'wow_subscriber_session_started_at';
                 const overlay = modal.querySelector('.practitioner-modal__backdrop');
                 let sessionStart = loadNumber(sessionStartKey);
                 if (!sessionStart){

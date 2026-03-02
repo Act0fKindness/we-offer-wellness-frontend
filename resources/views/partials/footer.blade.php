@@ -46,10 +46,12 @@
                         href="https://www.youtube.com/@weofferwellness" aria-label="YouTube" class="social-btn"
                         target="_blank" rel="noopener"><i class="bi bi-youtube"></i></a></div>
                     <div class="sub-title">Join our Community</div>
-                    <form class="subscribe"><input class="sub-input" type="email" required=""
-                                                   placeholder="Email address" aria-label="Email address">
+                    <form class="subscribe" data-subscriber-form="footer-community" data-subscriber-source="footer:community" novalidate>
+                        <input class="sub-input" type="email" name="email" required
+                               placeholder="Email address" aria-label="Email address">
                         <button class="sub-btn" type="submit"><span>Join Community</span><i
                             class="bi bi-arrow-right-short"></i></button>
+                        <p class="subscribe-feedback" data-subscriber-feedback aria-live="polite" hidden></p>
                     </form>
                     <div class="sub-note">No spam. Unsubscribe any time.</div>
                 </div>
