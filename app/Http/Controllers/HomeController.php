@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use App\Models\Product;
 use App\Models\Review;
@@ -12,8 +12,13 @@ class HomeController extends Controller
 {
     public function index(): View
     {
-        try {
-            $base = Product::query()
+        $payload = Cache::remember('home:index:v1', now()->addMinutes(10), function () {
+            $giftsUnder50 = collect();
+            $onlineUnder50 = collect();
+            $hasClassesThisWeek = false;
+
+            try {
+                $base = Product::query()
                 ->withCount('reviews')
                 ->withAvg('reviews', 'rating')
                 ->withMin('variants', 'price')
@@ -161,19 +166,21 @@ class HomeController extends Controller
                     }
                 }
             } catch (\Throwable $e) { $hasClassesThisWeek = false; }
-        } catch (\Throwable $e) {
-            $giftsUnder50 = collect();
-            $onlineUnder50 = collect();
-            $hasClassesThisWeek = false;
-        }
+            } catch (\Throwable $e) {
+                $giftsUnder50 = collect();
+                $onlineUnder50 = collect();
+                $hasClassesThisWeek = false;
+            }
 
-        return view('home.index', [
-            'giftsUnder50' => $giftsUnder50,
-            'onlineUnder50' => $onlineUnder50,
-            'hasClassesThisWeek' => $hasClassesThisWeek,
-            // Site-wide review stats for trust section
-            'review_count' => (int) (Review::query()->count() ?? 0),
-            'avg_rating' => ($r = (float) (Review::query()->avg('rating') ?? 0)) > 0 ? round($r, 1) : null,
-        ]);
+            return [
+                'giftsUnder50' => $giftsUnder50,
+                'onlineUnder50' => $onlineUnder50,
+                'hasClassesThisWeek' => $hasClassesThisWeek,
+                'review_count' => (int) (Review::query()->count() ?? 0),
+                'avg_rating' => ($r = (float) (Review::query()->avg('rating') ?? 0)) > 0 ? round($r, 1) : null,
+            ];
+        });
+
+        return view('home.index', $payload);
     }
 }
