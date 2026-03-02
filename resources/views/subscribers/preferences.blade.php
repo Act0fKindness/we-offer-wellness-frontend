@@ -236,7 +236,7 @@
   @media (min-width:900px){ .pref-hero__grid{ grid-template-columns:1.1fr .9fr; } }
   .pref-hero__copy h1{ font-size: clamp(2.2rem, 4vw, 3.4rem); margin-bottom:.5rem; }
   .pref-hero__cta-row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:1.5rem; }
-  .pref-hero__card{ background:#0b1220; color:#fff; border-radius:28px; padding:32px; box-shadow:0 40px 80px rgba(11,18,32,.25); }
+  .pref-hero__card{ background:#0b1220; color:#fff; border-radius:3px; padding:32px; box-shadow:none; }
   .pref-hero__eyebrow{ text-transform:uppercase; letter-spacing:.3em; font-size:12px; color:rgba(255,255,255,.65); margin-bottom:16px; }
   .pref-hero__list{ list-style:none; padding:0; margin:0 0 12px; display:flex; flex-wrap:wrap; gap:10px; }
   .pref-hero__list li{ padding:8px 14px; border-radius:999px; border:1px solid rgba(255,255,255,.25); font-weight:700; font-size:.9rem; }
