@@ -121,6 +121,7 @@
 <!-- Overlay shown behind header mega menu -->
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
 <div class="pointer-events-none fixed inset-0 -z-10"></div>
+<header>
         <div class="utility-bar hidden md:block">
             <div class="container-page">
                 <div class="utility-links">
@@ -132,7 +133,7 @@
             </div>
         </div>
         <div id="header-sentinel" style="position:relative;height:1px;width:1px"></div>
-        <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b"
+        <nav class="bg-white/90 backdrop-blur border-b"
                 style="border-bottom: 1px solid rgba(153, 153, 153, 0.4); margin-top: -1px;">
             <div class="container container-page header-inner h-16 flex items-center justify-between">
                 <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
@@ -356,7 +357,8 @@
                     </div>
                 </div>
             </div>
- </header>
+        </nav>
+</header>
 <style>
 /* Backdrop for mega menu (below header/utility, above content) */
 .mega-overlay{
