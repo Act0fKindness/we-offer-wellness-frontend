@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\TransactionalMail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $validated = $request->validated();
+        $oldEmail = $user->email;
 
         if ($request->hasFile('profile_picture')) {
             $path = $request->file('profile_picture')->store('profile-photos', 'public');
@@ -52,11 +54,16 @@ class ProfileController extends Controller
 
         $user->fill($validated);
 
+        $emailChanged = $user->isDirty('email');
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
 
         $user->save();
+
+        if ($emailChanged && $oldEmail) {
+            TransactionalMail::emailChanged($user->fresh(), $oldEmail);
+        }
 
         return Redirect::route('profile.edit');
     }
@@ -71,6 +78,8 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        $email = $user->email;
+        $name = $user->name;
 
         Auth::logout();
 
@@ -78,6 +87,8 @@ class ProfileController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        TransactionalMail::accountDeleted($email, $name);
 
         return Redirect::to('/');
     }

@@ -27,7 +27,7 @@
             </div>
         </a><a data-v-f43bb09d=""
                class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-               href="/therapies/massage-therapy"><img data-v-f43bb09d=""
+               href="/search?type=therapy&amp;what=massage%20therapy"><img data-v-f43bb09d=""
                                                       src="https://images.pexels.com/photos/6560298/pexels-photo-6560298.jpeg"
                                                       class="h-48 w-full object-cover"
                                                       alt="Massage Therapy">
@@ -38,7 +38,7 @@
             </div>
         </a><a data-v-f43bb09d=""
                class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-               href="/classes/yoga"><img data-v-f43bb09d=""
+               href="/search?type=therapy&amp;what=yoga"><img data-v-f43bb09d=""
                                          src="https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
                                          class="h-48 w-full object-cover" alt="Yoga &amp; Movement">
             <div data-v-f43bb09d=""
@@ -48,7 +48,7 @@
             </div>
         </a><a data-v-f43bb09d=""
                class="relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card"
-               href="/therapies/reiki"><img data-v-f43bb09d=""
+               href="/search?type=therapy&amp;what=reiki"><img data-v-f43bb09d=""
                                             src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
                                             class="h-48 w-full object-cover" alt="Reiki &amp; Energy">
             <div data-v-f43bb09d=""

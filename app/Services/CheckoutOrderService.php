@@ -41,6 +41,10 @@ class CheckoutOrderService
                 'stripe_payment_intent_id' => $context['stripe_payment_intent_id'] ?? $fresh->stripe_payment_intent_id,
             ]);
 
+            DB::afterCommit(function () use ($order) {
+                TransactionalMail::orderReceipt($order->fresh('items'));
+            });
+
             foreach ($fresh->items ?? [] as $id => $it) {
                 $title = (string)($it['title'] ?? ('Item '.$id));
                 $qty = max(1, (int)($it['qty'] ?? 1));

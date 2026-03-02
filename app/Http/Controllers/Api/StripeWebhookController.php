@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CheckoutAttempt;
 use App\Models\Order;
 use App\Services\CheckoutOrderService;
+use App\Services\TransactionalMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -56,9 +57,16 @@ class StripeWebhookController extends Controller
                         if ($orderId) {
                             $order = Order::find($orderId);
                             if ($order) {
-                                $order->status = 'paid';
+                                $statusChanged = false;
+                                if ($order->status !== 'paid') {
+                                    $order->status = 'paid';
+                                    $statusChanged = true;
+                                }
                                 $order->stripe_payment_intent_id = (string)($sess->payment_intent ?? '');
                                 $order->save();
+                                if ($statusChanged) {
+                                    TransactionalMail::orderReceipt($order->fresh('items'));
+                                }
                             }
                         }
                     }
@@ -82,27 +90,97 @@ class StripeWebhookController extends Controller
                     }
                     break;
                 }
-                case 'checkout.session.async_payment_failed':
+                case 'checkout.session.async_payment_failed': {
+                    $session = $event->data->object;
+                    $attempt = $this->resolveAttemptFromSession($session);
+                    $pi = (string)($session->payment_intent ?? '');
+                    $order = $pi ? Order::where('stripe_payment_intent_id', $pi)->first() : null;
+                    $reason = $session->last_payment_error->message ?? ($session->payment_status ?? 'Payment failed');
+
+                    $attemptChanged = false;
+                    if ($attempt && $attempt->status !== 'failed') {
+                        $attempt->status = 'failed';
+                        $attempt->save();
+                        $attemptChanged = true;
+                    }
+
+                    $orderChanged = false;
+                    if ($order && $order->status !== 'failed') {
+                        $order->status = 'failed';
+                        $order->save();
+                        $orderChanged = true;
+                    }
+
+                    if ($orderChanged || (!$order && $attemptChanged)) {
+                        TransactionalMail::paymentFailed($attempt, $order, ['reason' => $reason]);
+                    }
+                    break;
+                }
                 case 'payment_intent.payment_failed': {
                     $obj = $event->data->object;
                     $pi = (string)($obj->id ?? $obj->payment_intent ?? '');
                     $attempt = $pi ? CheckoutAttempt::where('stripe_payment_intent_id', $pi)->first() : null;
-                    if ($attempt) {
+                    $order = $pi ? Order::where('stripe_payment_intent_id', $pi)->first() : null;
+                    $reason = $obj->last_payment_error->message
+                        ?? $obj->cancellation_reason
+                        ?? ($obj->status ?? 'Payment failed');
+
+                    $attemptChanged = false;
+                    if ($attempt && $attempt->status !== 'failed') {
                         $attempt->status = 'failed';
                         $attempt->save();
+                        $attemptChanged = true;
                     }
-                    if ($pi) {
-                        $o = Order::where('stripe_payment_intent_id', $pi)->first();
-                        if ($o) {
-                            $o->status = 'failed';
-                            $o->save();
-                        }
+
+                    $orderChanged = false;
+                    if ($order && $order->status !== 'failed') {
+                        $order->status = 'failed';
+                        $order->save();
+                        $orderChanged = true;
+                    }
+
+                    if ($orderChanged || (!$order && $attemptChanged) || (!$order && !$attempt && $pi)) {
+                        TransactionalMail::paymentFailed($attempt, $order, ['reason' => $reason]);
                     }
                     break;
                 }
                 case 'charge.refunded': {
-                    $obj = $event->data->object; $pi = (string)($obj->payment_intent ?? '');
-                    if ($pi) { $o = Order::where('stripe_payment_intent_id', $pi)->first(); if($o){ $o->status='refunded'; $o->save(); } }
+                    $obj = $event->data->object;
+                    $pi = (string)($obj->payment_intent ?? '');
+                    if ($pi) {
+                        $o = Order::where('stripe_payment_intent_id', $pi)->first();
+                        if ($o) {
+                            $total = (int) ($obj->amount ?? ($o->amount_total ?? 0));
+                            $refunded = (int) ($obj->amount_refunded ?? 0);
+                            $isFull = $total > 0 ? $refunded >= $total : $refunded >= ($o->amount_total ?? 0);
+                            $o->status = $isFull ? 'refunded' : 'partial_refund';
+                            $o->save();
+                            TransactionalMail::refundNotification($o->fresh('items'), [
+                                'amount' => $refunded,
+                                'currency' => $obj->currency ?? $o->currency,
+                                'reason' => $obj->reason ?? null,
+                                'partial' => !$isFull,
+                            ]);
+                        }
+                    }
+                    break;
+                }
+                case 'charge.dispute.created': {
+                    $obj = $event->data->object;
+                    $pi = (string)($obj->payment_intent ?? '');
+                    if ($pi) {
+                        $o = Order::where('stripe_payment_intent_id', $pi)->first();
+                        if ($o) {
+                            $o->status = 'disputed';
+                            $o->save();
+                            TransactionalMail::disputeOpened($o->fresh('items'), [
+                                'amount' => (int) ($obj->amount ?? 0),
+                                'currency' => $obj->currency ?? $o->currency,
+                                'reason' => $obj->reason ?? null,
+                                'due_by' => $obj->evidence_due_by ?? null,
+                            ]);
+                        }
+                    }
                     break;
                 }
                 default:

@@ -54,6 +54,41 @@ class MailService
             ],
         ];
 
+        if (!empty($options['reply_to'])) {
+            $reply = $options['reply_to'];
+            $payload['replyTo'] = [
+                'email' => (string) ($reply['email'] ?? $fromEmail),
+                'name' => (string) ($reply['name'] ?? $fromName),
+            ];
+        }
+
+        foreach (['bcc', 'cc'] as $type) {
+            if (empty($options[$type]) || !is_array($options[$type])) {
+                continue;
+            }
+            $list = [];
+            foreach ($options[$type] as $entry) {
+                if (empty($entry['email'])) {
+                    continue;
+                }
+                $list[] = [
+                    'email' => (string) $entry['email'],
+                    'name' => (string) ($entry['name'] ?? ''),
+                ];
+            }
+            if (!empty($list)) {
+                $payload[$type] = $list;
+            }
+        }
+
+        if (!empty($options['tags']) && is_array($options['tags'])) {
+            $payload['tags'] = array_values(array_unique(array_filter(array_map('strval', $options['tags']))));
+        }
+
+        if (!empty($options['headers']) && is_array($options['headers'])) {
+            $payload['headers'] = array_merge($payload['headers'], $options['headers']);
+        }
+
         $response = Http::timeout(10)
             ->retry(1, 200)
             ->withHeaders([

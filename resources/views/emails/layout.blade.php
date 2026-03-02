@@ -64,7 +64,7 @@
             <td class="content">
               @yield('content')
               <div class="divider"></div>
-              <p class="muted" style="margin:0">Need help? Reply to this email or visit <a href="https://weofferwellness.co.uk/help">the Help Centre</a>.</p>
+              <p class="muted" style="margin:0{{ !empty($hideFooterHelp) ? ';display:none;' : '' }}">Need help? Reply to this email or visit <a href="https://weofferwellness.co.uk/help">the Help Centre</a>.</p>
             </td>
           </tr>
           <tr>

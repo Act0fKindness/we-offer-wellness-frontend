@@ -1,5 +1,7 @@
 @extends('emails.layout')
 
+@php($hideFooterHelp = true)
+
 @section('title','Reset your password')
 @section('content')
   <span class="eyebrow">Password reset</span>

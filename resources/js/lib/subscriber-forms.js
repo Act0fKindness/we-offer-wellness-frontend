@@ -1,6 +1,6 @@
 const SESSION_TOKEN_KEY = 'wow_subscriber_session_token';
 const SESSION_START_KEY = 'wow_subscriber_session_started_at';
-const DEFAULT_SUCCESS_MESSAGE = 'Thank you! We will keep you updated.';
+const DEFAULT_SUCCESS_MESSAGE = 'Check your email to confirm your subscription.';
 
 let sessionStart = loadNumber(SESSION_START_KEY);
 if (!sessionStart) {
@@ -219,9 +219,10 @@ function initSubscriberForms() {
       }
       setLoading(form, true);
       try {
-        await submitSubscriber(Object.assign(basePayload(source), { email }));
+        const result = await submitSubscriber(Object.assign(basePayload(source), { email }));
         form.reset();
-        showMessage(feedback, DEFAULT_SUCCESS_MESSAGE, true);
+        const successMessage = result?.message || DEFAULT_SUCCESS_MESSAGE;
+        showMessage(feedback, successMessage, true);
       } catch (error) {
         showMessage(feedback, error.message || 'Something went wrong. Please try again.', false);
       } finally {

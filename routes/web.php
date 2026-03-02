@@ -42,8 +42,17 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\LandingRedirectsController;
 use App\Http\Controllers\CustomerAccountController;
+use App\Http\Controllers\SubscriberController;
 
 Route::get('/', [HomeController::class, 'index']);
+
+Route::prefix('subscribe')->group(function () {
+    Route::get('/confirm/{token}', [SubscriberController::class, 'confirm'])->name('subscribe.confirm');
+    Route::get('/preferences/{token}', [SubscriberController::class, 'preferences'])->name('subscribe.preferences');
+    Route::post('/preferences/{token}', [SubscriberController::class, 'updatePreferences'])->name('subscribe.preferences.update');
+    Route::get('/unsubscribe/{token}', [SubscriberController::class, 'unsubscribe'])->name('subscribe.unsubscribe');
+    Route::get('/resubscribe/{token}', [SubscriberController::class, 'resubscribe'])->name('subscribe.resubscribe');
+});
 
 // Online & Near Me hub
 Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
@@ -338,4 +347,5 @@ Route::get('/corporate-wellness', [CorporateController::class, 'comingSoon']);
 Route::get('/gift-cards', [StaticPagesController::class, 'giftCards']);
 
 // Dynamic CMS-like pages stored in shared DB (from Backend admin)
-Route::fallback([\App\Http\Controllers\PageController::class, 'show']);
+Route::fallback([\App\Http\Controllers\PageController::class, 'show'])
+    ->where('fallbackPlaceholder', '^(?!api\/).*$');

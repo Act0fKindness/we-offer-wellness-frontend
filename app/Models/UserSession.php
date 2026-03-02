@@ -8,6 +8,7 @@ class UserSession extends Model
 {
     protected $fillable = [
         'user_id',
+        'fingerprint',
         'ip_address',
         'device',
         'location',
