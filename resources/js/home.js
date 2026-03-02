@@ -77,38 +77,181 @@ function initMegaMenu() {
   const panel = document.getElementById('mega-panel');
   const overlay = document.getElementById('mega-overlay');
   if (!header || !panel) return;
+
+  const focusableSelector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  const delayOpen = 320;
+  const delayClose = 200;
+  let openTimer = null;
+  let closeTimer = null;
+  let activeMenu = '';
+  let lastTrigger = null;
+
+  const escapeKey = (key) => {
+    if (!key) return '';
+    try {
+      return typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(key) : key;
+    } catch (_) {
+      return key;
+    }
+  };
+
+  const getMenuBlock = (key) => {
+    if (!key) return null;
+    return panel.querySelector(`[data-menu="${escapeKey(key)}"]`);
+  };
+
+  const showPanel = (key) => {
+    activeMenu = key;
+    panel.setAttribute('data-active', key || '');
+    panel.style.display = 'block';
+    if (overlay) overlay.style.display = 'block';
+    if (lastTrigger) {
+      try { lastTrigger.setAttribute('aria-expanded', 'true'); } catch (_) {}
+    }
+  };
+
+  const hidePanel = (focusTrigger = false) => {
+    activeMenu = '';
+    panel.removeAttribute('data-active');
+    panel.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+    if (lastTrigger) {
+      try { lastTrigger.setAttribute('aria-expanded', 'false'); } catch (_) {}
+    }
+    if (focusTrigger && lastTrigger) {
+      try { lastTrigger.focus(); } catch (_) {}
+    }
+  };
+
+  const clearTimers = () => {
+    if (openTimer) { window.clearTimeout(openTimer); openTimer = null; }
+    if (closeTimer) { window.clearTimeout(closeTimer); closeTimer = null; }
+  };
+
+  const scheduleClose = (immediate = false) => {
+    clearTimers();
+    if (immediate) {
+      hidePanel();
+    } else {
+      closeTimer = window.setTimeout(() => hidePanel(), delayClose);
+    }
+  };
+
+  const focusFirstItem = (key) => {
+    const block = getMenuBlock(key);
+    if (!block) return;
+    const target = block.querySelector(focusableSelector);
+    if (target) {
+      try { target.focus(); } catch (_) {}
+    }
+  };
+
+  const openMenu = (key, trigger, { immediate = false, focusContent = false } = {}) => {
+    const block = getMenuBlock(key);
+    if (!block) return;
+    lastTrigger = trigger || lastTrigger;
+    clearTimers();
+    const run = () => {
+      showPanel(key);
+      if (focusContent) {
+        focusFirstItem(key);
+      }
+    };
+    if (immediate) {
+      run();
+    } else {
+      openTimer = window.setTimeout(run, delayOpen);
+    }
+  };
+
   const navLinks = header.querySelectorAll('[data-mega-menu]');
-  navLinks.forEach((a) => {
-    a.addEventListener('mouseenter', () => {
-      const which = a.getAttribute('data-mega-menu');
-      panel.setAttribute('data-active', which || '');
-      panel.style.display = 'block';
-      if (overlay) overlay.style.display = 'block';
-    });
-    a.addEventListener('focus', () => {
-      const which = a.getAttribute('data-mega-menu');
-      panel.setAttribute('data-active', which || '');
-      panel.style.display = 'block';
-      if (overlay) overlay.style.display = 'block';
+  navLinks.forEach((link) => {
+    const key = link.getAttribute('data-mega-menu');
+    if (!getMenuBlock(key)) return;
+
+    link.setAttribute('aria-haspopup', 'true');
+    link.setAttribute('aria-expanded', 'false');
+
+    link.addEventListener('mouseenter', () => openMenu(key, link));
+    link.addEventListener('focus', () => openMenu(key, link, { immediate: true }));
+    link.addEventListener('mouseleave', () => scheduleClose());
+
+    link.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openMenu(key, link, { immediate: true, focusContent: true });
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        openMenu(key, link, { immediate: true, focusContent: true });
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        clearTimers();
+        hidePanel(true);
+      }
     });
   });
+
   // Links without a mega menu should not trigger the frosted overlay.
   try {
     const simpleLinks = header.querySelectorAll('.nav-item > a:not([data-mega-menu])');
     simpleLinks.forEach((a) => {
-      a.addEventListener('mouseenter', () => {
-        try { panel.style.display = 'none'; } catch(_){}
-        try { if (overlay) overlay.style.display = 'none'; } catch(_){}
-      });
-      a.addEventListener('focus', () => {
-        try { panel.style.display = 'none'; } catch(_){}
-        try { if (overlay) overlay.style.display = 'none'; } catch(_){}
-      });
+      a.addEventListener('mouseenter', () => scheduleClose(true));
+      a.addEventListener('focus', () => scheduleClose(true));
     });
-  } catch (e) {}
-  header.addEventListener('mouseleave', () => { panel.style.display = 'none'; if (overlay) overlay.style.display = 'none'; });
+  } catch (_) {}
+
+  const panelKeyHandler = (event) => {
+    if (!activeMenu) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      clearTimers();
+      hidePanel(true);
+      return;
+    }
+    if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+      return;
+    }
+    const block = getMenuBlock(activeMenu);
+    if (!block) return;
+    const focusable = Array.from(block.querySelectorAll(focusableSelector));
+    if (!focusable.length) return;
+    const currentIndex = focusable.indexOf(document.activeElement);
+    let nextIndex = currentIndex;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+      nextIndex = currentIndex + 1;
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+      nextIndex = currentIndex - 1;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = focusable.length - 1;
+    }
+    if (nextIndex < 0) nextIndex = focusable.length - 1;
+    if (nextIndex >= focusable.length) nextIndex = 0;
+    const target = focusable[nextIndex];
+    if (target) {
+      event.preventDefault();
+      try { target.focus(); } catch (_) {}
+    }
+  };
+
+  panel.addEventListener('mouseenter', () => {
+    if (closeTimer) { window.clearTimeout(closeTimer); closeTimer = null; }
+  });
+  panel.addEventListener('mouseleave', () => scheduleClose());
+  panel.addEventListener('keydown', panelKeyHandler);
+
+  header.addEventListener('mouseleave', () => scheduleClose());
   document.addEventListener('click', (e) => {
-    if (!header.contains(e.target)) { panel.style.display = 'none'; if (overlay) overlay.style.display = 'none'; }
+    if (!header.contains(e.target)) {
+      scheduleClose(true);
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && activeMenu) {
+      clearTimers();
+      hidePanel(true);
+    }
   });
 }
 

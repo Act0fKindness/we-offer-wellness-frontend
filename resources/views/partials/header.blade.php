@@ -129,6 +129,18 @@
             'email' => $headerUser?->email,
         ];
     }
+
+    $eventsMenuState = $eventsMenuState ?? ['visible' => true, 'links' => []];
+    $eventsMenuLinks = array_merge([
+        'events' => true,
+        'workshops' => true,
+        'classes' => false,
+        'online' => false,
+        'near_me' => false,
+        'this_week' => false,
+        'this_month' => false,
+    ], $eventsMenuState['links'] ?? []);
+    $eventsMenuVisible = $eventsMenuState['visible'] ?? true;
 @endphp
 <!-- Overlay shown behind header mega menu -->
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
@@ -186,8 +198,10 @@
                     <div class="nav-item"><a class="link-wow--nav" data-mega-menu="therapies" ex="0" href="/therapies">Therapies</a>
                     </div>
                     <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/classes">Classes</a></div>
-                    <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events-workshops">Events
-                        &amp; Workshops</a></div>
+                    @if($eventsMenuVisible)
+                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events-workshops">Events
+                            &amp; Workshops</a></div>
+                    @endif
                     <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/online-near-me">Online &amp; Near
                         Me</a></div>
                     <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/mindful-times">Mindful
@@ -371,29 +385,59 @@
                         </div>
                     </div>
                 </div>
-                <!-- Events & Workshops -->
-                <div data-menu="events" class="grid md:grid-cols-3 gap-6">
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">Highlights</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/events-workshops">Upcoming events &amp; workshops</a></li>
-                            <li><a class="menu-link" href="/classes">Classes</a></li>
-                        </ul>
+                @if($eventsMenuVisible)
+                    <!-- Events & Workshops -->
+                    <div data-menu="events" class="grid md:grid-cols-3 gap-6">
+                        <div class="menu-col">
+                            <div class="mega-kicker mb-2">Highlights</div>
+                            <ul class="list-unstyled m-0 p-0">
+                                <li><a class="menu-link" href="/events-workshops">Upcoming events &amp; workshops</a></li>
+                                @if($eventsMenuLinks['workshops'] ?? false)
+                                    <li><a class="menu-link" href="/events-workshops?type=workshop">Workshops</a></li>
+                                @endif
+                                @if($eventsMenuLinks['events'] ?? false)
+                                    <li><a class="menu-link" href="/events-workshops?type=event">Events</a></li>
+                                @endif
+                                @if($eventsMenuLinks['classes'] ?? false)
+                                    <li><a class="menu-link" href="/classes">Classes</a></li>
+                                @endif
+                            </ul>
+                        </div>
+                        @php
+                            $hasExploreLinks = ($eventsMenuLinks['online'] ?? false)
+                                || ($eventsMenuLinks['near_me'] ?? false)
+                                || ($eventsMenuLinks['this_week'] ?? false)
+                                || ($eventsMenuLinks['this_month'] ?? false);
+                        @endphp
+                        <div class="menu-col">
+                            <div class="mega-kicker mb-2">Explore</div>
+                            <ul class="list-unstyled m-0 p-0">
+                                @if($eventsMenuLinks['online'] ?? false)
+                                    <li><a class="menu-link" href="/events-workshops?format=online">Online</a></li>
+                                @endif
+                                @if($eventsMenuLinks['near_me'] ?? false)
+                                    <li><a class="menu-link" href="/events-workshops?format=in_person">Near me</a></li>
+                                @endif
+                                @if($eventsMenuLinks['this_week'] ?? false)
+                                    <li><a class="menu-link" href="/events-workshops?date=this_week">This week</a></li>
+                                @endif
+                                @if($eventsMenuLinks['this_month'] ?? false)
+                                    <li><a class="menu-link" href="/events-workshops?date=this_month">This month</a></li>
+                                @endif
+                                @if(!$hasExploreLinks)
+                                    <li><span class="menu-link menu-link--disabled" aria-disabled="true">New filters coming soon</span></li>
+                                @endif
+                            </ul>
+                        </div>
+                        <div class="menu-col">
+                            <div class="mega-kicker mb-2">Guides</div>
+                            <ul class="list-unstyled m-0 p-0">
+                                <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
+                                <li><a class="menu-link" href="/help">Help centre</a></li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">Explore</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/online-near-me">Online &amp; near me</a></li>
-                        </ul>
-                    </div>
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">Guides</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
-                            <li><a class="menu-link menu-link--disabled" href="/help" aria-disabled="true" tabindex="-1">Help centre</a></li>
-                        </ul>
-                    </div>
-                </div>
+                @endif
             </div>
         </div>
     </nav>
@@ -513,7 +557,9 @@
                     <li><a class="mobile-menu__link" href="/needs">By Need</a></li>
                     <li><a class="mobile-menu__link" href="/therapies">Therapies</a></li>
                     <li><a class="mobile-menu__link" href="/classes">Classes</a></li>
-                    <li><a class="mobile-menu__link" href="/events-workshops">Events &amp; Workshops</a></li>
+                    @if($eventsMenuVisible)
+                        <li><a class="mobile-menu__link" href="/events-workshops">Events &amp; Workshops</a></li>
+                    @endif
                     <li><a class="mobile-menu__link" href="/online-near-me">Online &amp; Near Me</a></li>
                     <li><a class="mobile-menu__link" href="/mindful-times">Mindful Times</a></li>
                 </ul>

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Review;
+use App\Support\Navigation\EventsMenuState;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Vite;
@@ -75,6 +76,10 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('authReviews', $reviews);
+        });
+
+        View::composer('partials.header', function ($view) {
+            $view->with('eventsMenuState', EventsMenuState::make());
         });
     }
 }
