@@ -5,9 +5,9 @@
       <h2 id="wowCookieTitle">We use cookies to keep things calm</h2>
       <p>Cookies help us keep your account secure, understand what’s working and personalise rituals. Pick what suits you.</p>
       <div class="wow-cookie-banner__actions actions">
-        <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-cookie-open-preferences>Cookie preferences</span>
-        <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-reject>Decline</button>
-        <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-accept>Accept</button>
+        <button type="button" class="wow-cookie-btn wow-cookie-btn--primary" data-cookie-open-preferences>Cookie preferences</button>
+        <button type="button" class="wow-cookie-btn" data-cookie-reject>Decline</button>
+        <button type="button" class="wow-cookie-btn wow-cookie-btn--accept" data-cookie-accept>Accept</button>
       </div>
     </div>
 
@@ -57,9 +57,9 @@
         </article>
       </div>
       <div class="wow-cookie-banner__advanced-actions actions">
-        <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-cookie-save>Save choices</span>
-        <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-reject>Reject non-essential</button>
-        <button type="button" class="btn js-add-to-cart js-open-cart" data-cookie-accept>Accept all</button>
+        <button type="button" class="wow-cookie-btn wow-cookie-btn--primary" data-cookie-save>Save choices</button>
+        <button type="button" class="wow-cookie-btn" data-cookie-reject>Reject non-essential</button>
+        <button type="button" class="wow-cookie-btn wow-cookie-btn--accept" data-cookie-accept>Accept all</button>
       </div>
     </div>
   </div>
@@ -74,8 +74,8 @@
   .wow-cookie-banner__simple p{ margin:0 0 16px; font-size:12px; color:#475569; }
   .wow-cookie-banner__actions.actions,
   .wow-cookie-banner__advanced-actions.actions{ display:flex; gap:10px; flex-wrap:wrap; }
-  .wow-cookie-banner__actions .btn,
-  .wow-cookie-banner__advanced-actions .btn{ flex:1 1 auto; min-width:110px; }
+  .wow-cookie-banner__actions .wow-cookie-btn,
+  .wow-cookie-banner__advanced-actions .wow-cookie-btn{ flex:1 1 auto; min-width:110px; }
   .wow-cookie-banner__advanced{ display:flex; flex-direction:column; gap:18px; }
   .wow-cookie-banner__advanced[hidden]{ display:none !important; }
   .wow-cookie-banner__head{ display:flex; gap:12px; justify-content:space-between; align-items:flex-start; }
@@ -92,11 +92,13 @@
   .wow-cookie-switch[aria-pressed="true"]{ background:#c1f0cb; border-color:#22c55e; }
   .wow-cookie-switch[aria-pressed="true"] .wow-cookie-switch__handle{ transform:translateX(22px); }
   .wow-cookie-banner__advanced-actions{ display:flex; flex-wrap:wrap; gap:10px; }
-  .wow-cookie-banner .btn{ height:36px; border-radius:3px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff !important; color:rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); padding:0 18px; transition:background .2s ease, color .2s ease, border-color .2s ease; }
-  .wow-cookie-banner .btn:hover,
-  .wow-cookie-banner .btn:focus-visible{ background:#000 !important; color:#fff; border-color:#000; outline:none; }
-  .wow-cookie-banner .btn--primary{ background:#0b1220 !important; color:#fff; border-color:#0b1220; box-shadow:0 12px 28px rgba(11,18,32,.18); }
-  .wow-cookie-banner .btn[data-cookie-accept]{ background:#549483 !important; color:#fff; border-color:#549483; }
+  .wow-cookie-btn{ height:36px; border-radius:3px; font-size:16px; font-weight:400; border:1px solid rgba(16,24,40,.22); background:#fff; color:rgba(11,18,32,.82); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(16,24,40,.08); padding:0 18px; transition:background .2s ease, color .2s ease, border-color .2s ease; }
+  .wow-cookie-btn:hover,
+  .wow-cookie-btn:focus-visible{ background:#000; color:#fff; border-color:#000; outline:none; }
+  .wow-cookie-btn--primary{ background:#0b1220; color:#fff; border-color:#0b1220; box-shadow:0 12px 28px rgba(11,18,32,.18); }
+  .wow-cookie-btn--accept{ background:#549483; color:#fff; border-color:#549483; }
+  .wow-cookie-btn--accept:hover,
+  .wow-cookie-btn--accept:focus-visible{ background:#3f6f61; border-color:#3f6f61; }
   @media (max-width:640px){
     .wow-cookie-banner{ left:16px; right:16px; width:auto; }
   }
@@ -219,11 +221,14 @@
 
   openPreferencesButtons.forEach((btn) => {
     const handler = () => { applyToUI(readPrefs()); openAdvanced(); };
-    if (btn.tagName === 'SPAN') {
-      btn.addEventListener('click', handler);
-      btn.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handler(); } });
-    } else {
-      btn.addEventListener('click', handler);
+    btn.addEventListener('click', handler);
+    if (btn.tagName !== 'BUTTON') {
+      btn.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handler();
+        }
+      });
     }
   });
 
