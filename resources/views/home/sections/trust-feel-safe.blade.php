@@ -28,10 +28,7 @@
                         </div>
                     </div>
                 </div>
-                <div data-v-f43bb09d="" class="text-right"><a data-v-f43bb09d="" href="/reviews"
-                                                              class="btn-wow btn-wow--outline btn-sm"
-                                                              data-loader-init="1">See reviews<span
-                    class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a></div>
+                {{-- Review CTA removed by request --}}
             </div>
         </div>
     </div>
