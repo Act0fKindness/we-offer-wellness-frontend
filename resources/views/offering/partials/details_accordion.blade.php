@@ -47,8 +47,7 @@
   .wow-loc-panel{ border-radius:var(--wow-radius-lg); overflow:hidden; background:linear-gradient(180deg,#f8fbfa,#eef5f1); border:1px solid var(--wow-soft-2); box-shadow:0 18px 40px rgba(16,24,40,.08) }
   .wow-loc-list{ padding:12px; height:340px; overflow:auto; background:transparent; list-style:none; margin:0; border-right:1px solid rgba(16,24,40,.08); }
   .wow-loc-list li{ list-style:none; margin:0; padding:0; }
-  .wow-loc-item{ width:100%; border:0; background:rgba(255,255,255,.45); padding:12px 14px; border-radius:14px; display:flex; align-items:flex-start; gap:12px; font-weight:600; color:var(--wow-text); text-align:left; transition:all .15s ease; width:100%; cursor:pointer; }
-  .wow-loc-item + li .wow-loc-item{ margin-top:10px; }
+  .wow-loc-item{ width:100%; border:0; background:rgba(255,255,255,.45); padding:12px 14px; border-radius:14px; display:flex; align-items:flex-start; gap:12px; font-weight:600; color:var(--wow-text); text-align:left; transition:all .15s ease; width:100%; cursor:pointer; margin-bottom:15px; }
   .wow-loc-item:hover{ background:#fff; box-shadow:0 10px 28px rgba(16,24,40,.08); }
   .wow-loc-item.active{ background:#fff; box-shadow:0 14px 32px rgba(16,24,40,.12); }
   .wow-loc-pill{ width:10px; height:10px; border-radius:999px; background:#d1d5db; margin-top:6px; flex:0 0 auto; transition:all .2s ease; }
