@@ -10,14 +10,15 @@
   $desc  = $seo['description'] ?? ($metaDescription ?? $defaultDesc);
   $canonicalUrl = $seo['canonical'] ?? ($canonical ?? url()->current());
   $ogImage = $seo['og_image'] ?? (config('app.og_image') ?: env('OG_IMAGE_URL'));
+  $favicon = config('app.favicon_url', '/favicon.ico');
 @endphp
 
 <title>{{ $title }}</title>
 <meta name="description" content="{{ $desc }}">
 <link rel="canonical" href="{{ $canonicalUrl }}">
 <!-- Favicon -->
-<link rel="icon" type="image/png" href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png?v=2">
-<link rel="shortcut icon" href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png?v=2">
+<link rel="icon" type="image/png" href="{{ $favicon }}">
+<link rel="shortcut icon" href="{{ $favicon }}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{ $title }}">
 <meta property="og:description" content="{{ $desc }}">

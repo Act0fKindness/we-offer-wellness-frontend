@@ -12,6 +12,7 @@
           $canonical = url()->current();
           $gtmId = env('GTM_ID') ?: env('VITE_GTM_ID');
           $gaId = env('GA_ID') ?: env('VITE_GA_ID');
+          $favicon = config('app.favicon_url', '/favicon.ico');
         @endphp
         <link rel="canonical" href="{{ $canonical }}" />
         <meta name="description" content="{{ $defaultDesc }}" />
@@ -63,8 +64,8 @@
         </script>
 
         <!-- Favicon -->
-        <link rel="icon" type="image/png" href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png">
-        <link rel="shortcut icon" href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png">
+        <link rel="icon" type="image/png" href="{{ $favicon }}">
+        <link rel="shortcut icon" href="{{ $favicon }}">
 
         <!-- Fonts: Instrument Sans -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
