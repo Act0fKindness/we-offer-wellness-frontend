@@ -191,7 +191,7 @@
             </div>
 
             <div class="d-grid gap-2 mb-2" id="ctaWrap">
-                <button class="btn btn-basket btn-lg js-add-to-cart" id="addBtn"
+                <button class="btn btn-basket btn-lg js-add-to-cart js-open-cart" id="addBtn"
                         data-id="{{ $initialVariantId }}"
                         data-title="{{ e($productTitleSafe) }}"
                         data-price="{{ $initialPriceFormatted }}"
@@ -225,7 +225,7 @@
         </div>
     </div>
     <div class="m-right">
-        <button class="btn btn-main js-add-to-cart" id="mobileAdd"
+        <button class="btn btn-main js-add-to-cart js-open-cart" id="mobileAdd"
                 data-id="{{ $initialVariantId }}"
                 data-title="{{ e($productTitleSafe) }}"
                 data-price="{{ $initialPriceFormatted }}"
@@ -817,6 +817,7 @@ function syncCartButtons(){
     btn.dataset.url = BASE_PRODUCT_URL || window.location.pathname;
     btn.dataset.qty = String(qtyVal);
     btn.classList.add('js-add-to-cart');
+    btn.classList.add('js-open-cart');
   });
 }
 function updateVariant(){
