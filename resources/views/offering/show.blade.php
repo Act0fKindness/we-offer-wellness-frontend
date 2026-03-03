@@ -19,6 +19,7 @@
   $contra = trim((string)($p['contraindications'] ?? ''));
   $variants = $p['variants'] ?? [];
   $options = $p['options'] ?? [];
+  $reviewPreviewWords = 55;
   // Extract Location(s) list from options
   $locationValues = [];
   foreach (($options ?? []) as $opt) {
@@ -103,7 +104,19 @@
             <h3 class="h6 m-0">Client reviews</h3>
             <div class="mt-3 d-grid gap-3">
               @foreach($clientReviews as $review)
-                <div class="p-3 border rounded bg-ink-50">
+                @php
+                  $body = trim((string)($review['body'] ?? ''));
+                  $preview = $body;
+                  $needsToggle = false;
+                  if ($body !== '') {
+                    $totalWords = \Illuminate\Support\Str::wordCount($body);
+                    if ($totalWords > $reviewPreviewWords) {
+                      $needsToggle = true;
+                      $preview = \Illuminate\Support\Str::words($body, $reviewPreviewWords, '…');
+                    }
+                  }
+                @endphp
+                <div class="p-3 border rounded bg-ink-50 js-review-card">
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="fw-semibold text-ink-900">{{ $review['author'] ?? 'Verified client' }}</div>
                     <div class="text-warning small" aria-label="{{ $review['rating'] ?? 0 }} out of 5 stars">
@@ -112,7 +125,12 @@
                       @endfor
                     </div>
                   </div>
-                  <p class="mb-2 text-ink-800" style="white-space:pre-line;">{{ $review['body'] ?? '' }}</p>
+                  <p class="mb-2 text-ink-800 js-review-body" style="white-space:pre-line;" data-expanded="false">{{ $preview }}</p>
+                  @if($needsToggle)
+                    <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold small js-review-toggle" aria-expanded="false">Read more</button>
+                    <template class="js-review-preview">{{ $preview }}</template>
+                    <template class="js-review-full">{{ $body }}</template>
+                  @endif
                   <div class="small text-muted">{{ $review['date'] ?? '' }}</div>
                 </div>
               @endforeach
@@ -125,5 +143,40 @@
 </section>
 
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+  function hydrateReview(card){
+    var body = card.querySelector('.js-review-body');
+    var toggle = card.querySelector('.js-review-toggle');
+    if(!body || !toggle) return;
+    var fullTpl = card.querySelector('.js-review-full');
+    var previewTpl = card.querySelector('.js-review-preview');
+    var fullText = fullTpl ? fullTpl.textContent.trim() : '';
+    var previewText = previewTpl ? previewTpl.textContent.trim() : body.textContent.trim();
+    if(!fullText || fullText === previewText){
+      toggle.remove();
+      return;
+    }
+    var expanded = false;
+    function apply(){
+      body.textContent = expanded ? fullText : previewText;
+      toggle.textContent = expanded ? 'Read less' : 'Read more';
+      toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      body.dataset.expanded = expanded ? 'true' : 'false';
+    }
+    toggle.addEventListener('click', function(){
+      expanded = !expanded;
+      apply();
+    });
+    apply();
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.js-review-card').forEach(hydrateReview);
+  });
+})();
+</script>
+@endpush
 
  
