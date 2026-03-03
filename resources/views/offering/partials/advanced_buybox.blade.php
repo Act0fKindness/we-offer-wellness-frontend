@@ -636,6 +636,22 @@ function syncOptionAria(optIdx){
     });
   }catch(e){}
 }
+
+function syncVariantQueryParam(){
+  try {
+    var url = new URL(window.location.href);
+    var vid = (state.variant && state.variant.id) ? String(state.variant.id) : null;
+    if (vid) {
+      url.searchParams.set('variant', vid);
+    } else {
+      url.searchParams.delete('variant');
+    }
+    var next = url.toString();
+    if (next !== window.location.href) {
+      window.history.replaceState({}, '', next);
+    }
+  } catch (e) {}
+}
 function buildOptions(){optionsWrap.innerHTML="";buildOptionsInto(optionsWrap)}
 function findLocationIndex(){
   var idx=-1; try{ (product.options||[]).forEach(function(o,i){ var n=String(o?.name||'').toLowerCase(); if(idx===-1 && (n.includes('location'))) idx=i; }); }catch(e){}
@@ -691,6 +707,34 @@ function equalsAtIndex(i, sel, got){
   if (i===locIdx){ return locationSimilar(sel, got); }
   return strNorm(sel)===strNorm(got);
 }
+
+function applyVariantFromQuery(){
+  try {
+    var url = new URL(window.location.href);
+    var varId = url.searchParams.get('variant');
+    if (!varId) return;
+    var match = (product.variants || []).find(function(v){ return String(v.id) === String(varId); });
+    if (!match || !Array.isArray(match.options)) return;
+    for (var i = 0; i < match.options.length; i++) {
+      var want = String(match.options[i] || '');
+      var values = (product.options[i] && product.options[i].values) ? product.options[i].values : [];
+      var locIdx = (__locIdxCache != null) ? __locIdxCache : findLocationIndex();
+      var chosen;
+      if (i === locIdx) {
+        if (strNorm(want) === 'online') {
+          chosen = values.find(function(v){ return strNorm(v) === 'online'; }) || values[0] || want;
+        } else {
+          var best = null, bestScore = -1;
+          values.forEach(function(v){ var sc = overlap(v, want); if (sc > bestScore) { best = v; bestScore = sc; } });
+          chosen = best || values[0] || want;
+        }
+      } else {
+        chosen = values.find(function(v){ return strNorm(v) === strNorm(want); }) || values[0] || want;
+      }
+      state.selected[i] = chosen;
+    }
+  } catch (e) {}
+}
 function findVariant(){
   var firstAvail = product.variants.find(function(v){ return v && v.available; }) || product.variants[0] || null;
   if(!Array.isArray(product.variants) || !product.variants.length) return firstAvail;
@@ -740,6 +784,7 @@ function updateVariant(){
   try { syncFormatUI(); } catch(e) {}
   // Notify helper of current selection + variant id
   try{ document.dispatchEvent(new CustomEvent('wow:selected', { detail: { options: (state.selected||[]), variantId: state.variant ? state.variant.id : null } })); }catch(e){}
+  syncVariantQueryParam();
 }
 function clampGroupCount(){let v=parseInt(groupCount.value||"3",10);if(isNaN(v)||v<3) v=3; if(v>10) v=10;groupCount.value=v; state.groupCount=v}
 function stepGroup(delta){let v=parseInt(groupCount.value||"3",10); if(isNaN(v)) v=3;v=Math.min(10,Math.max(3,v+delta));groupCount.value=v; state.groupCount=v; updatePriceUI()}
@@ -774,7 +819,7 @@ confirmBooking.addEventListener('click',()=>{if(!(calendarState.selectedDate && 
 bookingModalEl.addEventListener('shown.bs.modal',()=>{bookingModalContent.classList.remove('mobile-times');if(!calDayNames.children.length){populateTimezones();}renderCalendar();renderSlots();updateSummary()});
 // (mode note removed)
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
-function init(){renderStars();buildFormatBlock();buildOptions();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
+function init(){renderStars();buildFormatBlock();applyVariantFromQuery();buildOptions();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
 init();
 
 // Listen for external variant selection (from Product Data Helper)
