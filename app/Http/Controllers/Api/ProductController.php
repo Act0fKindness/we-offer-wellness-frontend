@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Support\ProductSearchFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -95,23 +96,12 @@ class ProductController extends Controller
             });
         }
 
-        if ($where = $request->string('where')->toString()) {
-            $places = collect(preg_split('/[|,]/', $where))
-                ->map(fn($part) => trim((string) $part))
-                ->filter();
-            if ($places->isNotEmpty()) {
-                $query->where(function($outer) use ($places) {
-                    foreach ($places as $place) {
-                        $outer->orWhereHas('options', function ($q) use ($place) {
-                            $q->where('meta_name', 'locations')
-                              ->whereHas('values', function ($q2) use ($place) {
-                                  $q2->where('value', 'like', "%{$place}%");
-                              });
-                        });
-                    }
-                });
-            }
-        }
+        $whereInput = $request->string('where')->toString();
+        ProductSearchFilters::applyWhereFilter($query, $whereInput);
+
+        $adults = $request->has('adults') ? (int) $request->input('adults') : null;
+        $groupType = $request->has('group_type') ? $request->string('group_type')->toString() : null;
+        ProductSearchFilters::applyWhoFilter($query, $adults, $groupType);
 
         if ($request->filled('price_max')) {
             $pm = (float) $request->input('price_max');
@@ -204,23 +194,8 @@ class ProductController extends Controller
                       });
                 });
             }
-            if ($where = $request->string('where')->toString()) {
-                $places = collect(preg_split('/[|,]/', $where))
-                    ->map(fn($part) => trim((string) $part))
-                    ->filter();
-                if ($places->isNotEmpty()) {
-                    $retry->where(function($outer) use ($places) {
-                        foreach ($places as $place) {
-                            $outer->orWhereHas('options', function ($q) use ($place) {
-                                $q->where('meta_name', 'locations')
-                                  ->whereHas('values', function ($q2) use ($place) {
-                                      $q2->where('value', 'like', "%{$place}%");
-                                  });
-                            });
-                        }
-                    });
-                }
-            }
+            ProductSearchFilters::applyWhereFilter($retry, $whereInput);
+            ProductSearchFilters::applyWhoFilter($retry, $adults, $groupType);
             if ($request->filled('price_max')) {
                 $pm = (float) $request->input('price_max');
                 $retry->where(function($q) use ($pm) {

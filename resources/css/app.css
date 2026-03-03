@@ -951,3 +951,7 @@ header .nav-item:hover > a::after, header .nav-item:focus-within > a::after{ tra
 }
 .account-trigger__avatar { width: 28px; height: 28px; border-radius: 999px; background: var(--ink-100); color: var(--ink-800); font-weight: 500; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; overflow: hidden; border: 1px solid #ddd; font-size: 14px; }
 .account-trigger__avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+
+div#home-template-what-pane {
+  left: 0px !important;
+}
