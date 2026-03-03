@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
@@ -963,6 +964,25 @@ class LandingController extends Controller
         } catch (\Throwable $e) { /* swallow fallback errors */ }
 
         $vendor = $product->vendor;
+        $clientReviews = [];
+        if ($vendor) {
+            $clientReviews = Review::query()
+                ->with('user')
+                ->where('vendor_id', $vendor->id)
+                ->whereNotNull('review_text')
+                ->latest('created_at')
+                ->take(6)
+                ->get()
+                ->map(function ($review) {
+                    return [
+                        'id' => $review->id,
+                        'rating' => (int) ($review->rating ?? 0),
+                        'body' => trim((string) $review->review_text),
+                        'author' => optional($review->user)->name ?? 'Verified client',
+                        'date' => optional($review->created_at)->format('M Y') ?? '',
+                    ];
+                })->values()->all();
+        }
         $metaSafety = $meta['safety_notes'] ?? ($meta['safety'] ?? '');
         $metaContra = $meta['contraindications'] ?? '';
         $metaBenefits = $meta['benefits'] ?? [];
@@ -1028,6 +1048,7 @@ class LandingController extends Controller
                     'created_at' => optional($r->created_at)->toIso8601String(),
                 ];
             })->values(),
+            'client_reviews' => $clientReviews,
         ];
 
         return view('offering.show', [

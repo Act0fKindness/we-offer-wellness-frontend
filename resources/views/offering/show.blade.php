@@ -95,14 +95,25 @@
         @include('offering.partials.advanced_buybox')
         @include('offering.partials.variant_helper')
 
-        @if(!empty($p['reviews']))
+        @php
+          $clientReviews = $p['client_reviews'] ?? [];
+        @endphp
+        @if(!empty($clientReviews))
           <div class="card p-4 mt-4">
             <h3 class="h6 m-0">Client reviews</h3>
             <div class="mt-3 d-grid gap-3">
-              @foreach($p['reviews'] as $r)
-                <div class="p-3 rounded border">
-                  <div class="small text-muted">★ {{ (int)($r['rating'] ?? 0) }}/5</div>
-                  <div class="mt-1">{{ $r['review'] ?? '' }}</div>
+              @foreach($clientReviews as $review)
+                <div class="p-3 border rounded bg-ink-50">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="fw-semibold text-ink-900">{{ $review['author'] ?? 'Verified client' }}</div>
+                    <div class="text-warning small" aria-label="{{ $review['rating'] ?? 0 }} out of 5 stars">
+                      @for($i = 1; $i <= 5; $i++)
+                        <i class="bi {{ $i <= ($review['rating'] ?? 0) ? 'bi-star-fill' : 'bi-star' }}"></i>
+                      @endfor
+                    </div>
+                  </div>
+                  <p class="mb-2 text-ink-800" style="white-space:pre-line;">{{ $review['body'] ?? '' }}</p>
+                  <div class="small text-muted">{{ $review['date'] ?? '' }}</div>
                 </div>
               @endforeach
             </div>
