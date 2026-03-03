@@ -299,13 +299,14 @@ class TransactionalMail
         );
     }
 
-    public static function vendorOrderNotification(Order $order): void
+    public static function vendorOrderNotification(Order $order): bool
     {
         $groups = self::vendorGroupsForOrder($order);
         if (empty($groups)) {
-            return;
+            return false;
         }
 
+        $sent = false;
         foreach ($groups as $group) {
             $email = $group['email'] ?? null;
             if (!$email) {
@@ -329,24 +330,28 @@ class TransactionalMail
                 null,
                 ['tags' => ['order', 'vendor', 'booking']]
             );
+            $sent = true;
         }
+
+        return $sent;
     }
 
-    public static function vendorIntroduction(Order $order): void
+    public static function vendorIntroduction(Order $order): bool
     {
         $customerEmail = $order->email;
         if (!$customerEmail) {
-            return;
+            return false;
         }
 
         $groups = self::vendorGroupsForOrder($order);
         if (empty($groups)) {
-            return;
+            return false;
         }
 
         $supportEmail = self::conciergeEmail();
         $customerName = self::customerName($order);
 
+        $sent = false;
         foreach ($groups as $group) {
             $email = $group['email'] ?? null;
             if (!$email) {
@@ -392,7 +397,10 @@ class TransactionalMail
                 null,
                 $options
             );
+            $sent = true;
         }
+
+        return $sent;
     }
 
     public static function paymentFailed(?CheckoutAttempt $attempt = null, ?Order $order = null, array $context = []): void

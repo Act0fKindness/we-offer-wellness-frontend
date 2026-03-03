@@ -130,7 +130,11 @@
             .wow-footer .links-col.links-col--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
         .wow-footer .links-col .col--full { grid-column: 1 / -1; }
-        .wow-footer .safety-card { display:flex; flex-direction:column; gap:10px; padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.15); text-align:left; margin-bottom:30px; }
+        .wow-footer .safety-card { display:flex; flex-direction:column; gap:10px; padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.15); text-align:left; margin-bottom:30px; align-items:flex-start; }
+        @media (min-width: 641px) {
+            .wow-footer .safety-card { text-align:left; align-items:flex-start; }
+            .wow-footer .safety-card .safety-cta { justify-content:flex-start; }
+        }
         .wow-footer .safety-card .safety-cta { width:100%; max-width:204px; color:#000; }
         .wow-footer .safety-card .title { font-weight:700; margin-bottom:4px; }
         @media (max-width: 640px) {

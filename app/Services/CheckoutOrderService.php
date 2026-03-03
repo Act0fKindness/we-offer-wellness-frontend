@@ -18,16 +18,19 @@ class CheckoutOrderService
             }
 
             if ($fresh->order_id) {
-                return Order::with('items')->find($fresh->order_id);
+                $existingOrder = Order::with(['items', 'customerProfile'])->find($fresh->order_id);
+                $this->queueOrderEmails($existingOrder, false);
+                return $existingOrder;
             }
 
             $existing = $fresh->stripe_session_id
-                ? Order::with('items')->where('stripe_session_id', $fresh->stripe_session_id)->first()
+                ? Order::with(['items', 'customerProfile'])->where('stripe_session_id', $fresh->stripe_session_id)->first()
                 : null;
             if ($existing) {
                 $fresh->order_id = $existing->id;
                 $fresh->status = 'completed';
                 $fresh->save();
+                $this->queueOrderEmails($existing, false);
                 return $existing;
             }
 
@@ -41,16 +44,7 @@ class CheckoutOrderService
                 'stripe_payment_intent_id' => $context['stripe_payment_intent_id'] ?? $fresh->stripe_payment_intent_id,
             ]);
 
-            DB::afterCommit(function () use ($order) {
-                $freshOrder = $order->fresh(['items', 'customerProfile']);
-                if (!$freshOrder) {
-                    return;
-                }
-
-                TransactionalMail::orderReceipt($freshOrder);
-                TransactionalMail::vendorOrderNotification($freshOrder);
-                TransactionalMail::vendorIntroduction($freshOrder);
-            });
+            $this->queueOrderEmails($order, true);
 
             foreach ($fresh->items ?? [] as $id => $it) {
                 $title = (string)($it['title'] ?? ('Item '.$id));
@@ -95,5 +89,50 @@ class CheckoutOrderService
 
             return $order->load('items');
         });
+    }
+
+    protected function queueOrderEmails(?Order $order, bool $sendReceipt): void
+    {
+        if (!$order) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($order, $sendReceipt) {
+            $freshOrder = $order->fresh(['items', 'customerProfile']);
+            if (!$freshOrder) {
+                return;
+            }
+
+            if ($sendReceipt) {
+                TransactionalMail::orderReceipt($freshOrder);
+            }
+
+            $this->sendVendorEmailsOnce($freshOrder);
+        });
+    }
+
+    protected function sendVendorEmailsOnce(Order $order): void
+    {
+        if ($order->status !== 'paid') {
+            return;
+        }
+
+        $updates = [];
+
+        if (!$order->vendor_notified_at) {
+            if (TransactionalMail::vendorOrderNotification($order)) {
+                $updates['vendor_notified_at'] = now();
+            }
+        }
+
+        if (!$order->vendor_introduction_sent_at) {
+            if (TransactionalMail::vendorIntroduction($order)) {
+                $updates['vendor_introduction_sent_at'] = now();
+            }
+        }
+
+        if (!empty($updates)) {
+            $order->forceFill($updates)->save();
+        }
     }
 }

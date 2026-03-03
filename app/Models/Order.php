@@ -15,7 +15,20 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id','email','currency','amount_total','status','stripe_session_id','stripe_payment_intent_id'
+        'user_id',
+        'email',
+        'currency',
+        'amount_total',
+        'status',
+        'stripe_session_id',
+        'stripe_payment_intent_id',
+        'vendor_notified_at',
+        'vendor_introduction_sent_at',
+    ];
+
+    protected $casts = [
+        'vendor_notified_at' => 'datetime',
+        'vendor_introduction_sent_at' => 'datetime',
     ];
 
     /**
