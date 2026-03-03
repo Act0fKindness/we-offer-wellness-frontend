@@ -263,7 +263,7 @@
         <div class="seg" id="search-top-seg-who"><i class="bi bi-person fs-5 text-muted"></i>
           <div class="flex-grow-1">
             <div class="seg-label">Who</div>
-            <div id="search-top-who-summary" class="summary">2 adults · Couple</div>
+            <div id="search-top-who-summary" class="summary is-placeholder">Add guests</div>
           </div>
           <div id="search-top-who-pane" class="pane narrow d-none" aria-label="Guests">
             <div class="section-title">Guests</div>
@@ -274,14 +274,14 @@
                   <small class="text-muted">18+</small></div>
                 <div class="counter">
                   <button type="button" class="btn btn-counter" data-dec="adults" aria-label="Decrease adults"><i class="bi bi-dash"></i></button>
-                  <span id="search-top-adults-val" class="fw-semibold">2</span>
+                  <span id="search-top-adults-val" class="fw-semibold">0</span>
                   <button type="button" class="btn btn-counter" data-inc="adults" aria-label="Increase adults"><i class="bi bi-plus"></i></button>
                 </div>
               </div>
               <div class="section-title">Group type</div>
               <div id="search-top-group-type-list">
                 <button type="button" class="item" data-group="Solo" aria-selected="false"><i class="bi bi-person"></i><span class="title">Solo</span></button>
-                <button type="button" class="item" data-group="Couple" aria-selected="true"><i class="bi bi-heart"></i><span class="title">Couple</span></button>
+                <button type="button" class="item" data-group="Couple" aria-selected="false"><i class="bi bi-heart"></i><span class="title">Couple</span></button>
                 <button type="button" class="item" data-group="Group" aria-selected="false"><i class="bi bi-people"></i><span class="title">Group</span></button>
               </div>
             </div>

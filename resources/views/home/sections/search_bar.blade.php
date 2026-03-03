@@ -103,7 +103,7 @@
                 <div class="seg" id="home-template-seg-who"><i class="bi bi-person fs-5 text-muted"></i>
                     <div class="flex-grow-1">
                         <div class="seg-label">Who</div>
-                        <div id="home-template-who-summary" class="summary">2 adults · Couple</div>
+                        <div id="home-template-who-summary" class="summary is-placeholder">Add guests</div>
                     </div>
                     <div id="home-template-who-pane" class="pane narrow d-none" aria-label="Guests">
                         <div class="section-title">Guests</div>
@@ -115,7 +115,7 @@
                                 <div class="counter">
                                     <button type="button" class="btn btn-counter" data-dec="adults"
                                             aria-label="Decrease adults"><i class="bi bi-dash"></i></button>
-                                    <span id="home-template-adults-val" class="fw-semibold">2</span>
+                                    <span id="home-template-adults-val" class="fw-semibold">0</span>
                                     <button type="button" class="btn btn-counter" data-inc="adults"
                                             aria-label="Increase adults"><i class="bi bi-plus"></i></button>
                                 </div>
@@ -124,7 +124,7 @@
                             <div id="home-template-group-type-list">
                                 <button type="button" class="item" data-group="Solo" aria-selected="false">
                                     <i class="bi bi-person"></i><span class="title">Solo</span></button>
-                                <button type="button" class="item" data-group="Couple" aria-selected="true">
+                                <button type="button" class="item" data-group="Couple" aria-selected="false">
                                     <i class="bi bi-heart"></i><span class="title">Couple</span></button>
                                 <button type="button" class="item" data-group="Group" aria-selected="false">
                                     <i class="bi bi-people"></i><span class="title">Group</span></button>

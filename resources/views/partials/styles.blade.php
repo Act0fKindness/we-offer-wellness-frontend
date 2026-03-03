@@ -22964,6 +22964,7 @@
     .wow-ultra .where-editor{ outline:0; min-height:1.25rem; font-size:1rem; line-height:1.25; }
     .wow-ultra .where-editor:empty:before{ content: attr(data-placeholder); color:#9ca3af; }
     .wow-ultra .summary{ color:#374151; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .wow-ultra .summary.is-placeholder{ color:rgba(11,18,32,.45); font-weight:500; }
     .wow-ultra.only-what .seg{ flex:1 1 100% }
     .wow-ultra.only-what .bar{ flex-wrap:nowrap }
     .wow-ultra .pane{

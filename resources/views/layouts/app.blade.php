@@ -125,6 +125,112 @@
       whoSeg.addEventListener('click', function(){ openPane('who') });
     }
 
+    var whoSummaryEl = byId('who-summary');
+    var adultsValEl = byId('adults-val');
+    var whoPane = byId('who-pane');
+    var groupList = document.getElementById(prefix + '-group-type-list');
+    var whoState = { adults: 0, group: null, explicitGroup: false };
+
+    (function initWhoState(){
+      try {
+        var params = new URLSearchParams(window.location.search || '');
+        var adultsParam = parseInt(params.get('adults'), 10);
+        if(Number.isFinite(adultsParam) && adultsParam > 0){ whoState.adults = adultsParam; }
+        var groupParam = params.get('group_type');
+        if(groupParam){
+          whoState.group = normalizeGroup(groupParam);
+          whoState.explicitGroup = !!whoState.group;
+        }
+      } catch(_err) {}
+    })();
+
+    function normalizeGroup(group){
+      if(!group) return null;
+      var key = String(group).trim().toLowerCase();
+      if(!key) return null;
+      if(key === 'solo') return 'Solo';
+      if(key === 'couple') return 'Couple';
+      return 'Group';
+    }
+
+    function autoGroupFromAdults(){
+      if(!whoState.adults || whoState.adults <= 0) return null;
+      if(whoState.adults === 1) return 'Solo';
+      if(whoState.adults === 2) return 'Couple';
+      return 'Group';
+    }
+
+    function currentGroup(){
+      if(whoState.explicitGroup && whoState.group) return whoState.group;
+      return autoGroupFromAdults();
+    }
+
+    function syncGroupButtons(active){
+      if(!groupList) return;
+      groupList.querySelectorAll('.item').forEach(function(btn){
+        var isActive = !!active && normalizeGroup(btn.getAttribute('data-group')) === active;
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+    }
+
+    function updateWhoSummary(){
+      var group = currentGroup();
+      syncGroupButtons(group);
+      if(adultsValEl){ adultsValEl.textContent = String(whoState.adults || 0); }
+      if(!whoSummaryEl) return;
+      if(whoState.adults && whoState.adults > 0){
+        var text = whoState.adults + ' adult' + (whoState.adults > 1 ? 's' : '');
+        if(group){ text += ' · ' + group; }
+        whoSummaryEl.textContent = text;
+        whoSummaryEl.classList.remove('is-placeholder');
+      } else {
+        whoSummaryEl.textContent = 'Add guests';
+        whoSummaryEl.classList.add('is-placeholder');
+      }
+    }
+
+    function setAdults(next){
+      var value = Math.max(0, Number(next) || 0);
+      whoState.adults = value;
+      if(value === 0){
+        whoState.explicitGroup = false;
+        whoState.group = null;
+      }
+      updateWhoSummary();
+    }
+
+    function setGroup(group, explicit){
+      var normalized = normalizeGroup(group);
+      whoState.group = normalized;
+      whoState.explicitGroup = !!(explicit && normalized);
+      updateWhoSummary();
+    }
+
+    if(groupList){
+      groupList.addEventListener('click', function(e){
+        var btn = e.target.closest('.item');
+        if(!btn) return;
+        e.preventDefault();
+        setGroup(btn.getAttribute('data-group'), true);
+      });
+    }
+
+    if(whoPane){
+      whoPane.addEventListener('click', function(e){
+        var inc = e.target.closest('[data-inc="adults"]');
+        var dec = e.target.closest('[data-dec="adults"]');
+        if(inc){
+          e.preventDefault();
+          setAdults((whoState.adults || 0) + 1);
+        } else if(dec){
+          e.preventDefault();
+          setAdults((whoState.adults || 0) - 1);
+        }
+      });
+    }
+
+    updateWhoSummary();
+
     // Close when clicking outside
     document.addEventListener('click', function(e){
       try{ if(root && !root.contains(e.target)) hideAll(); }catch(_){ /* no-op */ }
