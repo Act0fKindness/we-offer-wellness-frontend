@@ -283,6 +283,81 @@ function setupUltraSearchBar(prefix) {
   const whatList = byId('what-list'); if(whatList && byId('what')){ whatList.addEventListener('click', (e)=>{ const btn = e.target.closest('.item'); if(btn && btn.dataset.value){ byId('what').value = btn.dataset.value; hideAll(); byId('what').blur(); } }); }
   const whereHidden = byId('where'); if(byId('where-list') && whereEditor){ byId('where-list').addEventListener('click', (e)=>{ const btn = e.target.closest('.item'); if(btn && btn.dataset.value){ whereEditor.textContent = btn.dataset.value; if(whereHidden) whereHidden.value = btn.dataset.value; hideAll(); } }); }
   const whoDone = byId('who-done'); if(whoDone){ whoDone.addEventListener('click', ()=>hideAll()); }
+
+  // Shared Who panel controls (Adults counter + group type)
+  (function initWhoControls(){
+    const pane = byId('who-pane');
+    const adultsEl = byId('adults-val');
+    const groupList = byId('group-type-list');
+    const summaryEl = byId('who-summary');
+    if (!pane || !adultsEl || pane.dataset.wowWhoBound === '1') return;
+
+    function clampAdults(n){
+      const num = Number(n);
+      if (!Number.isFinite(num)) return 1;
+      return Math.max(1, Math.min(20, Math.round(num)));
+    }
+
+    function getAdults(){
+      return clampAdults((adultsEl.textContent || adultsEl.value || '1').trim());
+    }
+
+    function setGroupSelection(name){
+      if (!groupList) return;
+      const target = String(name || '');
+      Array.from(groupList.querySelectorAll('[data-group]')).forEach((btn) => {
+        const isMatch = String(btn.getAttribute('data-group')) === target;
+        btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+      });
+    }
+
+    function groupForAdults(n){
+      if (n <= 1) return 'Solo';
+      if (n === 2) return 'Couple';
+      return 'Group';
+    }
+
+    function updateSummary(n){
+      if (!summaryEl) return;
+      const label = groupForAdults(n);
+      summaryEl.textContent = `${n} ${n === 1 ? 'adult' : 'adults'} · ${label}`;
+    }
+
+    function applyAdults(n, { syncGroup = true } = {}){
+      const next = clampAdults(n);
+      adultsEl.textContent = String(next);
+      if (syncGroup) setGroupSelection(groupForAdults(next));
+      updateSummary(next);
+    }
+
+    pane.addEventListener('click', (event) => {
+      const dec = event.target.closest('[data-dec="adults"]');
+      const inc = event.target.closest('[data-inc="adults"]');
+      if (!dec && !inc) return;
+      event.preventDefault();
+      const current = getAdults();
+      applyAdults(current + (inc ? 1 : -1));
+    });
+
+    if (groupList) {
+      groupList.addEventListener('click', (event) => {
+        const btn = event.target.closest('[data-group]');
+        if (!btn) return;
+        const group = btn.getAttribute('data-group') || '';
+        if (group === 'Solo') {
+          applyAdults(1);
+        } else if (group === 'Couple') {
+          applyAdults(2);
+        } else {
+          applyAdults(Math.max(3, getAdults()));
+        }
+      });
+    }
+
+    // Initial sync
+    applyAdults(getAdults());
+    pane.dataset.wowWhoBound = '1';
+  })();
 }
 
 function initAccountDropdown() {
