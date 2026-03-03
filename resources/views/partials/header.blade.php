@@ -557,7 +557,7 @@
 
 #mega-panel .grid{ gap:0 !important; }
 #mega-panel .menu-col{
-    padding:20px !important;
+    padding:40px 30px !important;
     min-width:0;
     border-left:1px solid transparent;
     border-radius:0 !important;
