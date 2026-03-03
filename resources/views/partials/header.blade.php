@@ -545,6 +545,99 @@
 .mobile-account-logout button{ width:100%; }
 .mobile-account-guest-title{ margin:0; font-weight:800; letter-spacing:-.01em; color:var(--ink-900); }
 .mobile-account-guest-text{ margin:4px 0 0; color:var(--ink-700); font-size:13px; }
+
+/* Mega menu — Stripe-style polish */
+#mega-panel .container-page{ padding-top:20px; padding-bottom:24px; }
+#mega-panel [data-menu]{ display:none !important; }
+#mega-panel[data-active="need"] [data-menu="need"],
+#mega-panel[data-active="therapies"] [data-menu="therapies"],
+#mega-panel[data-active="events"] [data-menu="events"]{ display:grid !important; }
+
+#mega-panel .grid{ gap:0; }
+#mega-panel .menu-col{
+    padding:18px;
+    min-width:0;
+    border-left:1px solid transparent;
+}
+#mega-panel .menu-col:first-child{ border-left:0; }
+
+#mega-panel .mega-kicker{
+    font-family:"Instrument Sans", var(--font-sans, system-ui);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:rgba(74,136,120,.92);
+    margin:0 0 12px;
+}
+
+#mega-panel .menu-link{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    padding:9px 10px;
+    border-radius:10px;
+    text-decoration:none;
+    color:rgba(11,18,32,.86);
+    font-weight:650;
+    font-family:"Instrument Sans", var(--font-sans, system-ui);
+    font-size:14px;
+    transition:background .16s cubic-bezier(.2,.8,.2,1), transform .16s cubic-bezier(.2,.8,.2,1), box-shadow .16s cubic-bezier(.2,.8,.2,1);
+    position:relative;
+}
+#mega-panel .menu-link:hover{
+    background:rgba(15,23,42,.05);
+    transform:translateY(-1px);
+    box-shadow:0 10px 22px rgba(2,6,23,.06);
+    color:rgba(11,18,32,.92);
+}
+
+#mega-panel .menu-link::after{
+    content:"";
+    width:14px;
+    height:14px;
+    flex:0 0 auto;
+    margin-top:2px;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10 8l4 4-4 4' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    background: currentColor;
+    opacity:.35;
+    transition:transform .16s cubic-bezier(.2,.8,.2,1), opacity .16s cubic-bezier(.2,.8,.2,1);
+}
+#mega-panel .menu-link:hover::after{ transform:translateX(2px); opacity:.65; }
+
+#mega-panel .menu-col--foryou .mega-label,
+#mega-panel .mega-label{
+    font-family:"Instrument Sans", var(--font-sans, system-ui);
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(11,18,32,.46);
+    margin:14px 0 8px;
+}
+#mega-panel .mega-quick-links .menu-link{ font-size:13px; font-weight:600; }
+
+#mega-panel .list-unstyled{ display:flex; flex-direction:column; gap:8px; }
+
+#mega-panel [data-menu="need"]{ grid-template-columns:1.05fr 1.05fr .95fr; }
+#mega-panel [data-menu="need"] .menu-col--foryou{
+    background:linear-gradient(180deg, rgba(15,23,42,.02), rgba(15,23,42,0));
+    border-left:1px solid rgba(15,23,42,.08);
+}
+
+#mega-panel [data-menu="therapies"]{ grid-template-columns:1fr 1fr .92fr; }
+#mega-panel [data-menu="therapies"] .menu-col + .menu-col{ border-left:1px solid rgba(15,23,42,.08); }
+#mega-panel [data-menu="therapies"] .menu-col:nth-child(2){ background:rgba(15,23,42,.02); }
+
+#mega-panel .menu-col--foryou .mega-label + ul{ margin-top:0; }
+
+#mega-panel .menu-col .mega-label:first-child{ margin-top:0; }
+
+@media (max-width: 991.98px){
+    #mega-panel .grid{ grid-template-columns:1fr !important; }
+    #mega-panel [data-menu="need"] .menu-col--foryou,
+    #mega-panel [data-menu="therapies"] .menu-col + .menu-col{ border-left:0; border-top:1px solid rgba(15,23,42,.08); }
+}
 </style>
 
 
