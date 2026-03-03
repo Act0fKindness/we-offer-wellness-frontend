@@ -1,40 +1,36 @@
+@include('partials.styles.ratings')
+
 @php
-    $rating = is_null($rating ?? null) ? null : max(0, min(5, round((float) $rating, 1)));
+    $rating = is_null($rating ?? null) ? null : round((float) $rating, 1);
     $reviews = max(0, (int) ($reviews ?? 0));
-    $vendorRating = is_null($vendorRating ?? null) ? null : max(0, min(5, round((float) $vendorRating, 1)));
+    $vendorRating = is_null($vendorRating ?? null) ? null : round((float) $vendorRating, 1);
     $vendorReviews = max(0, (int) ($vendorReviews ?? 0));
-    if ($reviews === 0 && $vendorReviews > 0 && $vendorRating !== null) {
+    if (($reviews === 0 || $rating === null) && $vendorReviews > 0 && $vendorRating !== null) {
         $rating = $vendorRating;
         $reviews = $vendorReviews;
     }
-    $fullStars = $rating !== null ? (int) floor($rating) : 0;
-    $hasHalf = $rating !== null ? (($rating - $fullStars) >= 0.5) : false;
-    if ($hasHalf && $fullStars === 5) {
-        $hasHalf = false;
-    }
-    if ($reviews > 0 && $rating !== null) {
-        $label = 'Rating '.number_format($rating, 1).' out of 5 from '.number_format($reviews).' reviews';
-    } elseif ($reviews > 0) {
-        $label = number_format($reviews).' reviews published';
-    } else {
-        $label = 'No reviews yet';
-    }
+    $rating = max(0, min(5, $rating ?? 0));
+    $fullStars = (int) floor($rating);
+    $hasHalf = ($rating - $fullStars) >= 0.5 && $fullStars < 5;
+    $label = 'Rating '.number_format($rating, 1).' out of 5 from '.number_format($reviews).' '.\Illuminate\Support\Str::plural('review', $reviews);
 @endphp
-<div class="rating-row" aria-label="{{ $label }}">
-    <span class="stars" aria-hidden="true">
+
+<div class="wow-rating wow-review-row" aria-label="{{ $label }}">
+    <span class="stars wow-review-stars" aria-hidden="true">
         @for ($i = 1; $i <= 5; $i++)
             @php
-                $class = 'star star--empty';
+                $class = 'star wow-review-star';
                 if ($i <= $fullStars) {
-                    $class = 'star star--filled';
+                    $class .= ' wow-review-star--full';
                 } elseif ($hasHalf && $i === $fullStars + 1) {
-                    $class = 'star star--half';
+                    $class .= ' wow-review-star--half';
                 }
             @endphp
             <span class="{{ $class }}"></span>
         @endfor
     </span>
-    @if($reviews > 0)
-        <span class="rating-count">({{ number_format($reviews) }})</span>
-    @endif
+    <span class="wow-review-meta">
+        <span class="wow-review-score">{{ number_format($rating, 1) }}</span>
+        <span class="wow-review-count">{{ number_format($reviews) }} {{ \Illuminate\Support\Str::plural('review', $reviews) }}</span>
+    </span>
 </div>
