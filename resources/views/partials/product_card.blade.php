@@ -215,7 +215,7 @@
   .wow-therapy-card-scope .meta .item svg{ width: var(--metaIcon); height: var(--metaIcon); color: rgba(11,18,32,.58); }
   .wow-therapy-card-scope .meta .item .label{ font-size: var(--meta); font-weight:600; letter-spacing:0; text-transform:none; color: rgba(11,18,32,.72); }
   .wow-therapy-card-scope .content-bottom{ flex:0 0 auto; margin-top:auto; padding:15px; border-top:1px solid rgba(16,24,40,.10); background:#fff }
-  .wow-therapy-card-scope .content-bottom-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; }
+  .wow-therapy-card-scope .content-bottom-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:0; }
   .wow-therapy-card-scope .content-bottom-head > div{ flex:1 1 auto; }
   .wow-therapy-card-scope .fomo{ margin:0 0 8px; font-size: var(--fomo); font-weight:600; color: rgba(11,18,32,.84); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
   .wow-therapy-card-scope .price{ display:flex; align-items:baseline; gap:8px; margin:0 0 12px }
