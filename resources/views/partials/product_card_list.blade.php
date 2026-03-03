@@ -233,6 +233,8 @@
     .wow-meta svg{ width:var(--metaIcon); height:var(--metaIcon); color:rgba(11,18,32,.58); }
     .wow-meta .label{ display:inline-block; max-width:140px; letter-spacing:normal; margin-left:0; font-size:12px; padding-left:0; font-weight:400; text-transform:capitalize; overflow:hidden; text-overflow:ellipsis; }
     .wow-row-bottom{ grid-column:3; padding:var(--pad); padding-right:22px; border-left:1px solid rgba(16,24,40,.10); background:#fff; display:flex; flex-direction:column; justify-content:space-between; gap:14px; }
+    .wow-bottom-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .wow-bottom-head > div{ flex:1 1 auto; }
     .wow-fomo{ margin:0 0 6px; font-size:12px; font-weight:800; color:rgba(11,18,32,.84); }
     .wow-price{ display:flex; align-items:baseline; gap:8px; margin:0; }
     .wow-price .from{ font-size:var(--from); color:rgba(11,18,32,.70); }
@@ -278,12 +280,6 @@
               'rating' => $rating,
               'reviewCount' => $reviewCount,
           ])
-
-          <button class="wow-save" type="button" aria-label="Save" aria-pressed="false" title="Save">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" height="18">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z"/>
-              </svg>
-          </button>
       </div>
 
       <div>
@@ -307,17 +303,25 @@
 
   <!-- Col 3 -->
   <div class="wow-row-bottom">
-      <div>
-        <p class="wow-fomo">Click to find out more information</p>
-        @if($priceMin)
-            <p class="wow-price">
-                <span class="from">From</span>
-                <span class="now">£{{ number_format((float)$priceMin, 2) }}</span>
-                @if($compareMin && $compareMin > $priceMin)
-                    <span class="was">(was £{{ number_format((float)$compareMin, 2) }})</span>
-                @endif
-            </p>
-        @endif
+      <div class="wow-bottom-head">
+        <div>
+          <p class="wow-fomo">Click to find out more information</p>
+          @if($priceMin)
+              <p class="wow-price">
+                  <span class="from">From</span>
+                  <span class="now">£{{ number_format((float)$priceMin, 2) }}</span>
+                  @if($compareMin && $compareMin > $priceMin)
+                      <span class="was">(was £{{ number_format((float)$compareMin, 2) }})</span>
+                  @endif
+              </p>
+          @endif
+        </div>
+
+        <button class="wow-save" type="button" aria-label="Save" aria-pressed="false" title="Save">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" height="18">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z"/>
+            </svg>
+        </button>
       </div>
 
       <div class="wow-actions">

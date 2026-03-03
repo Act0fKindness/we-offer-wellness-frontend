@@ -210,6 +210,8 @@
   }
   .wow-therapy-card-scope .content-top .provider{ margin:0 0 8px; font-size:var(--provider); font-weight:500; color: var(--muted); }
   .wow-therapy-card-scope .content-bottom{ flex:0 0 auto; margin-top:auto; padding:15px; border-top:1px solid rgba(16,24,40,.10); background:#fff }
+  .wow-therapy-card-scope .content-bottom-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; }
+  .wow-therapy-card-scope .content-bottom-head > div{ flex:1 1 auto; }
   .wow-therapy-card-scope .fomo{ margin:0 0 8px; font-size: var(--fomo); font-weight:600; color: rgba(11,18,32,.84); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
   .wow-therapy-card-scope .price{ display:flex; align-items:baseline; gap:8px; margin:0 0 12px }
   .wow-therapy-card-scope .price .from{ font-size: var(--from); font-weight:400; color: rgba(11,18,32,.70) }
@@ -285,9 +287,6 @@
               'reviewCount' => $reviewCount,
           ])
         </div>
-        <button class="save" type="button" aria-label="Save" aria-pressed="false" title="Save">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z"/></svg>
-        </button>
       </header>
 
       <div class="media">
@@ -368,16 +367,23 @@
 
         </div>
         <div class="content-bottom">
-          <p class="fomo">Click to find out more information</p>
-          @if($priceMin)
-            <div class="price">
-              <span class="from">From</span>
-              <span class="now">£{{ number_format((float)$priceMin, 2) }}</span>
-              @if($compareMin && $compareMin > $priceMin)
-                <span class="was">(was £{{ number_format((float)$compareMin, 2) }})</span>
+          <div class="content-bottom-head">
+            <div>
+              <p class="fomo">Click to find out more information</p>
+              @if($priceMin)
+                <div class="price">
+                  <span class="from">From</span>
+                  <span class="now">£{{ number_format((float)$priceMin, 2) }}</span>
+                  @if($compareMin && $compareMin > $priceMin)
+                    <span class="was">(was £{{ number_format((float)$compareMin, 2) }})</span>
+                  @endif
+                </div>
               @endif
             </div>
-          @endif
+            <button class="save" type="button" aria-label="Save" aria-pressed="false" title="Save">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z"/></svg>
+            </button>
+          </div>
           <div class="actions">
             <button type="button" class="btn js-add-to-cart js-open-cart"
               data-id="{{ $product->id }}"
