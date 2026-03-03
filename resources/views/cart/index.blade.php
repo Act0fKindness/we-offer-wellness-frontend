@@ -308,7 +308,13 @@
     document.getElementById('summaryWrap').style.display = isEmpty ? 'none' : '';
     document.getElementById('emptyWrap').style.display = isEmpty ? '' : 'none';
     sumHeadTitle.textContent = isEmpty ? 'Your cart' : 'Order summary';
-    if (isEmpty){ cartBody.innerHTML = ''; renderSummary(); return; }
+    if (isEmpty){
+      cartBody.innerHTML = '';
+      renderSummary();
+      renderUpsells();
+      writeLocalFromCart();
+      return;
+    }
     cartBody.innerHTML = cart.map(function(it){ var line = Number(it.unit||0) * Number(it.qty||1); var variant = it.variant_label ? '<div class="variant">'+escapeHtml(it.variant_label)+'</div>' : ''; return (
       '<div class="cart-row" data-id="'+escapeHtml(String(it.id))+'">'
       + '<div class="cart-item">'
