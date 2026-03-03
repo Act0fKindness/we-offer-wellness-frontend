@@ -69,9 +69,9 @@
 
 @include('offering.partials.sections.summary', ['summary' => $sum])
 
-@include('offering.partials.sections.about', ['body' => $about])
-
 @include('offering.partials.sections.features', ['locationsList' => $locs, 'participantRange' => $participantRange])
+
+@include('offering.partials.sections.about', ['body' => $about])
 
 <div class="wow-acc mt-3">
   @include('offering.partials.sections.included', ['included' => $includedHtml])
