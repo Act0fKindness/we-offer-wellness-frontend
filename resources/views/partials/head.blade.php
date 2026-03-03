@@ -22850,7 +22850,7 @@ What’s included
 
 @media (min-width: 1400px) {
     :root {
-        --wow-cn: min(100vw - 2rem, 1320px);
+        --wow-cn: min(100vw - 2rem, 1233px);
     }
 }
 

@@ -85,7 +85,7 @@
 @media (min-width: 768px){ :root { --wow-cn: min(100vw - 2rem, 720px); } }
 @media (min-width: 992px){ :root { --wow-cn: min(100vw - 2rem, 960px); } }
 @media (min-width:1200px){ :root { --wow-cn: min(100vw - 2rem,1140px); } }
-@media (min-width:1400px){ :root { --wow-cn: min(100vw - 2rem,1320px); } }
+@media (min-width:1400px){ :root { --wow-cn: min(100vw - 2rem,1233px); } }
 
 :root{ --wow-cn-half: calc(var(--wow-cn) / 2); --wow-col: calc(var(--wow-cn) / 12); --wow-step: calc(var(--wow-col) * 3); --wow-line: rgba(0,0,0,.08); --wow-dash: rgba(0,0,0,.14); }
 
