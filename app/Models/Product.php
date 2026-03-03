@@ -364,6 +364,110 @@ class Product extends Model
     }
 
     /**
+     * Return the ProductOption row for locations (with values), if present.
+     */
+    public function locationOption(): ?ProductOption
+    {
+        if ($this->relationLoaded('options')) {
+            $opt = $this->options->firstWhere('meta_name', 'locations');
+            if ($opt && !$opt->relationLoaded('values')) {
+                $opt->load('values');
+            }
+            return $opt;
+        }
+        return $this->options()->where('meta_name', 'locations')->with('values')->first();
+    }
+
+    /**
+     * Map each location label to the variant IDs that include that location in their options.
+     *
+     * @return array<string, array<int>> [ location_label => [variant_id, ...] ]
+     */
+    public function locationVariantMap(): array
+    {
+        $locOpt = $this->locationOption();
+        if (!$locOpt) return [];
+
+        $valueLookup = [];
+        foreach (($this->relationLoaded('options') ? $this->options : $this->options()->with('values')->get()) as $o) {
+            foreach ($o->values as $val) {
+                $valueLookup[$val->id] = trim((string) $val->value);
+            }
+        }
+
+        $normalize = function ($s) {
+            $s = trim((string) $s);
+            if ($s === '') return $s;
+            if (function_exists('mb_strtolower')) return mb_strtolower($s, 'UTF-8');
+            return strtolower($s);
+        };
+
+        $locationLabels = $locOpt->values->pluck('value')->map(fn($v) => trim((string)$v))->filter()->values()->all();
+        $locationIndex = [];
+        foreach ($locationLabels as $label) {
+            $locationIndex[$normalize($label)] = $label; // normalized => original
+        }
+
+        $map = [];
+        $variants = $this->relationLoaded('variants') ? $this->variants : $this->variants()->get();
+        foreach ($variants as $v) {
+            $labels = [];
+            // Preferred: option_ids referencing ProductOptionValue IDs
+            $optIdsRaw = $v->option_ids ?? null;
+            if (is_string($optIdsRaw) && $optIdsRaw !== '') {
+                $ids = json_decode($optIdsRaw, true) ?: [];
+                foreach ((array)$ids as $id) {
+                    if (isset($valueLookup[$id])) { $labels[] = $valueLookup[$id]; }
+                }
+            }
+            // Fallback: textual options array/json on variant
+            if (empty($labels)) {
+                $opts = $v->options ?? null;
+                if (is_string($opts) && $opts !== '') {
+                    $opts = json_decode($opts, true) ?: [];
+                }
+                if (is_array($opts) && !empty($opts)) {
+                    // Keep only string-ish values
+                    foreach ($opts as $ov) {
+                        if (is_string($ov)) { $labels[] = $ov; }
+                        elseif (is_array($ov)) {
+                            foreach ($ov as $sub) { if (is_string($sub)) $labels[] = $sub; }
+                        }
+                    }
+                }
+            }
+
+            // Match labels to known location values
+            $norms = array_map($normalize, $labels);
+            foreach ($norms as $n) {
+                if (isset($locationIndex[$n])) {
+                    $orig = $locationIndex[$n];
+                    $map[$orig] = $map[$orig] ?? [];
+                    $map[$orig][] = (int) $v->id;
+                }
+            }
+        }
+
+        // Ensure deterministic order and unique IDs
+        foreach ($map as $k => $ids) {
+            $map[$k] = array_values(array_unique(array_map('intval', $ids)));
+        }
+        return $map;
+    }
+
+    /**
+     * Convenience: retrieve variants available for a given location label.
+     */
+    public function variantsForLocation(string $location)
+    {
+        $map = $this->locationVariantMap();
+        $ids = $map[trim($location)] ?? [];
+        if (empty($ids)) return collect();
+        $variants = $this->relationLoaded('variants') ? $this->variants : $this->variants()->get();
+        return $variants->whereIn('id', $ids)->values();
+    }
+
+    /**
      * Reviews published in our system that are associated to this product's vendor.
      *
      * These originate from the internal `reviews` table and are tied to a
