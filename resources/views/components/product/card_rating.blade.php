@@ -28,7 +28,7 @@
             <span class="{{ $class }}"></span>
         @endfor
     </span>
-    <span class="rating-count">
-        {{ $reviews > 0 ? '('.number_format($reviews).')' : 'New' }}
-    </span>
+    @if($reviews > 0)
+        <span class="rating-count">({{ number_format($reviews) }})</span>
+    @endif
 </div>
