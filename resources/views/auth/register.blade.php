@@ -3,6 +3,13 @@
 @section('page-title', 'Create an account — We Offer Wellness™')
 @section('auth-heading', 'Create account')
 @section('auth-subheading', 'Create an account to save favourites, manage bookings, and checkout faster.')
+@php($recaptchaEnabled = config('recaptcha.enabled') && config('recaptcha.site_key'))
+
+@if($recaptchaEnabled)
+  @pushOnce('scripts', 'recaptcha-script')
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  @endPushOnce
+@endif
 
 @section('auth-alert')
   <div id="registerAlert" class="account-auth-alert {{ $errors->any() ? 'show' : '' }}" role="alert" aria-live="polite">
@@ -77,6 +84,16 @@
       </label>
     </div>
 
+    @if($recaptchaEnabled)
+      <div class="account-auth-field-group">
+        <label class="account-auth-label">Security check</label>
+        <div class="account-auth-field account-auth-field--recaptcha">
+          <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
+        </div>
+        @error('g-recaptcha-response')<div class="account-auth-alert show">{{ $message }}</div>@enderror
+      </div>
+    @endif
+
     <button class="btn btn--primary account-auth-btn" id="registerSubmit" type="submit">
       <span class="spinner" aria-hidden="true"></span>
       Create account
@@ -147,6 +164,11 @@
   }
   .account-auth-inline--center {
     text-align: left;
+  }
+  .account-auth-field--recaptcha {
+    border: none;
+    padding: 0;
+    box-shadow: none;
   }
 </style>
 @endpush

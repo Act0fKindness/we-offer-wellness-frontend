@@ -5,6 +5,13 @@
 @section('auth-subheading', 'Log in to manage bookings, save favourites, and checkout faster.')
 
 @php($status = session('status'))
+@php($recaptchaEnabled = config('recaptcha.enabled') && config('recaptcha.site_key'))
+
+@if($recaptchaEnabled)
+  @pushOnce('scripts', 'recaptcha-script')
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  @endPushOnce
+@endif
 
 @section('auth-alert')
   @if($errors->any() || $status)
@@ -48,6 +55,16 @@
       <a href="{{ route('password.request') }}">Forgot password?</a>
     </div>
 
+    @if($recaptchaEnabled)
+      <div class="account-auth-field-group">
+        <label class="account-auth-label">Security check</label>
+        <div class="account-auth-field account-auth-field--recaptcha">
+          <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}"></div>
+        </div>
+        @error('g-recaptcha-response')<div class="account-auth-alert show">{{ $message }}</div>@enderror
+      </div>
+    @endif
+
     <button class="btn btn--primary account-auth-btn" id="loginSubmit" type="submit">
       <span class="spinner" aria-hidden="true"></span>
       Log in
@@ -64,6 +81,16 @@
     By continuing, you agree to our <a href="/terms" style="color:inherit;">Terms</a> and <a href="/privacy" style="color:inherit;">Privacy Policy</a>.
   </div>
 @endsection
+
+@push('styles')
+<style>
+  .account-auth-field--recaptcha {
+    border: none;
+    padding: 0;
+    box-shadow: none;
+  }
+</style>
+@endpush
 
 @push('scripts')
 <script>
