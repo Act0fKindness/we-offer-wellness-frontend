@@ -4,6 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MZMQNETBYH"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-MZMQNETBYH');
+    </script>
     <title>@yield('page-title', 'We Offer Wellness™')</title>
     @php($favicon = config('app.favicon_url', '/favicon.ico'))
     <link rel="icon" type="image/png" href="{{ $favicon }}">
