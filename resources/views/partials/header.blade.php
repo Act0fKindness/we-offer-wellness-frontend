@@ -566,8 +566,8 @@
 
 #mega-panel .mega-kicker{
     font-family:"Instrument Sans", var(--font-sans, system-ui);
-    font-size:11px;
-    font-weight:800;
+    font-size:12px;
+    font-weight:600;
     letter-spacing:.12em;
     text-transform:uppercase;
     color:rgba(74,136,120,.92);
@@ -600,9 +600,10 @@
 #mega-panel .mega-label{
     font-family:"Instrument Sans", var(--font-sans, system-ui);
     font-size:10px;
-    letter-spacing:.14em;
+    letter-spacing:.08em;
+    font-weight:600;
     text-transform:uppercase;
-    color:rgba(11,18,32,.46);
+    color:#443;
     margin:14px 0 8px;
 }
 #mega-panel .mega-quick-links .menu-link{ font-size:13px; font-weight:600; }

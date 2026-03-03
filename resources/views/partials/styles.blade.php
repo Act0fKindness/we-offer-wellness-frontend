@@ -23785,6 +23785,27 @@
         text-underline-offset: 3px
     }
 
+    #mega-panel .mega-kicker {
+        font-family: "Instrument Sans", var(--font-sans, system-ui);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: rgba(74, 136, 120, .92);
+        margin: 0 0 12px;
+    }
+
+    #mega-panel .menu-col--foryou .mega-label,
+    #mega-panel .mega-label {
+        font-family: "Instrument Sans", var(--font-sans, system-ui);
+        font-size: 10px;
+        letter-spacing: .08em;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #443;
+        margin: 14px 0 8px;
+    }
+
     /* Ensure only the active mega section is visible (override utility .grid) */
     #mega-panel [data-menu]{ display:none !important; }
     #mega-panel[data-active="need"] [data-menu="need"]{ display:grid !important; }
@@ -26374,6 +26395,10 @@
     .wow-card.is-fluid {
         width: 100%;
         max-width: none;
+    }
+
+    .wow-width-auto {
+        width: auto !important;
     }
 
     /* ---------- MEDIUM SIZE (compact content) ---------- */
