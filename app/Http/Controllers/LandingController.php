@@ -833,6 +833,7 @@ class LandingController extends Controller
                             $locIdxForCombos = $i;
                         }
                     }
+                    $combosOrdered = $combos;
                     if ($sessionIdxForCombos !== null && $locIdxForCombos !== null) {
                         $sessionScore = function ($label) {
                             $s = strtolower(trim((string) $label));
@@ -847,26 +848,49 @@ class LandingController extends Controller
                             }
                             return 0.0;
                         };
-                        $locationOrder = array_values($optionsArr[$locIdxForCombos]['values'] ?? []);
-                        $locationRank = [];
-                        foreach ($locationOrder as $idx => $label) {
-                            $locationRank[strtolower(trim((string) $label))] = $idx;
+                        $sessionVals = $optionsArr[$sessionIdxForCombos]['values'] ?? [];
+                        $sessionPairs = [];
+                        foreach ($sessionVals as $lbl) {
+                            $sessionPairs[] = ['label' => $lbl, 'score' => $sessionScore($lbl)];
                         }
-                        usort($combos, function ($a, $b) use ($locIdxForCombos, $sessionIdxForCombos, $sessionScore, $locationRank) {
-                            $aLoc = strtolower(trim((string) ($a[$locIdxForCombos] ?? '')));
-                            $bLoc = strtolower(trim((string) ($b[$locIdxForCombos] ?? '')));
-                            $rankA = $locationRank[$aLoc] ?? PHP_INT_MAX;
-                            $rankB = $locationRank[$bLoc] ?? PHP_INT_MAX;
-                            if ($rankA !== $rankB) {
-                                return $rankA <=> $rankB;
-                            }
-                            $scoreA = $sessionScore($a[$sessionIdxForCombos] ?? '');
-                            $scoreB = $sessionScore($b[$sessionIdxForCombos] ?? '');
-                            if ($scoreA === $scoreB) {
-                                return 0;
-                            }
-                            return $scoreA <=> $scoreB;
+                        usort($sessionPairs, function ($a, $b) {
+                            return $a['score'] <=> $b['score'];
                         });
+                        $sessionOrder = array_map(fn($p) => $p['label'], $sessionPairs);
+                        $locationOrder = array_values($optionsArr[$locIdxForCombos]['values'] ?? []);
+                        $normalize = static function ($value) {
+                            return strtolower(trim((string) $value));
+                        };
+                        $used = [];
+                        $orderedList = [];
+                        foreach ($locationOrder as $locLabel) {
+                            $locNorm = $normalize($locLabel);
+                            foreach ($sessionOrder as $sessLabel) {
+                                $sessNorm = $normalize($sessLabel);
+                                foreach ($combos as $idx => $comboValues) {
+                                    if (isset($used[$idx])) {
+                                        continue;
+                                    }
+                                    $comboLoc = $normalize($comboValues[$locIdxForCombos] ?? '');
+                                    $comboSess = $normalize($comboValues[$sessionIdxForCombos] ?? '');
+                                    if ($comboLoc === $locNorm && $comboSess === $sessNorm) {
+                                        $orderedList[] = array_values($comboValues);
+                                        $used[$idx] = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        foreach ($combos as $idx => $comboValues) {
+                            if (isset($used[$idx])) {
+                                continue;
+                            }
+                            $orderedList[] = array_values($comboValues);
+                            $used[$idx] = true;
+                        }
+                        if (count($orderedList) === count($combos)) {
+                            $combosOrdered = $orderedList;
+                        }
                     }
                     $sortedVariants = $variantsArr;
                     usort($sortedVariants, function ($a, $b) {
@@ -879,7 +903,7 @@ class LandingController extends Controller
                     });
                     $mapped = [];
                     foreach ($sortedVariants as $i => $sv) {
-                        $combo = array_values($combos[$i] ?? []);
+                        $combo = array_values($combosOrdered[$i] ?? []);
                         $sv['options'] = $combo;
                         $mapped[$sv['id']] = $sv;
                     }
