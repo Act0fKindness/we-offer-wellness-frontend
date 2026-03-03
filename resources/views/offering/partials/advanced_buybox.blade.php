@@ -1,7 +1,9 @@
 @php
     $hasVendorReviews = (($product['review_count'] ?? 0) > 0) && ($product['rating'] ?? null) !== null;
     $initialVariant = $product['variants'][0] ?? null;
-    $initialVariantId = $initialVariant['id'] ?? ($product['id'] ?? null);
+    $baseProductId = $product['id']
+        ?? ($initialVariant['product_id'] ?? null)
+        ?? ($initialVariant['id'] ?? null);
     $initialPrice = $product['variants_min_price'] ?? ($product['price'] ?? 0);
     if (is_numeric($initialPrice) && $initialPrice > 1000) { $initialPrice = $initialPrice / 100; }
     $initialPriceFormatted = is_numeric($initialPrice) ? number_format((float)$initialPrice, 2, '.', '') : '0.00';
@@ -192,7 +194,7 @@
 
             <div class="d-grid gap-2 mb-2" id="ctaWrap">
                 <button class="btn btn-basket btn-lg js-add-to-cart js-open-cart" id="addBtn"
-                        data-id="{{ $initialVariantId }}"
+                        data-id="{{ $baseProductId }}"
                         data-title="{{ e($productTitleSafe) }}"
                         data-price="{{ $initialPriceFormatted }}"
                         data-image="{{ $primaryImage }}"
@@ -226,7 +228,7 @@
     </div>
     <div class="m-right">
         <button class="btn btn-main js-add-to-cart js-open-cart" id="mobileAdd"
-                data-id="{{ $initialVariantId }}"
+                data-id="{{ $baseProductId }}"
                 data-title="{{ e($productTitleSafe) }}"
                 data-price="{{ $initialPriceFormatted }}"
                 data-image="{{ $primaryImage }}"
@@ -370,6 +372,7 @@ try{
   if(bbRating!=null) product.rating = Number(bbRating)||0;
   if(bbRatingCount!=null) product.ratingCount = Number(bbRatingCount)||0;
 }catch(e){}
+const BASE_PRODUCT_ID = @json($baseProductId ?? null);
 const BASE_PRODUCT_TITLE = @json($product['title'] ?? 'Experience');
 const BASE_PRODUCT_IMAGE = @json($product['images'][0] ?? ($product['image'] ?? ''));
 const BASE_PRODUCT_URL = @json(url()->current());
@@ -805,12 +808,13 @@ function updatePriceUI(){
 function updateSheetSubtotal(){if(!sheetSubtotal) return;const t=totals();sheetSubtotal.textContent=`Subtotal: ${fmt(t.total)}`}
 function syncCartButtons(){
   const variantId = state.variant && state.variant.id ? state.variant.id : (product?.variants?.[0]?.id ?? product?.id ?? '');
+  const productId = BASE_PRODUCT_ID || variantId || (product?.id ?? '');
   const qtyVal = Math.max(1, Number(state.qty||1)||1);
   const pricePennies = unitPriceWithMode();
   const pricePounds = (pricePennies >= 0 ? (pricePennies/100).toFixed(2) : '0.00');
   [addBtn, mobileAdd].forEach(function(btn){
     if(!btn) return;
-    btn.dataset.id = String(variantId);
+    btn.dataset.id = String(productId);
     btn.dataset.title = BASE_PRODUCT_TITLE || '';
     btn.dataset.price = pricePounds;
     btn.dataset.image = BASE_PRODUCT_IMAGE || '';
@@ -818,6 +822,11 @@ function syncCartButtons(){
     btn.dataset.qty = String(qtyVal);
     btn.classList.add('js-add-to-cart');
     btn.classList.add('js-open-cart');
+    if(variantId){
+      btn.dataset.variantId = String(variantId);
+    } else {
+      delete btn.dataset.variantId;
+    }
   });
 }
 function updateVariant(){
@@ -841,8 +850,31 @@ function clampGroupCountSheet(){let v=parseInt(groupCountSheet.value||"3",10);if
 function stepGroupSheet(delta){let v=parseInt(groupCountSheet.value||"3",10); if(isNaN(v)) v=3;v=Math.min(10,Math.max(3,v+delta));groupCountSheet.value=v; state.groupCount=v; updatePriceUI()}
 function wireQty(){if(inc && dec && qty){inc.addEventListener("click",()=>{qty.value=Math.max(1,parseInt(qty.value||"1",10)+1);state.qty=parseInt(qty.value,10);updatePriceUI()});dec.addEventListener("click",()=>{qty.value=Math.max(1,parseInt(qty.value||"1",10)-1);state.qty=parseInt(qty.value,10);updatePriceUI()});qty.addEventListener("input",()=>{qty.value=qty.value.replace(/[^0-9]/g,"")||1;state.qty=parseInt(qty.value,10);updatePriceUI()})}if(groupInc && groupDec && groupCount){groupInc.addEventListener("click",()=>stepGroup(1));groupDec.addEventListener("click",()=>stepGroup(-1));groupCount.addEventListener("input",()=>{groupCount.value=groupCount.value.replace(/[^0-9]/g,"");clampGroupCount();updatePriceUI()});groupCount.addEventListener("blur",()=>{clampGroupCount();updatePriceUI()})}if(groupIncSheet && groupDecSheet && groupCountSheet){groupIncSheet.addEventListener("click",()=>stepGroupSheet(1));groupDecSheet.addEventListener("click",()=>stepGroupSheet(-1));groupCountSheet.addEventListener("input",()=>{groupCountSheet.value=groupCountSheet.value.replace(/[^0-9]/g,"");clampGroupCountSheet();updatePriceUI()});groupCountSheet.addEventListener("blur",()=>{clampGroupCountSheet();updatePriceUI()})}}
 function isMobile(){return window.matchMedia('(max-width: 991px)').matches}
-function doAddToCart(){const t=new bootstrap.Toast(toastEl); t.show();const badge=document.querySelector("[data-cart-count]")||document.body.appendChild(Object.assign(document.createElement("div"),{dataset:{cartCount:""}}));if(!badge.className){badge.className="position-fixed top-0 end-0 m-3 badge bg-success rounded-pill p-3";badge.textContent="0"}const incBy=isMobile()?1:(parseInt(qty.value||"1",10) || 1);badge.textContent=String(parseInt(badge.textContent||"0",10)+incBy)}
-function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
+function triggerGlobalAdd(btn){
+  if(!btn) return;
+  if(typeof window !== 'undefined' && typeof window.WOW_addToCart === 'function'){
+    try { window.WOW_addToCart(btn); return; } catch(_e){}
+  }
+  try {
+    const evt = new MouseEvent('click', { bubbles:true, cancelable:true });
+    btn.dispatchEvent(evt);
+  } catch(_err) {}
+}
+function doAddToCart(){
+  try { syncCartButtons(); } catch(_e){}
+  triggerGlobalAdd(addBtn);
+  const toast = new bootstrap.Toast(toastEl); toast.show();
+}
+function wireCTA(){
+  if(addBtn){
+    addBtn.addEventListener('click',()=>{
+      try{ new bootstrap.Toast(toastEl).show(); }catch(_e){}
+    });
+  }
+  if(buyNow){
+    buyNow.addEventListener('click',e=>{ e.preventDefault(); try{ new bootstrap.Toast(toastEl).show(); }catch(_e){} });
+  }
+}
 mobileAdd.addEventListener('click',()=>{buildOptionsInto(sheetOptions);groupRangeSheet.style.display=isGroup()?'block':'none';groupCountSheet.value=String(state.groupCount||3);if(bookingChoice.value==='now'){sheetBookLater.classList.remove('active');sheetBookNow.classList.add('active');}else{sheetBookLater.classList.add('active');sheetBookNow.classList.remove('active');}updateSheetSubtotal();configModal.show()});
 const calendarState={viewYear:new Date().getFullYear(),viewMonth:new Date().getMonth(),selectedDate:null,selectedTime:null,tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/London'};
 function exitMobileTimesMode(){bookingModalContent.classList.remove('mobile-times')}
