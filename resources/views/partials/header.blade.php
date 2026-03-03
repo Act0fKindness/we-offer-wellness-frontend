@@ -555,11 +555,12 @@
 #mega-panel[data-active="therapies"] [data-menu="therapies"],
 #mega-panel[data-active="events"] [data-menu="events"]{ display:grid !important; }
 
-#mega-panel .grid{ gap:0; }
+#mega-panel .grid{ gap:0 !important; }
 #mega-panel .menu-col{
-    padding:6px 10px;
+    padding:20px !important;
     min-width:0;
     border-left:1px solid transparent;
+    border-radius:0 !important;
 }
 #mega-panel .menu-col:first-child{ border-left:0; }
 
