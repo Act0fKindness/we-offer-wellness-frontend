@@ -244,6 +244,9 @@
 <div class="wow-row-card"
      data-id="{{ $product->id }}"
      data-url="{{ $url }}"
+     role="link"
+     tabindex="0"
+     aria-label="View details for {{ e($titleFormatted) }}"
      @if(is_numeric($lat ?? null) && is_numeric($lng ?? null)) data-lat="{{ $lat }}" data-lng="{{ $lng }}" @endif>
 
   <!-- Col 1 -->
@@ -337,3 +340,38 @@
   </div>
 
 </div>
+
+@once
+  @push('scripts')
+    <script>
+      (function(){
+        function ignoreTarget(target){
+          return target.closest('.js-add-to-cart, .js-buy-now, .wow-save, button, a, input, textarea, select');
+        }
+        function openCard(card, event){
+          var url = card?.getAttribute('data-url');
+          if(!url) return;
+          if(event && (event.metaKey || event.ctrlKey)){
+            window.open(url, '_blank');
+            return;
+          }
+          window.location.href = url;
+        }
+        document.addEventListener('click', function(evt){
+          if(evt.defaultPrevented || evt.button !== 0) return;
+          var card = evt.target.closest('.wow-row-card');
+          if(!card || ignoreTarget(evt.target)) return;
+          openCard(card, evt);
+        });
+        document.addEventListener('keydown', function(evt){
+          if(evt.defaultPrevented) return;
+          if(evt.key !== 'Enter' && evt.key !== ' ' && evt.key !== 'Spacebar') return;
+          var card = evt.target.closest('.wow-row-card');
+          if(!card || ignoreTarget(evt.target)) return;
+          evt.preventDefault();
+          openCard(card, evt);
+        });
+      })();
+    </script>
+  @endpush
+@endonce
