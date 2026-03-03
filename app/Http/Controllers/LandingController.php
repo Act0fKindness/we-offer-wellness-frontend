@@ -868,8 +868,25 @@ class LandingController extends Controller
                             return $scoreA <=> $scoreB;
                         });
                     }
+                    $sortedVariants = $variantsArr;
+                    usort($sortedVariants, function ($a, $b) {
+                        $pa = (float) ($a['price'] ?? 0);
+                        $pb = (float) ($b['price'] ?? 0);
+                        if ($pa === $pb) {
+                            return ($a['id'] ?? 0) <=> ($b['id'] ?? 0);
+                        }
+                        return $pa <=> $pb;
+                    });
+                    $mapped = [];
+                    foreach ($sortedVariants as $i => $sv) {
+                        $combo = array_values($combos[$i] ?? []);
+                        $sv['options'] = $combo;
+                        $mapped[$sv['id']] = $sv;
+                    }
                     foreach ($variantsArr as $k => $vv) {
-                        $variantsArr[$k]['options'] = array_values($combos[$k] ?? []);
+                        if (isset($mapped[$vv['id'] ?? null])) {
+                            $variantsArr[$k] = $mapped[$vv['id']];
+                        }
                     }
                 } else {
                     $peopleIdx = null; $sessionsIdx = null; $locIdx = null;
