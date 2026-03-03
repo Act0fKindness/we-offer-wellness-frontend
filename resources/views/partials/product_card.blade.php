@@ -51,6 +51,8 @@
     );
     $vendorRating = data_get($product, 'vendor_reviews_avg_rating')
         ?? data_get($product, 'vendor.reviews_avg_rating');
+    $hasDisplayableRating = ($reviewCount > 0 && $rating !== null)
+        || ($vendorReviewCount > 0 && $vendorRating !== null);
 
     // Helper: shorten physical address to "Place, City" (or just City)
     $shortLocation = function($address){
@@ -397,12 +399,14 @@
         <div class="content-top">
           <h2 class="title">{{ $titleFormatted }}</h2>
           @if($providerFormatted)<p class="provider">with {{ $providerFormatted }}</p>@endif
-          @include('components.product.card_rating', [
-              'rating' => $rating,
-              'reviews' => $reviewCount,
-              'vendorRating' => $vendorRating,
-              'vendorReviews' => $vendorReviewCount,
-          ])
+          @if($hasDisplayableRating)
+            @include('components.product.card_rating', [
+                'rating' => $rating,
+                'reviews' => $reviewCount,
+                'vendorRating' => $vendorRating,
+                'vendorReviews' => $vendorReviewCount,
+            ])
+          @endif
           <div class="meta">
             @if($durationLabel)
               <span class="item">{{ $durationLabel }}</span>

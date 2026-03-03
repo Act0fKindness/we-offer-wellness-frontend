@@ -53,6 +53,8 @@
     );
     $vendorRating = data_get($product, 'vendor_reviews_avg_rating')
         ?? data_get($product, 'vendor.reviews_avg_rating');
+    $hasDisplayableRating = ($reviewCount > 0 && $rating !== null)
+        || ($vendorReviewCount > 0 && $vendorRating !== null);
 
     // Provider
     $provider = $product->vendor_name
@@ -296,12 +298,14 @@
               <p class="wow-row-provider">with {{ $providerFormatted }}</p>
           @endif
 
-          @include('components.product.card_rating', [
-              'rating' => $rating,
-              'reviews' => $reviewCount,
-              'vendorRating' => $vendorRating,
-              'vendorReviews' => $vendorReviewCount,
-          ])
+          @if($hasDisplayableRating)
+              @include('components.product.card_rating', [
+                  'rating' => $rating,
+                  'reviews' => $reviewCount,
+                  'vendorRating' => $vendorRating,
+                  'vendorReviews' => $vendorReviewCount,
+              ])
+          @endif
 
           <div class="wow-meta">
               @if($locationLabel)
