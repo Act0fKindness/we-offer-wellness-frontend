@@ -155,15 +155,24 @@
       }
       // Highlight option pills: strict match for non-location, loose only for location
       var groups = root.querySelectorAll('[data-vh-opt-group]');
-      function norm(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9\s]+/g,''); }
-      function tokens(s){ return norm(s).split(/\s+/).filter(Boolean); }
-      function overlap(a,b){ var A=new Set(tokens(a)), B=new Set(tokens(b)); var c=0; A.forEach(t=>{ if(B.has(t)) c++; }); return c; }
-      function loose(a,b){
-        var A=norm(a), B=norm(b);
-        if(!A||!B) return A===B;
-        if(A.includes('online')||B.includes('online')) return A.includes('online') && B.includes('online');
+      function normValue(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9\s]+/g,''); }
+      function tokens(s){ return normValue(s).split(/\s+/).filter(Boolean); }
+      function overlapCount(a,b){ var A=new Set(tokens(a)), B=new Set(tokens(b)); var c=0; A.forEach(t=>{ if(B.has(t)) c++; }); return c; }
+      function locationSimilar(a,b){
+        var A = normValue(a), B = normValue(b);
+        if(!A || !B) return A === B;
+        if(A === 'online' || B === 'online') return A === 'online' && B === 'online';
         if(A.includes(B) || B.includes(A)) return true;
-        return overlap(a,b) >= 1;
+        var overlap = overlapCount(a,b);
+        if (overlap >= 2) return true;
+        if (overlap >= 1) {
+          var tokA = tokens(a)[0] || '';
+          var tokB = tokens(b)[0] || '';
+          if ((tokA && B.startsWith(tokA)) || (tokB && A.startsWith(tokB))) {
+            return true;
+          }
+        }
+        return false;
       }
       var locIdx = (__locIdxCache!=null)?__locIdxCache:findLocationIndex();
       groups.forEach(function(g){
@@ -171,7 +180,7 @@
         var isLoc = (idx === locIdx);
         g.querySelectorAll('.vh-opt').forEach(function(b){
           var val = String(b.dataset.optVal||'');
-          var active = isLoc ? loose(val, cur) : (norm(val) === norm(cur));
+          var active = isLoc ? locationSimilar(val, cur) : (normValue(val) === normValue(cur));
           b.classList.toggle('active', active);
         });
       });
