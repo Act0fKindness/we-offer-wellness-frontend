@@ -580,7 +580,7 @@
     justify-content:space-between;
     gap:10px;
     padding:9px 10px;
-    border-radius:10px;
+    border-radius:3px;
     text-decoration:none;
     color:rgba(11,18,32,.86);
     font-weight:650;
@@ -592,7 +592,7 @@
 #mega-panel .menu-link:hover{
     background:rgba(11,18,32,.08);
     transform:translateY(-1px);
-    box-shadow:0 10px 22px rgba(2,6,23,.06);
+    box-shadow:none;
     color:rgba(11,18,32,.92);
 }
 
