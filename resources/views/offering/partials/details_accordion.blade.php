@@ -37,7 +37,10 @@
   .wow-badge-note{ display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; background:#eef7f2; color:#185a44; border:1px solid #c7e5d9 }
   /* Icon feature row */
   .wow-features{ margin:16px 0; padding:4px 0 }
-  .wow-feature-grid{ max-width:920px; margin:0 auto }
+  .wow-feature-grid{ max-width:1200px; margin:0 auto; width:100% }
+  @media (max-width: 576px){
+    .wow-feature-grid{ --bs-gutter-x:10px; --bs-gutter-y:14px; }
+  }
   .wow-feature{ text-align:center; padding:6px 2px }
   .wow-icon-circle{ width:56px; height:56px; border-radius:999px; margin:0 auto 8px auto; display:flex; align-items:center; justify-content:center; border:1px solid var(--wow-soft-2); background:#fff; box-shadow:0 8px 20px rgba(16,24,40,.05) }
   .wow-icon-circle svg{ width:22px; height:22px; stroke:var(--wow-accent) }
