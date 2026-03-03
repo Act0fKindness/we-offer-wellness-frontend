@@ -823,95 +823,14 @@ class LandingController extends Controller
                 }
 
                 if (count($combos) > 0 && count($combos) === count($variantsArr)) {
-                    $sessionIdxForCombos = null;
-                    $locIdxForCombos = null;
-                    foreach ($optionsArr as $i => $opt) {
-                        $nm = strtolower(trim((string)($opt['meta_name'] ?? $opt['name'] ?? '')));
-                        if ($sessionIdxForCombos === null && str_contains($nm, 'session')) {
-                            $sessionIdxForCombos = $i;
+                    $optionCount = count($optionsArr);
+                    foreach ($variantsArr as $idx => $variantData) {
+                        $combo = $combos[$idx] ?? [];
+                        $normalized = [];
+                        for ($oi = 0; $oi < $optionCount; $oi++) {
+                            $normalized[$oi] = (string) ($combo[$oi] ?? ($optionsArr[$oi]['values'][0] ?? ''));
                         }
-                        if ($locIdxForCombos === null && str_contains($nm, 'location')) {
-                            $locIdxForCombos = $i;
-                        }
-                    }
-                    $combosOrdered = $combos;
-                    if ($sessionIdxForCombos !== null && $locIdxForCombos !== null) {
-                        $sessionScore = function ($label) {
-                            $s = strtolower(trim((string) $label));
-                            if (preg_match('/(\d+(?:\.\d+)?)\s*(hour|hr|hours|hrs)/', $s, $m)) {
-                                return (float) $m[1] * 60;
-                            }
-                            if (preg_match('/(\d+(?:\.\d+)?)\s*(min|mins|minute|minutes)/', $s, $m)) {
-                                return (float) $m[1];
-                            }
-                            if (preg_match('/\d+/', $s, $m)) {
-                                return (float) $m[0];
-                            }
-                            return 0.0;
-                        };
-                        $sessionVals = $optionsArr[$sessionIdxForCombos]['values'] ?? [];
-                        $sessionPairs = [];
-                        foreach ($sessionVals as $lbl) {
-                            $sessionPairs[] = ['label' => $lbl, 'score' => $sessionScore($lbl)];
-                        }
-                        usort($sessionPairs, function ($a, $b) {
-                            return $a['score'] <=> $b['score'];
-                        });
-                        $sessionOrder = array_map(fn($p) => $p['label'], $sessionPairs);
-                        $locationOrder = array_values($optionsArr[$locIdxForCombos]['values'] ?? []);
-                        $normalize = static function ($value) {
-                            return strtolower(trim((string) $value));
-                        };
-                        $used = [];
-                        $orderedList = [];
-                        foreach ($locationOrder as $locLabel) {
-                            $locNorm = $normalize($locLabel);
-                            foreach ($sessionOrder as $sessLabel) {
-                                $sessNorm = $normalize($sessLabel);
-                                foreach ($combos as $idx => $comboValues) {
-                                    if (isset($used[$idx])) {
-                                        continue;
-                                    }
-                                    $comboLoc = $normalize($comboValues[$locIdxForCombos] ?? '');
-                                    $comboSess = $normalize($comboValues[$sessionIdxForCombos] ?? '');
-                                    if ($comboLoc === $locNorm && $comboSess === $sessNorm) {
-                                        $orderedList[] = array_values($comboValues);
-                                        $used[$idx] = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        foreach ($combos as $idx => $comboValues) {
-                            if (isset($used[$idx])) {
-                                continue;
-                            }
-                            $orderedList[] = array_values($comboValues);
-                            $used[$idx] = true;
-                        }
-                        if (count($orderedList) === count($combos)) {
-                            $combosOrdered = $orderedList;
-                        }
-                    }
-                    $sortedVariants = $variantsArr;
-                    usort($sortedVariants, function ($a, $b) {
-                        $pa = (float) ($a['price'] ?? 0);
-                        $pb = (float) ($b['price'] ?? 0);
-                        if ($pa === $pb) {
-                            return ($a['id'] ?? 0) <=> ($b['id'] ?? 0);
-                        }
-                        return $pa <=> $pb;
-                    });
-                    $mapped = [];
-                    foreach ($sortedVariants as $i => $sv) {
-                        $combo = array_values($combosOrdered[$i] ?? []);
-                        $sv['options'] = $combo;
-                        $mapped[$sv['id']] = $sv;
-                    }
-                    foreach ($variantsArr as $k => $vv) {
-                        if (isset($mapped[$vv['id'] ?? null])) {
-                            $variantsArr[$k] = $mapped[$vv['id']];
-                        }
+                        $variantsArr[$idx]['options'] = $normalized;
                     }
                 } else {
                     $peopleIdx = null; $sessionsIdx = null; $locIdx = null;
