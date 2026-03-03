@@ -154,13 +154,15 @@ class SearchController extends Controller
                   ->orderByRaw('COALESCE(reviews_count, 0) DESC');
         }
 
-        $limit = (int) $request->integer('limit', 50);
-        $products = $query->limit($limit)->get();
+        $perPage = (int) $request->integer('per_page', 48);
+        $perPage = min(96, max(12, $perPage));
+        $products = $query->paginate($perPage)->withQueryString();
 
         return view('search.index', [
             'mapsKey' => env('GOOGLE_MAPS_API_KEY'),
             'products' => $products,
-            'resultCount' => $products->count(),
+            'resultCount' => method_exists($products, 'total') ? $products->total() : $products->count(),
+            'perPage' => $perPage,
         ]);
     }
 

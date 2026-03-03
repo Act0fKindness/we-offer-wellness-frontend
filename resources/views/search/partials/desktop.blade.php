@@ -26,6 +26,11 @@
                 </div>
               @endforeach
             </div>
+            @if($products instanceof \Illuminate\Pagination\Paginator || $products instanceof \Illuminate\Pagination\LengthAwarePaginator)
+              <div class="mt-4">
+                {{ $products->withQueryString()->onEachSide(1)->links('pagination::bootstrap-4') }}
+              </div>
+            @endif
           @else
             <div class="card p-6 text-ink-600">No results matched your filters. Try widening your search.</div>
           @endif
