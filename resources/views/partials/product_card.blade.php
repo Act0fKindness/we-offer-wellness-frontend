@@ -194,7 +194,20 @@
   .wow-therapy-card-scope .content{ padding: 0px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0 }
 /* Ensure popover can overflow the content area */
   .wow-therapy-card-scope .content-top{ overflow: visible }
-  .wow-therapy-card-scope .content-top .title{ margin:0 0 6px; font-size:var(--title); font-weight:600; line-height:1.25; color:var(--text); letter-spacing:-.01em; }
+  .wow-therapy-card-scope .content-top .title{
+    margin:0 0 6px;
+    font-size:var(--title);
+    line-height:1.12;
+    letter-spacing:-.015em;
+    font-weight:400 !important;
+    color:var(--text);
+    font-family:'Manrope', var(--bs-font-sans-serif);
+    text-transform:capitalize;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
   .wow-therapy-card-scope .content-top .provider{ margin:0 0 8px; font-size:var(--provider); font-weight:500; color: var(--muted); }
   .wow-therapy-card-scope .content-bottom{ flex:0 0 auto; margin-top:auto; padding:15px; border-top:1px solid rgba(16,24,40,.10); background:#fff }
   .wow-therapy-card-scope .fomo{ margin:0 0 8px; font-size: var(--fomo); font-weight:600; color: rgba(11,18,32,.84); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
