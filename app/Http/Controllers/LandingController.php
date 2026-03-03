@@ -822,6 +822,52 @@ class LandingController extends Controller
                 }
 
                 if (count($combos) > 0 && count($combos) === count($variantsArr)) {
+                    $sessionIdxForCombos = null;
+                    $locIdxForCombos = null;
+                    foreach ($optionsArr as $i => $opt) {
+                        $nm = strtolower(trim((string)($opt['meta_name'] ?? $opt['name'] ?? '')));
+                        if ($sessionIdxForCombos === null && str_contains($nm, 'session')) {
+                            $sessionIdxForCombos = $i;
+                        }
+                        if ($locIdxForCombos === null && str_contains($nm, 'location')) {
+                            $locIdxForCombos = $i;
+                        }
+                    }
+                    if ($sessionIdxForCombos !== null && $locIdxForCombos !== null) {
+                        $sessionScore = function ($label) {
+                            $s = strtolower(trim((string) $label));
+                            if (preg_match('/(\d+(?:\.\d+)?)\s*(hour|hr|hours|hrs)/', $s, $m)) {
+                                return (float) $m[1] * 60;
+                            }
+                            if (preg_match('/(\d+(?:\.\d+)?)\s*(min|mins|minute|minutes)/', $s, $m)) {
+                                return (float) $m[1];
+                            }
+                            if (preg_match('/\d+/', $s, $m)) {
+                                return (float) $m[0];
+                            }
+                            return 0.0;
+                        };
+                        $locationOrder = array_values($optionsArr[$locIdxForCombos]['values'] ?? []);
+                        $locationRank = [];
+                        foreach ($locationOrder as $idx => $label) {
+                            $locationRank[strtolower(trim((string) $label))] = $idx;
+                        }
+                        usort($combos, function ($a, $b) use ($locIdxForCombos, $sessionIdxForCombos, $sessionScore, $locationRank) {
+                            $aLoc = strtolower(trim((string) ($a[$locIdxForCombos] ?? '')));
+                            $bLoc = strtolower(trim((string) ($b[$locIdxForCombos] ?? '')));
+                            $rankA = $locationRank[$aLoc] ?? PHP_INT_MAX;
+                            $rankB = $locationRank[$bLoc] ?? PHP_INT_MAX;
+                            if ($rankA !== $rankB) {
+                                return $rankA <=> $rankB;
+                            }
+                            $scoreA = $sessionScore($a[$sessionIdxForCombos] ?? '');
+                            $scoreB = $sessionScore($b[$sessionIdxForCombos] ?? '');
+                            if ($scoreA === $scoreB) {
+                                return 0;
+                            }
+                            return $scoreA <=> $scoreB;
+                        });
+                    }
                     foreach ($variantsArr as $k => $vv) {
                         $variantsArr[$k]['options'] = array_values($combos[$k] ?? []);
                     }
