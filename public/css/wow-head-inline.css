@@ -26416,7 +26416,7 @@ This stylesheet scopes variables to .wow-card to avoid global conflicts. */
 /* ---------- MEDIUM SIZE (compact content) ---------- */
 .wow-card.md {
     --card-h: 530px;
-    width: auto;
+    width: auto !important;
     max-width: 309px;
 }
 

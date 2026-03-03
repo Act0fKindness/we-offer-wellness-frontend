@@ -159,7 +159,7 @@
 .wow-card.is-fluid{ width: 100%; max-width: none; }
 
 /* ---------- MEDIUM SIZE (compact content) ---------- */
-.wow-card.md{ --card-h: 530px; width: auto; max-width: 309px; }
+.wow-card.md{ --card-h: 530px; width: auto !important; max-width: 309px; }
 .wow-card.md .wow-body{ padding: 14px 14px 0 14px; gap: 8px; }
 .wow-card.md .wow-type{ font-size: .78rem; }
 .wow-card.md .wow-title{ font-size: 1rem; }
