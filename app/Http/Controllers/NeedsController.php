@@ -65,7 +65,7 @@ class NeedsController extends Controller
     {
         return [
             [
-                'key' => 'stress-anxiety',
+                'key' => 'stress-and-anxiety',
                 'slug' => 'stress-and-anxiety',
                 'title' => 'Stress & Anxiety',
                 'seo_title' => 'Stress & Anxiety Support | We Offer Wellness™',
