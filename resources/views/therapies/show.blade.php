@@ -11,13 +11,10 @@
 @section('content')
 @php
   $slug  = $therapy['slug'] ?? request()->route('slug');
-  $items = $results['items'] ?? [];
-
-  $normPrice = function($v){
-    if($v === null || $v === '') return null;
-    if(is_string($v)) $v = preg_replace('/[^0-9.\-]/', '', $v);
-    return is_numeric($v) ? (float)$v : null;
-  };
+  $items = $results['items'] ?? collect();
+  if (!($items instanceof \Illuminate\Support\Collection)) {
+    $items = collect($items ?? []);
+  }
 @endphp
 
 <section class="section">
@@ -69,53 +66,13 @@
     </form>
 
     {{-- Results --}}
-    @if(count($items))
+    @if($items->count())
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        @foreach($items as $it)
-          @php
-            $title = $it['title'] ?? 'Untitled';
-            $type  = $it['type'] ?? ($it['offering_type'] ?? 'Therapy');
-            $img   = $it['image'] ?? ($it['featured_image'] ?? null);
-
-            $url = $it['url'] ?? ($it['handle'] ?? null);
-            if($url && !str_starts_with($url, 'http')) $url = url($url);
-            $url = $url ?: '#';
-
-            $rating  = $it['rating'] ?? null;
-            $reviews = $it['review_count'] ?? ($it['reviews'] ?? null);
-
-            $priceMin = $normPrice($it['price_min'] ?? null);
-            $price    = $priceMin ?? $normPrice($it['price'] ?? null);
-          @endphp
-
-          <a href="{{ $url }}" class="wow-card md is-fluid" style="text-decoration:none;">
-            <div class="wow-media">
-              @if($img)<img src="{{ $img }}" alt="{{ $title }}">@endif
-            </div>
-
-            <div class="wow-body">
-              <div class="wow-type text-muted">{{ $type }}</div>
-              <div class="wow-title">{{ $title }}</div>
-
-              @if($rating)
-                <div class="rating-text">
-                  ★ {{ number_format((float)$rating, 1) }}
-                  @if($reviews)<small class="text-muted">({{ (int)$reviews }})</small>@endif
-                </div>
-              @endif
-            </div>
-
-            <div class="wow-bottom">
-              <div class="price">
-                @if($price !== null)
-                  £{{ number_format($price, 2) }} @if($priceMin !== null)<small>from</small>@endif
-                @else
-                  <span class="text-muted">View</span>
-                @endif
-              </div>
-              <div class="actions"><span class="wow-btn-like">See details</span></div>
-            </div>
-          </a>
+        @foreach($items as $product)
+          @include('partials.product_card', [
+            'product' => $product,
+            'preferredLocation' => $filters['location'] ?? null,
+          ])
         @endforeach
       </div>
 

@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class NeedsController extends Controller
 {
@@ -236,7 +234,7 @@ class NeedsController extends Controller
             }
 
             $total = (clone $builder)->count();
-            $items = $builder->forPage($page, $perPage)->get()->map(fn (Product $product) => $this->mapProductForNeed($product))->filter()->values()->all();
+            $items = $builder->forPage($page, $perPage)->get();
 
             $lastPage = max(1, (int) ceil($total / max(1, $perPage)));
 
@@ -250,37 +248,4 @@ class NeedsController extends Controller
         });
     }
 
-    private function mapProductForNeed(Product $product): array
-    {
-        $image = $product->getFirstImageUrl();
-        $rating = $product->reviews_avg_rating ?? null;
-        $priceMin = $product->variants_min_price ?? $product->price;
-
-        return [
-            'id' => $product->id,
-            'title' => $product->title,
-            'type' => $product->product_type ?? 'Therapy',
-            'image' => $image,
-            'rating' => $rating ? round($rating, 1) : null,
-            'review_count' => (int) ($product->reviews_count ?? 0),
-            'price' => $product->price,
-            'price_min' => $priceMin,
-            'url' => $this->productUrl($product),
-        ];
-    }
-
-    private function productUrl(Product $product): string
-    {
-        $t = strtolower((string) ($product->product_type ?? ''));
-        $tags = strtolower((string) ($product->tags_list ?? ''));
-        $seg = 'therapies';
-        if (str_contains($t, 'workshop')) $seg = 'events';
-        elseif (str_contains($t, 'event')) $seg = 'events';
-        elseif (str_contains($t, 'class')) $seg = 'classes';
-        elseif (str_contains($t, 'retreat')) $seg = 'therapies';
-        elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $seg = 'therapies';
-
-        $slug = Str::slug($product->title ?: (string) $product->id);
-        return url('/' . trim($seg, '/') . '/' . $product->id . '-' . $slug);
-    }
 }
