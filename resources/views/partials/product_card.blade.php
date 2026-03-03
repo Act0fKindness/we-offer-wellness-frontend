@@ -205,6 +205,7 @@
   .wow-therapy-card-scope .content{ padding: 0px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0 }
 /* Ensure popover can overflow the content area */
   .wow-therapy-card-scope .content-top{ overflow: visible; padding:15px !important; }
+  .wow-therapy-card-scope .content-top.wow-content-top{ display:flex; flex-direction:column; height:100%; }
   .wow-therapy-card-scope .content-top .title{
     margin:0 0 6px;
     font-size:var(--title);

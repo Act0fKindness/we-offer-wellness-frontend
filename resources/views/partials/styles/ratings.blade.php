@@ -10,7 +10,7 @@
         font-weight:600;
         color:#0b1220;
       }
-      .wow-content-top .wow-review-row{ margin-top:16px; }
+      .wow-content-top .wow-review-row{ margin-top:auto; padding-top:12px; }
       .wow-review-stars{
         display:inline-flex;
         align-items:center;
