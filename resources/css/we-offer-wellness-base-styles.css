@@ -26375,7 +26375,7 @@
     /* ---------- MEDIUM SIZE (compact content) ---------- */
     .wow-card.md {
         --card-h: 530px;
-        width: auto !important;
+        width: 309px;
         max-width: 309px;
         border: none !important;
         box-shadow: none;
