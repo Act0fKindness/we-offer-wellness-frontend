@@ -23959,6 +23959,11 @@ a:hover {
     width: min(900px, calc(100vw - 2rem));
 }
 
+#mega-panel,
+#mega-panel * {
+    font-family: "Manrope", "Instrument Sans", var(--font-sans, system-ui) !important;
+}
+
 .mega-panel .container-page {
     max-width: none;
     padding-left: 16px;

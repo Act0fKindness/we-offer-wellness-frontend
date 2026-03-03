@@ -550,6 +550,8 @@
 #mega-panel .container-page{ padding:0 !important; border-radius:0; }
 #mega-panel .mega-panel,
 .mega-panel{ border-radius:0 0 4px 4px; }
+#mega-panel,
+#mega-panel *{ font-family:"Manrope", "Instrument Sans", var(--font-sans, system-ui) !important; }
 #mega-panel [data-menu]{ display:none !important; }
 #mega-panel[data-active="need"] [data-menu="need"],
 #mega-panel[data-active="therapies"] [data-menu="therapies"],
