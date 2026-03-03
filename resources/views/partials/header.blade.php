@@ -547,7 +547,9 @@
 .mobile-account-guest-text{ margin:4px 0 0; color:var(--ink-700); font-size:13px; }
 
 /* Mega menu — Stripe-style polish */
-#mega-panel .container-page{ padding-top:20px; padding-bottom:24px; }
+#mega-panel .container-page{ padding-top:20px; padding-bottom:24px; border-radius:0; }
+#mega-panel .mega-panel,
+.mega-panel{ border-radius:0 0 4px 4px; }
 #mega-panel [data-menu]{ display:none !important; }
 #mega-panel[data-active="need"] [data-menu="need"],
 #mega-panel[data-active="therapies"] [data-menu="therapies"],
@@ -555,7 +557,7 @@
 
 #mega-panel .grid{ gap:0; }
 #mega-panel .menu-col{
-    padding:18px;
+    padding:6px 10px;
     min-width:0;
     border-left:1px solid transparent;
 }
@@ -587,24 +589,11 @@
     position:relative;
 }
 #mega-panel .menu-link:hover{
-    background:rgba(15,23,42,.05);
+    background:rgba(11,18,32,.08);
     transform:translateY(-1px);
     box-shadow:0 10px 22px rgba(2,6,23,.06);
     color:rgba(11,18,32,.92);
 }
-
-#mega-panel .menu-link::after{
-    content:"";
-    width:14px;
-    height:14px;
-    flex:0 0 auto;
-    margin-top:2px;
-    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10 8l4 4-4 4' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
-    background: currentColor;
-    opacity:.35;
-    transition:transform .16s cubic-bezier(.2,.8,.2,1), opacity .16s cubic-bezier(.2,.8,.2,1);
-}
-#mega-panel .menu-link:hover::after{ transform:translateX(2px); opacity:.65; }
 
 #mega-panel .menu-col--foryou .mega-label,
 #mega-panel .mega-label{
