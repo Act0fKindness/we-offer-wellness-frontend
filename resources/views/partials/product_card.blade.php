@@ -447,10 +447,7 @@
             @endif
           </div>
           @include('components.product.card_rating', [
-              'rating' => $rating,
-              'reviews' => $reviewCount,
-              'vendorRating' => $vendorRating,
-              'vendorReviews' => $vendorReviewCount,
+              'product' => $product,
           ])
 
         </div>
