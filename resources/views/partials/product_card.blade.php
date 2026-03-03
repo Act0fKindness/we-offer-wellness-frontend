@@ -210,6 +210,10 @@
     overflow:hidden;
   }
   .wow-therapy-card-scope .content-top .provider{ margin:0 0 8px; font-size:var(--provider); font-weight:500; color: var(--muted); }
+  .wow-therapy-card-scope .meta{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; margin-bottom:12px; color: rgba(11,18,32,.62); font-size: var(--meta); }
+  .wow-therapy-card-scope .meta .item{ display:flex; align-items:center; gap:6px; color:inherit; position:relative; }
+  .wow-therapy-card-scope .meta .item svg{ width: var(--metaIcon); height: var(--metaIcon); color: rgba(11,18,32,.58); }
+  .wow-therapy-card-scope .meta .item .label{ font-size: var(--meta); font-weight:600; letter-spacing:0; text-transform:none; color: rgba(11,18,32,.72); }
   .wow-therapy-card-scope .content-bottom{ flex:0 0 auto; margin-top:auto; padding:15px; border-top:1px solid rgba(16,24,40,.10); background:#fff }
   .wow-therapy-card-scope .content-bottom-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; }
   .wow-therapy-card-scope .content-bottom-head > div{ flex:1 1 auto; }
@@ -218,6 +222,20 @@
   .wow-therapy-card-scope .price .from{ font-size: var(--from); font-weight:400; color: rgba(11,18,32,.70) }
   .wow-therapy-card-scope .price .now{ font-size: var(--priceNow); font-weight:600; letter-spacing:-.02em; color: rgba(11,18,32,.92) }
   .wow-therapy-card-scope .price .was{ font-size: var(--was); font-weight:400; color: rgba(11,18,32,.75) }
+  .wow-therapy-card-scope .loc-overflow{ position:relative; }
+  .wow-therapy-card-scope .loc-overflow .chip{ display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 10px; font-size:.78rem; font-weight:700; background:#f0f7f4; color:#1f3b34; border:1px solid rgba(74,134,118,.35); cursor:pointer; transition: background .16s ease, color .16s ease, box-shadow .16s ease; }
+  .wow-therapy-card-scope .loc-overflow .chip:hover,
+  .wow-therapy-card-scope .loc-overflow .chip:focus-visible{ background:#e5f2eb; color:#183027; box-shadow:0 8px 20px rgba(74,134,118,.25); outline:2px solid rgba(74,134,118,.25); outline-offset:2px; }
+  .wow-therapy-card-scope .loc-popover{ position:absolute; top:calc(100% + 10px); right:0; width:260px; background:#fff; border:1px solid rgba(15,24,40,.1); border-radius:16px; box-shadow:0 28px 65px rgba(11,18,32,.25); padding:16px; opacity:0; visibility:hidden; transform:translateY(-6px); transition:opacity .18s ease, transform .18s ease; z-index:40; pointer-events:none; }
+  .wow-therapy-card-scope .loc-overflow:hover .loc-popover,
+  .wow-therapy-card-scope .loc-overflow:focus-within .loc-popover,
+  .wow-therapy-card-scope .loc-overflow.is-open .loc-popover{ opacity:1; visibility:visible; transform:translateY(0); pointer-events:auto; }
+  .wow-therapy-card-scope .loc-popover h4{ margin:0 0 10px; font-size:.85rem; font-weight:700; color:#0b1220; }
+  .wow-therapy-card-scope .loc-popover .list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .wow-therapy-card-scope .loc-popover .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:#f4f6fb; color:#1b2435; font-size:.78rem; font-weight:600; }
+  .wow-therapy-card-scope .loc-popover .pill svg{ width:14px; height:14px; color:#64748b; }
+  .wow-therapy-card-scope .loc-popover .link{ display:inline-flex; align-items:center; gap:4px; font-size:.8rem; font-weight:700; color:#4a8676; cursor:pointer; text-decoration:none; }
+  .wow-therapy-card-scope .loc-popover .link::after{ content:'→'; font-size:.8rem; }
   .wow-therapy-card-scope .actions{ display:grid; grid-template-columns: 1fr 1.15fr; gap:10px }
   .wow-therapy-card-scope .btn{
     height: var(--btnH);
@@ -271,6 +289,55 @@
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
 }
 </style>
+
+@once
+  @push('scripts')
+    <script>
+      (function(){
+        function closeLocationPopovers(){
+          document.querySelectorAll('.loc-overflow.is-open').forEach(function(el){
+            el.classList.remove('is-open');
+            var chip = el.querySelector('.chip[aria-expanded="true"]');
+            if(chip){ chip.setAttribute('aria-expanded','false'); }
+          });
+        }
+
+        document.addEventListener('click', function(event){
+          var chip = event.target.closest('.loc-overflow .chip');
+          if(chip){
+            event.preventDefault();
+            var wrap = chip.closest('.loc-overflow');
+            if(!wrap) return;
+            var isOpen = wrap.classList.contains('is-open');
+            closeLocationPopovers();
+            if(!isOpen){
+              wrap.classList.add('is-open');
+              chip.setAttribute('aria-expanded','true');
+            }
+            return;
+          }
+
+          var link = event.target.closest('.loc-popover .link');
+          if(link && link.dataset.href){
+            window.location.href = link.dataset.href;
+            closeLocationPopovers();
+            return;
+          }
+
+          if(!event.target.closest('.loc-overflow')){
+            closeLocationPopovers();
+          }
+        });
+
+        document.addEventListener('keydown', function(event){
+          if(event.key === 'Escape'){
+            closeLocationPopovers();
+          }
+        });
+      })();
+    </script>
+  @endpush
+@endonce
 
 <div class="wow-therapy-card-scope">
   <a href="{{ $url }}" class="wow-card md">
