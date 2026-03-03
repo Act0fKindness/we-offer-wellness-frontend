@@ -37,8 +37,8 @@
 
     {{-- Filters --}}
     <form method="get" action="{{ url('/needs/'.$slug) }}" class="card p-3 mb-4" style="border-radius:18px;">
-      <div class="grid md:grid-cols-4 gap-3 items-end">
-        <div>
+      <div class="grid md:grid-cols-3 gap-3 items-end">
+        <div class="col-span-3 md:col-span-1">
           <label class="form-label">Format</label>
           <select class="form-control" name="format">
             <option value="" @selected(($filters['format'] ?? '') === '')>All</option>
@@ -46,25 +46,24 @@
             <option value="in_person" @selected(($filters['format'] ?? '') === 'in_person')>Near me</option>
           </select>
         </div>
-
-        <div>
+        <div class="col-span-3 md:col-span-1">
           <label class="form-label">Location</label>
           <input class="form-control" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="e.g. London, Kent">
         </div>
-
-        <div>
+        <div class="col-span-3 md:col-span-1">
           <label class="form-label">Sort</label>
-          <select class="form-control" name="sort">
-            <option value="" @selected(($filters['sort'] ?? '') === '')>Recommended</option>
-            <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price: Low → High</option>
-            <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price: High → Low</option>
-            <option value="rating_desc" @selected(($filters['sort'] ?? '') === 'rating_desc')>Top rated</option>
-          </select>
-        </div>
-
-        <div class="flex gap-2 justify-end">
-          <button class="btn btn-primary" type="submit">Apply</button>
-          <a class="btn btn-light" href="{{ url('/needs/'.$slug) }}">Reset</a>
+          <div class="flex gap-2">
+            <select class="form-control" name="sort">
+              <option value="" @selected(($filters['sort'] ?? '') === '')>Recommended</option>
+              <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price: Low → High</option>
+              <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price: High → Low</option>
+              <option value="rating_desc" @selected(($filters['sort'] ?? '') === 'rating_desc')>Top rated</option>
+            </select>
+            <div class="flex gap-2">
+              <button class="btn btn-primary" type="submit">Apply</button>
+              <a class="btn btn-light" href="{{ url('/needs/'.$slug) }}">Reset</a>
+            </div>
+          </div>
         </div>
       </div>
     </form>
