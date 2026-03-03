@@ -547,7 +547,7 @@
 .mobile-account-guest-text{ margin:4px 0 0; color:var(--ink-700); font-size:13px; }
 
 /* Mega menu — Stripe-style polish */
-#mega-panel .container-page{ padding-top:20px; padding-bottom:24px; border-radius:0; }
+#mega-panel .container-page{ padding:0 !important; border-radius:0; }
 #mega-panel .mega-panel,
 .mega-panel{ border-radius:0 0 4px 4px; }
 #mega-panel [data-menu]{ display:none !important; }
