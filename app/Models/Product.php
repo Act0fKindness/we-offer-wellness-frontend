@@ -363,4 +363,100 @@ class Product extends Model
                     ->withPivot('sort_order');
     }
 
+    /**
+     * Reviews published in our system that are associated to this product's vendor.
+     *
+     * These originate from the internal `reviews` table and are tied to a
+     * vendor via `vendor_id` (not only to a specific product).
+     */
+    public function vendorPublishedReviews()
+    {
+        return $this->hasMany(Review::class, 'vendor_id', 'vendor_id');
+    }
+
+    /**
+     * External reviews we ingest for this product's vendor (e.g. Google, etc.).
+     */
+    public function vendorExternalReviews()
+    {
+        return $this->hasMany(VendorReview::class, 'vendor_id', 'vendor_id');
+    }
+
+    /**
+     * Unified collection of all reviews for the vendor behind this product.
+     * Combines internal published reviews and external vendor reviews into a
+     * single, normalized collection, newest first.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function vendorAllReviews()
+    {
+        $published = $this->vendorPublishedReviews()
+            ->with(['user:id,name,first_name,last_name'])
+            ->get()
+            ->map(function (Review $r) {
+                $name = trim(($r->user->first_name ?? '').' '.($r->user->last_name ?? ''));
+                if ($name === '') {
+                    $name = $r->user->name ?? 'Verified customer';
+                }
+                return [
+                    'source' => 'published',
+                    'rating' => (float) ($r->rating ?? 0),
+                    'text' => (string) ($r->review_text ?? ''),
+                    'reviewer' => $name,
+                    'date' => optional($r->created_at)->toImmutable(),
+                ];
+            });
+
+        $external = $this->vendorExternalReviews()
+            ->get()
+            ->map(function (VendorReview $r) {
+                return [
+                    'source' => (string) ($r->source ?? 'external'),
+                    'rating' => (float) ($r->rating ?? 0),
+                    'text' => (string) ($r->review_text ?? ''),
+                    'reviewer' => (string) ($r->reviewer_name ?? 'Customer'),
+                    'date' => optional($r->reviewed_at ?: $r->created_at)->toImmutable(),
+                ];
+            });
+
+        return $published->merge($external)
+            ->filter(fn ($x) => ($x['rating'] ?? 0) > 0 || ($x['text'] ?? '') !== '')
+            ->sortByDesc(fn ($x) => $x['date'] ?? now())
+            ->values();
+    }
+
+    /**
+     * Aggregate rating stats for this product's vendor across all sources.
+     *
+     * @return array{avg: float|null, count: int}
+     */
+    public function vendorReviewStats(): array
+    {
+        // Pull light-weight aggregates directly from DB to avoid loading bodies
+        $pub = $this->vendorPublishedReviews()
+            ->selectRaw('COUNT(*) as c, AVG(rating) as a')
+            ->first();
+
+        $ext = $this->vendorExternalReviews()
+            ->selectRaw('COUNT(*) as c, AVG(rating) as a')
+            ->first();
+
+        $c1 = (int) ($pub->c ?? 0); $a1 = (float) ($pub->a ?? 0);
+        $c2 = (int) ($ext->c ?? 0); $a2 = (float) ($ext->a ?? 0);
+
+        $count = $c1 + $c2;
+        if ($count === 0) {
+            return ['avg' => null, 'count' => 0];
+        }
+
+        // Weighted average by count across the two sources
+        $avg = 0.0;
+        if ($c1 > 0) { $avg += $a1 * $c1; }
+        if ($c2 > 0) { $avg += $a2 * $c2; }
+        $avg = round($avg / max(1, $count), 1);
+
+        return ['avg' => $avg > 0 ? $avg : null, 'count' => $count];
+    }
+
 }
