@@ -89,7 +89,11 @@
 </div>
 
 <script>
-  (function(){
+  (function initWowDetailsAccordion(){
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initWowDetailsAccordion, { once: true });
+      return;
+    }
     function iconFor(sel){ return document.querySelector('[data-icon-for="'+sel+'"]'); }
     document.querySelectorAll('.collapse').forEach(function(el){
       el.addEventListener('shown.bs.collapse', function(){ var ic = iconFor('#'+el.id); if(ic) ic.textContent = '−'; });

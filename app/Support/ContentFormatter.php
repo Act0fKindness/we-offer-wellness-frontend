@@ -41,7 +41,7 @@ class ContentFormatter
             $s = preg_replace('/(<br\s*\/?>\s*){2,}/i', '<br/>', $s);
             // Convert &nbsp; runs to single spaces
             $s = preg_replace('/(&nbsp;\s*)+/i', ' ', $s);
-            return $s;
+            return self::stripEmojiImages($s);
         }
 
         // Plain text → paragraphs; escape HTML first, keep our FA icons intact
@@ -67,7 +67,28 @@ class ContentFormatter
             $p = preg_replace('/\n/', '<br/>', trim($p));
             if ($p !== '') $out .= '<p>'.$p.'</p>';
         }
-        return $out ?: $s;
+        $final = $out ?: $s;
+        return self::stripEmojiImages($final);
+    }
+
+    private static function stripEmojiImages(string $html): string
+    {
+        return preg_replace_callback('/<img\b[^>]*>/i', function ($match) {
+            $tag = $match[0] ?? '';
+            if ($tag === '') {
+                return $tag;
+            }
+            $lc = strtolower($tag);
+            $targets = ['fonts.gstatic.com', 'gstatic.com/emoji', 'data-emoji', 'class="an1', 'class=\'an1', 'emoji-img'];
+            foreach ($targets as $needle) {
+                if (str_contains($lc, $needle)) {
+                    return '';
+                }
+            }
+            if (str_contains($lc, '&lt;i class') || str_contains($lc, '<i class')) {
+                return '';
+            }
+            return $tag;
+        }, $html) ?? $html;
     }
 }
-
