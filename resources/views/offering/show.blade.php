@@ -142,11 +142,8 @@
                   $preview = $body;
                   $needsToggle = false;
                   if ($body !== '') {
-                    $totalWords = \Illuminate\Support\Str::wordCount($body);
-                    if ($totalWords > $reviewPreviewWords) {
-                      $needsToggle = true;
-                      $preview = \Illuminate\Support\Str::words($body, $reviewPreviewWords, '…');
-                    }
+                    $preview = \Illuminate\Support\Str::words($body, $reviewPreviewWords, '…');
+                    $needsToggle = ($preview !== $body);
                   }
                 @endphp
                 <div class="p-3 border rounded bg-ink-50 js-review-card">
@@ -160,7 +157,7 @@
                   </div>
                   <p class="mb-2 text-ink-800 js-review-body" style="white-space:pre-line;" data-expanded="false">{{ $preview }}</p>
                   @if($needsToggle)
-                    <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold small js-review-toggle" aria-expanded="false">Read more</button>
+                    <button type="button" class="btn btn-link px-0 text-decoration-underline fw-semibold small js-review-toggle" aria-expanded="false">Read more</button>
                     <template class="js-review-preview">{{ $preview }}</template>
                     <template class="js-review-full">{{ $body }}</template>
                   @endif
