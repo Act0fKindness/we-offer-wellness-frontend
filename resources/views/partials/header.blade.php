@@ -581,7 +581,7 @@
     align-items:flex-start;
     justify-content:space-between;
     gap:10px;
-    padding:9px 10px;
+    padding:9px 0;
     border-radius:3px;
     text-decoration:none;
     color:rgba(11,18,32,.86);
@@ -596,6 +596,7 @@
     transform:translateY(-1px);
     box-shadow:none;
     color:rgba(11,18,32,.92);
+    padding:9px 10px;
 }
 
 #mega-panel .menu-col--foryou .mega-label,
