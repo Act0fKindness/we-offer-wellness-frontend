@@ -673,11 +673,6 @@ function syncFormatUI(){
       var isOnline = String(p.dataset.variantLocation||'').toLowerCase()==='online';
       p.setAttribute('aria-checked', online ? (isOnline?'true':'false') : (!isOnline?'true':'false'));
     });
-    // Hide location option rows when Online is selected; show when In-person
-    try{
-      document.querySelectorAll('.bb-location-row').forEach(function(el){ el.style.display = online ? 'none' : ''; });
-      document.querySelectorAll('.sheet-location-row').forEach(function(el){ el.style.display = online ? 'none' : ''; });
-    } catch(e){}
   }catch(e){}
 }
 function buildFormatBlock(){
