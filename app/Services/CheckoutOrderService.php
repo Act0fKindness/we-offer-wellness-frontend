@@ -42,7 +42,14 @@ class CheckoutOrderService
             ]);
 
             DB::afterCommit(function () use ($order) {
-                TransactionalMail::orderReceipt($order->fresh('items'));
+                $freshOrder = $order->fresh(['items', 'customerProfile']);
+                if (!$freshOrder) {
+                    return;
+                }
+
+                TransactionalMail::orderReceipt($freshOrder);
+                TransactionalMail::vendorOrderNotification($freshOrder);
+                TransactionalMail::vendorIntroduction($freshOrder);
             });
 
             foreach ($fresh->items ?? [] as $id => $it) {
@@ -51,16 +58,32 @@ class CheckoutOrderService
                 $raw = (float)($it['price'] ?? 0);
                 $unit = $raw >= 1000 ? (int)round($raw) : (int)round($raw * 100);
                 $image = $it['image'] ?? $it['img'] ?? null;
+                $productId = $it['product_id'] ?? $it['productId'] ?? null;
+                $vendorId = $it['vendor_id'] ?? $it['vendorId'] ?? null;
+                $variantLabel = $it['variant_label'] ?? null;
+                $variantOptions = $it['options'] ?? [];
+                if (!is_array($variantOptions)) {
+                    $variantOptions = [];
+                }
+                $meta = array_filter([
+                    'url' => $it['url'] ?? null,
+                    'image' => $image,
+                    'variant_label' => $variantLabel,
+                    'variant_options' => $variantOptions,
+                    'product_id' => $productId,
+                    'vendor_id' => $vendorId,
+                ], function ($value) {
+                    return !is_null($value) && $value !== '' && $value !== [];
+                });
                 OrderItem::create([
                     'order_id' => $order->id,
+                    'product_id' => $productId,
+                    'vendor_id' => $vendorId,
                     'name' => $title,
                     'sku' => (string)$id,
                     'unit_amount' => $unit,
                     'quantity' => $qty,
-                    'meta' => [
-                        'url' => $it['url'] ?? null,
-                        'image' => $image,
-                    ],
+                    'meta' => $meta,
                 ]);
             }
 

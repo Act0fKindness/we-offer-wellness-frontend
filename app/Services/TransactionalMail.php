@@ -4,8 +4,11 @@ namespace App\Services;
 
 use App\Models\CheckoutAttempt;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\User;
 use App\Models\V3Subscriber;
+use App\Models\VendorDetail;
 
 class TransactionalMail
 {
@@ -296,6 +299,95 @@ class TransactionalMail
         );
     }
 
+    public static function vendorOrderNotification(Order $order): void
+    {
+        $groups = self::vendorGroupsForOrder($order);
+        if (empty($groups)) {
+            return;
+        }
+
+        foreach ($groups as $group) {
+            $email = $group['email'] ?? null;
+            if (!$email) {
+                continue;
+            }
+
+            MailService::send(
+                $email,
+                'New We Offer Wellness booking (Order #'.$order->id.')',
+                'emails.vendor-order-notification',
+                [
+                    'order' => $order,
+                    'vendor' => $group['vendor'],
+                    'items' => $group['items'],
+                    'customerEmail' => $order->email,
+                ],
+                null,
+                null,
+                ['tags' => ['order', 'vendor', 'booking']]
+            );
+        }
+    }
+
+    public static function vendorIntroduction(Order $order): void
+    {
+        $customerEmail = $order->email;
+        if (!$customerEmail) {
+            return;
+        }
+
+        $groups = self::vendorGroupsForOrder($order);
+        if (empty($groups)) {
+            return;
+        }
+
+        $supportEmail = self::conciergeEmail();
+        $customerName = self::customerName($order);
+
+        foreach ($groups as $group) {
+            $email = $group['email'] ?? null;
+            if (!$email) {
+                continue;
+            }
+
+            $cc = array_values(array_filter([
+                ['email' => $customerEmail, 'name' => $customerName ?: $customerEmail],
+                $supportEmail ? ['email' => $supportEmail, 'name' => 'We Offer Wellness'] : null,
+            ], function (?array $entry) {
+                return !empty($entry['email']);
+            }));
+
+            $options = [
+                'tags' => ['order', 'introduction'],
+                'cc' => $cc,
+            ];
+
+            if ($supportEmail) {
+                $options['reply_to'] = [
+                    'email' => $supportEmail,
+                    'name' => 'We Offer Wellness',
+                ];
+            }
+
+            MailService::send(
+                $email,
+                'Booking introduction for Order #'.$order->id,
+                'emails.order-introduction',
+                [
+                    'order' => $order,
+                    'vendor' => $group['vendor'],
+                    'items' => $group['items'],
+                    'customerEmail' => $customerEmail,
+                    'customerName' => $customerName,
+                    'supportEmail' => $supportEmail,
+                ],
+                null,
+                null,
+                $options
+            );
+        }
+    }
+
     public static function paymentFailed(?CheckoutAttempt $attempt = null, ?Order $order = null, array $context = []): void
     {
         $order?->loadMissing('items');
@@ -385,6 +477,131 @@ class TransactionalMail
             null,
             ['tags' => ['order', 'dispute']]
         );
+    }
+
+    protected static function vendorGroupsForOrder(Order $order): array
+    {
+        $order->loadMissing('items');
+        $items = $order->items;
+        if ($items->isEmpty()) {
+            return [];
+        }
+
+        $vendorIds = $items->pluck('vendor_id')->filter()->unique()->values();
+        $productIds = $items->map(function (OrderItem $item) {
+            return self::extractProductId($item);
+        })->filter()->unique()->values();
+
+        $vendors = $vendorIds->isEmpty()
+            ? collect()
+            : VendorDetail::with('user')->whereIn('id', $vendorIds)->get()->keyBy('id');
+
+        $products = $productIds->isEmpty()
+            ? collect()
+            : Product::with('vendor.user')->whereIn('id', $productIds)->get()->keyBy('id');
+
+        $groups = [];
+        foreach ($items as $item) {
+            $vendor = null;
+            if ($item->vendor_id && $vendors->has($item->vendor_id)) {
+                $vendor = $vendors->get($item->vendor_id);
+            } else {
+                $productId = self::extractProductId($item);
+                if ($productId && $products->has($productId)) {
+                    $vendor = optional($products->get($productId))->vendor;
+                }
+            }
+
+            if (!$vendor) {
+                continue;
+            }
+
+            $email = self::resolveVendorEmail($vendor);
+            if (!$email) {
+                continue;
+            }
+
+            $key = (string) $vendor->id;
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'vendor' => $vendor,
+                    'email' => $email,
+                    'items' => [],
+                ];
+            }
+
+            $groups[$key]['items'][] = self::formatVendorItem($item);
+        }
+
+        return array_values($groups);
+    }
+
+    protected static function formatVendorItem(OrderItem $item): array
+    {
+        $meta = is_array($item->meta) ? $item->meta : [];
+        return [
+            'name' => $item->name,
+            'quantity' => (int) $item->quantity,
+            'unit_amount' => (int) $item->unit_amount,
+            'variant' => $meta['variant_label'] ?? null,
+            'url' => $meta['url'] ?? null,
+            'image' => $meta['image'] ?? null,
+        ];
+    }
+
+    protected static function extractProductId(OrderItem $item): ?int
+    {
+        if ($item->product_id) {
+            return (int) $item->product_id;
+        }
+
+        $meta = is_array($item->meta) ? $item->meta : [];
+        $raw = $meta['product_id'] ?? null;
+        if (is_numeric($raw)) {
+            return (int) $raw;
+        }
+        $url = $meta['url'] ?? null;
+        if (is_string($url) && preg_match('/\/(\d+)-/', $url, $matches)) {
+            return (int) $matches[1];
+        }
+        if ($item->sku && preg_match('/(\d+)/', (string) $item->sku, $matches)) {
+            return (int) $matches[1];
+        }
+        return null;
+    }
+
+    protected static function resolveVendorEmail(?VendorDetail $vendor): ?string
+    {
+        if (!$vendor) {
+            return null;
+        }
+        $raw = trim((string) ($vendor->user?->email ?: $vendor->vendor_contact));
+        if ($raw === '') {
+            return null;
+        }
+        if (str_contains($raw, '<') && preg_match('/<([^>]+)>/', $raw, $matches)) {
+            $raw = trim($matches[1]);
+        }
+        return filter_var($raw, FILTER_VALIDATE_EMAIL) ? $raw : null;
+    }
+
+    protected static function conciergeEmail(): ?string
+    {
+        $email = config('mail.concierge_address') ?: 'hello@weofferwellness.co.uk';
+        return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
+    }
+
+    protected static function customerName(Order $order): ?string
+    {
+        $order->loadMissing('customerProfile');
+        $profile = $order->customerProfile;
+        if (!$profile) {
+            return null;
+        }
+        $name = trim(implode(' ', array_filter([$profile->first_name, $profile->last_name], function ($value) {
+            return is_string($value) && trim($value) !== '';
+        })));
+        return $name !== '' ? $name : null;
     }
 
     protected static function preferencesUrl(V3Subscriber $subscriber): string

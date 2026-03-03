@@ -135,6 +135,7 @@ class CartController extends Controller
                 'qty' => $qty,
                 'image' => $image,
                 'url' => $url,
+                'vendor_id' => $product->vendor_id,
             ];
         }
         session(['cart.items' => $items]);
@@ -265,6 +266,7 @@ class CartController extends Controller
         }
         return [
             'product_id' => $rawProductId,
+            'vendor_id' => $entry['vendor_id'] ?? $entry['vendorId'] ?? null,
             'variant_id' => $variantId,
             'variant_label' => $variantLabel,
             'options' => $options,

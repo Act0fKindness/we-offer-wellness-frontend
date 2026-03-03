@@ -25,6 +25,7 @@ class CheckoutController extends Controller
                 $normalized[(string)$id] = [
                     'id' => $id,
                     'product_id' => $entry['product_id'] ?? $entry['productId'] ?? null,
+                    'vendor_id' => $entry['vendor_id'] ?? $entry['vendorId'] ?? null,
                     'variant_id' => $entry['variant_id'] ?? $entry['variantId'] ?? null,
                     'variant_label' => $entry['variant_label'] ?? $entry['options_label'] ?? null,
                     'title' => (string)($entry['title'] ?? ('Item '.$id)),
