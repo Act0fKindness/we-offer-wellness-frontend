@@ -979,6 +979,7 @@ class LandingController extends Controller
         return view('offering.show', [
             'type' => $type,
             'product' => $data,
+            'productModel' => $product, // pass Eloquent model for debugging helpers
         ]);
     }
 }
