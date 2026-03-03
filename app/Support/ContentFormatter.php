@@ -73,7 +73,7 @@ class ContentFormatter
 
     private static function stripEmojiImages(string $html): string
     {
-        return preg_replace_callback('/<img\b[^>]*>/i', function ($match) {
+        $cleaned = preg_replace_callback('/<img\b[^>]*>/i', function ($match) {
             $tag = $match[0] ?? '';
             if ($tag === '') {
                 return $tag;
@@ -90,5 +90,11 @@ class ContentFormatter
             }
             return $tag;
         }, $html) ?? $html;
+
+        // Remove any stray attribute fragments left behind by stripped emoji tags
+        $cleaned = preg_replace('/"\s*loading="lazy"[^>]*data-emoji="[^"]*"[^>]*>\s*/i', '', $cleaned) ?? $cleaned;
+        $cleaned = preg_replace('/&quot;\s*loading="lazy"[^>]*data-emoji="[^"]*"[^>]*&gt;\s*/i', '', $cleaned) ?? $cleaned;
+
+        return $cleaned;
     }
 }
