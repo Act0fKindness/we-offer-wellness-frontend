@@ -39,7 +39,6 @@
         $categoryRaw = $categoryRaw['name'] ?? reset($categoryRaw) ?? null;
     }
     $categoryLabel = $categoryRaw ? $ucWords($toLower(str_replace(['_', '-'], ' ', $categoryRaw))) : null;
-    $categoryBadgeLabel = $categoryLabel ?? $typeLabel;
     $priceMin = $product->variants_min_price ?? ($product->price ?? null);
     // Normalise pennies to pounds where needed
     if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) { $priceMin = $priceMin / 100; }
@@ -176,6 +175,7 @@
   .wow-therapy-card-scope .badge{ height: var(--badgeH); display:inline-flex; align-items:center; gap:4px; padding:0 var(--badgePx); border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size: var(--badgeFont); line-height:1; white-space:nowrap; flex:0 0 auto }
   .wow-therapy-card-scope .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
   .wow-therapy-card-scope .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
+  .wow-therapy-card-scope .badge--trust{ background:#e7f5ff; color:#0f3d62; border:1px solid rgba(15,61,98,.15); }
   .wow-therapy-card-scope .badge svg{
     color: #d59d4c;
     width: 18px;
@@ -191,108 +191,7 @@
   .wow-therapy-card-scope .media{ height: var(--imgH); overflow:hidden; flex:0 0 auto; padding:0 15px; border-radius:3px }
   .wow-therapy-card-scope .media img{ width:100%; height:100%; object-fit:cover; border:1px solid #eee; display:block; border-radius:2px }
   .wow-therapy-card-scope .content{ padding: 0px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0 }
-  .rating-row{
-              display:flex;
-              align-items:center;
-              gap: 8px;
-              margin-bottom: 10px;
-              color: rgba(11,18,32,.80);
-              font-weight: 400;
-              font-size: var(--rating);
-          }
-
-          .stars{
-              display:inline-flex;
-              align-items:center;
-              gap: 3px;
-              transform: translateY(1px);
-          }
-
-          .star{
-              width: var(--star);
-              height: var(--star);
-              display: inline-block;
-              position: relative;
-
-              /* gold fill (set via color on the element) */
-              background: currentColor;
-
-              /* FILLED mask */
-              -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat;
-              mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat;
-          }
-
-          /* grey outline (NOW 2px) */
-          .star::after{
-              content:"";
-              position:absolute;
-              inset:0;
-              background:#333;
-              pointer-events:none;
-
-              -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%20stroke-linecap%3D%27round%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat;
-              mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%20stroke-linecap%3D%27round%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat;
-          }
-
-          .star--empty{
-              color: transparent;
-          }
-
-  .wow-therapy-card-scope .content-top{ flex:1 1 auto; padding: var(--padContentY) var(--padContentX); min-height:0; overflow:hidden }
-  .wow-therapy-card-scope .fomo {     margin: 0 0 8px;
-                                      font-size: var(--fomo);
-                                      font-weight: 600;
-                                      color: rgba(11, 18, 32, .84);
-                                      display: -webkit-box;
-                                      -webkit-line-clamp: 2;
-                                      -webkit-box-orient: vertical;
-                                      overflow: hidden; }
-  .wow-therapy-card-scope .title{ margin:0 0 6px; font-size: var(--title); font-weight:400 !important; line-height:1.12; margin-top:10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family: 'Manrope', var(--bs-font-sans-serif) !important; text-transform: capitalize }
-  .wow-therapy-card-scope .provider{ margin:0 0 8px; color: var(--muted); font-size: var(--provider); font-weight:400 }
-  .wow-therapy-card-scope .rating-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; color: rgba(11,18,32,.80); font-weight:400; font-size: var(--rating) }
-  .wow-therapy-card-scope .stars{ display:inline-flex; align-items:center; gap:3px; transform: translateY(1px) }
-  .wow-therapy-card-scope .star{ width: 18px; height: 18px; display:inline-block; position:relative; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat }
-  .wow-therapy-card-scope .star.star--empty{ background: transparent }
-  .wow-therapy-card-scope .star::after{ content:""; position:absolute; inset:0; background:#333; pointer-events:none; -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%20stroke-linecap%3D%27round%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%20stroke-linecap%3D%27round%27%20d%3D%27M11.083%205.104c.35-.8%201.485-.8%201.834%200l1.752%204.022a1%201%200%200%200%20.84.597l4.463.342c.9.069%201.255%201.2.556%201.771l-3.33%202.723a1%201%200%200%200-.337%201.016l1.03%204.119c.214.858-.71%201.552-1.474%201.106l-3.913-2.281a1%201%200%200%200-1.008%200L7.583%2020.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1%201%200%200%200%206.8%2014.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1%201%200%200%20.84-.597l1.753-4.022Z%27%2F%3E%3C%2Fsvg%3E") center/contain no-repeat }
-  .wow-therapy-card-scope .meta{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; margin-bottom:8px; color: rgba(11,18,32,.62); font-size: var(--meta); font-weight:400 }
-  .wow-therapy-card-scope .meta .item{ display:flex; align-items:center; gap:6px; white-space:nowrap }
-  .wow-therapy-card-scope .meta .label{
-    display: inline-block;
-    max-width: 140px;
-    letter-spacing: normal;
-    margin-left: 0px;
-    font-size: 12px;
-    padding-left: 0px;
-    font-weight: normal;
-    text-transform: capitalize;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .wow-therapy-card-scope .meta .chip{
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    margin-left: -15px;
-    margin-top: -1px;
-    padding: 3px 5px;
-    cursor: pointer;
-    color: rgba(11,18,32,.72);
-  }
-  .wow-therapy-card-scope .meta .chip:hover{ color: rgba(11,18,32,.92) }
-  .wow-therapy-card-scope .meta .chip svg{ width: var(--metaIcon); height: var(--metaIcon) }
-  /* Popover for (+N) overflow */
-  .wow-therapy-card-scope .loc-overflow{ position:relative; }
-  /* Invisible hover bridge so moving from chip to popover doesn't close it */
-  .wow-therapy-card-scope .loc-overflow::before{ content:""; position:absolute; left:-8px; right:-8px; top:100%; height:10px; }
-  .wow-therapy-card-scope .loc-popover{ position:absolute; top: calc(100% + 2px); left:0; width:240px; max-width:80vw; background:#fff; border:1px solid rgba(16,24,40,.12); box-shadow:0 10px 30px rgba(16,24,40,.12); border-radius:6px; padding:10px; z-index:60; display:none }
-  .wow-therapy-card-scope .loc-popover h4{ margin:0 0 8px; font-size:12px; font-weight:700; color:#0b1220 }
-  .wow-therapy-card-scope .loc-popover .list{ display:flex; flex-wrap:wrap; gap:6px }
-  .wow-therapy-card-scope .loc-popover .pill{ border:1px solid rgba(16,24,40,.14); border-radius:999px; padding:4px 8px; font-size:12px; color:#0b1220; display:inline-flex; align-items:center; gap:4px }
-  .wow-therapy-card-scope .loc-popover .link{ display:block; margin-top:8px; font-size:12px; color:#1f3a77; text-decoration:underline }
-  /* Show popover on hover/focus for desktop */
-  @media (hover:hover){ .wow-therapy-card-scope .loc-overflow:hover .loc-popover, .wow-therapy-card-scope .loc-overflow:focus-within .loc-popover{ display:block } }
-  /* Ensure popover can overflow the content area */
+/* Ensure popover can overflow the content area */
   .wow-therapy-card-scope .content-top{ overflow: visible }
   .wow-therapy-card-scope .content-bottom{ flex:0 0 auto; margin-top:auto; padding:15px; border-top:1px solid rgba(16,24,40,.10); background:#fff }
   .wow-therapy-card-scope .fomo{ margin:0 0 8px; font-size: var(--fomo); font-weight:600; color: rgba(11,18,32,.84); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
@@ -354,15 +253,16 @@
     <article class="therapy-card" aria-label="Therapy card {{ $product->id }}">
       <header class="card-top">
         <div class="card-top-left">
-          <div class="badges">
-            <span class="badge badge--warm">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.122 17.645a7.185 7.185 0 0 1-2.656 2.495 7.06 7.06 0 0 1-3.52.853 6.617 6.617 0 0 1-3.306-.718 6.73 6.73 0 0 1-2.54-2.266c-2.672-4.57.287-8.846.887-9.668A4.448 4.448 0 0 0 8.07 6.31 4.49 4.49 0 0 0 7.997 4c1.284.965 6.43 3.258 5.525 10.631 1.496-1.136 2.7-3.046 2.846-6.216 1.43 1.061 3.985 5.462 1.754 9.23Z"/>
-              </svg>
-              {{ $categoryBadgeLabel }}
-            </span>
-            <span class="badge badge--cool">{{ $typeLabel }}</span>
-          </div>
+          @include('components.product.card_badges', [
+              'product' => $product,
+              'categoryLabel' => $categoryLabel,
+              'typeLabel' => $typeLabel,
+              'activeTaxonomy' => $activeTaxonomy ?? null,
+              'seg' => $seg,
+              'tags' => $tags,
+              'rating' => $rating,
+              'reviewCount' => $reviewCount,
+          ])
         </div>
         <button class="save" type="button" aria-label="Save" aria-pressed="false" title="Save">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z"/></svg>
@@ -379,16 +279,7 @@
         <div class="content-top">
           <h2 class="title">{{ $titleFormatted }}</h2>
           @if($providerFormatted)<p class="provider">with {{ $providerFormatted }}</p>@endif
-          <div class="rating-row" aria-label="Rating 4.8 out of 5 from 231 reviews">
-              <span class="stars" aria-hidden="true">
-                <span class="star" style="color:#f5c84b;"></span>
-                <span class="star" style="color:#f5c84b;"></span>
-                <span class="star" style="color:#f5c84b;"></span>
-                <span class="star" style="color:#f5c84b;"></span>
-                <span class="star star--empty"></span>
-              </span>
-              <span></span>
-            </div>
+          @include('components.product.card_rating', ['rating' => $rating, 'reviews' => $reviewCount])
           <div class="meta">
             @if($durationLabel)
               <span class="item">{{ $durationLabel }}</span>

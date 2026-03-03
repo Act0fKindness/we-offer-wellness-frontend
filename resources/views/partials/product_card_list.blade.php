@@ -38,7 +38,6 @@
         $categoryRaw = $categoryRaw['name'] ?? reset($categoryRaw) ?? null;
     }
     $categoryLabel = $categoryRaw ? $ucWords($toLower(str_replace(['_', '-'], ' ', $categoryRaw))) : null;
-    $categoryBadgeLabel = $categoryLabel ?? $typeLabel;
 
     $priceMin = $product->variants_min_price ?? ($product->price ?? null);
     if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) { $priceMin = $priceMin / 100; }
@@ -189,6 +188,7 @@
     .wow-row-card .badge{ height: var(--badgeH); display:inline-flex; align-items:center; gap:4px; padding:0 var(--badgePx); border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size: var(--badgeFont); line-height:1; white-space:nowrap; flex:0 0 auto; }
     .wow-row-card .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
     .wow-row-card .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
+    .wow-row-card .badge--trust{ background:#e7f5ff; color:#0f3d62; border:1px solid rgba(15,61,98,.15); }
     .wow-row-card .badge svg{ width: var(--badgeIcon); height: var(--badgeIcon); color:#d59d4c; transform: translateY(1px); }
     .wow-save{
         width: 34px;
@@ -210,15 +210,18 @@
     /* Title styling to match product_card */
     .wow-row-title{ font-size:var(--title); line-height:1.12; letter-spacing:-.015em; font-weight:400 !important; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family: 'Manrope', var(--bs-font-sans-serif); text-transform: capitalize; }
     .wow-row-provider{ margin:6px 0 8px; color:var(--muted); font-size:var(--provider); font-weight:400; }
-    .wow-rating{ display:flex; align-items:center; gap:8px; color:rgba(11,18,32,.80); font-size:var(--rating); margin-top:8px; margin-bottom:10px; font-weight:400; }
-    .wow-stars{ display:inline-flex; align-items:center; gap:3px; transform:translateY(1px); }
-    .wow-star{ width:var(--star); height:var(--star); display:inline-block; position:relative; background:currentColor;
+    .wow-row-card .rating-row{ display:flex; align-items:center; gap:8px; color:rgba(11,18,32,.80); font-size:var(--rating); margin:8px 0 10px; font-weight:400; }
+    .wow-row-card .rating-row .stars{ display:inline-flex; align-items:center; gap:4px; transform:translateY(1px); }
+    .wow-row-card .rating-row .star{ width:var(--star); height:var(--star); display:inline-block; position:relative; background:#dfe4ef;
       -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
       mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat; }
-    .wow-star::after{ content:""; position:absolute; inset:0; background:#333; pointer-events:none; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2 .556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702 .557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
-      mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2 .556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702 .557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat; }
-    .wow-star--empty{ background:transparent; }
-    .wow-star--empty::after{ background:#333; opacity:.55; }
+    .wow-row-card .rating-row .star::after{ content:""; position:absolute; inset:0; background:rgba(11,18,32,.35); pointer-events:none;
+      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2 .556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702 .557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
+      mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2 .556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702 .557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat; opacity:.25; }
+    .wow-row-card .rating-row .star--filled{ background:#f5c84b; }
+    .wow-row-card .rating-row .star--half{ background:linear-gradient(90deg,#f5c84b 0 50%, #dfe4ef 50% 100%); }
+    .wow-row-card .rating-row .star--empty{ background:#e8ecf5; }
+    .wow-row-card .rating-row .rating-count{ font-weight:600; color:rgba(11,18,32,.75); }
     .wow-meta{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; color:rgba(11,18,32,.62); font-size:var(--meta); margin-top:6px; font-weight:400; }
     .wow-meta .item{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
     .wow-meta svg{ width:var(--metaIcon); height:var(--metaIcon); color:rgba(11,18,32,.58); }
@@ -259,15 +262,16 @@
   <!-- Col 2 -->
   <div class="wow-row-body">
       <div class="wow-row-top">
-          <div class="badges" aria-label="Badges">
-              <span class="badge badge--warm">
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.122 17.645a7.185 7.185 0 0 1-2.656 2.495 7.06 7.06 0 0 1-3.52.853 6.617 6.617 0 0 1-3.306-.718 6.73 6.73 0 0 1-2.54-2.266c-2.672-4.57.287-8.846.887-9.668A4.448 4.448 0 0 0 8.07 6.31 4.49 4.49 0 0 0 7.997 4c1.284.965 6.43 3.258 5.525 10.631 1.496-1.136 2.7-3.046 2.846-6.216 1.43 1.061 3.985 5.462 1.754 9.23Z"/>
-                </svg>
-                {{ $categoryBadgeLabel }}
-              </span>
-              <span class="badge badge--cool">{{ $typeLabel }}</span>
-          </div>
+          @include('components.product.card_badges', [
+              'product' => $product,
+              'categoryLabel' => $categoryLabel,
+              'typeLabel' => $typeLabel,
+              'activeTaxonomy' => $activeTaxonomy ?? null,
+              'seg' => $seg,
+              'tags' => $tags,
+              'rating' => $rating,
+              'reviewCount' => $reviewCount,
+          ])
 
           <button class="wow-save" type="button" aria-label="Save" aria-pressed="false" title="Save">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" height="18">
@@ -282,23 +286,7 @@
               <p class="wow-row-provider">with {{ $providerFormatted }}</p>
           @endif
 
-          @if($rating)
-              <div class="wow-rating" aria-label="Rating {{ number_format($rating,1) }} out of 5">
-                  <span class="wow-stars" aria-hidden="true">
-                      @php
-                          $full = (int) floor($rating);
-                          $empties = 5 - $full;
-                      @endphp
-                      @for($i=0; $i<$full; $i++)
-                          <span class="wow-star" style="color:#f5c84b;"></span>
-                      @endfor
-                      @for($i=0; $i<$empties; $i++)
-                          <span class="wow-star wow-star--empty"></span>
-                      @endfor
-                  </span>
-                  <span class="text-muted">{{ number_format($rating,1) }} ({{ $reviewCount }})</span>
-              </div>
-          @endif
+          @include('components.product.card_rating', ['rating' => $rating, 'reviews' => $reviewCount])
 
           <div class="wow-meta">
               @if($locationLabel)
