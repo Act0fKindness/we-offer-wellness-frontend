@@ -23174,7 +23174,19 @@ a:hover {
     background:#fff; border:1px solid var(--soft-border); border-radius:16px;
     box-shadow:var(--shadow); z-index:40; overflow:hidden; text-align:left;
 }
-.wow-ultra .pane.narrow{ width:min(560px, 96vw); right:auto }
+.wow-ultra .pane.narrow{
+  z-index:39;
+  left:auto!important;
+  right:0!important;
+  width:min(560px,96vw);
+  max-width:96vw;
+  height:auto;
+  max-height:304px;
+  overflow:auto;
+  -ms-overflow-style:none;
+  scrollbar-width:none
+}
+.wow-ultra .pane.narrow::-webkit-scrollbar{width:0;height:0}
 .wow-ultra .pane.align-left{ left:0 !important; right:auto !important }
 .wow-ultra .pane.align-right{ left:auto !important; right:0 !important }
 .wow-ultra .pane .section-title{ font-size:.85rem; font-weight:700; letter-spacing:.01em; color:#111827; padding:10px 14px; background:#f9fafb; border-bottom:1px solid #eef2f7; }

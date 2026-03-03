@@ -188,7 +188,19 @@
 }
 .wow-ultra #search-top-who-pane::-webkit-scrollbar{ width:0; height:0 }
 /* Requested narrow pane sizing */
-.wow-ultra .pane.narrow{ width: min(560px, 96vw); right:auto; height:auto; max-height:304px; }
+.wow-ultra .pane.narrow{
+  z-index: 39;
+  left: auto !important;
+  right: 0 !important;
+  width: min(560px, 96vw);
+  max-width: 96vw;
+  height: auto;
+  max-height: 304px;
+  overflow: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.wow-ultra .pane.narrow::-webkit-scrollbar{ width:0; height:0 }
 /* Constrain scrollable list */
 /* Avoid inner list scrollbars in Who pane */
 .wow-ultra #search-top-who-pane .listy{ max-height: none; overflow: visible; }

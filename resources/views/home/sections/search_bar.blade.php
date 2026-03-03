@@ -155,7 +155,19 @@
 /* Ensure search suggestion panes overlay content but stay under the header */
 .wow-ultra{ position: relative; z-index: 30; }
 .wow-ultra .pane{ z-index: 39; }
-.wow-ultra .pane.narrow{ z-index: 39; }
+.wow-ultra .pane.narrow{
+  z-index: 39;
+  left: auto !important;
+  right: 0 !important;
+  width: min(560px, 96vw);
+  max-width: 96vw;
+  height: auto;
+  max-height: 304px;
+  overflow: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.wow-ultra .pane.narrow::-webkit-scrollbar{ width:0; height:0 }
 /* Desktop default: show text label, hide icon on Search button */
 .btn-wow.is-squarish.btn-xl .btn-label{ display:inline; }
 .btn-wow.is-squarish.btn-xl .btn-icon{ display:none; }
