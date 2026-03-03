@@ -27,10 +27,8 @@ class HomeController extends Controller
                 ->withAvg('reviews', 'rating')
                 ->withMin('variants', 'price')
                 ->with(['media', 'options.values', 'category'])
-                ->where(function ($q) {
-                    $q->whereHas('status', function ($qs) {
-                        $qs->whereIn('status', ['live', 'approved']);
-                    })->orWhereNull('product_status_id');
+                ->whereHas('status', function ($qs) {
+                    $qs->where('status', 'live');
                 });
 
             $giftsUnder50 = (clone $base)
