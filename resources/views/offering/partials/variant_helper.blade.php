@@ -164,7 +164,7 @@
         if(A === 'online' || B === 'online') return A === 'online' && B === 'online';
         if(A.includes(B) || B.includes(A)) return true;
         var overlap = overlapCount(a,b);
-        if (overlap >= 2) return true;
+        if (overlap >= 3) return true;
         if (overlap >= 1) {
           var tokA = tokens(a)[0] || '';
           var tokB = tokens(b)[0] || '';
