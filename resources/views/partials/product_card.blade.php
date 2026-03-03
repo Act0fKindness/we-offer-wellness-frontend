@@ -233,10 +233,10 @@
   .wow-therapy-card-scope .loc-overflow .chip{ display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 10px; font-size:.78rem; font-weight:700; background:#f0f7f4; color:#1f3b34; border:1px solid rgba(74,134,118,.35); cursor:pointer; transition: background .16s ease, color .16s ease, box-shadow .16s ease; }
   .wow-therapy-card-scope .loc-overflow .chip:hover,
   .wow-therapy-card-scope .loc-overflow .chip:focus-visible{ background:#e5f2eb; color:#183027; box-shadow:0 8px 20px rgba(74,134,118,.25); outline:2px solid rgba(74,134,118,.25); outline-offset:2px; }
-  .wow-therapy-card-scope .loc-popover{ position:absolute; top:calc(100% + 10px); right:0; width:260px; background:#fff; border:1px solid rgba(15,24,40,.1); border-radius:16px; box-shadow:0 28px 65px rgba(11,18,32,.25); padding:16px; opacity:0; visibility:hidden; transform:translateY(-6px); transition:opacity .18s ease, transform .18s ease; z-index:40; pointer-events:none; }
+  .wow-therapy-card-scope .loc-popover{ position:absolute; top:calc(100% + 10px); right:0; width:260px; max-width:calc(100vw - 32px); background:#fff; border:1px solid rgba(15,24,40,.1); border-radius:16px; box-shadow:0 28px 65px rgba(11,18,32,.25); padding:16px; opacity:0; visibility:hidden; transform:translate(var(--loc-popover-shift, 0px), -6px); transition:opacity .18s ease, transform .18s ease; z-index:40; pointer-events:none; }
   .wow-therapy-card-scope .loc-overflow:hover .loc-popover,
   .wow-therapy-card-scope .loc-overflow:focus-within .loc-popover,
-  .wow-therapy-card-scope .loc-overflow.is-open .loc-popover{ opacity:1; visibility:visible; transform:translateY(0); pointer-events:auto; }
+  .wow-therapy-card-scope .loc-overflow.is-open .loc-popover{ opacity:1; visibility:visible; transform:translate(var(--loc-popover-shift, 0px), 0); pointer-events:auto; }
   .wow-therapy-card-scope .loc-popover h4{ margin:0 0 10px; font-size:.85rem; font-weight:700; color:#0b1220; }
   .wow-therapy-card-scope .loc-popover .list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .wow-therapy-card-scope .loc-popover .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:#f4f6fb; color:#1b2435; font-size:.78rem; font-weight:600; }
@@ -301,12 +301,30 @@
   @push('scripts')
     <script>
       (function(){
+        var activeLocWrap = null;
         function closeLocationPopovers(){
           document.querySelectorAll('.loc-overflow.is-open').forEach(function(el){
             el.classList.remove('is-open');
             var chip = el.querySelector('.chip[aria-expanded="true"]');
             if(chip){ chip.setAttribute('aria-expanded','false'); }
+            var pop = el.querySelector('.loc-popover');
+            if(pop){ pop.style.removeProperty('--loc-popover-shift'); }
           });
+          activeLocWrap = null;
+        }
+
+        function adjustLocationPopover(wrap){
+          if(!wrap) return;
+          var pop = wrap.querySelector('.loc-popover');
+          if(!pop) return;
+          pop.style.setProperty('--loc-popover-shift', '0px');
+          var rect = pop.getBoundingClientRect();
+          var viewport = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
+          var padding = 16;
+          var shift = 0;
+          if(rect.left < padding){ shift = padding - rect.left; }
+          else if(rect.right > viewport - padding){ shift = (viewport - padding) - rect.right; }
+          pop.style.setProperty('--loc-popover-shift', shift + 'px');
         }
 
         document.addEventListener('click', function(event){
@@ -320,6 +338,8 @@
             if(!isOpen){
               wrap.classList.add('is-open');
               chip.setAttribute('aria-expanded','true');
+              activeLocWrap = wrap;
+              requestAnimationFrame(function(){ adjustLocationPopover(wrap); });
             }
             return;
           }
@@ -341,6 +361,9 @@
             closeLocationPopovers();
           }
         });
+
+        window.addEventListener('resize', function(){ if(activeLocWrap){ adjustLocationPopover(activeLocWrap); } });
+        window.addEventListener('scroll', function(){ if(activeLocWrap){ adjustLocationPopover(activeLocWrap); } }, { passive:true });
       })();
     </script>
   @endpush
