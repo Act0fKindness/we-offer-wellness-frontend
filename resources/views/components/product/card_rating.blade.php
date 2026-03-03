@@ -1,6 +1,12 @@
 @php
     $rating = is_null($rating ?? null) ? null : max(0, min(5, round((float) $rating, 1)));
     $reviews = max(0, (int) ($reviews ?? 0));
+    $vendorRating = is_null($vendorRating ?? null) ? null : max(0, min(5, round((float) $vendorRating, 1)));
+    $vendorReviews = max(0, (int) ($vendorReviews ?? 0));
+    if ($reviews === 0 && $vendorReviews > 0 && $vendorRating !== null) {
+        $rating = $vendorRating;
+        $reviews = $vendorReviews;
+    }
     $fullStars = $rating !== null ? (int) floor($rating) : 0;
     $hasHalf = $rating !== null ? (($rating - $fullStars) >= 0.5) : false;
     if ($hasHalf && $fullStars === 5) {

@@ -46,6 +46,13 @@
 
     $rating = isset($product->reviews_avg_rating) ? round((float)$product->reviews_avg_rating, 1) : null;
     $reviewCount = (int) ($product->reviews_count ?? 0);
+    $vendorReviewCount = (int) (
+        data_get($product, 'vendor_reviews_count')
+        ?? data_get($product, 'vendor.reviews_count')
+        ?? 0
+    );
+    $vendorRating = data_get($product, 'vendor_reviews_avg_rating')
+        ?? data_get($product, 'vendor.reviews_avg_rating');
 
     // Provider
     $provider = $product->vendor_name
@@ -289,7 +296,12 @@
               <p class="wow-row-provider">with {{ $providerFormatted }}</p>
           @endif
 
-          @include('components.product.card_rating', ['rating' => $rating, 'reviews' => $reviewCount])
+          @include('components.product.card_rating', [
+              'rating' => $rating,
+              'reviews' => $reviewCount,
+              'vendorRating' => $vendorRating,
+              'vendorReviews' => $vendorReviewCount,
+          ])
 
           <div class="wow-meta">
               @if($locationLabel)

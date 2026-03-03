@@ -161,7 +161,14 @@ class TherapiesController extends Controller
             $page    = max(1, (int)($query['page'] ?? 1));
 
             $builder = Product::query()
-                ->with(['media', 'category', 'options.values'])
+                ->with([
+                    'media',
+                    'category',
+                    'options.values',
+                    'vendor' => function($vendor){
+                        $vendor->withAvg('reviews','rating')->withCount('reviews');
+                    },
+                ])
                 ->withCount('reviews')
                 ->withAvg('reviews', 'rating')
                 ->withMin('variants', 'price')

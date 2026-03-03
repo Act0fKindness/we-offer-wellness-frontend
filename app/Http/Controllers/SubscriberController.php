@@ -172,7 +172,15 @@ class SubscriberController extends Controller
     {
         try {
             $query = Product::query()
-                ->with(['media', 'options.values', 'category', 'status'])
+                ->with([
+                    'media',
+                    'options.values',
+                    'category',
+                    'status',
+                    'vendor' => function($vendor){
+                        $vendor->withAvg('reviews','rating')->withCount('reviews');
+                    },
+                ])
                 ->withCount('reviews')
                 ->withAvg('reviews', 'rating')
                 ->where(function ($q) {

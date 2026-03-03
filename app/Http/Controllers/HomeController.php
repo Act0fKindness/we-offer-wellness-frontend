@@ -27,7 +27,10 @@ class HomeController extends Controller
                 ->withCount('reviews')
                 ->withAvg('reviews', 'rating')
                 ->withMin('variants', 'price')
-                ->with(['media', 'options.values', 'category'])
+                ->with(['media', 'options.values', 'category', 'vendor' => function($vendor){
+                    $vendor->withAvg('reviews', 'rating')
+                           ->withCount('reviews');
+                }])
                 ->whereHas('status', function ($qs) {
                     $qs->where('status', 'live');
                 });

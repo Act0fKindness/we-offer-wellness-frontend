@@ -43,6 +43,13 @@
     if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) { $priceMin = $priceMin / 100; }
     $rating = isset($product->reviews_avg_rating) ? round((float)$product->reviews_avg_rating, 1) : null;
     $reviewCount = (int) ($product->reviews_count ?? 0);
+    $vendorReviewCount = (int) (
+        data_get($product, 'vendor_reviews_count')
+        ?? data_get($product, 'vendor.reviews_count')
+        ?? 0
+    );
+    $vendorRating = data_get($product, 'vendor_reviews_avg_rating')
+        ?? data_get($product, 'vendor.reviews_avg_rating');
 @endphp
 
 @php
@@ -108,7 +115,12 @@
         'reviewCount' => $reviewCount,
     ])
     <div class="title">{{ $titleFormatted }}</div>
-    @include('components.product.card_rating', ['rating' => $rating, 'reviews' => $reviewCount])
+    @include('components.product.card_rating', [
+        'rating' => $rating,
+        'reviews' => $reviewCount,
+        'vendorRating' => $vendorRating,
+        'vendorReviews' => $vendorReviewCount,
+    ])
     <div class="bottom">
       @if($priceMin)
         <div class="price">£{{ number_format((float)$priceMin, 2) }} <small>from</small></div>
