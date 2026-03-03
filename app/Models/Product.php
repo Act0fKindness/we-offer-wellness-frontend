@@ -468,6 +468,71 @@ class Product extends Model
     }
 
     /**
+     * Find the location label (from the Locations option) that corresponds to a given variant.
+     * Accepts ProductVariant instance or variant ID.
+     */
+    public function findVariantLocationLabel($variant): ?string
+    {
+        $v = $variant;
+        if (!($v instanceof ProductVariant)) {
+            $v = ($this->relationLoaded('variants') ? $this->variants : $this->variants()->get())->firstWhere('id', (int) $variant);
+        }
+        if (!$v) return null;
+
+        $locOpt = $this->locationOption();
+        if (!$locOpt) return null;
+
+        // Build lookup id->value for all option values
+        $valueLookup = [];
+        foreach (($this->relationLoaded('options') ? $this->options : $this->options()->with('values')->get()) as $o) {
+            foreach ($o->values as $val) {
+                $valueLookup[$val->id] = trim((string) $val->value);
+            }
+        }
+
+        $labels = [];
+        if (!empty($v->option_ids)) {
+            $ids = json_decode($v->option_ids, true) ?: [];
+            foreach ((array)$ids as $id) {
+                if (isset($valueLookup[$id])) { $labels[] = $valueLookup[$id]; }
+            }
+        }
+        if (empty($labels)) {
+            $opts = $v->options ?? null;
+            if (is_string($opts) && $opts !== '') {
+                $opts = json_decode($opts, true) ?: [];
+            }
+            if (is_array($opts) && !empty($opts)) {
+                foreach ($opts as $ov) {
+                    if (is_string($ov)) { $labels[] = $ov; }
+                    elseif (is_array($ov)) { foreach ($ov as $sub) if (is_string($sub)) $labels[] = $sub; }
+                }
+            }
+        }
+
+        $known = array_map(fn($v) => trim((string)$v), $locOpt->values->pluck('value')->all());
+        $norm = function ($s) { $s = trim((string)$s); return function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s); };
+        $index = [];
+        foreach ($known as $k) { $index[$norm($k)] = $k; }
+        foreach ($labels as $lab) {
+            $n = $norm($lab);
+            if (isset($index[$n])) return $index[$n];
+        }
+        return null;
+    }
+
+    /**
+     * Get a formatted address string for a variant's location, e.g., "Sidmouth, UK".
+     * Accepts ProductVariant or variant ID.
+     */
+    public function variantFormattedLocation($variant, string $country = 'UK'): ?string
+    {
+        $label = $this->findVariantLocationLabel($variant);
+        if (!$label) return null;
+        return \App\Support\AddressFormatter::cityCountry($label, $country);
+    }
+
+    /**
      * Reviews published in our system that are associated to this product's vendor.
      *
      * These originate from the internal `reviews` table and are tied to a
