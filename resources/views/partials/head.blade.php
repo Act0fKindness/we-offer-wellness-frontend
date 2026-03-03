@@ -23644,8 +23644,8 @@ a:hover {
     align-items: center;
     gap: 0.375rem;
     border-radius: 9999px;
-    padding: 0.25rem 0.5rem;
-    font-size: 11px;
+    padding: 0.25rem 0.2rem;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
