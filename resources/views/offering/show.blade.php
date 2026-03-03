@@ -172,6 +172,46 @@
   </div>
 </section>
 
+@php
+  $pm = $productModel ?? null; // Eloquent Product model injected from controller
+  $variants = $product['variants'] ?? [];
+@endphp
+@if($pm && !empty($variants))
+  <div class="container-page wow-debug-wrap">
+    <h3 class="h6">Variant → Location debug</h3>
+    <table class="wow-debug-table">
+      <thead>
+        <tr>
+          <th>Variant ID</th>
+          <th>Option 1</th>
+          <th>Option 2</th>
+          <th>Option 3</th>
+          <th>Formatted city</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($variants as $v)
+          @php
+            $opts = $v['options'] ?? [];
+            $o1 = (string)($opts[0] ?? '');
+            $o2 = (string)($opts[1] ?? '');
+            $o3 = (string)($opts[2] ?? '');
+            $city = $pm->variantFormattedLocation($v['id'] ?? null) ?? '';
+          @endphp
+          <tr>
+            <td>{{ $v['id'] ?? '' }}</td>
+            <td>{{ $o1 }}</td>
+            <td>{{ $o2 }}</td>
+            <td>{{ $o3 }}</td>
+            <td>{{ $city }}</td>
+          </tr>
+        @endforeach
+      </tbody>
+    </table>
+    <div class="wow-debug-note">This table uses Product::variantFormattedLocation() against each variant’s options to derive the location label and a compact formatted address.</div>
+  </div>
+@endif
+
 @endsection
 
 @push('scripts')
@@ -224,45 +264,5 @@
 @push('head')
   <style>.wow-debug-wrap{ margin: 20px 0; }</style>
 @endpush
-
-@php
-  $pm = $productModel ?? null; // Eloquent Product model injected from controller
-  $variants = $product['variants'] ?? [];
-@endphp
-@if($pm && !empty($variants))
-  <div class="container-page wow-debug-wrap">
-    <h3 class="h6">Variant → Location debug</h3>
-    <table class="wow-debug-table">
-      <thead>
-        <tr>
-          <th>Variant ID</th>
-          <th>Option 1</th>
-          <th>Option 2</th>
-          <th>Option 3</th>
-          <th>Formatted city</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach($variants as $v)
-          @php
-            $opts = $v['options'] ?? [];
-            $o1 = (string)($opts[0] ?? '');
-            $o2 = (string)($opts[1] ?? '');
-            $o3 = (string)($opts[2] ?? '');
-            $city = $pm->variantFormattedLocation($v['id'] ?? null) ?? '';
-          @endphp
-          <tr>
-            <td>{{ $v['id'] ?? '' }}</td>
-            <td>{{ $o1 }}</td>
-            <td>{{ $o2 }}</td>
-            <td>{{ $o3 }}</td>
-            <td>{{ $city }}</td>
-          </tr>
-        @endforeach
-      </tbody>
-    </table>
-    <div class="wow-debug-note">This table uses Product::variantFormattedLocation() against each variant’s options to derive the location label and a compact formatted address.</div>
-  </div>
-@endif
 
  
