@@ -8,12 +8,31 @@
     $reviewCount = $reviewCount ?? 0;
 
     $chipOne = null;
+    $chipSource = null;
     if ($activeTaxonomy === 'category') {
-        $chipOne = $typeLabel ?? $categoryLabel;
+        if ($typeLabel) {
+            $chipOne = $typeLabel;
+            $chipSource = 'type';
+        } elseif ($categoryLabel) {
+            $chipOne = $categoryLabel;
+            $chipSource = 'category';
+        }
     } elseif ($activeTaxonomy === 'type') {
-        $chipOne = $categoryLabel ?? $typeLabel;
+        if ($categoryLabel) {
+            $chipOne = $categoryLabel;
+            $chipSource = 'category';
+        } elseif ($typeLabel) {
+            $chipOne = $typeLabel;
+            $chipSource = 'type';
+        }
     } else {
-        $chipOne = $categoryLabel ?? $typeLabel;
+        if ($categoryLabel) {
+            $chipOne = $categoryLabel;
+            $chipSource = 'category';
+        } elseif ($typeLabel) {
+            $chipOne = $typeLabel;
+            $chipSource = 'type';
+        }
     }
 
     $tagBlob = strtolower(trim(($tags ?? '').' '.($product->tags_list ?? '')));
@@ -59,18 +78,18 @@
 
     $trustChip = null;
     if ($isGift) {
-        $trustChip = 'Instant e-gift';
+        $trustChip = ['label' => 'Instant e-gift', 'variant' => 'gift'];
     } elseif ($vendorVerified) {
-        $trustChip = 'Verified practitioner';
+        $trustChip = ['label' => 'Verified practitioner', 'variant' => 'verified'];
     } elseif (($reviewCount ?? 0) >= 20 && ($rating ?? 0) >= 4.8) {
-        $trustChip = 'Top Rated';
+        $trustChip = ['label' => 'Top Rated', 'variant' => 'reviews'];
     } elseif ($views7d !== null && $views7d >= 500) {
-        $trustChip = 'Trending';
+        $trustChip = ['label' => '🔥 Trending', 'variant' => 'trending'];
     } elseif ($vendorCreatedAt) {
         try {
             $yearsWithWow = \Illuminate\Support\Carbon::parse($vendorCreatedAt)->diffInYears(now());
             if ($yearsWithWow >= 2) {
-                $trustChip = '2+ years with WOW';
+                $trustChip = ['label' => '2+ years with WOW', 'variant' => 'tenure'];
             }
         } catch (\Throwable $e) {
             // Ignore parse issues
@@ -78,17 +97,16 @@
     }
 
     if (! $trustChip && $vendorHasProfile) {
-        $trustChip = 'Meet the practitioner';
-    }
-
-    if (! $trustChip) {
-        $trustChip = 'Hosted on WOW';
+        $trustChip = ['label' => 'Meet the practitioner', 'variant' => 'profile'];
     }
 @endphp
 
 <div class="badges">
     @if($chipOne)
-        <span class="badge badge--warm">
+        @php
+            $chipClass = $chipSource === 'type' ? 'badge badge--cool' : 'badge badge--warm';
+        @endphp
+        <span class="{{ $chipClass }}">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M12 3 2 9l10 6 8-4.8V17h2V9L12 3Z"/>
             </svg>
@@ -96,7 +114,17 @@
         </span>
     @endif
 
-    @if($trustChip)
-        <span class="badge badge--trust">{{ $trustChip }}</span>
+    @php
+        $trustLabel = is_array($trustChip) ? ($trustChip['label'] ?? null) : null;
+        $trustVariant = is_array($trustChip) ? ($trustChip['variant'] ?? null) : null;
+    @endphp
+    @if($trustLabel)
+        @php
+            $trustClasses = 'badge badge--trust';
+            if ($trustVariant) {
+                $trustClasses .= ' badge--trust-'.$trustVariant;
+            }
+        @endphp
+        <span class="{{ $trustClasses }}">{{ $trustLabel }}</span>
     @endif
 </div>

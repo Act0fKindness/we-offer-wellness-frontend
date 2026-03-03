@@ -113,9 +113,9 @@
 @endphp
 
 <style>
-        span.btn-primary-list {
+        .wow-row-card .btn-primary-list {
             color: #fff;
-            background: #549483 !important;
+            background: #4a8676 !important;
             height: 38px;
             border-radius: 4px;
             font-size: 16px;
@@ -126,6 +126,11 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
+        }
+        .wow-row-card .btn-primary-list:hover,
+        .wow-row-card .btn-primary-list:focus{
+            background:#4a8676 !important;
+            color:#fff;
         }
         button.btn-cart-list {
             height: 38px;
@@ -189,6 +194,7 @@
     .wow-row-card .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
     .wow-row-card .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
     .wow-row-card .badge--trust{ background:#e7f5ff; color:#0f3d62; border:1px solid rgba(15,61,98,.15); }
+    .wow-row-card .badge--trust.badge--trust-trending{ background:#ffe0e7; color:#b21c4f; border-color:rgba(178,28,79,.25); }
     .wow-row-card .badge svg{ width: var(--badgeIcon); height: var(--badgeIcon); color:#d59d4c; transform: translateY(1px); }
     .wow-save{
         width: 34px;

@@ -176,6 +176,7 @@
   .wow-therapy-card-scope .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
   .wow-therapy-card-scope .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
   .wow-therapy-card-scope .badge--trust{ background:#e7f5ff; color:#0f3d62; border:1px solid rgba(15,61,98,.15); }
+  .wow-therapy-card-scope .badge--trust.badge--trust-trending{ background:#ffe0e7; color:#b21c4f; border-color:rgba(178,28,79,.25); }
   .wow-therapy-card-scope .badge svg{
     color: #d59d4c;
     width: 18px;
@@ -217,13 +218,18 @@
   .wow-therapy-card-scope .btn--primary{
     border-color: rgba(0,0,0,.10);
     color: #fff;
-    background: #549483 !important;
+    background: #4a8676 !important;
   }
-  .wow-therapy-card-scope .btn:hover,
-  .wow-therapy-card-scope .btn:focus{
+  .wow-therapy-card-scope .btn:not(.btn--primary):hover,
+  .wow-therapy-card-scope .btn:not(.btn--primary):focus{
     background: #f7f7f7 !important;
     color: rgba(11,18,32,.90);
     border-color: rgba(0,0,0,.18);
+  }
+  .wow-therapy-card-scope .btn--primary:hover,
+  .wow-therapy-card-scope .btn--primary:focus{
+    background: #4a8676 !important;
+    color:#fff;
   }
   @media (max-width: 768px){ .wow-therapy-card-scope .therapy-card{ border-radius:20px; width:300px } }
   /* Override: use provided SVG path for star masks (base and outline) */
