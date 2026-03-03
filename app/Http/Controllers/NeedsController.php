@@ -241,6 +241,7 @@ class NeedsController extends Controller
 
             $total = (clone $builder)->count();
             $items = $builder->forPage($page, $perPage)->get();
+            \App\Support\ProductReviewEnricher::enrich($items);
 
             $lastPage = max(1, (int) ceil($total / max(1, $perPage)));
 

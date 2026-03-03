@@ -50,6 +50,8 @@ class ProductCardsController extends Controller
         ProductOrdering::applyReviewPriority($q);
 
         $products = $q->limit($limit)->get();
+        // Enrich with vendor-level review stats for display
+        \App\Support\ProductReviewEnricher::enrich($products);
         $html = '';
         foreach ($products as $p) {
             $html .= view('partials.product_card', ['product' => $p])->render();

@@ -192,7 +192,9 @@ class SubscriberController extends Controller
 
             ProductOrdering::applyReviewPriority($query);
 
-            return $query->get();
+            $items = $query->get();
+            \App\Support\ProductReviewEnricher::enrich($items);
+            return $items;
         } catch (\Throwable $e) {
             logger()->warning('preferences.upsells_failed', ['error' => $e->getMessage()]);
         }

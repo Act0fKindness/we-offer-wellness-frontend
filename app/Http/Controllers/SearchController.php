@@ -155,6 +155,8 @@ class SearchController extends Controller
         $perPage = (int) $request->integer('per_page', 48);
         $perPage = min(96, max(12, $perPage));
         $products = $query->paginate($perPage)->withQueryString();
+        // Enrich visible items with vendor review stats
+        \App\Support\ProductReviewEnricher::enrich($products);
 
         return view('search.index', [
             'mapsKey' => env('GOOGLE_MAPS_API_KEY'),
