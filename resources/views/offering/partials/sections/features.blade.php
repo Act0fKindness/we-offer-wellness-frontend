@@ -1,17 +1,23 @@
-@php $locs = $locationsList ?? []; $locCount = is_array($locs) ? count($locs) : 0; @endphp
+@php
+  $locs = $locationsList ?? [];
+  $locCount = is_array($locs) ? count($locs) : 0;
+  $participantRange = $participantRange ?? null;
+@endphp
 <div class="wow-features">
   <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 text-center">
-    <div class="col">
-      <div class="wow-feature">
-        <div class="wow-icon-circle">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-            <path d="M20 21a8 8 0 0 0-16 0"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
+    @if($participantRange)
+      <div class="col">
+        <div class="wow-feature">
+          <div class="wow-icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+              <path d="M20 21a8 8 0 0 0-16 0"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <b>{{ $participantRange['label'] }}</b><span>{{ $participantRange['suffix'] }}</span>
         </div>
-        <b>For 1–2</b><span>participants</span>
       </div>
-    </div>
+    @endif
     <div class="col">
       <div class="wow-feature">
         <div class="wow-icon-circle">
@@ -73,4 +79,3 @@
     </div>
   </div>
 </div>
-

@@ -6,6 +6,7 @@
   $safetyTxt = trim((string)($safety ?? ''));
   $contraTxt = trim((string)($contra ?? ''));
   $locs = $locationsList ?? [];
+  $participantRange = $participantRange ?? null;
 @endphp
 
 <style>
@@ -56,7 +57,7 @@
 
 @include('offering.partials.sections.about', ['body' => $about])
 
-@include('offering.partials.sections.features', ['locationsList' => $locs])
+@include('offering.partials.sections.features', ['locationsList' => $locs, 'participantRange' => $participantRange])
 
 <div class="wow-acc mt-3">
   @include('offering.partials.sections.included', ['included' => $includedHtml])

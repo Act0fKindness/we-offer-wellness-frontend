@@ -39,6 +39,38 @@
     $k = strtolower($lv);
     if (!isset($seen[$k])) { $seen[$k] = true; $locationsList[] = $lv; }
   }
+  $participantRange = null;
+  foreach (($options ?? []) as $opt) {
+    $name = strtolower((string)($opt['name'] ?? $opt['meta_name'] ?? ''));
+    if ($name === '' || !str_contains($name, 'person')) {
+      continue;
+    }
+    $vals = $opt['values'] ?? [];
+    if (!is_array($vals) || empty($vals)) {
+      break;
+    }
+    $numbers = [];
+    $allNumeric = true;
+    foreach ($vals as $val) {
+      $raw = is_array($val) ? ($val['value'] ?? '') : (string) $val;
+      $raw = trim($raw);
+      if ($raw === '' || !preg_match('/^\d+$/', $raw)) {
+        $allNumeric = false;
+        break;
+      }
+      $numbers[] = (int) $raw;
+    }
+    if ($allNumeric && !empty($numbers)) {
+      sort($numbers);
+      $min = $numbers[0];
+      $max = $numbers[count($numbers) - 1];
+      $participantRange = [
+        'label' => $min === $max ? 'For ' . $min : ('For ' . $min . '–' . $max),
+        'suffix' => $max === 1 ? 'participant' : 'participants',
+      ];
+    }
+    break;
+  }
 @endphp
 
 <section class="section product-page">
@@ -89,6 +121,7 @@
           'safety' => $safety,
           'contra' => $contra,
           'locationsList' => $locationsList,
+          'participantRange' => $participantRange,
         ])
       </div>
 
