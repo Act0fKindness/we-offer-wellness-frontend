@@ -252,7 +252,11 @@
 </style>
 
 <script>
-(function(){
+(function initSearchTopBar(){
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSearchTopBar, { once: true });
+    return;
+  }
   try { (window.setupUltraSearchBar||function(){})('search-top') } catch(e){}
   // Mobile-specific search bar behavior
   try{
