@@ -698,7 +698,14 @@ function locationSimilar(a,b){
   if(!A||!B) return A===B;
   if(A==='online' || B==='online') return A==='online' && B==='online';
   if(A.includes(B) || B.includes(A)) return true;
-  return overlap(a,b) >= 2 || (overlap(a,b)>=1 && (A.startsWith(B.split(' ')[0]) || B.startsWith(A.split(' ')[0])));
+  var shared = overlap(a,b);
+  if(shared >= 3) return true;
+  if(shared >= 1){
+    var firstA = A.split(/\s+/)[0] || '';
+    var firstB = B.split(/\s+/)[0] || '';
+    if(firstA && firstB && (firstA.startsWith(firstB) || firstB.startsWith(firstA))) return true;
+  }
+  return false;
 }
 function looseMatch(a,b){ var A=strNorm(a), B=strNorm(b); if(!A||!B) return A===B; return A.includes(B) || B.includes(A) || locationSimilar(a,b); }
 function equalsAtIndex(i, sel, got){
