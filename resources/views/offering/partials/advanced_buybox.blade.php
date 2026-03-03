@@ -201,7 +201,14 @@
                         data-url="{{ $productUrlCurrent }}"
                         data-qty="1"
                 >Add to cart</button>
-                <button class="btn btn-main btn-lg" id="buyNow">Book now</button>
+                <button class="btn btn-main btn-lg js-buy-now" id="buyNow"
+                        data-id="{{ $baseProductId }}"
+                        data-title="{{ e($productTitleSafe) }}"
+                        data-price="{{ $initialPriceFormatted }}"
+                        data-image="{{ $primaryImage }}"
+                        data-url="{{ $productUrlCurrent }}"
+                        data-qty="1"
+                >Book now</button>
             </div>
 
             <div class="meta mb-3 mt-2">
@@ -828,6 +835,16 @@ function syncCartButtons(){
       delete btn.dataset.variantId;
     }
   });
+  if(buyNow){
+    buyNow.dataset.id = String(productId);
+    buyNow.dataset.title = BASE_PRODUCT_TITLE || '';
+    buyNow.dataset.price = pricePounds;
+    buyNow.dataset.image = BASE_PRODUCT_IMAGE || '';
+    buyNow.dataset.url = BASE_PRODUCT_URL || window.location.pathname;
+    buyNow.dataset.qty = String(qtyVal);
+    if(variantId){ buyNow.dataset.variantId = String(variantId); }
+    else { delete buyNow.dataset.variantId; }
+  }
 }
 function updateVariant(){
   state.variant=findVariant();
@@ -870,9 +887,6 @@ function wireCTA(){
     addBtn.addEventListener('click',()=>{
       try{ new bootstrap.Toast(toastEl).show(); }catch(_e){}
     });
-  }
-  if(buyNow){
-    buyNow.addEventListener('click',e=>{ e.preventDefault(); try{ new bootstrap.Toast(toastEl).show(); }catch(_e){} });
   }
 }
 mobileAdd.addEventListener('click',()=>{buildOptionsInto(sheetOptions);groupRangeSheet.style.display=isGroup()?'block':'none';groupCountSheet.value=String(state.groupCount||3);if(bookingChoice.value==='now'){sheetBookLater.classList.remove('active');sheetBookNow.classList.add('active');}else{sheetBookLater.classList.add('active');sheetBookNow.classList.remove('active');}updateSheetSubtotal();configModal.show()});

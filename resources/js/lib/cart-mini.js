@@ -85,18 +85,21 @@
     // Always update local storage for resilience
     upsertItem({ ...payload, qty });
     // Try server add; on success refresh count; on failure, use LS count
-    serverAdd({ id: payload.id, qty }).then(()=>{
+    const request = serverAdd({ id: payload.id, qty }).then(()=>{
       fetchCountAndUpdateBadge();
+      return true;
     }).catch(()=>{
       updateBadgeUI(countItems());
+      return false;
     }).finally(()=>{
       if (isDesktop()) { renderDropdownFromLS(); showDropdown(); }
-      else { /* mobile keep as is, icon navigates to /cart */ }
+      else { /* mobile keeps cart icon redirect */ }
       try {
         const detail = { items: getItems(), count: countItems(), source: 'mini:add' };
         window.dispatchEvent(new CustomEvent('wow:cart:change', { detail }));
       } catch(_){ }
     });
+    return request;
   }
 
   // Keep dropdown and badge in sync when other pages change the cart
@@ -114,13 +117,29 @@
     const image = btn.getAttribute('data-image')||'';
     const url = btn.getAttribute('data-url')||'';
     const qty = Number(btn.getAttribute('data-qty')||'1') || 1;
-    addToCart({ id, title, price, image, url, qty });
+    if(!id) return null;
+    return addToCart({ id, title, price, image, url, qty });
   }
   // Delegate add-to-cart clicks (capture to beat anchor navigation)
   document.addEventListener('click', function(e){
     const btn = e.target.closest('.js-add-to-cart');
     if(!btn) return;
     handleAddFromBtn(btn, e);
+  }, true);
+  function goToCart(){
+    try { window.location.assign('/cart'); }
+    catch(_){ window.location.href = '/cart'; }
+  }
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('.js-buy-now');
+    if(!btn) return;
+    const res = handleAddFromBtn(btn, e);
+    const finish = () => { goToCart(); };
+    if(res && typeof res.finally === 'function'){
+      res.finally(finish);
+    } else {
+      finish();
+    }
   }, true);
   // Expose global helper for inline fallbacks
   try{ window.WOW_addToCart = function(el){ handleAddFromBtn(el); return false; }; }catch(_){ }

@@ -474,7 +474,14 @@
               data-image="{{ $image }}"
               data-url="{{ $url }}"
             >Add to cart</button>
-            <span class="btn btn--primary js-buy-now" role="button" tabindex="0" data-id="{{ $product->id }}">Book now</span>
+            <button type="button" class="btn btn--primary js-buy-now"
+              data-id="{{ $product->id }}"
+              data-title="{{ e($titleFormatted) }}"
+              data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
+              data-image="{{ $image }}"
+              data-url="{{ $url }}"
+              data-qty="1"
+            >Book now</button>
           </div>
         </div>
       </div>
