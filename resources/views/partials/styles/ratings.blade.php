@@ -9,7 +9,9 @@
         font-size:13px;
         font-weight:600;
         color:#0b1220;
+        --wow-review-star-fill: #d1d5db;
       }
+      .wow-review-row.wow-review-row--has-reviews{ --wow-review-star-fill:#f5b301; }
       .wow-content-top .wow-review-row{ margin-top:auto; padding-top:12px; }
       .wow-review-stars{
         display:inline-flex;
@@ -30,7 +32,7 @@
         content:"";
         position:absolute;
         inset:0;
-        background:#f5c84b;
+        background:var(--wow-review-star-fill);
         opacity:0;
         pointer-events:none;
       }
@@ -39,6 +41,8 @@
         opacity:1;
         width:50%;
         right:auto;
+        left:0;
+        overflow:hidden;
       }
       .wow-review-meta{
         display:flex;

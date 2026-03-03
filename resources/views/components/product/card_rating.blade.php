@@ -37,10 +37,11 @@
     $ratingValue = max(0, min(5, $ratingValue ?? 0));
     $fullStars = (int) floor($ratingValue);
     $hasHalf = ($ratingValue - $fullStars) >= 0.5 && $fullStars < 5;
+    $hasReviews = $reviewCount > 0;
     $label = 'Rating ' . number_format($ratingValue, 1) . ' out of 5 from ' . number_format($reviewCount) . ' ' . \Illuminate\Support\Str::plural('review', $reviewCount);
 @endphp
 
-<div class="wow-rating wow-review-row" aria-label="{{ $label }}">
+<div class="wow-review-row{{ $hasReviews ? ' wow-review-row--has-reviews' : '' }}" aria-label="{{ $label }}">
     <span class="stars wow-review-stars" aria-hidden="true">
         @for ($i = 1; $i <= 5; $i++)
             @php
