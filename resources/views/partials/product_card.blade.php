@@ -174,6 +174,7 @@
   .wow-therapy-card-scope .badges{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:8px; flex-wrap:nowrap; white-space:nowrap; overflow:hidden }
   .wow-therapy-card-scope .badge{ height: var(--badgeH); display:inline-flex; align-items:center; gap:4px; padding:0 var(--badgePx); border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size: var(--badgeFont); line-height:1; white-space:nowrap; flex:0 0 auto }
   .wow-therapy-card-scope .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
+  .wow-therapy-card-scope .badge--warm.badge--long{ background:#fff2e0; color:#5a350a; }
   .wow-therapy-card-scope .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
   .wow-therapy-card-scope .badge--trust{ background:#e7f5ff; color:#0f3d62; border:1px solid rgba(15,61,98,.15); }
   .wow-therapy-card-scope .badge--trust.badge--trust-trending{ background:#ffe0e7; color:#b21c4f; border-color:rgba(178,28,79,.25); }

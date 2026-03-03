@@ -192,6 +192,7 @@
     .wow-row-card .badges{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; white-space:nowrap; overflow:hidden; min-width:0; }
     .wow-row-card .badge{ height: var(--badgeH); display:inline-flex; align-items:center; gap:4px; padding:0 var(--badgePx); border-radius:3px; border:1px solid rgba(16,24,40,.10); font-weight:600; font-size: var(--badgeFont); line-height:1; white-space:nowrap; flex:0 0 auto; }
     .wow-row-card .badge--warm{ background: var(--badgeWarmBg); color: var(--badgeWarmText) }
+    .wow-row-card .badge--warm.badge--long{ background:#fff2e0; color:#5a350a; }
     .wow-row-card .badge--cool{ background: var(--badgeCoolBg); color: var(--badgeCoolText) }
     .wow-row-card .badge--trust{ background:#e7f5ff; color:#0f3d62; border:1px solid rgba(15,61,98,.15); }
     .wow-row-card .badge--trust.badge--trust-trending{ background:#ffe0e7; color:#b21c4f; border-color:rgba(178,28,79,.25); }

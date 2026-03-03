@@ -1,4 +1,5 @@
 @php
+    use Illuminate\Support\Str;
     $activeTaxonomy = $activeTaxonomy ?? null;
     $categoryLabel = $categoryLabel ?? null;
     $typeLabel = $typeLabel ?? null;
@@ -105,6 +106,9 @@
     @if($chipOne)
         @php
             $chipClass = $chipSource === 'type' ? 'badge badge--cool' : 'badge badge--warm';
+            if ($chipSource === 'category' && Str::length($chipOne) > 14) {
+                $chipClass .= ' badge--long';
+            }
         @endphp
         <span class="{{ $chipClass }}">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">

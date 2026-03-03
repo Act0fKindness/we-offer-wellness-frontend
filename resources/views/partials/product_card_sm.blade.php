@@ -63,6 +63,7 @@
     .wow-card-sm .badges{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px; }
     .wow-card-sm .badge{ height:24px; display:inline-flex; align-items:center; gap:4px; padding:0 8px; border-radius:999px; border:1px solid rgba(11,18,32,.12); font-size:.72rem; font-weight:600; line-height:1; color:#0f1e2e; }
     .wow-card-sm .badge--warm{ background:#ffe7c2; color:#6b4b12; }
+    .wow-card-sm .badge--warm.badge--long{ background:#fff2e0; color:#5a350a; }
     .wow-card-sm .badge--cool{ background:#dfe9ff; color:#1f3a77; }
     .wow-card-sm .badge--trust{ background:#e7f5ff; color:#0f3d62; border-color:rgba(15,61,98,.25); }
     .wow-card-sm .badge--trust.badge--trust-trending{ background:#ffe0e7; color:#b21c4f; border-color:rgba(178,28,79,.25); }
