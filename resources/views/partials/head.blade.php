@@ -5313,6 +5313,86 @@ textarea.form-control-lg {
     --bs-pagination-border-radius: var(--bs-border-radius-sm)
 }
 
+/* WOW custom pagination overrides */
+.pagination{
+    --wow-pagination-bg:#fff;
+    --wow-pagination-shadow:0 12px 30px rgba(8,19,39,.10);
+    --wow-pagination-border:rgba(11,18,32,.15);
+    --wow-pagination-text:#0b1220;
+    --wow-pagination-muted:rgba(11,18,32,.45);
+    --wow-pagination-hover:#4a8676;
+    --wow-pagination-active:#4a8676;
+    --wow-pagination-active-dark:#356556;
+    gap:10px;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+    padding:0;
+}
+
+.pagination .page-item{ list-style:none; }
+
+.pagination .page-link{
+    min-width:42px;
+    height:42px;
+    padding:0 16px;
+    border-radius:999px !important;
+    border:1px solid var(--wow-pagination-border);
+    background:var(--wow-pagination-bg);
+    box-shadow:var(--wow-pagination-shadow);
+    color:var(--wow-pagination-text);
+    font-weight:600;
+    font-size:.95rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:color .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.pagination .page-link:hover{
+    color:var(--wow-pagination-hover);
+    border-color:var(--wow-pagination-hover);
+    box-shadow:0 16px 28px rgba(74,134,118,.25);
+    transform:translateY(-1px);
+}
+
+.pagination .page-link:focus{
+    color:var(--wow-pagination-hover);
+    border-color:var(--wow-pagination-hover);
+    box-shadow:0 0 0 2px rgba(74,134,118,.25);
+}
+
+.pagination .page-item.active .page-link,
+.pagination .page-link.active{
+    color:#fff;
+    background:linear-gradient(135deg,var(--wow-pagination-active),var(--wow-pagination-active-dark));
+    border-color:var(--wow-pagination-active-dark);
+    box-shadow:0 18px 32px rgba(74,134,118,.35);
+}
+
+.pagination .page-item.disabled .page-link,
+.pagination .page-link.disabled{
+    color:var(--wow-pagination-muted);
+    background:#f3f5fa;
+    border-color:rgba(11,18,32,.08);
+    box-shadow:none;
+    cursor:not-allowed;
+}
+
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link{
+    border-radius:999px;
+}
+
+@media (max-width: 576px){
+    .pagination .page-link{
+        min-width:36px;
+        height:36px;
+        padding:0 12px;
+        font-size:.9rem;
+    }
+}
+
 .badge {
     --bs-badge-padding-x: 0.65em;
     --bs-badge-padding-y: 0.35em;
