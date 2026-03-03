@@ -329,6 +329,7 @@
       <div class="wow-actions">
           <button type="button" class="btn js-add-to-cart js-open-cart btn-cart-list"
                   data-id="{{ $product->id }}"
+                  data-product-id="{{ $product->id }}"
                   data-qty="1"
                   data-title="{{ e($titleFormatted) }}"
                   data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
@@ -337,6 +338,7 @@
           >Add to cart</button>
           <button type="button" class="btn btn-primary-list js-buy-now"
                   data-id="{{ $product->id }}"
+                  data-product-id="{{ $product->id }}"
                   data-qty="1"
                   data-title="{{ e($titleFormatted) }}"
                   data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"

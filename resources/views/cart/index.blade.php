@@ -7,8 +7,12 @@
   foreach (($items ?? []) as $id => $it) {
       $p = (float)($it['price'] ?? 0);
       if ($p >= 1000) $p = $p / 100;
+      $lineProductId = $it['product_id'] ?? (is_numeric($id) ? (int)$id : (\Illuminate\Support\Str::startsWith((string)$id, 'p:') ? (int)substr((string)$id, 2) : null));
       $serverCart[] = [
           'id'    => (string)$id,
+          'product_id' => $lineProductId,
+          'variant_id' => $it['variant_id'] ?? null,
+          'variant_label' => (string)($it['variant_label'] ?? ''),
           'title' => (string)($it['title'] ?? 'Item'),
           'url'   => (string)($it['url'] ?? '#'),
           'img'   => (string)($it['image'] ?? ''),
@@ -147,16 +151,36 @@
     }).then(r=>r.json());
   }
   function money(n){ try{ return '£'+Number(n||0).toFixed(2) }catch(_){ return '£0.00' } }
+  function mapEntry(x){
+    if(!x) return null;
+    var rawId = x.id ?? x.cartKey ?? (x.variant_id ? 'v:'+x.variant_id : (x.product_id ? 'p:'+x.product_id : x.variantId ? 'v:'+x.variantId : (x.productId ? 'p:'+x.productId : '')));
+    var id = String(rawId ?? '');
+    if(!id){ id = 'p:'+String(x.product_id || x.productId || Math.random().toString(36).slice(2)); }
+    var rawPrice = Number(x.price_min ?? x.price ?? x.unit ?? 0);
+    if(rawPrice>=1000) rawPrice = rawPrice/100;
+    var variantLabel = x.variant_label || x.variantLabel || x.options_label || '';
+    return {
+      id: id,
+      title: x.title || x.name || 'Item',
+      url: x.url || x.href || '#',
+      img: x.image || x.img || '',
+      unit: Number(rawPrice)||0,
+      qty: Number(x.qty || x.quantity || 1) || 1,
+      product_id: x.product_id || x.productId || null,
+      variant_id: x.variant_id || x.variantId || null,
+      variant_label: variantLabel,
+    };
+  }
   function readLocalCart(){
     try{
       var raw = localStorage.getItem('wow_cart');
       if (raw){
         var data = JSON.parse(raw);
         var items = (data && (data.items||data.cart||data)) || [];
-        if (Array.isArray(items)) return items.map(function(x){ return { id:String(x.id), title:x.title||x.name, url:x.url||x.href||'#', img:x.image||x.img||'', unit: ((Number(x.price_min ?? x.price ?? 0)>=1000)? Number(x.price_min ?? x.price ?? 0)/100 : Number(x.price_min ?? x.price ?? 0)), qty: Number(x.qty||x.quantity||1) } });
+        if (Array.isArray(items)) return items.map(mapEntry).filter(Boolean);
       }
       var c = decodeURIComponent(cookie('wow_cart')||'');
-      if (c){ var obj = JSON.parse(c); var arr = Array.isArray(obj) ? obj : Object.values(obj||{}); return (arr||[]).filter(Boolean).map(function(x){ var p=Number(x.price||0); if(p>=1000) p=p/100; return { id:String(x.id), title:x.title||'Item', url:x.url||'#', img:x.image||'', unit:p, qty:Number(x.qty||1) } }); }
+      if (c){ var obj = JSON.parse(c); var arr = Array.isArray(obj) ? obj : Object.values(obj||{}); return (arr||[]).filter(Boolean).map(mapEntry).filter(Boolean); }
     }catch(_){ }
     return [];
   }
@@ -183,14 +207,24 @@
 
   function writeLocalFromCart(){
     try{
-      var items = (cart||[]).map(function(it){ return { id:String(it.id), title:String(it.title||''), qty:Number(it.qty||1)||1, price:Number(it.unit||0), image:it.img||'', url:it.url||'#' }; });
-      // LocalStorage schema (array + keyed for convenience)
+      var items = (cart||[]).map(function(it){
+        return {
+          id:String(it.id),
+          product_id: it.product_id || null,
+          variant_id: it.variant_id || null,
+          variant_label: it.variant_label || '',
+          title:String(it.title||''),
+          qty:Number(it.qty||1)||1,
+          price:Number(it.unit||0),
+          image:it.img||'',
+          url:it.url||'#'
+        };
+      });
       var bag = { items: items };
       items.forEach(function(it){ bag[String(it.id)] = it; });
       localStorage.setItem('wow_cart', JSON.stringify(bag));
-      // Mirror cookie used by server to restore cart between requests
       var cookieObj = {};
-      items.forEach(function(it){ cookieObj[String(it.id)] = { id: it.id, title: it.title, price: it.price, qty: it.qty, image: it.image, url: it.url }; });
+      items.forEach(function(it){ cookieObj[String(it.id)] = { id: it.id, product_id: it.product_id, variant_id: it.variant_id, variant_label: it.variant_label, title: it.title, price: it.price, qty: it.qty, image: it.image, url: it.url }; });
       try{ document.cookie = 'wow_cart='+encodeURIComponent(JSON.stringify(cookieObj))+'; Path=/; Max-Age='+(60*60*24*30)+'; SameSite=Lax'; }catch(_){ }
       try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items, source:'cart:page' } })); } catch(_){ }
     }catch(_){ }
@@ -204,6 +238,9 @@
         if(!id) return;
         map[id] = {
           id: it.id,
+          product_id: it.product_id || null,
+          variant_id: it.variant_id || null,
+          variant_label: it.variant_label || '',
           title: it.title || '',
           price: Number(it.unit || it.price || 0),
           qty: Number(it.qty || 1) || 1,
@@ -272,12 +309,13 @@
     document.getElementById('emptyWrap').style.display = isEmpty ? '' : 'none';
     sumHeadTitle.textContent = isEmpty ? 'Your cart' : 'Order summary';
     if (isEmpty){ cartBody.innerHTML = ''; renderSummary(); return; }
-    cartBody.innerHTML = cart.map(function(it){ var line = Number(it.unit||0) * Number(it.qty||1); return (
+    cartBody.innerHTML = cart.map(function(it){ var line = Number(it.unit||0) * Number(it.qty||1); var variant = it.variant_label ? '<div class="variant">'+escapeHtml(it.variant_label)+'</div>' : ''; return (
       '<div class="cart-row" data-id="'+escapeHtml(String(it.id))+'">'
       + '<div class="cart-item">'
         + '<a class="cart-img" href="'+escapeHtml(it.url||'#')+'">'+(it.img?('<img src="'+escapeHtml(it.img)+'" alt="">'):'')+'</a>'
         + '<div class="cart-info">'
           + '<a class="title" href="'+escapeHtml(it.url||'#')+'">'+escapeHtml(it.title||'')+'</a>'
+          + variant
           + '<div class="meta">'
             + '<span class="pill"><span class="dot"></span>Unit: '+money(it.unit)+'</span>'
             + '<span class="pill">Line: '+money(line)+'</span>'
@@ -398,9 +436,12 @@
       var uid = add.getAttribute('data-add');
       var u = (upsellPool||[]).find(function(x){ return String(x.id)===String(uid) }); if(!u) return;
       var pRaw = Number(u.price_min ?? u.price ?? 0); var unit = pRaw>=1000 ? pRaw/100 : pRaw;
-      var ex = cart.find(function(x){ return String(x.id)===String(uid) });
+      var cartId = 'p:'+String(uid);
+      var ex = cart.find(function(x){ return String(x.id)===cartId });
       if(ex){ ex.qty = Math.max(1, Number(ex.qty||1)+1); }
-      else { cart.unshift({ id:String(uid), title:String(u.title||''), url:(u.url||('/therapies/'+uid)), img:(u.image||(u.images&&u.images[0])||''), unit:unit, qty:1 }); }
+      else {
+        cart.unshift({ id:cartId, product_id:Number(uid)||uid, variant_id:null, variant_label:'', title:String(u.title||''), url:(u.url||('/therapies/'+uid)), img:(u.image||(u.images&&u.images[0])||''), unit:unit, qty:1 });
+      }
       try{ post('/api/cart/add', { id: Number(uid)||uid, qty:1 }); }catch(_){}
       add.classList.add('is-added'); add.textContent='Added'; setTimeout(function(){ add.textContent='Add'; add.classList.remove('is-added'); }, 700);
       renderCart();
@@ -415,7 +456,8 @@
 </script>
 
 <style>
- .lead-cart{ margin:0 0 18px; color: var(--ink-600); font-size:14px; font-weight:600; }
+.lead-cart{ margin:0 0 18px; color: var(--ink-600); font-size:14px; font-weight:600; }
+.cart-info .variant{ color: var(--ink-600); font-size:13px; margin:4px 0 0; }
 .card.glass{
   position:relative;
   border-radius:3px;

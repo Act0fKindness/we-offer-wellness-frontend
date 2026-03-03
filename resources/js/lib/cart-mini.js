@@ -19,12 +19,20 @@
   const LS_KEY = 'wow_cart';
   function loadLS(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'{}')||{} }catch(_){ return {} } }
   function saveLS(obj){ try{ localStorage.setItem(LS_KEY, JSON.stringify(obj||{})); }catch(_){ } }
-  function getItems(){ const o=loadLS(); if(Array.isArray(o.items)) return o.items; // new schema
-    // legacy keyed map fallback
-    const out=[]; Object.keys(o||{}).forEach(k=>{ if(k!=='items'){ out.push(o[k]); } }); return out; }
+  function getItems(){
+    const o = loadLS();
+    if (Array.isArray(o.items)) return o.items;
+    const out=[]; Object.keys(o||{}).forEach(k=>{ if(k!=='items'){ out.push(o[k]); } }); return out;
+  }
   function setItems(items){
     const bag = { items: items||[] };
-    (items||[]).forEach(it => { if(it && typeof it.id!=='undefined'){ bag[String(it.id)] = it; } });
+    (items||[]).forEach(it => {
+      if(!it) return;
+      const key = String(it.id ?? it.cartKey ?? (it.variant_id ? 'v:'+it.variant_id : (it.product_id ? 'p:'+it.product_id : '')));
+      if(!key) return;
+      const payload = { ...it, id: key };
+      bag[key] = payload;
+    });
     saveLS(bag);
     try {
       const detail = { items: getItems(), count: countItems(), source: 'mini:set' };
@@ -34,10 +42,28 @@
   function countItems(){ return getItems().reduce((sum,it)=> sum + (Number(it.qty||1)||1), 0); }
   function upsertItem(newItem){
     const items = getItems();
-    const id = String(newItem.id||'');
-    const idx = items.findIndex(it => String(it.id||'')===id);
-    if(idx>=0){ items[idx].qty = Number(items[idx].qty||1) + Number(newItem.qty||1); }
-    else { items.push({ id, title:newItem.title, qty:Number(newItem.qty||1)||1, price:newItem.price, image:newItem.image, url:newItem.url }); }
+    const cartKey = String(newItem.id || newItem.cartKey || (newItem.variantId ? 'v:'+newItem.variantId : (newItem.productId ? 'p:'+newItem.productId : '')) || '');
+    if(!cartKey) return;
+    const idx = items.findIndex(it => String(it.id||it.cartKey||'') === cartKey);
+    const base = {
+      id: cartKey,
+      cartKey,
+      title: newItem.title,
+      price: newItem.price,
+      image: newItem.image,
+      url: newItem.url,
+      product_id: newItem.productId || newItem.product_id || null,
+      variant_id: newItem.variantId || newItem.variant_id || null,
+      variant_label: newItem.variantLabel || newItem.variant_label || '',
+    };
+    const qty = Number(newItem.qty||1)||1;
+    if(idx>=0){
+      items[idx].qty = Number(items[idx].qty||1) + qty;
+      items[idx] = { ...items[idx], ...base };
+    }
+    else {
+      items.push({ ...base, qty });
+    }
     setItems(items);
   }
 
@@ -76,7 +102,7 @@
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN': csrf() },
       credentials:'same-origin',
-      body: JSON.stringify({ id: payload.id, qty })
+      body: JSON.stringify({ id: payload.productId || payload.id, variant_id: payload.variantId || null, variant_label: payload.variantLabel || null, qty })
     }).then(r => r.json()).catch(()=>{ throw new Error('server failed'); });
   }
 
@@ -85,7 +111,7 @@
     // Always update local storage for resilience
     upsertItem({ ...payload, qty });
     // Try server add; on success refresh count; on failure, use LS count
-    const request = serverAdd({ id: payload.id, qty }).then(()=>{
+    const request = serverAdd({ productId: payload.productId || payload.id, variantId: payload.variantId || null, variantLabel: payload.variantLabel || null, qty }).then(()=>{
       fetchCountAndUpdateBadge();
       return true;
     }).catch(()=>{
@@ -111,14 +137,19 @@
 
   function handleAddFromBtn(btn, ev){
     if (ev){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(_){} }
+    const productId = btn.getAttribute('data-product-id') || btn.getAttribute('data-product') || btn.getAttribute('data-id');
+    const variantId = btn.getAttribute('data-variant-id') || '';
     const id = btn.getAttribute('data-id');
     const title = btn.getAttribute('data-title')||'';
     const price = Number(btn.getAttribute('data-price')||'0');
     const image = btn.getAttribute('data-image')||'';
     const url = btn.getAttribute('data-url')||'';
     const qty = Number(btn.getAttribute('data-qty')||'1') || 1;
-    if(!id) return null;
-    return addToCart({ id, title, price, image, url, qty });
+    const variantLabel = btn.getAttribute('data-variant-label')||'';
+    const cartKey = variantId ? `v:${variantId}` : `p:${productId || id || ''}`;
+    const resolvedId = cartKey || id;
+    if(!resolvedId) return null;
+    return addToCart({ id: resolvedId, cartKey: resolvedId, productId: productId || id, variantId: variantId || null, variantLabel, title, price, image, url, qty });
   }
   // Delegate add-to-cart clicks (capture to beat anchor navigation)
   document.addEventListener('click', function(e){

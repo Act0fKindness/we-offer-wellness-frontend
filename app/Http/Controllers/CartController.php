@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 class CartController extends Controller
@@ -43,6 +44,9 @@ class CartController extends Controller
                 'qty' => $qty,
                 'image' => $row['image'] ?? null,
                 'url' => $row['url'] ?? '#',
+                'variant_label' => $row['variant_label'] ?? null,
+                'product_id' => $row['product_id'] ?? null,
+                'variant_id' => $row['variant_id'] ?? null,
             ];
             $count += $qty;
             $total += $price * $qty;
@@ -73,24 +77,70 @@ class CartController extends Controller
     public function add(Request $request)
     {
         $items = $this->getCartItems();
-        $id = (int) $request->input('id'); $qty = max(1, (int)$request->input('qty', 1));
+        $id = (int) $request->input('id');
+        $variantId = (int) $request->input('variant_id');
+        $qty = max(1, (int)$request->input('qty', 1));
         if ($id <= 0) return response()->json(['ok'=>false,'error'=>'invalid'], 400);
-        $p = 
-Product::query()->withMin('variants','price')->find($id);
-        if (!$p) return response()->json(['ok'=>false,'error'=>'not_found'], 404);
-        $price = $p->variants_min_price ?? $p->price ?? 0; $price = (float)$price;
-        $slug = \Illuminate\Support\Str::slug($p->title ?: (string)$p->id);
-        $t = strtolower((string)($p->product_type ?? '')); $tags = strtolower((string)($p->tags_list ?? '')); $seg='therapies';
+        $product = Product::query()->with(['variants'])->withMin('variants','price')->find($id);
+        if (!$product) return response()->json(['ok'=>false,'error'=>'not_found'], 404);
+
+        $price = $product->variants_min_price ?? $product->price ?? 0;
+        $price = $this->formatPrice($price);
+        $variant = null;
+        $variantLabel = trim((string)$request->input('variant_label', '')) ?: null;
+        $variantOptions = [];
+        if ($variantId > 0) {
+            $variant = $product->variants?->firstWhere('id', $variantId);
+            if (!$variant) {
+                $variant = ProductVariant::query()
+                    ->where('id', $variantId)
+                    ->where('product_id', $product->id)
+                    ->first();
+            }
+        }
+        if ($variant) {
+            $price = $this->formatPrice($variant->price ?? $price);
+            $opts = $variant->options;
+            if (is_string($opts)) {
+                $decoded = json_decode($opts, true);
+                $opts = is_array($decoded) ? array_values($decoded) : [];
+            } elseif (!is_array($opts)) {
+                $opts = [];
+            }
+            $variantOptions = $opts;
+            if (!$variantLabel) {
+                $variantLabel = $this->buildVariantLabel($variant->title ?? null, $variantOptions);
+            }
+        }
+
+        $slug = \Illuminate\Support\Str::slug($product->title ?: (string)$product->id);
+        $t = strtolower((string)($product->product_type ?? '')); $tags = strtolower((string)($product->tags_list ?? '')); $seg='therapies';
         if (str_contains($t,'workshop')) $seg='workshops'; elseif (str_contains($t,'event')) $seg='events'; elseif (str_contains($t,'class')) $seg='classes'; elseif (str_contains($t,'retreat')) $seg='retreats'; elseif (str_contains($t,'gift')||str_contains($tags,'gift')) $seg='gifts';
-        $url = url('/'.$seg.'/'.$p->id.'-'.$slug);
-        $image = method_exists($p,'getFirstImageUrl') ? $p->getFirstImageUrl() : null;
-        $key = (string)$id;
-        if(isset($items[$key])){ $items[$key]['qty'] = (int)($items[$key]['qty'] ?? 1) + $qty; }
-        else { $items[$key] = ['id'=>$id, 'title'=>$p->title, 'price'=>$price, 'qty'=>$qty, 'image'=>$image, 'url'=>$url]; }
+        $url = url('/'.$seg.'/'.$product->id.'-'.$slug);
+        $image = method_exists($product,'getFirstImageUrl') ? $product->getFirstImageUrl() : null;
+        $key = $this->cartKey($product->id, $variant?->id);
+        if(isset($items[$key])){
+            $items[$key]['qty'] = (int)($items[$key]['qty'] ?? 1) + $qty;
+            if($variantLabel){ $items[$key]['variant_label'] = $variantLabel; }
+        }
+        else {
+            $items[$key] = [
+                'id' => $key,
+                'product_id' => $product->id,
+                'variant_id' => $variant?->id,
+                'variant_label' => $variantLabel,
+                'options' => $variantOptions,
+                'title' => $product->title,
+                'price' => $price,
+                'qty' => $qty,
+                'image' => $image,
+                'url' => $url,
+            ];
+        }
         session(['cart.items' => $items]);
         $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
         $count = array_sum(array_map(fn($it)=> (int)($it['qty'] ?? 0), $items));
-        return response()->json(['ok'=>true,'count'=>$count])->withCookie($cookie);
+        return response()->json(['ok'=>true,'count'=>$count,'key'=>$key])->withCookie($cookie);
     }
 
     public function remove(Request $request)
@@ -143,7 +193,25 @@ Product::query()->withMin('variants','price')->find($id);
             session(['cart.items' => $items]);
         }
 
-        return is_array($items) ? $items : [];
+        if (!is_array($items)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($items as $key => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $line = $this->mapLineItem($row);
+            $productId = $line['product_id'] ?? (is_numeric($key) ? (int)$key : null);
+            $variantId = $line['variant_id'] ?? null;
+            $cartKey = $this->cartKey($productId ?? $key, $variantId);
+            $line['id'] = $cartKey;
+            $normalized[$cartKey] = $line;
+        }
+        session(['cart.items' => $normalized]);
+
+        return $normalized;
     }
 
     protected function listCartItems(): array
@@ -173,9 +241,10 @@ Product::query()->withMin('variants','price')->find($id);
                 continue;
             }
             $line = $this->mapLineItem($entry);
-            $id = (string) ($line['id'] ?? $key ?? Str::uuid()->toString());
-            $line['id'] = $id;
-            $normalized[$id] = $line;
+            $productId = $line['product_id'] ?? (is_numeric($key) ? (int)$key : null);
+            $cartKey = $this->cartKey($productId ?? $key, $line['variant_id'] ?? null);
+            $line['id'] = $cartKey;
+            $normalized[$cartKey] = $line;
         }
 
         return $normalized;
@@ -183,10 +252,24 @@ Product::query()->withMin('variants','price')->find($id);
 
     protected function mapLineItem(array $entry): array
     {
+        $price = $entry['price'] ?? $entry['unit'] ?? $entry['unit_amount'] ?? 0;
+        $variantId = $entry['variant_id'] ?? null;
+        $variantLabel = $entry['variant_label'] ?? $entry['options_label'] ?? null;
+        $options = $entry['options'] ?? [];
+        if (!is_array($options)) {
+            $options = [];
+        }
+        $rawProductId = $entry['product_id'] ?? $entry['productId'] ?? null;
+        if ($rawProductId === null && isset($entry['id'])) {
+            $rawProductId = str_starts_with((string)$entry['id'], 'p:') ? substr((string)$entry['id'], 2) : $entry['id'];
+        }
         return [
-            'id' => $entry['id'] ?? null,
+            'product_id' => $rawProductId,
+            'variant_id' => $variantId,
+            'variant_label' => $variantLabel,
+            'options' => $options,
             'title' => $entry['title'] ?? $entry['name'] ?? 'Item',
-            'price' => $entry['price'] ?? $entry['unit'] ?? $entry['unit_amount'] ?? 0,
+            'price' => $this->formatPrice($price ?? 0),
             'qty' => max(1, (int) ($entry['qty'] ?? $entry['quantity'] ?? 1)),
             'image' => $entry['image'] ?? $entry['img'] ?? null,
             'url' => $entry['url'] ?? $entry['href'] ?? '#',
@@ -200,5 +283,37 @@ Product::query()->withMin('variants','price')->find($id);
             return $price / 100;
         }
         return $price;
+    }
+
+    protected function buildVariantLabel(?string $title, array $options = []): ?string
+    {
+        $cleanTitle = trim((string)$title);
+        if ($cleanTitle !== '' && stripos($cleanTitle, 'default') === false) {
+            return $cleanTitle;
+        }
+        $values = array_values(array_filter(array_map(function ($value) {
+            if (is_string($value)) {
+                return trim($value);
+            }
+            if (is_scalar($value)) {
+                return trim((string)$value);
+            }
+            return '';
+        }, $options), fn($v) => $v !== ''));
+        if (!empty($values)) {
+            return implode(' • ', $values);
+        }
+        return null;
+    }
+
+    protected function cartKey($productId, $variantId = null): string
+    {
+        if ($variantId) {
+            return 'v:' . (string)$variantId;
+        }
+        if (is_string($productId) && (str_starts_with($productId, 'v:') || str_starts_with($productId, 'p:'))) {
+            return $productId;
+        }
+        return 'p:' . (string)$productId;
     }
 }

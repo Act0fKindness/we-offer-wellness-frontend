@@ -195,6 +195,7 @@
             <div class="d-grid gap-2 mb-2" id="ctaWrap">
                 <button class="btn btn-basket btn-lg js-add-to-cart js-open-cart" id="addBtn"
                         data-id="{{ $baseProductId }}"
+                        data-product-id="{{ $baseProductId }}"
                         data-title="{{ e($productTitleSafe) }}"
                         data-price="{{ $initialPriceFormatted }}"
                         data-image="{{ $primaryImage }}"
@@ -203,6 +204,7 @@
                 >Add to cart</button>
                 <button class="btn btn-main btn-lg" id="buyNow"
                         data-id="{{ $baseProductId }}"
+                        data-product-id="{{ $baseProductId }}"
                         data-title="{{ e($productTitleSafe) }}"
                         data-price="{{ $initialPriceFormatted }}"
                         data-image="{{ $primaryImage }}"
@@ -236,6 +238,7 @@
     <div class="m-right">
         <button class="btn btn-main" id="mobileAdd"
                 data-id="{{ $baseProductId }}"
+                data-product-id="{{ $baseProductId }}"
                 data-title="{{ e($productTitleSafe) }}"
                 data-price="{{ $initialPriceFormatted }}"
                 data-image="{{ $primaryImage }}"
@@ -814,30 +817,43 @@ function updatePriceUI(){
   try { document.dispatchEvent(new CustomEvent('wow:price', { detail: { unit: t.unit, compare: t.cmpUnit } })); } catch(e) {}
 }
 function updateSheetSubtotal(){if(!sheetSubtotal) return;const t=totals();sheetSubtotal.textContent=`Subtotal: ${fmt(t.total)}`}
+function currentVariantLabel(){
+  try {
+    const selections = Array.isArray(state.selected) ? state.selected : [];
+    const parts = selections.map(v => String(v||'').trim()).filter(Boolean);
+    if(isGroup()){
+      parts.push(`${state.groupCount || 3} people`);
+    }
+    return parts.join(' • ');
+  } catch(_e) { return ''; }
+}
 function syncCartButtons(){
-  const variantId = state.variant && state.variant.id ? state.variant.id : (product?.variants?.[0]?.id ?? product?.id ?? '');
-  const productId = BASE_PRODUCT_ID || variantId || (product?.id ?? '');
+  const variantId = state.variant && state.variant.id ? state.variant.id : null;
+  const productId = BASE_PRODUCT_ID || (product?.id ?? '');
   const qtyVal = Math.max(1, Number(state.qty||1)||1);
   const pricePennies = unitPriceWithMode();
   const pricePounds = (pricePennies >= 0 ? (pricePennies/100).toFixed(2) : '0.00');
+  const variantLabel = currentVariantLabel() || (state.variant && state.variant.title ? state.variant.title : '');
   [addBtn, mobileAdd].forEach(function(btn){
     if(!btn) return;
     btn.dataset.id = String(productId);
+    btn.dataset.productId = String(productId);
     btn.dataset.title = BASE_PRODUCT_TITLE || '';
     btn.dataset.price = pricePounds;
     btn.dataset.image = BASE_PRODUCT_IMAGE || '';
     btn.dataset.url = BASE_PRODUCT_URL || window.location.pathname;
     btn.dataset.qty = String(qtyVal);
-    btn.classList.add('js-add-to-cart');
-    btn.classList.add('js-open-cart');
-    if(variantId){
-      btn.dataset.variantId = String(variantId);
-    } else {
-      delete btn.dataset.variantId;
+    if(btn===addBtn){
+      btn.classList.add('js-add-to-cart');
+      btn.classList.add('js-open-cart');
     }
+    if(variantId){ btn.dataset.variantId = String(variantId); }
+    else { delete btn.dataset.variantId; }
+    if(variantLabel){ btn.dataset.variantLabel = variantLabel; } else { delete btn.dataset.variantLabel; }
   });
   if(buyNow){
     buyNow.dataset.id = String(productId);
+    buyNow.dataset.productId = String(productId);
     buyNow.dataset.title = BASE_PRODUCT_TITLE || '';
     buyNow.dataset.price = pricePounds;
     buyNow.dataset.image = BASE_PRODUCT_IMAGE || '';
@@ -845,6 +861,8 @@ function syncCartButtons(){
     buyNow.dataset.qty = String(qtyVal);
     if(variantId){ buyNow.dataset.variantId = String(variantId); }
     else { delete buyNow.dataset.variantId; }
+    if(variantLabel){ buyNow.dataset.variantLabel = variantLabel; }
+    else { delete buyNow.dataset.variantLabel; }
   }
 }
 function updateVariant(){

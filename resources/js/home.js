@@ -452,6 +452,13 @@ document.addEventListener('DOMContentLoaded', () => {
           var qty = Number(it.qty||1);
           var price = (typeof it.price!== 'undefined') ? money(it.price) : '';
           var amt = (it.price!=null) ? money((Number(it.price)||0) * qty) : '';
+          var variantRaw = (it.variant_label || it.subtitle || '').trim();
+          var metaParts = [];
+          if(variantRaw){
+            var safeVariant = variantRaw.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+            metaParts.push(safeVariant);
+          }
+          metaParts.push('Qty '+qty+(price?(' • '+price+' each'):''));
           var removeBtn = '<button class="cartdd-remove remove-btn js-remove" type="button" aria-label="Remove item" data-remove="'+String(it.id||'')+'">'
             + '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">'
             +   '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />'
@@ -459,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
             + '</button>';
           return '<div class="cartdd-item" data-id="'+String(it.id||'')+'">'
             + img
-            + '<div class="cartdd-info"><a class="cartdd-title" href="'+(it.url||'#')+'">'+title+'</a><div class="cartdd-meta">Qty '+qty+(price?(' • '+price+' each'):'')+'</div></div>'
+            + '<div class="cartdd-info"><a class="cartdd-title" href="'+(it.url||'#')+'">'+title+'</a><div class="cartdd-meta">'+metaParts.join(' • ')+'</div></div>'
             + '<div class="cartdd-amt">'+amt+'</div>'
             + removeBtn
             + '</div>';
@@ -487,7 +494,17 @@ document.addEventListener('DOMContentLoaded', () => {
         var data = JSON.parse(raw);
         var items = data && (data.items||data.cart||data) || [];
         if(!Array.isArray(items)) return [];
-        return items.map(function(x){ return { title:x.title||x.name, qty:Number(x.qty||x.quantity||1), price:x.price_min||x.price, image:x.image||x.img, url:x.url||x.href, id:x.id } });
+        return items.map(function(x){
+          return {
+            title:x.title||x.name,
+            qty:Number(x.qty||x.quantity||1),
+            price:x.price_min||x.price,
+            image:x.image||x.img,
+            url:x.url||x.href,
+            id:x.id,
+            variant_label:x.variant_label||x.options_label||''
+          };
+        });
       }catch(_){ return []; }
     }
     function writeLocalCart(items){
@@ -507,7 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
             price: Number(it.price || it.unit || 0),
             qty: Number(it.qty || 1) || 1,
             image: it.image || it.img || '',
-            url: it.url || '#'
+            url: it.url || '#',
+            variant_label: it.variant_label || ''
           };
         });
         document.cookie = 'wow_cart=' + encodeURIComponent(JSON.stringify(cookieObj)) + '; Path=/; Max-Age=' + (60*60*24*30) + '; SameSite=Lax';
@@ -614,7 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return '<div class="upsell-item">'
               + (img?('<img src="'+img+'" alt="">'):'<div style="width:46px;height:46px;border-radius:8px;background:#f3f5f7;border:1px solid #eceff3"></div>')
               + '<div><p class="upsell-title">'+title+'</p><div class="upsell-price">'+money(p)+'</div></div>'
-              + '<button class="btn-wow btn-wow--outline btn-sm js-add-to-cart" data-id="'+it.id+'" data-title="'+title+'" data-price="'+p.toFixed(2)+'" data-image="'+img+'" data-url="'+url+'">Add</button>'
+              + '<button class="btn-wow btn-wow--outline btn-sm js-add-to-cart" data-id="'+it.id+'" data-product-id="'+it.id+'" data-title="'+title+'" data-price="'+p.toFixed(2)+'" data-image="'+img+'" data-url="'+url+'">Add</button>'
             + '</div>';
           }).join('');
         }catch(_){ }

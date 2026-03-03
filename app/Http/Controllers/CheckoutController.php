@@ -24,6 +24,9 @@ class CheckoutController extends Controller
                 if (!$id) continue;
                 $normalized[(string)$id] = [
                     'id' => $id,
+                    'product_id' => $entry['product_id'] ?? $entry['productId'] ?? null,
+                    'variant_id' => $entry['variant_id'] ?? $entry['variantId'] ?? null,
+                    'variant_label' => $entry['variant_label'] ?? $entry['options_label'] ?? null,
                     'title' => (string)($entry['title'] ?? ('Item '.$id)),
                     'price' => (float)($entry['price'] ?? $entry['unit'] ?? 0),
                     'qty' => max(1, (int)($entry['qty'] ?? $entry['quantity'] ?? 1)),

@@ -469,6 +469,7 @@
           <div class="actions">
             <button type="button" class="btn js-add-to-cart js-open-cart"
               data-id="{{ $product->id }}"
+              data-product-id="{{ $product->id }}"
               data-title="{{ e($titleFormatted) }}"
               data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
               data-image="{{ $image }}"
@@ -476,6 +477,7 @@
             >Add to cart</button>
             <button type="button" class="btn btn--primary js-buy-now"
               data-id="{{ $product->id }}"
+              data-product-id="{{ $product->id }}"
               data-title="{{ e($titleFormatted) }}"
               data-price="{{ is_numeric($priceMin) ? number_format((float)$priceMin, 2, '.', '') : '0' }}"
               data-image="{{ $image }}"
