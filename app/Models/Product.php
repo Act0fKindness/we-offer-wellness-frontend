@@ -28,10 +28,12 @@ class Product extends Model
         'is_lgbtq_friendly', // Added field
         'tags_list',
         'meta_json',
+        'by_need',
     ];
 
     protected $casts = [
         'meta_json' => 'array',
+        'by_need' => 'array',
     ];
 
 
