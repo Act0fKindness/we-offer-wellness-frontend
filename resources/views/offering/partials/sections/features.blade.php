@@ -12,7 +12,7 @@
   $participantRange = $participantRange ?? null;
 @endphp
 <div class="wow-features">
-  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 text-center">
+  <div class="row row-cols-2 row-cols-md-3 g-3 text-center justify-content-center wow-feature-grid">
     @if($participantRange)
       <div class="col">
         <div class="wow-feature">

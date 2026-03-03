@@ -36,12 +36,13 @@
   .wow-guidelines{ margin:0; padding-left:18px; color:#0f172a; line-height:1.8; list-style-type:circle; font-size:15px }
   .wow-badge-note{ display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; background:#eef7f2; color:#185a44; border:1px solid #c7e5d9 }
   /* Icon feature row */
-  .wow-features{ margin:18px 0 18px; padding:6px 0 2px }
-  .wow-feature{ text-align:center; padding:8px 6px }
-  .wow-icon-circle{ width:68px; height:68px; border-radius:999px; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; border:1px solid var(--wow-soft-2); background:#fff; box-shadow:0 10px 24px rgba(16,24,40,.06) }
-  .wow-icon-circle svg{ width:28px; height:28px; stroke:var(--wow-accent) }
-  .wow-feature b{ display:block; font-size:13px; font-weight:800; line-height:1.1 }
-  .wow-feature span{ display:block; font-size:13px; font-weight:800; line-height:1.1 }
+  .wow-features{ margin:16px 0; padding:4px 0 }
+  .wow-feature-grid{ max-width:920px; margin:0 auto }
+  .wow-feature{ text-align:center; padding:6px 2px }
+  .wow-icon-circle{ width:56px; height:56px; border-radius:999px; margin:0 auto 8px auto; display:flex; align-items:center; justify-content:center; border:1px solid var(--wow-soft-2); background:#fff; box-shadow:0 8px 20px rgba(16,24,40,.05) }
+  .wow-icon-circle svg{ width:22px; height:22px; stroke:var(--wow-accent) }
+  .wow-feature b{ display:block; font-size:12px; font-weight:800; line-height:1.1 }
+  .wow-feature span{ display:block; font-size:12px; font-weight:700; line-height:1.1; color:var(--wow-muted) }
   .wow-loc-meta{ display:flex; align-items:center; gap:10px; color:var(--wow-text); font-weight:800; margin:8px 0 12px }
   .wow-loc-meta svg{ width:18px; height:18px; stroke:var(--wow-text); opacity:.85 }
   .wow-loc-panel{ border-radius:var(--wow-radius-lg); overflow:hidden; background:linear-gradient(180deg,#f8fbfa,#eef5f1); border:1px solid var(--wow-soft-2); box-shadow:0 18px 40px rgba(16,24,40,.08) }
