@@ -201,7 +201,7 @@
                         data-url="{{ $productUrlCurrent }}"
                         data-qty="1"
                 >Add to cart</button>
-                <button class="btn btn-main btn-lg js-buy-now" id="buyNow"
+                <button class="btn btn-main btn-lg" id="buyNow"
                         data-id="{{ $baseProductId }}"
                         data-title="{{ e($productTitleSafe) }}"
                         data-price="{{ $initialPriceFormatted }}"
@@ -234,7 +234,7 @@
         </div>
     </div>
     <div class="m-right">
-        <button class="btn btn-main js-add-to-cart js-open-cart" id="mobileAdd"
+        <button class="btn btn-main" id="mobileAdd"
                 data-id="{{ $baseProductId }}"
                 data-title="{{ e($productTitleSafe) }}"
                 data-price="{{ $initialPriceFormatted }}"
@@ -387,6 +387,7 @@ const HOLD_MINUTES=10;const bookings={};function dateKey(d){return d.toISOString
 const state={mode:"evoucher",selected:product.options.map(o=>o.values[0]),qty:1,variant:null,groupCount:3,recur:{cadence:"none",length:1}};const priceEl=document.getElementById("price"),compareEl=document.getElementById("compare"),optionsWrap=document.getElementById("options"),addBtn=document.getElementById("addBtn"),buyNow=document.getElementById("buyNow"),qty=document.getElementById("qty"),dec=document.getElementById("dec"),inc=document.getElementById("inc"),toastEl=document.getElementById("addToast"),stars=document.getElementById("stars"),ratingText=document.getElementById("ratingText"),groupRange=document.getElementById("groupRange"),groupCount=document.getElementById("groupCount"),groupInc=document.getElementById("groupInc"),groupDec=document.getElementById("groupDec");
 const mPrice=document.getElementById('mPrice'),mStars=document.getElementById('mStars'),mRatingText=document.getElementById('mRatingText'),mobileAdd=document.getElementById('mobileAdd');
 const configModalEl=document.getElementById('configModal'),configModal=new bootstrap.Modal(configModalEl),sheetOptions=document.getElementById('sheetOptions'),groupRangeSheet=document.getElementById('groupRangeSheet'),groupCountSheet=document.getElementById('groupCountSheet'),groupIncSheet=document.getElementById('groupIncSheet'),groupDecSheet=document.getElementById('groupDecSheet'),sheetBookLater=document.getElementById('sheetBookLater'),sheetBookNow=document.getElementById('sheetBookNow'),sheetConfirm=document.getElementById('sheetConfirm'),sheetSubtotal=document.getElementById('sheetSubtotal');
+let sheetIntent='add';
 const btnBookNow=document.getElementById('btnBookNow'),btnBookLater=document.getElementById('btnBookLater'),bookingChoice=document.getElementById('bookingChoice'),preferredDateValue=document.getElementById('preferredDateValue'),preferredTimeValue=document.getElementById('preferredTimeValue'),preferredTZValue=document.getElementById('preferredTZValue'),bookingSelectionRow=document.getElementById('bookingSelectionRow'),bookingSelectionText=document.getElementById('bookingSelectionText'),changeBooking=document.getElementById('changeBooking');
 const bookingModalEl=document.getElementById('bookingModal'),bookingModal=new bootstrap.Modal(bookingModalEl),bookingModalContent=document.getElementById('bookingModalContent'),calMonthLabel=document.getElementById('calMonthLabel'),calDayNames=document.getElementById('calDayNames'),calGrid=document.getElementById('calGrid'),calPrev=document.getElementById('calPrev'),calNext=document.getElementById('calNext'),slotList=document.getElementById('slotList'),bookingSummary=document.getElementById('bookingSummary'),confirmBooking=document.getElementById('confirmBooking'),tzCurrent=document.getElementById('tzCurrent'),tzSelect=document.getElementById('tzSelect'),modalHint=document.getElementById('modalHint'),mobileBack=document.getElementById('mobileBack'),holdTimer=document.getElementById('holdTimer'),holdCountdown=document.getElementById('holdCountdown');
 const pillHoldBanner=document.getElementById('pillHoldBanner'),pillHoldCountdown=document.getElementById('pillHoldCountdown'),pillHourglass=pillHoldBanner.querySelector('i.bi-hourglass-split');
@@ -877,10 +878,15 @@ function triggerGlobalAdd(btn){
     btn.dispatchEvent(evt);
   } catch(_err) {}
 }
-function doAddToCart(){
+function goToCart(){
+  try { window.location.assign('/cart'); }
+  catch(_e){ window.location.href = '/cart'; }
+}
+function doAddToCart(opts){
   try { syncCartButtons(); } catch(_e){}
   triggerGlobalAdd(addBtn);
   const toast = new bootstrap.Toast(toastEl); toast.show();
+  if(opts && opts.redirect){ goToCart(); }
 }
 function wireCTA(){
   if(addBtn){
@@ -889,12 +895,39 @@ function wireCTA(){
     });
   }
 }
-mobileAdd.addEventListener('click',()=>{buildOptionsInto(sheetOptions);groupRangeSheet.style.display=isGroup()?'block':'none';groupCountSheet.value=String(state.groupCount||3);if(bookingChoice.value==='now'){sheetBookLater.classList.remove('active');sheetBookNow.classList.add('active');}else{sheetBookLater.classList.add('active');sheetBookNow.classList.remove('active');}updateSheetSubtotal();configModal.show()});
+function openConfigSheet(intent){
+  sheetIntent = intent || 'add';
+  buildOptionsInto(sheetOptions);
+  groupRangeSheet.style.display=isGroup()?'block':'none';
+  groupCountSheet.value=String(state.groupCount||3);
+  if(bookingChoice.value==='now'){
+    sheetBookLater?.classList.remove('active');
+    sheetBookNow?.classList.add('active');
+  }else{
+    sheetBookLater?.classList.add('active');
+    sheetBookNow?.classList.remove('active');
+  }
+  updateSheetSubtotal();
+  configModal.show();
+}
+mobileAdd?.addEventListener('click',()=>{ openConfigSheet('add'); });
+if(buyNow){
+  buyNow.addEventListener('click',function(e){
+    e.preventDefault();
+    if(isMobile()){
+      openConfigSheet('buy');
+      return;
+    }
+    try { syncCartButtons(); } catch(_e){}
+    triggerGlobalAdd(buyNow);
+    goToCart();
+  });
+}
 const calendarState={viewYear:new Date().getFullYear(),viewMonth:new Date().getMonth(),selectedDate:null,selectedTime:null,tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/London'};
 function exitMobileTimesMode(){bookingModalContent.classList.remove('mobile-times')}
 function clearBookingSelection(){bookingChoice.value='later';preferredDateValue.value='';preferredTimeValue.value='';preferredTZValue.value='';bookingSelectionRow.style.display='none';bookingSelectionText.textContent='';calendarState.selectedDate=null;calendarState.selectedTime=null;bookingSummary.textContent='No date selected.';confirmBooking.disabled=true;modalHint.textContent='Pick a date, then choose a time.';btnBookLater?.classList.add('active');btnBookNow?.classList.remove('active');exitMobileTimesMode();stopUserHold()}
 btnBookLater?.addEventListener('click',clearBookingSelection);btnBookNow?.addEventListener('click',()=>{btnBookNow.classList.add('active');btnBookLater.classList.remove('active');bookingChoice.value='now';bookingModal.show()});changeBooking?.addEventListener('click',(e)=>{e.preventDefault();btnBookNow.click()});
-sheetBookLater.addEventListener('click',()=>{sheetBookLater.classList.add('active');sheetBookNow.classList.remove('active');bookingChoice.value='later';});sheetBookNow.addEventListener('click',()=>{sheetBookNow.classList.add('active');sheetBookLater.classList.remove('active');bookingChoice.value='now';});sheetConfirm.addEventListener('click',()=>{if(bookingChoice.value==='now' && !(preferredDateValue.value && preferredTimeValue.value)){configModal.hide();bookingModal.show();return;}configModal.hide();doAddToCart();});
+sheetBookLater.addEventListener('click',()=>{sheetBookLater.classList.add('active');sheetBookNow.classList.remove('active');bookingChoice.value='later';});sheetBookNow.addEventListener('click',()=>{sheetBookNow.classList.add('active');sheetBookLater.classList.remove('active');bookingChoice.value='now';});sheetConfirm.addEventListener('click',()=>{if(bookingChoice.value==='now' && !(preferredDateValue.value && preferredTimeValue.value)){configModal.hide();bookingModal.show();return;}configModal.hide();const redirect = (sheetIntent==='buy');doAddToCart({ redirect });sheetIntent='add';});
 function generateSlotsForDate(d){const day=d.getDay(); if(day===0||day===6) return [];const slots=[]; for(let h=9;h<=16;h++){slots.push(`${String(h).padStart(2,'0')}:00`);slots.push(`${String(h).padStart(2,'0')}:30`)} return slots}
 function renderDayNames(){calDayNames.innerHTML='';['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(n=>{const el=document.createElement('div');el.className='cal-dayname text-center';el.textContent=n;calDayNames.appendChild(el)})}
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}function firstWeekday(y,m){const js=new Date(y,m,1).getDay();return (js+6)%7}function isSameDate(a,b){return a&&b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
