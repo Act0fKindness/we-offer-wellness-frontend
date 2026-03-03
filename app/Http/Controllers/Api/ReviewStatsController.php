@@ -9,10 +9,15 @@ class ReviewStatsController extends Controller
 {
     public function index()
     {
-        // Overall stats from product reviews
-        $avg = (float) (ProductReview::query()->avg('rating') ?? 0);
-        $avgRounded = $avg > 0 ? round($avg, 1) : null;
-        $count = (int) (ProductReview::query()->count() ?? 0);
+        try {
+            // Overall stats from product reviews
+            $avg = (float) (ProductReview::query()->avg('rating') ?? 0);
+            $avgRounded = $avg > 0 ? round($avg, 1) : null;
+            $count = (int) (ProductReview::query()->count() ?? 0);
+        } catch (\Throwable $e) {
+            $avgRounded = null;
+            $count = 0;
+        }
 
         // Verified count: ProductReview has no provider-added flag; treat all as verified
         $verifiedCount = $count;

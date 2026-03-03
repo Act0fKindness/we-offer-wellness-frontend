@@ -181,12 +181,23 @@ class HomeController extends Controller
                 $hasClassesThisWeek = false;
             }
 
+            $reviewCount = 0;
+            $avgRating = null;
+            try {
+                $reviewCount = (int) (Review::query()->count() ?? 0);
+                $r = (float) (Review::query()->avg('rating') ?? 0);
+                $avgRating = $r > 0 ? round($r, 1) : null;
+            } catch (\Throwable $e) {
+                $reviewCount = 0;
+                $avgRating = null;
+            }
+
             return [
                 'giftsUnder50' => $giftsUnder50,
                 'onlineUnder50' => $onlineUnder50,
                 'hasClassesThisWeek' => $hasClassesThisWeek,
-                'review_count' => (int) (Review::query()->count() ?? 0),
-                'avg_rating' => ($r = (float) (Review::query()->avg('rating') ?? 0)) > 0 ? round($r, 1) : null,
+                'review_count' => $reviewCount,
+                'avg_rating' => $avgRating,
             ];
         });
 
