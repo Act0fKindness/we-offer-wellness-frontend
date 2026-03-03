@@ -165,6 +165,9 @@ class TherapiesController extends Controller
                 ->withAvg('reviews', 'rating')
                 ->withMin('variants', 'price')
                 ->withMax('variants', 'price')
+                ->where(function ($q) {
+                    $q->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'");
+                })
                 ->where(function ($q) use ($therapyKey) {
                     $ids = $this->categoryIdsForTherapy($therapyKey);
                     if (!empty($ids)) {
@@ -243,8 +246,9 @@ class TherapiesController extends Controller
 
         return ProductCategory::query()
             ->where(function ($query) use ($safe, $title) {
-                $query->whereRaw('LOWER(slug) like ?', [$safe.'%'])
-                    ->orWhereRaw('LOWER(name) = ?', [strtolower($title)]);
+                $query->whereRaw('LOWER(slug) like ?', ['%'.$safe.'%'])
+                    ->orWhereRaw('LOWER(name) like ?', ['%'.$safe.'%'])
+                    ->orWhereRaw('LOWER(name) like ?', ['%'.strtolower($title).'%']);
             })
             ->pluck('id')
             ->all();
