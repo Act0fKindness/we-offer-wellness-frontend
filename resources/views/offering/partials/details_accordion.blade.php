@@ -95,9 +95,19 @@
       return;
     }
     function iconFor(sel){ return document.querySelector('[data-icon-for="'+sel+'"]'); }
-    document.querySelectorAll('.collapse').forEach(function(el){
-      el.addEventListener('shown.bs.collapse', function(){ var ic = iconFor('#'+el.id); if(ic) ic.textContent = '−'; });
-      el.addEventListener('hidden.bs.collapse', function(){ var ic = iconFor('#'+el.id); if(ic) ic.textContent = '+'; });
+    document.querySelectorAll('.wow-acc-header').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        var targetSel = btn.getAttribute('data-bs-target') || '';
+        if (!targetSel) return;
+        var panel = document.querySelector(targetSel);
+        if (!panel) return;
+        e.preventDefault();
+        var willOpen = !panel.classList.contains('show');
+        panel.classList.toggle('show', willOpen);
+        btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        var ic = iconFor(targetSel);
+        if (ic) ic.textContent = willOpen ? '−' : '+';
+      });
     });
     document.addEventListener('click', function(e){
       var a = e.target.closest('[data-wow-readmore]'); if(!a) return; e.preventDefault();
