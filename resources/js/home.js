@@ -11,6 +11,15 @@ function runIdle(fn) {
   setTimeout(fn, 1);
 }
 
+function onDocumentReady(fn) {
+  if (typeof document === 'undefined') return;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn, { once: true });
+    return;
+  }
+  fn();
+}
+
 // Minimal interactivity for header mega menu, mobile menu, and ultra search bar panes
 
 function createHamburgerTimeline(button){
@@ -417,7 +426,7 @@ function initAccountDropdown() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+onDocumentReady(() => {
   runIdle(() => { try { initMegaMenu(); } catch (e) {} });
   runIdle(() => { try { initMobileMenu(); } catch (e) {} });
   runIdle(() => { try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {} });

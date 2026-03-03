@@ -1,6 +1,8 @@
 const SESSION_TOKEN_KEY = 'wow_subscriber_session_token';
 const SESSION_START_KEY = 'wow_subscriber_session_started_at';
 const DEFAULT_SUCCESS_MESSAGE = 'Check your email to confirm your subscription.';
+const SUBSCRIBER_FORM_SELECTOR = 'form[data-subscriber-form]';
+const EMAIL_INPUT_SELECTOR = 'input[type="email"], input[name="email"]';
 
 let sessionStart = loadNumber(SESSION_START_KEY);
 if (!sessionStart) {
@@ -10,6 +12,8 @@ if (!sessionStart) {
 
 let toastEl = null;
 let toastTimer = null;
+let submitListenerBound = false;
+const pendingSubmissions = new WeakMap();
 
 function loadNumber(key) {
   try {
@@ -197,38 +201,72 @@ function setLoading(form, loading) {
   }
 }
 
+function findSubscriberForm(node) {
+  if (!node) return null;
+  if (typeof node.closest === 'function') {
+    return node.closest(SUBSCRIBER_FORM_SELECTOR);
+  }
+  let current = node;
+  while (current && current !== document) {
+    if (current.matches?.(SUBSCRIBER_FORM_SELECTOR)) return current;
+    current = current.parentElement;
+  }
+  return null;
+}
+
+function findEmailInput(form) {
+  return form.querySelector(EMAIL_INPUT_SELECTOR);
+}
+
+async function handleSubscriberSubmit(form) {
+  const input = findEmailInput(form);
+  if (!input) return;
+
+  const feedback = ensureFeedbackEl(form);
+  const source = form.getAttribute('data-subscriber-source') || form.getAttribute('data-subscriber-form') || 'site:subscribe-form';
+
+  showMessage(feedback);
+  const email = input.value.trim();
+  if (!email) {
+    showMessage(feedback, 'Please enter your email address.', false);
+    input.focus();
+    return;
+  }
+  if (input.checkValidity && !input.checkValidity()) {
+    input.reportValidity?.();
+    return;
+  }
+
+  if (pendingSubmissions.get(form)) {
+    return;
+  }
+
+  pendingSubmissions.set(form, true);
+  setLoading(form, true);
+
+  try {
+    const payload = Object.assign(basePayload(source), { email });
+    const result = await submitSubscriber(payload);
+    form.reset?.();
+    const successMessage = result?.message || DEFAULT_SUCCESS_MESSAGE;
+    showMessage(feedback, successMessage, true);
+  } catch (error) {
+    showMessage(feedback, error.message || 'Something went wrong. Please try again.', false);
+  } finally {
+    pendingSubmissions.delete(form);
+    setLoading(form, false);
+  }
+}
+
 function initSubscriberForms() {
-  const forms = document.querySelectorAll('[data-subscriber-form]');
-  forms.forEach((form) => {
-    const input = form.querySelector('input[type="email"], input[name="email"]');
-    if (!input) return;
-    const source = form.getAttribute('data-subscriber-source') || form.getAttribute('data-subscriber-form') || 'site:subscribe-form';
-    const feedback = ensureFeedbackEl(form);
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      showMessage(feedback);
-      const email = input.value.trim();
-      if (!email) {
-        showMessage(feedback, 'Please enter your email address.', false);
-        input.focus();
-        return;
-      }
-      if (input.checkValidity && !input.checkValidity()) {
-        input.reportValidity?.();
-        return;
-      }
-      setLoading(form, true);
-      try {
-        const result = await submitSubscriber(Object.assign(basePayload(source), { email }));
-        form.reset();
-        const successMessage = result?.message || DEFAULT_SUCCESS_MESSAGE;
-        showMessage(feedback, successMessage, true);
-      } catch (error) {
-        showMessage(feedback, error.message || 'Something went wrong. Please try again.', false);
-      } finally {
-        setLoading(form, false);
-      }
-    });
+  if (typeof document === 'undefined' || submitListenerBound) return;
+  submitListenerBound = true;
+
+  document.addEventListener('submit', (event) => {
+    const form = findSubscriberForm(event.target);
+    if (!form || form.tagName !== 'FORM') return;
+    event.preventDefault();
+    handleSubscriberSubmit(form);
   });
 }
 
@@ -241,6 +279,10 @@ try {
     sessionDurationSeconds,
   };
   window.dispatchEvent(new CustomEvent('wow:subscriber-ready'));
+} catch (_err) {}
+
+try {
+  initSubscriberForms();
 } catch (_err) {}
 
 export { initSubscriberForms, submitSubscriber, basePayload };
