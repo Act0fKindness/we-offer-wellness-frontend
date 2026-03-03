@@ -965,11 +965,20 @@ class LandingController extends Controller
 
         $vendor = $product->vendor;
         $clientReviews = [];
+        $vendorReviewCount = 0;
+        $vendorRatingAvg = null;
         if ($vendor) {
-            $clientReviews = Review::query()
-                ->with('user')
+            $vendorReviewBase = Review::query()
                 ->where('vendor_id', $vendor->id)
-                ->whereNotNull('review_text')
+                ->whereRaw("TRIM(COALESCE(review_text, '')) <> ''");
+
+            $vendorReviewCount = (int) (clone $vendorReviewBase)->count();
+            if ($vendorReviewCount > 0) {
+                $vendorRatingAvg = round((float) ((clone $vendorReviewBase)->avg('rating') ?? 0), 1);
+            }
+
+            $clientReviews = (clone $vendorReviewBase)
+                ->with('user')
                 ->latest('created_at')
                 ->take(6)
                 ->get()
@@ -982,6 +991,12 @@ class LandingController extends Controller
                         'date' => optional($review->created_at)->format('M Y') ?? '',
                     ];
                 })->values()->all();
+        }
+        $ratingFallback = round((float)($product->reviews_avg_rating ?? 0), 1) ?: null;
+        $countFallback = (int)($product->reviews_count ?? 0);
+        if ($vendorReviewCount > 0 && $vendorRatingAvg !== null) {
+            $ratingFallback = $vendorRatingAvg;
+            $countFallback = $vendorReviewCount;
         }
         $metaSafety = $meta['safety_notes'] ?? ($meta['safety'] ?? '');
         $metaContra = $meta['contraindications'] ?? '';
@@ -996,8 +1011,10 @@ class LandingController extends Controller
             'title' => $product->title,
             'type' => $product->product_type ?: 'experience',
             'category' => $product->category ? ['id'=>$product->category->id,'name'=>$product->category->name] : null,
-            'rating' => round((float)($product->reviews_avg_rating ?? 0), 1) ?: null,
-            'review_count' => (int)($product->reviews_count ?? 0),
+            'rating' => $ratingFallback,
+            'review_count' => $countFallback,
+            'vendor_rating' => $vendorRatingAvg,
+            'vendor_review_count' => $vendorReviewCount,
             'price' => $product->price ?? null,
             'price_min' => $product->variants_min_price ?? ($product->price ?? null),
             'price_max' => $product->variants_max_price ?? ($product->price ?? null),

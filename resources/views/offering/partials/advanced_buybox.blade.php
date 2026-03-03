@@ -1,3 +1,7 @@
+@php
+    $hasVendorReviews = (($product['review_count'] ?? 0) > 0) && ($product['rating'] ?? null) !== null;
+@endphp
+
 <style>
     .buybox{position:sticky;top:24px;max-width:420px;margin-left:auto;margin-right:0}
     .buybox .card {
@@ -105,7 +109,7 @@
                 <div class="price" id="price">£0.00</div><div class="compare" id="compare"></div>
             </div>
 
-            <div class="rating mb-2">
+            <div class="rating mb-2 {{ $hasVendorReviews ? '' : 'd-none' }}">
                 <div class="stars" id="stars"></div>
                 <div class="text-secondary small" id="ratingText"></div>
             </div>
@@ -200,7 +204,7 @@
 <div id="mobileBar" class="d-lg-none">
     <div class="m-left">
         <div class="price" id="mPrice">£0.00</div>
-        <div class="rating">
+        <div class="rating {{ $hasVendorReviews ? '' : 'd-none' }}">
             <div class="stars" id="mStars"></div>
             <div class="text-secondary small" id="mRatingText"></div>
         </div>
