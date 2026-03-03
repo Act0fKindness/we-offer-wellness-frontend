@@ -44,13 +44,27 @@
   .wow-feature span{ display:block; font-size:13px; font-weight:800; line-height:1.1 }
   .wow-loc-meta{ display:flex; align-items:center; gap:10px; color:var(--wow-text); font-weight:800; margin:8px 0 12px }
   .wow-loc-meta svg{ width:18px; height:18px; stroke:var(--wow-text); opacity:.85 }
-  .wow-loc-panel{ border-radius:var(--wow-radius-lg); overflow:hidden; background:#fff; border:1px solid var(--wow-soft-2); box-shadow:0 16px 40px rgba(16,24,40,.06) }
-  .wow-loc-list{ padding:10px; position:relative; height:320px; overflow:auto; background:#fff; list-style:none; margin:0 }
-  .wow-loc-list:after{ content:""; position:absolute; top:10px; right:6px; width:3px; height:calc(100% - 20px); border-radius:999px; background:rgba(24,179,107,.18); pointer-events:none }
-  .wow-loc-item{ width:100%; border:0; background:transparent; padding:12px 12px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:800; color:var(--wow-text); text-align:left }
-  .wow-loc-item small{ font-weight:700; color:var(--wow-muted) }
-  .wow-loc-item svg{ width:16px; height:16px; stroke:rgba(16,24,40,.65) }
-  .wow-map{ height:320px; width:100%; border-left:1px solid var(--wow-soft-2); background:#f4f6f8 }
+  .wow-loc-panel{ border-radius:var(--wow-radius-lg); overflow:hidden; background:linear-gradient(180deg,#f8fbfa,#eef5f1); border:1px solid var(--wow-soft-2); box-shadow:0 18px 40px rgba(16,24,40,.08) }
+  .wow-loc-list{ padding:12px; height:340px; overflow:auto; background:transparent; list-style:none; margin:0; border-right:1px solid rgba(16,24,40,.08); }
+  .wow-loc-list li{ list-style:none; margin:0; padding:0; }
+  .wow-loc-item{ width:100%; border:0; background:rgba(255,255,255,.45); padding:12px 14px; border-radius:14px; display:flex; align-items:flex-start; gap:12px; font-weight:600; color:var(--wow-text); text-align:left; transition:all .15s ease; width:100%; cursor:pointer; }
+  .wow-loc-item + li .wow-loc-item{ margin-top:10px; }
+  .wow-loc-item:hover{ background:#fff; box-shadow:0 10px 28px rgba(16,24,40,.08); }
+  .wow-loc-item.active{ background:#fff; box-shadow:0 14px 32px rgba(16,24,40,.12); }
+  .wow-loc-pill{ width:10px; height:10px; border-radius:999px; background:#d1d5db; margin-top:6px; flex:0 0 auto; transition:all .2s ease; }
+  .wow-loc-item.active .wow-loc-pill{ background:#549483; box-shadow:0 0 0 4px rgba(84,148,131,.18); }
+  .wow-loc-copy{ flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .wow-loc-title{ font-weight:700; font-size:15px; color:var(--wow-text); word-break:break-word; }
+  .wow-loc-sub{ font-weight:500; color:var(--wow-muted); font-size:13px; word-break:break-word; }
+  .wow-loc-chevron{ display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .wow-loc-chevron svg{ width:18px; height:18px; stroke:rgba(16,24,40,.4); transition:color .15s ease, stroke .15s ease; }
+  .wow-loc-item.active .wow-loc-chevron svg{ stroke:#549483; }
+  .wow-map{ position:relative; min-height:340px; width:100%; border-left:1px solid var(--wow-soft-2); background:linear-gradient(180deg,#f4f6f8,#e3ece8); border-top-right-radius:var(--wow-radius-lg); border-bottom-right-radius:var(--wow-radius-lg); overflow:hidden; }
+  .wow-map canvas{ border-top-right-radius:var(--wow-radius-lg); border-bottom-right-radius:var(--wow-radius-lg); }
+  .wow-map-placeholder{ position:absolute; inset:0; display:grid; place-items:center; color:#6b7280; font-weight:600; text-align:center; padding:1rem; }
+  .wow-pin{ width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:linear-gradient(135deg,#5ecba1,#3d8b72); border:2px solid #fff; box-shadow:0 12px 26px rgba(16,24,40,.3); position:relative; }
+  .wow-pin::after{ content:""; position:absolute; width:10px; height:10px; border-radius:50%; background:#fff; top:50%; left:50%; transform:translate(-50%,-50%); }
+  .wow-pin.is-active{ background:linear-gradient(135deg,#3d8b72,#266956); box-shadow:0 16px 30px rgba(16,24,40,.4); }
 </style>
 
 @include('offering.partials.sections.summary', ['summary' => $sum])
