@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ProductOrdering;
 use App\Support\ProductSearchFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -138,9 +139,7 @@ class SearchController extends Controller
         elseif ($sort === 'price_asc') $query->orderBy('price', 'asc');
         elseif ($sort === 'price_desc') $query->orderBy('price', 'desc');
         else {
-            $query->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                  ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                  ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ProductOrdering::applyReviewPriority($query);
         }
 
         $perPage = (int) $request->integer('per_page', 48);

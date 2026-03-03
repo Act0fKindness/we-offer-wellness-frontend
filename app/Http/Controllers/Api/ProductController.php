@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Support\ProductOrdering;
 use App\Support\ProductSearchFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -135,12 +136,7 @@ class ProductController extends Controller
         } elseif ($sort === 'price_desc') {
             $query->orderBy('price', 'desc');
         } else {
-            // popular/favorability: rank by weighted combo of rating × log(review_count)
-            // This pushes highly rated items with many reviews to the top, and
-            // still bubbles up new items with great ratings.
-            $query->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                  ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                  ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ProductOrdering::applyReviewPriority($query);
         }
 
         // Category filter: by id or by name/slug via `category`
@@ -227,9 +223,7 @@ class ProductController extends Controller
             } elseif ($sort === 'price_desc') {
                 $retry->orderBy('price', 'desc');
             } else {
-                $retry->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                      ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                      ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ProductOrdering::applyReviewPriority($retry);
             }
 
             $products = $retry->limit($limit)->get();

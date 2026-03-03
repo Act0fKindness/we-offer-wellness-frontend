@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProductController as ApiProductController;
 use App\Models\Product;
 use App\Models\V3Subscriber;
 use App\Services\TransactionalMail;
+use App\Support\ProductOrdering;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -179,10 +180,9 @@ class SubscriberController extends Controller
                         $qs->whereIn('status', ['live', 'approved']);
                     })->orWhereNull('product_status_id');
                 })
-                ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                ->orderByRaw('COALESCE(reviews_count, 0) DESC')
                 ->limit(max($limit, 4));
+
+            ProductOrdering::applyReviewPriority($query);
 
             return $query->get();
         } catch (\Throwable $e) {

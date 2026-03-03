@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Support\ProductOrdering;
 use Illuminate\Http\Request;
 
 class ProductCardsController extends Controller
@@ -46,9 +47,7 @@ class ProductCardsController extends Controller
                });
         });
 
-        $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-          ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-          ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+        ProductOrdering::applyReviewPriority($q);
 
         $products = $q->limit($limit)->get();
         $html = '';

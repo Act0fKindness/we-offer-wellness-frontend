@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Product;
 use App\Models\Review;
+use App\Support\ProductOrdering;
 
 class HomeController extends Controller
 {
@@ -31,7 +32,7 @@ class HomeController extends Controller
                     $qs->where('status', 'live');
                 });
 
-            $giftsUnder50 = (clone $base)
+            $giftQuery = (clone $base)
                 ->where(function ($q) {
                     $q->whereRaw("LOWER(COALESCE(tags_list,'')) like '%gift%'")
                         ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%voucher%'")
@@ -54,10 +55,11 @@ class HomeController extends Controller
                                     $qq->where('price', '>=', 1000)->where('price', '<=', 50 * 100);
                                 });
                         });
-                })
-                ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                ->orderByRaw('COALESCE(reviews_count, 0) DESC')
+                });
+
+            ProductOrdering::applyReviewPriority($giftQuery);
+
+            $giftsUnder50 = $giftQuery
                 ->limit(12)
                 ->get()
                 ->filter(function ($p) {
@@ -70,7 +72,7 @@ class HomeController extends Controller
                 ->values();
 
             if ($giftsUnder50->isEmpty()) {
-                $giftsUnder50 = (clone $base)
+                $fallbackGiftQuery = (clone $base)
                     ->where(function ($q) {
                         $q->where(function ($inner) {
                             $inner->where('price', '<', 1000)->where('price', '<=', 50);
@@ -86,10 +88,11 @@ class HomeController extends Controller
                                         $qq->where('price', '>=', 1000)->where('price', '<=', 50 * 100);
                                     });
                             });
-                    })
-                    ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                    ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                    ->orderByRaw('COALESCE(reviews_count, 0) DESC')
+                    });
+
+                ProductOrdering::applyReviewPriority($fallbackGiftQuery);
+
+                $giftsUnder50 = $fallbackGiftQuery
                     ->limit(12)
                     ->get()
                     ->filter(function ($p) {
@@ -102,7 +105,7 @@ class HomeController extends Controller
                     ->values();
             }
 
-            $onlineUnder50 = (clone $base)
+            $onlineQuery = (clone $base)
                 ->whereHas('options', function ($q) {
                     $q->where('meta_name', 'locations')
                         ->whereHas('values', function ($q2) {
@@ -124,10 +127,11 @@ class HomeController extends Controller
                                     $qq->where('price', '>=', 1000)->where('price', '<=', 50 * 100);
                                 });
                         });
-                })
-                ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                ->orderByRaw('COALESCE(reviews_count, 0) DESC')
+                });
+
+            ProductOrdering::applyReviewPriority($onlineQuery);
+
+            $onlineUnder50 = $onlineQuery
                 ->limit(12)
                 ->get()
                 ->filter(function ($p) {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Review;
+use App\Support\ProductOrdering;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
@@ -250,9 +251,7 @@ class LandingController extends Controller
         }
 
         // Popular first
-        $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-          ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-          ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+        ProductOrdering::applyReviewPriority($q);
 
         $items = $q->limit($limit)->get();
         $products = $items->map(fn($p) => $this->transformProduct($p));
@@ -274,9 +273,7 @@ class LandingController extends Controller
                        ->orWhereRaw('LOWER(COALESCE(tags_list,\'\')) LIKE ?', [$like]);
                 }
             });
-            $q2->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-               ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-               ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ProductOrdering::applyReviewPriority($q2);
             $items = $q2->limit($limit)->get();
             $products = $items->map(fn($p) => $this->transformProduct($p));
         }
@@ -380,10 +377,8 @@ class LandingController extends Controller
             }
         });
 
-        // Prefer popular within matches using weighted favorability
-        $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-          ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-          ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+        // Prefer popular within matches using review-first ordering
+        ProductOrdering::applyReviewPriority($q);
 
         $products = $q->limit(48)->get()->map(fn($p) => $this->transformProduct($p));
 
@@ -493,10 +488,8 @@ class LandingController extends Controller
             });
         }
 
-        // Sort by weighted favorability within the filters
-        $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-          ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-          ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+        // Sort by WOW trust ordering
+        ProductOrdering::applyReviewPriority($q);
 
         $perPage = (int) $request->integer('per_page', 48);
         $perPage = max(6, min($perPage, 120));
@@ -526,9 +519,7 @@ class LandingController extends Controller
                        ->whereHas('values', fn($vq)=>$vq->where('value','like',$like));
                 });
             }
-            $fb->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-               ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-               ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ProductOrdering::applyReviewPriority($fb);
             $fallback = $fb->limit(24)->get()->map(fn($p) => $this->transformProduct($p))->values();
         }
 
@@ -666,9 +657,7 @@ class LandingController extends Controller
         } elseif ($sort === 'price_desc') {
             $q->orderBy('price','desc');
         } else {
-            $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-              ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-              ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ProductOrdering::applyReviewPriority($q);
         }
 
         return $q;

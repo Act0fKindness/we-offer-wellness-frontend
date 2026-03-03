@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Support\ProductOrdering;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -218,9 +219,7 @@ class TherapiesController extends Controller
             } elseif ($sort === 'rating_desc') {
                 $builder->orderByRaw('COALESCE(reviews_avg_rating, 0) desc nulls last');
             } else {
-                $builder->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                        ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                        ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+                ProductOrdering::applyReviewPriority($builder);
             }
 
             $total = (clone $builder)->count();
