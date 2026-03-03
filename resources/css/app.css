@@ -874,7 +874,7 @@ header .nav-item:hover > a::after, header .nav-item:focus-within > a::after{ tra
 .wow-ultra .pane{ position:absolute; left:0; right:0; top:calc(100% + 10px); background:#fff; border:1px solid var(--soft-border); border-radius:16px; box-shadow:var(--shadow); z-index:40; overflow:hidden; text-align:left; }
 .wow-ultra .pane.narrow{
   z-index:39;
-  left:auto!important;
+  left:0!important;
   right:0!important;
   width:min(560px,96vw);
   max-width:96vw;

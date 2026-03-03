@@ -22973,7 +22973,7 @@
     }
     .wow-ultra .pane.narrow{
         z-index:39;
-        left:auto!important;
+        left:0!important;
         right:0!important;
         width:min(560px,96vw);
         max-width:96vw;

@@ -235,8 +235,8 @@
 /* Requested narrow pane sizing */
 .wow-ultra .pane.narrow{
   z-index: 39;
-  left: auto !important;
-  right: 0 !important;
+  left: 0px !important;
+  right: 0px !important;
   width: min(560px, 96vw);
   max-width: 96vw;
   height: auto;
