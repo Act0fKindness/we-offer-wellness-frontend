@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Models\ProductStatus;
 use App\Models\V3Subscriber;
 use App\Support\BotPathMatcher;
+use App\Support\ExternalReviews\VendorReviewFetcher;
+use App\Support\ExternalReviews\VendorReviewPublisher;
 use Illuminate\Support\Str;
 
 Artisan::command('inspire', function () {
@@ -215,3 +217,26 @@ Artisan::command('bot-traffic:purge {--dry-run}', function () {
         $this->info("Removed {$legacyRemoved} legacy hits and {$subscribersRemoved} subscriber records originating from blocked paths.");
     }
 })->purpose('Remove legacy page hits and V3 subscriber records created by blocked bot paths');
+
+Artisan::command('reviews:recover {--vendor-id=} {--limit=0} {--with-ddg} {--skip-places} {--dry-run}', function (VendorReviewFetcher $fetcher) {
+    $options = [
+        'vendor_id' => $this->option('vendor-id'),
+        'limit' => (int) ($this->option('limit') ?? 0),
+        'with_ddg' => (bool) $this->option('with-ddg'),
+        'skip_places' => (bool) $this->option('skip-places'),
+        'dry_run' => (bool) $this->option('dry-run'),
+    ];
+
+    return $fetcher->run($this, $options);
+})->purpose('Recover external vendor reviews using Google Places, Gemini, and JSON-LD scraping');
+
+Artisan::command('reviews:publish {--vendor-id=} {--limit=0} {--dry-run} {--refresh}', function (VendorReviewPublisher $publisher) {
+    $options = [
+        'vendor_id' => $this->option('vendor-id'),
+        'limit' => (int) ($this->option('limit') ?? 0),
+        'dry_run' => (bool) $this->option('dry-run'),
+        'refresh' => (bool) $this->option('refresh'),
+    ];
+
+    return $publisher->run($this, $options);
+})->purpose('Publish vendor review rows into the primary reviews table for vendors');

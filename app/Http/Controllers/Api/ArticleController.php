@@ -6,13 +6,54 @@ use App\Http\Controllers\Controller;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class ArticleController extends Controller
 {
     public function index(Request $request)
     {
       $limit = (int) $request->integer('limit', 6);
-      // Try published/active first; if none, fall back to latest regardless of status
+
+      // Normalise article images to atease host regardless of source
+      $atease = rtrim((string) env('ATEASE_BASE_URL', env('ALT_STORAGE_BASE', 'https://atease.weofferwellness.co.uk')), '/');
+      $normalizeImg = function ($u) use ($atease) {
+          if (!$u) return $u;
+          $s = (string) $u;
+          if (preg_match('#^https?://#i', $s)) {
+              $parts = parse_url($s) ?: [];
+              $path = ($parts['path'] ?? '/') ?: '/';
+              $query = isset($parts['query']) && $parts['query'] !== '' ? ('?'.$parts['query']) : '';
+              return $atease . $path . $query;
+          }
+          $p = '/'.ltrim($s, '/');
+          return $atease . $p;
+      };
+
+      // 1) Prefer Mindful Times API if configured/available
+      $timesBase = rtrim((string) env('TIMES_BASE_URL', ''), '/');
+      if ($timesBase !== '') {
+        try {
+          $res = Http::timeout(4)->acceptJson()->get($timesBase.'/api/articles', [ 'limit' => $limit ]);
+          if ($res->successful()) {
+            $json = $res->json();
+            if (is_array($json)) {
+              // Force image host
+              $out = [];
+              foreach ($json as $row) {
+                  if (is_array($row) && isset($row['img'])) {
+                      $row['img'] = $normalizeImg($row['img']);
+                  }
+                  $out[] = $row;
+              }
+              return response()->json($out);
+            }
+          }
+        } catch (\Throwable $e) {
+          // fall through to local
+        }
+      }
+
+      // 2) Fallback to local DB if remote not available
       $base = Article::query()->with(['featuredMedia', 'category']);
       $queryPublished = (clone $base)
         ->where(function($q){
@@ -29,7 +70,8 @@ class ArticleController extends Controller
         $articles = (clone $base)->latest('id')->limit($limit)->get();
       }
 
-      $items = $articles->map(function(Article $a){
+      $norm = $normalizeImg; // import into closure
+      $items = $articles->map(function(Article $a) use ($norm){
         $img = null;
         if ($a->relationLoaded('featuredMedia') && $a->featuredMedia) {
           $media = $a->featuredMedia;
@@ -58,6 +100,9 @@ class ArticleController extends Controller
             }
           }
         }
+
+        // Normalise to atease host
+        if ($img) { $img = $norm($img); }
 
         // Build external Times URL: category/year/month/slug-id
         $catName = optional($a->category)->name ?: 'journal';

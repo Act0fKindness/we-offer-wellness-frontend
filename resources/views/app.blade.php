@@ -63,13 +63,16 @@
         </script>
 
         <!-- Favicon -->
-        <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFXklEQVR4AZ1XA6wwSQw+24xzDg/Rb9u2bdu2bdu2nm3bto1eO9kmvWbfqUkXszvzfeXOvmYnACD1TXX/KepvqD1Qh9fX1w+na2vsM7u5+I7RfxQF/oa4fg91KOot1BRoWOjZbdRhqO/brfWPYmP1ZGQfp4DqUWtxvBbPrDQmJQGfT1Pe+Ffgb1nn71FdxII1uCBpHSqB1ZOo6zp6j5SGLXFH/ckKgy0Ju3i3Qi2yFqi2LCQUgwQ0UFcHLHzNfCwhotXWeAme2imMhsHJEgFuhC2VgGVVlVBSWQE8ZoFLFrwGS3vyhCShk+QHYXmNwOaVGRzistJh2rkDMOnMHohIT9YkJGFei8bK8PSLVRlvoEoPmEEXxZrjC9Jy95hw6H9gPfTcswp67VkNffatBYeIIEnCKM9Xa3pJTOmOyRqcRIN7xEYYYAIdeHCD0b7710G3XStBklA5wx7ktWejmqSUdW5KzSotsLM8El1NlhPgAATuh2fSAQfMtSEVlBwHmgQTELmVgtcfyxAMVbFicOlO8E2INiB9Ue0IkGfcYsL0PElC5tY4mYS3dOLxAnWWJfue34Xzbi8gLC3JEOi9dw2RIHBDqifmgn9SLFzxcoSdT25yHep8oGvGeMwEPhXttc7O9T5oeeedy6DzjmVw09cVwlITMQxrDTBZ3msvgifGwL0AT+iyczl02rGUErWhfOAwZOPt15QIv+myYdZMJD47Ayae3kNWGhK3kES45Qlye0BSHNwP9DQk6Z1xJ3dBTGYa6LUskSQakwd6cPLJfs6u94qLhG2PrkNKXg6MPr4drV2DFi6DO/7u6JkoY+nDIG9DjMIy/OhWSMrNgl0YBtfoUOkFSYATfTARGM4d1a7h7Hp6Cxqvnw37X9w1lg60kq/d1kWmJAMw7u23LaYxUyF+GK4jDg+hCc7Z8vAqG6M9wK19iiGgPWCSz1QMoBVhxrIO25agJ67BRY9XBqzD9iVwydMBbvm5QcftS01pnnV7biynZxQK7gu0liQgSn0Kh4BEEgCSgrJScEE30kI9dq+Crphgsy4exva7F9puWYQJ6YLu9zLemHBqN8y5dAS67lphmtLzMH/jobzSYkblswzBUCLwGzPTBKpqqmEExvRegAc8wjhjhmPmm/IzHrnu40zJRxbTmKkKSkTKj8fBPpgPW6C8qlIS0EnY9DVrG5Wqy5CTcCu6veWm+WbB0y5PTQIOObwJ2lsEHlgEaIyeHXN8BM9D/aH15oWw/t4l2Q/YAQyeh/otN6LbuhFxEjpGBpPlptyoB6y9ewHDsZLizh4wdU8hWnnrLNz2c6ecoaogIroKpPtfyE44zKYV82SM7WGM6wqTfIde3jc9oc2WhXDDxwU94AVtMQeo9g+9um86I+XA9PMHKIS6CUmMqZLA+6gJYicjvcBNhzoeuZoSjkCZACbhYhh/ahc+20zW03v6o1SvumAW6hf8MeKt8zT+HPMMScI5KsQs3gNDMejQxr+GAK9pjMJE5fcyPECD6z3BMt6F6X8Ad36R5mgSwSnxMBlLkMKhQ0DlR57xT4yVzYc3NDK/QlDfamhL9hNqCU+wzpKEKaurXk4Y6/VwzdvJlCh1wEvYoErF/lCB14pm94fEJNfzdox3Ru1FyzKeEJXBN1BUXgb52GQKykqgsKxU75C15Sx99R+TEb7hB9butUyEo052MgLRoq2mOSLmtRqcVIv2xC+oXnY/JgSihTsc8VNWh+DYH/8Ibk/C6Gz1P8jW1bJaoNotWTi+jBIOz3LN//Vz+jHqOGsblQ0NS57V4ajJfGG3lpb/83v+NWpj1MGoUywdihY2pd6u53KSNwT+J9Vk45RJGBJeAAAAAElFTkSuQmCC">
-        <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFXklEQVR4AZ1XA6wwSQw+24xzDg/Rb9u2bdu2bdu2nm3bto1eO9kmvWbfqUkXszvzfeXOvmYnACD1TXX/KepvqD1Qh9fX1w+na2vsM7u5+I7RfxQF/oa4fg91KOot1BRoWOjZbdRhqO/brfWPYmP1ZGQfp4DqUWtxvBbPrDQmJQGfT1Pe+Ffgb1nn71FdxII1uCBpHSqB1ZOo6zp6j5SGLXFH/ckKgy0Ju3i3Qi2yFqi2LCQUgwQ0UFcHLHzNfCwhotXWeAme2imMhsHJEgFuhC2VgGVVlVBSWQE8ZoFLFrwGS3vyhCShk+QHYXmNwOaVGRzistJh2rkDMOnMHohIT9YkJGFei8bK8PSLVRlvoEoPmEEXxZrjC9Jy95hw6H9gPfTcswp67VkNffatBYeIIEnCKM9Xa3pJTOmOyRqcRIN7xEYYYAIdeHCD0b7710G3XStBklA5wx7ktWejmqSUdW5KzSotsLM8El1NlhPgAATuh2fSAQfMtSEVlBwHmgQTELmVgtcfyxAMVbFicOlO8E2INiB9Ue0IkGfcYsL0PElC5tY4mYS3dOLxAnWWJfue34Xzbi8gLC3JEOi9dw2RIHBDqifmgn9SLFzxcoSdT25yHep8oGvGeMwEPhXttc7O9T5oeeedy6DzjmVw09cVwlITMQxrDTBZ3msvgifGwL0AT+iyczl02rGUErWhfOAwZOPt15QIv+myYdZMJD47Ayae3kNWGhK3kES45Qlye0BSHNwP9DQk6Z1xJ3dBTGYa6LUskSQakwd6cPLJfs6u94qLhG2PrkNKXg6MPr4drV2DFi6DO/7u6JkoY+nDIG9DjMIy/OhWSMrNgl0YBtfoUOkFSYATfTARGM4d1a7h7Hp6Cxqvnw37X9w1lg60kq/d1kWmJAMw7u23LaYxUyF+GK4jDg+hCc7Z8vAqG6M9wK19iiGgPWCSz1QMoBVhxrIO25agJ67BRY9XBqzD9iVwydMBbvm5QcftS01pnnV7biynZxQK7gu0liQgSn0Kh4BEEgCSgrJScEE30kI9dq+Crphgsy4exva7F9puWYQJ6YLu9zLemHBqN8y5dAS67lphmtLzMH/jobzSYkblswzBUCLwGzPTBKpqqmEExvRegAc8wjhjhmPmm/IzHrnu40zJRxbTmKkKSkTKj8fBPpgPW6C8qlIS0EnY9DVrG5Wqy5CTcCu6veWm+WbB0y5PTQIOObwJ2lsEHlgEaIyeHXN8BM9D/aH15oWw/t4l2Q/YAQyeh/otN6LbuhFxEjpGBpPlptyoB6y9ewHDsZLizh4wdU8hWnnrLNz2c6ecoaogIroKpPtfyE44zKYV82SM7WGM6wqTfIde3jc9oc2WhXDDxwU94AVtMQeo9g+9um86I+XA9PMHKIS6CUmMqZLA+6gJYicjvcBNhzoeuZoSjkCZACbhYhh/ahc+20zW03v6o1SvumAW6hf8MeKt8zT+HPMMScI5KsQs3gNDMejQxr+GAK9pjMJE5fcyPECD6z3BMt6F6X8Ad36R5mgSwSnxMBlLkMKhQ0DlR57xT4yVzYc3NDK/QlDfamhL9hNqCU+wzpKEKaurXk4Y6/VwzdvJlCh1wEvYoErF/lCB14pm94fEJNfzdox3Ru1FyzKeEJXBN1BUXgb52GQKykqgsKxU75C15Sx99R+TEb7hB9butUyEo052MgLRoq2mOSLmtRqcVIv2xC+oXnY/JgSihTsc8VNWh+DYH/8Ibk/C6Gz1P8jW1bJaoNotWTi+jBIOz3LN//Vz+jHqOGsblQ0NS57V4ajJfGG3lpb/83v+NWpj1MGoUywdihY2pd6u53KSNwT+J9Vk45RJGBJeAAAAAElFTkSuQmCC">
+        <link rel="icon" type="image/png" href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png">
+        <link rel="shortcut icon" href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png">
 
         <!-- Fonts: Instrument Sans -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap" rel="stylesheet">
+
+        <!-- WOW V3 Typography Deck (source of truth) -->
+        <link rel="stylesheet" href="/css/wow-typography.css">
 
         <!-- Scripts -->
         @routes
@@ -104,7 +107,7 @@
         <script type="application/ld+json">{!! json_encode($orgLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
         @inertiaHead
     </head>
-    <body class="font-sans antialiased">
+    <body class="antialiased">
         @if ($gtmId)
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         @endif

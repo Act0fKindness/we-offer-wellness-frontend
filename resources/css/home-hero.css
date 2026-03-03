@@ -1,0 +1,58 @@
+/* Homepage hero (whero-*) and segmented tabs (seg-*) shared styles */
+
+/* Hero base */
+.whero { position: relative; isolation: isolate; overflow: clip; }
+.whero-pad { padding-top: clamp(72px, 8vw, 120px); padding-bottom: clamp(54px, 6vw, 96px); min-height: clamp(560px, 5vh, 820px); }
+.whero-eyebrow { display:inline-flex; align-items:center; gap:.5rem; font-size:.7rem; letter-spacing:.12em; margin-bottom:5px; text-transform:uppercase; background:rgba(0,0,0,.6); color:#fff; border-radius:999px; padding:4px 12px; }
+.whero-title { font-weight: 800; line-height: 1.02; letter-spacing: -.01em; font-size: clamp(3.6rem, 4vw + 1rem, 4.6rem); margin-top:.6rem; color:#0b1323; }
+@supports (mix-blend-mode:difference) { .whero-title { color:#fff; mix-blend-mode:difference; } }
+.whero-sub { color: #000; font-size: clamp(1rem, .4vw + .95rem, 1.125rem); max-width: 44rem; mix-blend-mode: normal; }
+.whero-subline { display:block; margin-top:1rem; max-width:36rem; }
+
+/* Background radial + subtle rays */
+.whero-radial { position:absolute; inset:0; z-index:-1; display:grid; place-items:center; overflow:hidden; perspective:420px; background-image: radial-gradient(circle at 18% -12%, #dbeafe, #ffffff00 22em), conic-gradient(#7bf, #7fb, #b7f, #bf7, #f7b, #fb7, #7bf); opacity:.9; }
+.whero-radial::after, .whero-radial::before{ content:""; position:absolute; inset:-100%; background-image: repeating-conic-gradient(#ffffff20 0 10deg, #0000 0 20deg, #ffffff20 0 40deg, #0000 0 55deg); animation: ray 30s linear infinite; mix-blend-mode: overlay; pointer-events:none; }
+.whero-radial::before{ animation-duration: 60s; animation-direction: reverse; }
+@keyframes ray { to { rotate: 1turn } }
+
+/* Browser mock + animated cards */
+.whero-stack{ position:relative; min-height:480px; perspective:1200px }
+.whero-panel{ position:absolute; right:-30px; top:225px; width:min(660px, 100%); background:transparent; border:0; padding:0; transform: translateX(0) translateY(0); transition: transform .35s cubic-bezier(.2,.75,.2,1), z-index .01s; }
+.whero-browser-frame{ border-radius:16px; overflow:hidden; background: rgba(255,255,255,.28); backdrop-filter: saturate(160%) blur(10px); -webkit-backdrop-filter:saturate(160%) blur(10px); border:1px solid rgba(255,255,255,.45); box-shadow:0 18px 48px rgba(2,8,23,.12) }
+.whero-browser-chrome{ height:46px; display:flex; align-items:center; gap:10px; padding:0 10px; background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.38)); border-bottom:1px solid rgba(255,255,255,.35) }
+.whero-browser-dots{ display:flex; gap:6px }
+.whero-browser-dots span{ width:10px; height:10px; border-radius:50%; box-shadow: 0 0 0 1px rgba(0,0,0,.05) inset }
+.whero-browser-dots .r{ background:#ff5f57 } .whero-browser-dots .y{ background:#febc2e } .whero-browser-dots .g{ background:#28c840 }
+.whero-browser-url{ flex:1; display:flex; justify-content:center }
+.whero-url-pill{ min-width:55%; max-width:76%; height:30px; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 12px; border-radius:999px; background:rgba(255,255,255,.92); border:1px solid #e8eef5; box-shadow: inset 0 0 0 1px #eef3f7; font-size:13px; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.whero-browser-page{ background:#fff; border-top:1px solid #eef2f7; padding:14px }
+.whero-bar{ height:38px; background:#f8fafc; border:1px solid var(--panel-border, #e5e7eb); border-radius:10px; display:flex; align-items:center; padding:0 12px; gap:10px; color:#334155; font-weight:600 }
+.whero-grid-viewport{ overflow:hidden; margin-top:14px }
+.whero-panel .whero-grid{ display:flex; gap:14px; min-width:max-content; will-change: transform; animation: driftFull var(--drift-time, 18s) cubic-bezier(.25, .01, .25, 1) infinite; }
+.whero-panel:hover .whero-grid{ animation-play-state: paused }
+@keyframes driftFull { 0%{ transform: translateX(0) } 6%{ transform: translateX(0) } 50%{ transform: translateX(calc(-1 * var(--scrollDist, 0px))) } 56%{ transform: translateX(calc(-1 * var(--scrollDist, 0px))) } 100%{ transform: translateX(0) } }
+@media (prefers-reduced-motion: reduce) { .whero-panel .whero-grid { animation: none } }
+.whero-panel .card{ background:#fff; border:1px solid var(--panel-border, #e5e7eb); border-radius:14px; padding:12px; min-height:140px; width:220px; flex:0 0 220px }
+.whero-spark, .spark{ height:88px; background: linear-gradient(180deg, #e2e8f0 0 1px, transparent 0) center/100% 22px repeat-y, linear-gradient(90deg, #94a3b81a, #94a3b845 50%, #94a3b81a); border-radius:8px; margin-top:10px }
+
+.whero-book{ position:absolute; right:12%; top:-18px; width:320px; max-width:40vw; background:#fff; border:1px solid var(--panel-border, #e5e7eb); border-radius:28px; box-shadow:0 24px 60px rgba(2,8,23,.18); padding:18px 14px 16px; transform: translateX(0) translateY(0); transition: transform .35s cubic-bezier(.2,.75,.2,1), z-index .01s; }
+.whero-panel .btn-primary, .whero-book .btn-primary { width: 100%; border-radius: 10px; }
+.whero-stack:hover .whero-panel{ transform: translateX(-12px) translateY(3px) }
+.whero-stack:hover .whero-book{ transform: translateX(16px) translateY(-3px) }
+.whero-appicon{ width:42px; height:42px; border-radius:10px; background: linear-gradient(135deg, #7dd3fc, #f472b6, #fde047); margin:0 auto 10px }
+.whero-line{ height:14px; background:#f1f5f9; border-radius:8px; margin-top:10px }
+.whero-kv{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px }
+.whero-field{ background:#f8fafc; border:1px solid var(--panel-border, #e5e7eb); border-radius:10px; height:38px }
+
+.whero-cta{ height:50px; display:flex; align-items:center; gap:8px; padding:8px 8px 8px 20px; max-width:406px; background:#f7fafc; border:1px solid #e3eaf2; border-radius:999px; box-shadow: 0 1px 0 #fdfefe inset, 0 0 0 1px #eef3f7; }
+.whero-cta-input{ appearance:none; border:0; background:transparent; outline:0; flex:1; min-width:0; font-size:15px; line-height:1; color:#344256; padding:0 }
+.whero-cta-input::placeholder{ color:#344256; opacity:.9 }
+
+@media (max-width: 991.98px) { .whero-stack { min-height: 560px; margin-top: 24px } .whero-panel { position: relative; top: auto; right: auto; width: 100% } .whero-book { position: absolute; right: 6%; top: -22px } }
+@media (max-width: 575.98px) { .whero-book { right: 2%; top: -16px; width: 88% } }
+
+/* Segmented tabs */
+.seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
+.seg{ appearance:none; border:0; background:transparent; padding:6px 12px; border-radius:999px; color: var(--ink-700); font-weight:600; font-size:.9rem; transition: all .15s ease; }
+.seg:hover{ background:#eef2f7 }
+.seg.active{ background: linear-gradient(180deg, #549483, #3b7768); color:#fff; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset }

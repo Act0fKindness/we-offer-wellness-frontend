@@ -1,8 +1,40 @@
 import { reactive, computed, watch } from 'vue'
 
 const LS_KEY = 'wow_cart_v1'
+const COOKIE_KEY = 'wow_cart'
+
+function readCookie(name){
+  try {
+    const match = document.cookie
+      .split(';')
+      .map(r => r.trim())
+      .find(r => r.startsWith(name + '='))
+    return match ? decodeURIComponent(match.slice(name.length + 1)) : ''
+  } catch { return '' }
+}
+
+function mapToItems(obj){
+  if (!obj) return []
+  if (Array.isArray(obj)) return obj.map(normalizeItemSafely)
+  if (typeof obj === 'object') return Object.values(obj).map(normalizeItemSafely)
+  return []
+}
+
+function normalizeItemSafely(it){
+  try { return normalizeItem(it) } catch { return null }
+}
 
 function load() {
+  // Prefer server-synced cookie (wow_cart) if present
+  try {
+    const cookieRaw = readCookie(COOKIE_KEY)
+    if (cookieRaw) {
+      const parsed = JSON.parse(cookieRaw)
+      const items = mapToItems(parsed).filter(Boolean)
+      if (items.length) return { items }
+    }
+  } catch {}
+  // Fallback to legacy localStorage format
   try {
     const raw = localStorage.getItem(LS_KEY)
     if (!raw) return { items: [] }
@@ -14,9 +46,28 @@ function load() {
 
 const state = reactive(load())
 
-watch(state, () => {
+function persist(){
   try { localStorage.setItem(LS_KEY, JSON.stringify({ items: state.items })) } catch {}
-}, { deep: true })
+  if (typeof document === 'undefined') return
+  try {
+    const payload = {}
+    state.items.forEach(it => {
+      if (!it?.id) return
+      payload[String(it.id)] = {
+        id: it.id,
+        title: it.title || '',
+        price: Number(it.price) || 0,
+        qty: Number(it.qty) || 1,
+        image: it.image || null,
+        url: it.url || '#',
+      }
+    })
+    const maxAge = 30 * 24 * 60 * 60
+    document.cookie = `${COOKIE_KEY}=${encodeURIComponent(JSON.stringify(payload))}; Path=/; Max-Age=${maxAge}; SameSite=Lax`
+  } catch {}
+}
+
+watch(state, () => { persist() }, { deep: true })
 
 function normalizeItem(input) {
   const id = input?.id ?? input?.product_id
@@ -55,4 +106,3 @@ export function useCart() {
 
   return { items, count, subtotal, add, remove, updateQty, clear }
 }
-

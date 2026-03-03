@@ -4,15 +4,25 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     build: {
-        minify: false,
-        cssMinify: false,
+        minify: 'esbuild',
+        cssMinify: true,
         sourcemap: false,
         emptyOutDir: true,
         chunkSizeWarningLimit: 2000,
+        esbuild: {
+            drop: ['console', 'debugger'],
+        },
     },
     plugins: [
         laravel({
-            input: 'resources/js/app.js',
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                // Provide a direct CSS entry so Blade calls like
+                // @vite('resources/css/we-offer-wellness-base-styles.css')
+                // resolve in production manifests when present.
+                'resources/css/we-offer-wellness-base-styles.css',
+            ],
             refresh: true,
         }),
         vue({

@@ -1,0 +1,162 @@
+/* ==========================================================
+   WOW V3 — FONT + TYPOGRAPHY STYLE DECK (RESPONSIVE)
+   ----------------------------------------------------------
+   Section headings: Playfair Display
+   Body copy: Manrope
+   Inputs & Buttons: Instrument Sans
+   Product card title: Manrope
+   Homepage hero H1: developer choice (via variable/class)
+   ========================================================== */
+
+/* 0) Breakpoints (reference)
+   xs: 0–479, sm: 480–639, md: 640–767, lg: 768–1023, xl: 1024–1279, 2xl: 1280+ */
+
+/* 1) Core Tokens */
+:root{
+  /* Font families */
+  --font-display: "Playfair Display", Georgia, serif; 
+  --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-ui: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+
+  /* Hero font: dev can override per page (home hero H1) */
+  --font-hero: var(--font-display);
+
+  /* Weights */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Line heights */
+  --lh-tight: 1.08;
+  --lh-snug: 1.22;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.68;
+
+  /* Letter spacing */
+  --ls-tight: -0.02em;
+  --ls-normal: 0;
+  --ls-wide: 0.06em;
+
+  /* Measure (ideal line length) */
+  --measure: 68ch;
+  --measure-narrow: 52ch;
+  --measure-wide: 78ch;
+
+  /* Typography scale (fluid; mobile → desktop) */
+  --step--2: clamp(0.78rem, 0.76rem + 0.20vw, 0.88rem);
+  --step--1: clamp(0.88rem, 0.86rem + 0.25vw, 0.98rem);
+  --step-0:  clamp(1.00rem, 0.96rem + 0.35vw, 1.10rem);
+  --step-1:  clamp(1.12rem, 1.05rem + 0.55vw, 1.32rem);
+  --step-2:  clamp(1.28rem, 1.14rem + 0.85vw, 1.68rem);
+  --step-3:  clamp(1.46rem, 1.22rem + 1.25vw, 2.05rem);
+  --step-4:  clamp(1.72rem, 1.36rem + 1.85vw, 2.55rem);
+  --step-5:  clamp(2.05rem, 1.52rem + 2.65vw, 3.20rem);
+  --step-6:  clamp(2.40rem, 1.68rem + 3.25vw, 3.85rem);
+
+  /* UI sizing */
+  --ui-text: var(--step--1);
+  --ui-text-lg: var(--step-0);
+  --btn-text: var(--step--1);
+  --input-text: var(--step--1);
+
+  /* Spacing helpers */
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem;
+
+  /* Rendering polish */
+  --text-rendering: optimizeLegibility;
+}
+
+/* 2) Global Defaults */
+html{ text-rendering: var(--text-rendering); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-size: 16px; }
+body{ font-family: var(--font-body); font-weight: var(--fw-regular); font-size: var(--step-0); line-height: var(--lh-relaxed); letter-spacing: var(--ls-normal); }
+p{ max-width: var(--measure); }
+small, .wow-text-small{ font-size: var(--step--1); line-height: var(--lh-normal); }
+.wow-text-caption{ font-size: var(--step--2); line-height: var(--lh-normal); letter-spacing: 0.01em; }
+strong{ font-weight: var(--fw-semibold); }
+em{ font-style: italic; }
+a{ text-underline-offset: 0.15em; text-decoration-thickness: 0.08em; }
+h1,h2,h3,h4,h5,h6{ font-family: var(--font-body); font-weight: var(--fw-semibold); line-height: var(--lh-snug); letter-spacing: var(--ls-tight); max-width: var(--measure); margin: 0; }
+.wow-type > * + *{ margin-top: var(--space-4); } .wow-type-tight > * + *{ margin-top: var(--space-3); } .wow-type-loose > * + *{ margin-top: var(--space-5); }
+
+/* 3) Utility Classes */
+.font-display{ font-family: var(--font-display) !important; }
+.font-body{ font-family: var(--font-body) !important; }
+.font-ui{ font-family: var(--font-ui) !important; }
+.font-hero{ font-family: var(--font-hero) !important; }
+.fw-regular{ font-weight: var(--fw-regular) !important; }
+.fw-medium{ font-weight: var(--fw-medium) !important; }
+.fw-semibold{ font-weight: var(--fw-semibold) !important; }
+.fw-bold{ font-weight: var(--fw-bold) !important; }
+.lh-tight{ line-height: var(--lh-tight) !important; }
+.lh-snug{ line-height: var(--lh-snug) !important; }
+.lh-normal{ line-height: var(--lh-normal) !important; }
+.lh-relaxed{ line-height: var(--lh-relaxed) !important; }
+.tracking-tight{ letter-spacing: var(--ls-tight) !important; }
+.tracking-normal{ letter-spacing: var(--ls-normal) !important; }
+.tracking-wide{ letter-spacing: var(--ls-wide) !important; }
+.measure{ max-width: var(--measure) !important; } .measure-narrow{ max-width: var(--measure-narrow) !important; } .measure-wide{ max-width: var(--measure-wide) !important; }
+
+/* 4) Section Headings (Playfair) */
+.wow-section-kicker{ font-family: var(--font-ui); font-weight: var(--fw-semibold); font-size: var(--step--2); letter-spacing: 0.10em; text-transform: uppercase; line-height: var(--lh-snug); }
+.wow-section-title{ font-family: var(--font-display); font-weight: var(--fw-semibold); font-size: var(--step-3); line-height: var(--lh-tight); letter-spacing: var(--ls-tight); }
+.wow-section-lede{ font-family: var(--font-body); font-weight: var(--fw-regular); font-size: var(--step-1); line-height: var(--lh-relaxed); max-width: var(--measure); }
+.wow-section-meta{ font-family: var(--font-ui); font-weight: var(--fw-medium); font-size: var(--step--1); line-height: var(--lh-normal); letter-spacing: 0.01em; max-width: var(--measure-narrow); }
+
+/* 5) Landing Page / Marketing Headings (Manrope) */
+.wow-page-title{ font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--step-4); line-height: var(--lh-tight); letter-spacing: var(--ls-tight); }
+.wow-page-subtitle{ font-family: var(--font-body); font-weight: var(--fw-regular); font-size: var(--step-1); line-height: var(--lh-relaxed); max-width: var(--measure); }
+.wow-eyebrow{ font-family: var(--font-ui); font-weight: var(--fw-semibold); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; line-height: var(--lh-snug); }
+
+/* 6) Homepage Hero H1 (Developer choice) */
+.wow-hero-title{ font-family: var(--font-hero); font-weight: var(--fw-semibold); font-size: var(--step-6); line-height: var(--lh-tight); letter-spacing: var(--ls-tight); max-width: 22ch; }
+.wow-hero-title--editorial{ --font-hero: var(--font-display); }
+.wow-hero-title--modern{ --font-hero: var(--font-body); font-weight: var(--fw-bold); }
+.wow-hero-lede{ font-family: var(--font-body); font-weight: var(--fw-regular); font-size: var(--step-1); line-height: var(--lh-relaxed); max-width: 55ch; }
+
+/* 7) Product Cards */
+.wow-card__type, .wow-card__meta{ font-family: var(--font-body); font-weight: var(--fw-regular); font-size: var(--step--1); line-height: var(--lh-normal); }
+.wow-card__title{ font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--step-2); line-height: var(--lh-snug); letter-spacing: var(--ls-tight); }
+.wow-card__price{ font-family: var(--font-ui); font-weight: var(--fw-semibold); font-size: var(--step-0); line-height: var(--lh-snug); }
+.wow-card__rating{ font-family: var(--font-body); font-weight: var(--fw-medium); font-size: var(--step--1); line-height: var(--lh-normal); }
+
+/* 8) Buttons & Inputs (Instrument Sans) */
+.wow-btn, button, input[type="button"], input[type="submit"], input[type="reset"]{ font-family: var(--font-ui); font-weight: var(--fw-semibold); font-size: var(--btn-text); line-height: var(--lh-snug); letter-spacing: 0.01em; }
+.wow-btn--sm{ font-size: var(--step--2); } .wow-btn--lg{ font-size: var(--step-0); }
+.wow-input, .wow-select, .wow-textarea, input, select, textarea{ font-family: var(--font-ui); font-weight: var(--fw-medium); font-size: var(--input-text); line-height: var(--lh-normal); letter-spacing: var(--ls-normal); }
+.wow-input::placeholder, .wow-select::placeholder, .wow-textarea::placeholder, input::placeholder, textarea::placeholder{ font-family: var(--font-ui); font-weight: var(--fw-regular); opacity: 0.7; }
+.wow-label, label{ font-family: var(--font-ui); font-weight: var(--fw-semibold); font-size: var(--step--2); line-height: var(--lh-snug); letter-spacing: 0.03em; }
+.wow-help{ font-family: var(--font-ui); font-size: var(--step--2); line-height: var(--lh-normal); }
+.wow-error{ font-family: var(--font-ui); font-size: var(--step--2); line-height: var(--lh-normal); font-weight: var(--fw-medium); }
+
+/* 9) Navigation / UI Text */
+.wow-nav-link{ font-family: var(--font-ui); font-weight: var(--fw-semibold); font-size: var(--ui-text); line-height: var(--lh-snug); letter-spacing: 0.01em; }
+.wow-nav-sub{ font-family: var(--font-ui); font-weight: var(--fw-medium); font-size: var(--step--2); line-height: var(--lh-normal); }
+
+/* 10) Chips / Badges / Pill labels */
+.wow-chip{ font-family: var(--font-ui); font-weight: var(--fw-semibold); font-size: var(--step--2); line-height: 1; letter-spacing: 0.03em; }
+
+/* 11) Longform / Articles */
+.wow-prose{ font-family: var(--font-body); font-size: var(--step-0); line-height: var(--lh-relaxed); max-width: var(--measure-wide); }
+.wow-prose h2{ font-family: var(--font-display); font-weight: var(--fw-semibold); font-size: var(--step-3); line-height: var(--lh-tight); letter-spacing: var(--ls-tight); margin-top: var(--space-10); }
+.wow-prose h3{ font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--step-2); line-height: var(--lh-snug); margin-top: var(--space-8); }
+
+/* 12) Accessibility / focus polish */
+:focus-visible{ outline: 2px solid currentColor; outline-offset: 3px; }
+@media (max-width: 360px){ :root{ --step--2: 0.82rem; --step--1: 0.92rem; --step-0:  1.00rem; } }
+@media (min-width: 1024px){ .wow-hero-title{ max-width: 24ch; } .wow-section-lede{ max-width: 72ch; } }
+.wow-on-dark .wow-hero-title, .wow-on-dark .wow-section-title{ letter-spacing: -0.015em; }
+
+/* 13) One-liner overrides */
+.wow-hero-modern{ --font-hero: var(--font-body); font-weight: var(--fw-bold); }
+.wow-hero-editorial{ --font-hero: var(--font-display); font-weight: var(--fw-semibold); }
+.wow-heading-compact{ font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--step-1); line-height: var(--lh-snug); letter-spacing: var(--ls-tight); }
+
+/* Legacy/semantic section heading classes used on landing/home pages */
+.section-title, .home-section-title, .landing-section-title{
+  font-family: var(--font-display);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
+}

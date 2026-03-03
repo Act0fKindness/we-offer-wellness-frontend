@@ -18,6 +18,21 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    'stripe' => [
+        // Publishable key (pk_live_... / pk_test_...)
+        'key' => env('STRIPE_KEY'),
+
+        // Secret key (sk_live_... / sk_test_...)
+        'secret' => env('STRIPE_SECRET'),
+
+        // Webhook signing secret (whsec_...)
+        // Keep both keys for compatibility with different codebases/packages.
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'webhook' => [
+            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+        ],
+    ],
+
     'resend' => [
         'key' => env('RESEND_KEY'),
     ],
@@ -33,6 +48,24 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    'mapbox' => [
+        'token' => env('MAPBOX_API_KEY'),
+    ],
+
+    'brevo' => [
+        'key' => env('BREVO_API_KEY'),
+    ],
+
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+    ],
+
+    'google_maps' => [
+        'key' => env('GOOGLE_MAPS_API_KEY'),
+        'region' => env('GOOGLE_REGION', 'uk'),
     ],
 
 ];

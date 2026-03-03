@@ -3,24 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\TransactionalMail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\File;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request): View
     {
-        return Inertia::render('Profile/Edit', [
+        return view('auth.profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'current' => 'profile',
+            'eyebrow' => 'Profile & preferences',
+            'title' => 'Profile & contact details',
+            'intro' => 'Use the same email you checkout with so every booking lands in this account.',
         ]);
     }
 
@@ -29,13 +36,34 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
+        $oldEmail = $user->email;
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($request->hasFile('profile_picture')) {
+            $path = $request->file('profile_picture')->store('profile-photos', 'public');
+            if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+            $validated['profile_picture'] = $path;
         }
 
-        $request->user()->save();
+        $first = $validated['first_name'] ?? $user->first_name;
+        $last = $validated['last_name'] ?? $user->last_name;
+        $validated['name'] = trim(sprintf('%s %s', $first, $last));
+
+        $user->fill($validated);
+
+        $emailChanged = $user->isDirty('email');
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        if ($emailChanged && $oldEmail) {
+            TransactionalMail::emailChanged($user->fresh(), $oldEmail);
+        }
 
         return Redirect::route('profile.edit');
     }
@@ -50,6 +78,8 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        $email = $user->email;
+        $name = $user->name;
 
         Auth::logout();
 
@@ -58,6 +88,52 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        TransactionalMail::accountDeleted($email, $name);
+
         return Redirect::to('/');
+    }
+
+    /**
+     * Handle asynchronous profile photo uploads.
+     */
+    public function uploadPhoto(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'profile_picture' => ['required', File::image()->max(4096)],
+        ]);
+
+        $user = $request->user();
+
+        if (!$request->hasFile('profile_picture')) {
+            return response()->json([
+                'message' => 'No photo received.',
+            ], 422);
+        }
+
+        $path = $request->file('profile_picture')->store('profile-photos', 'public');
+
+        if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        $user->profile_picture = $path;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile photo updated.',
+            'path' => $path,
+            'url' => $this->profilePhotoUrl($path),
+        ]);
+    }
+
+    protected function profilePhotoUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+        $host = config('app.asset_url') ?: config('services.asset_host') ?: 'https://atease.weofferwellness.co.uk';
+        $host = rtrim($host, '/');
+        $storagePath = '/storage/'.ltrim($path, '/');
+        return $host.$storagePath;
     }
 }

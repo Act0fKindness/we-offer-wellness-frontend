@@ -53,7 +53,7 @@ const heroCtaMap = {
   ],
   gifts: [
     { label: 'Shop curated gifts', href: '#hub-products', variant: 'cta', arrow: true },
-    { label: 'Send gift vouchers', href: '/gift-cards', variant: 'ghost' },
+    { label: 'Send WOW gift vouchers', href: '/gift-cards', variant: 'ghost' },
   ],
   'near-me': [
     { label: 'See nearby options', href: '#hub-products', variant: 'cta', arrow: true },

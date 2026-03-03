@@ -22,9 +22,9 @@ const practitionerSignupUrl = import.meta.env.VITE_ATEASE_SIGNUP_URL || 'https:/
         <div class="wow-hero-card provider-hero">
           <div class="wow-hero-grid">
             <div>
-              <div class="kicker">Become a practitioner</div>
+              <div class="kicker">Become a provider</div>
               <h1 class="mt-2 m-0">{{ props.title }}</h1>
-              <p class="text-ink-700 text-lg mt-3">Join WOW to reach thoughtful clients, receive timely payouts and contribute to a trauma-aware marketplace.</p>
+              <p class="text-ink-700 text-lg mt-3">Share your expertise with the WOW community. Trauma-aware, inclusive practitioners are always welcome.</p>
               <div class="mt-4 flex flex-wrap gap-3">
                 <WowButton as="a" :href="practitionerSignupUrl" variant="cta" :arrow="true">Apply now</WowButton>
                 <WowButton as="a" href="/contact?topic=partners" variant="ghost">Talk to partnerships</WowButton>

@@ -12,7 +12,7 @@
           </button>
           <p class="cta-note">No spam. Quick updates + early rewards only.</p>
         </div>
-        <p v-if="success" class="text-success mt-3">Thanks — you’re on the list!</p>
+        <p v-if="success" class="text-success mt-3">{{ successMessage || 'Check your email to confirm your spot.' }}</p>
         <ul class="benefits">
           <li>Cash giveaways + early discounts</li>
           <li>Launch alerts & behind-the-scenes updates</li>
@@ -71,7 +71,7 @@
           </button>
         </div>
       </form>
-      <p v-if="success" class="text-success mt-3">Thanks — you’re on the list!</p>
+      <p v-if="success" class="text-success mt-3">{{ successMessage || 'Check your email to confirm your spot.' }}</p>
     </div>
   </div>
 </template>
@@ -83,6 +83,7 @@ const email = ref('')
 const name = ref('')
 const pending = ref(false)
 const success = ref(false)
+const successMessage = ref('')
 const sessionToken = ref(null)
 const modalOpen = ref(false)
 const modalPanelRef = ref(null)
@@ -95,6 +96,7 @@ let geoCache = loadJson('v3_geo')
 
 function openModal(){
   success.value = false
+  successMessage.value = ''
   modalOpen.value = true
 }
 
@@ -265,6 +267,8 @@ function maybeRequestGeo(){
 
 async function submit(){
   if (!email.value) return
+  success.value = false
+  successMessage.value = ''
   pending.value = true
   try{
     const token = document.querySelector('meta[name="csrf-token"]')?.content || ''
@@ -284,6 +288,7 @@ async function submit(){
       sessionToken.value = data.session_token
       try { sessionStorage.setItem('v3_session_token', data.session_token) } catch {}
     }
+    successMessage.value = (data && data.message) ? data.message : 'Check your email to confirm your spot.'
     success.value = true
     email.value = ''
     name.value = ''

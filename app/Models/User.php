@@ -385,7 +385,7 @@ class User extends Authenticatable implements MustVerifyEmail
         ])->save();
 
         // Email content tries to avoid spam triggers: concise, code-first, minimal links
-        $subject = 'Your AtEase verification code: ' . $code;
+        $subject = 'Your We Offer Wellness verification code: ' . $code;
         MailService::send(
             $this->email,
             $subject,
@@ -395,6 +395,23 @@ class User extends Authenticatable implements MustVerifyEmail
                 'url' => $url,
                 'code' => $code,
                 'expires' => $expires,
+            ]
+        );
+    }
+
+    /**
+     * Send the password reset notification using the custom Brevo template.
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $url = url(route('password.reset', ['token' => $token, 'email' => $this->email], false));
+        MailService::send(
+            $this->email,
+            'Reset your We Offer Wellness password',
+            'emails.reset-password',
+            [
+                'user' => $this,
+                'url' => $url,
             ]
         );
     }

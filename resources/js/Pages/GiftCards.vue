@@ -42,7 +42,7 @@ onMounted(loadGiftCards)
               <h1 class="mt-3">WOW gift vouchers</h1>
               <p class="text-ink-700 text-lg mt-3">Send instant e-gift cards that can be redeemed on any therapy, class, workshop or event across We Offer Wellness.</p>
               <div class="mt-4 flex flex-wrap gap-3">
-                <WowButton as="a" href="#gift-grid" variant="cta">Shop gift vouchers</WowButton>
+              <WowButton as="a" href="#gift-grid" variant="cta">Shop WOW gift vouchers</WowButton>
                 <WowButton as="a" href="/help/gift-cards" variant="ghost">How gifting works</WowButton>
               </div>
             </div>

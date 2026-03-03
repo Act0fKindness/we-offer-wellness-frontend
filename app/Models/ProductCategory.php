@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class ProductCategory extends Model
 {
@@ -13,6 +14,11 @@ class ProductCategory extends Model
 
     protected $fillable = [
         'name',
+        'slug',
+        'tagline',
+        'description',
+        'image_path',
+        'image_meta',
         'parent_id',
         'options',
         'meta_1',
@@ -22,7 +28,10 @@ class ProductCategory extends Model
 
     protected $casts = [
         'options' => 'array',
+        'image_meta' => 'array',
     ];
+
+    protected $appends = ['image_url'];
 
     public function products()
     {
@@ -42,5 +51,10 @@ class ProductCategory extends Model
     public function options()
     {
         return $this->hasMany(ProductCategoryOption::class, 'category_id');
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
     }
 }

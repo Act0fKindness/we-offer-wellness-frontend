@@ -5,16 +5,25 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\V3Subscriber;
+use App\Services\TransactionalMail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class V3SubscriberController extends Controller
 {
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'name' => 'nullable|string|max:255',
+            'first_name' => 'nullable|string|max:120',
+            'last_name' => 'nullable|string|max:120',
+            'business_name' => 'nullable|string|max:255',
+            'offers_online' => 'nullable|boolean',
+            'offers_in_person' => 'nullable|boolean',
+            'in_person_locations' => 'nullable|string|max:255',
+            'practitioner_interest' => 'nullable|boolean',
             'landing_path' => 'nullable|string|max:2048',
             'referrer' => 'nullable|string',
             'session_token' => 'nullable|string|max:100',
@@ -34,83 +43,167 @@ class V3SubscriberController extends Controller
             'session_duration_seconds' => 'nullable|integer|min:0',
         ]);
 
+        $validator->after(function ($validator) use ($request) {
+            $isPractitioner = $this->normalizeBoolean($request->input('practitioner_interest'));
+            if (!$isPractitioner) {
+                return;
+            }
+
+            $online = $this->normalizeBoolean($request->input('offers_online'));
+            $inPerson = $this->normalizeBoolean($request->input('offers_in_person'));
+            if (!$online && !$inPerson) {
+                $validator->errors()->add('offers_online', 'Select at least one availability option.');
+            }
+
+            if ($inPerson) {
+                $location = trim((string) $request->input('in_person_locations'));
+                if ($location === '') {
+                    $validator->errors()->add('in_person_locations', 'Share a general location for in-person sessions.');
+                }
+            }
+        });
+
+        $data = $validator->validate();
+        $hasOffersOnline = array_key_exists('offers_online', $data);
+        $offersOnline = $hasOffersOnline ? $this->normalizeBoolean($data['offers_online']) : null;
+        $hasOffersInPerson = array_key_exists('offers_in_person', $data);
+        $offersInPerson = $hasOffersInPerson ? $this->normalizeBoolean($data['offers_in_person']) : null;
+        $hasLocationField = array_key_exists('in_person_locations', $data);
+        $isPractitioner = array_key_exists('practitioner_interest', $data)
+            ? $this->normalizeBoolean($data['practitioner_interest'])
+            : null;
+
+        if ($hasLocationField && !$offersInPerson) {
+            $data['in_person_locations'] = null;
+        }
+
+        $data['practitioner_interest'] = $isPractitioner;
+        if (empty($data['name']) && (!empty($data['first_name']) || !empty($data['last_name']))) {
+            $data['name'] = trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''));
+        }
+
         $token = $data['session_token'] ?? null;
         $landingPath = $data['landing_path'] ?? null;
         $referrer = $data['referrer'] ?? null;
         $sessionStarted = isset($data['session_started_at']) ? Carbon::parse($data['session_started_at']) : null;
         $duration = isset($data['session_duration_seconds']) ? max(0, (int) $data['session_duration_seconds']) : null;
         $meta = $this->extractMeta($data, $request);
+        unset($data['practitioner_interest']);
+
+        $subscriber = null;
+        if ($token) {
+            $subscriber = V3Subscriber::where('session_token', $token)->first();
+        }
+        if (!$subscriber) {
+            $subscriber = V3Subscriber::where('email', $data['email'])->orderByDesc('id')->first();
+        }
+
+        $isNew = false;
+        if (!$subscriber) {
+            $subscriber = new V3Subscriber();
+            $isNew = true;
+        }
+
+        $subscriber->email = $data['email'];
+        if (!empty($data['name'])) {
+            $subscriber->name = $data['name'];
+        }
+        if (!empty($data['first_name'])) {
+            $subscriber->first_name = $data['first_name'];
+        }
+        if (!empty($data['last_name'])) {
+            $subscriber->last_name = $data['last_name'];
+        }
+        if (!empty($data['business_name'])) {
+            $subscriber->business_name = $data['business_name'];
+        }
+
+        if ($hasOffersOnline) {
+            $subscriber->offers_online = $offersOnline;
+        }
+        if ($hasOffersInPerson) {
+            $subscriber->offers_in_person = $offersInPerson;
+        }
+        if ($hasLocationField) {
+            $subscriber->in_person_locations = $data['in_person_locations'] ?? null;
+        }
+
+        if ($landingPath && ($isNew || !$subscriber->landing_path)) {
+            $subscriber->landing_path = $landingPath;
+        }
+        if ($referrer && ($isNew || !$subscriber->referrer)) {
+            $subscriber->referrer = $referrer;
+        }
+
+        if ($sessionStarted && ($isNew || !$subscriber->session_started_at)) {
+            $subscriber->session_started_at = $sessionStarted;
+        }
+        if (!$subscriber->session_started_at) {
+            $subscriber->session_started_at = now();
+        }
+        if ($duration !== null) {
+            $subscriber->session_duration_seconds = max($subscriber->session_duration_seconds ?? 0, $duration);
+        } elseif ($isNew && $subscriber->session_duration_seconds === null) {
+            $subscriber->session_duration_seconds = 0;
+        }
+
+        $subscriber->last_seen_at = now();
+        if (!empty($meta)) {
+            $subscriber->fill($meta);
+        }
 
         if ($token) {
-            $tracked = V3Subscriber::where('session_token', $token)->first();
-            if ($tracked) {
-                $tracked->email = $data['email'];
-                if (!empty($data['name'])) {
-                    $tracked->name = $data['name'];
-                }
-                if ($landingPath && !$tracked->landing_path) {
-                    $tracked->landing_path = $landingPath;
-                }
-                if ($referrer && !$tracked->referrer) {
-                    $tracked->referrer = $referrer;
-                }
-                if ($sessionStarted && !$tracked->session_started_at) {
-                    $tracked->session_started_at = $sessionStarted;
-                }
-                if ($duration !== null) {
-                    $tracked->session_duration_seconds = max($tracked->session_duration_seconds ?? 0, $duration);
-                }
-                $tracked->last_seen_at = now();
-                $tracked->fill($meta);
-                $tracked->save();
-
-                return response()->json(['ok' => true, 'session_token' => $tracked->session_token]);
-            }
-        }
-
-        // De-duplicate by email + landing_path when no session token exists
-        $existing = V3Subscriber::where('email', $data['email'])
-            ->where('landing_path', $landingPath)
-            ->first();
-        if ($existing) {
-            if (!empty($data['name'])) {
-                $existing->name = $data['name'];
-            }
-            if ($referrer && !$existing->referrer) {
-                $existing->referrer = $referrer;
-            }
-            if ($token) {
-                $existing->session_token = $token;
-            }
-            if ($sessionStarted && !$existing->session_started_at) {
-                $existing->session_started_at = $sessionStarted;
-            }
-            if ($duration !== null) {
-                $existing->session_duration_seconds = max($existing->session_duration_seconds ?? 0, $duration);
-            }
-            $existing->last_seen_at = now();
-            $existing->fill($meta);
-            $existing->save();
-
-            return response()->json(['ok' => true, 'session_token' => $existing->session_token]);
-        }
-
-        if (!$token) {
+            $subscriber->session_token = $token;
+        } elseif ($subscriber->session_token) {
+            $token = $subscriber->session_token;
+        } else {
             $token = (string) Str::uuid();
+            $subscriber->session_token = $token;
         }
 
-        $record = V3Subscriber::create(array_merge(array_filter([
-            'session_token' => $token,
-            'email' => $data['email'],
-            'name' => $data['name'] ?? null,
-            'landing_path' => $landingPath,
-            'referrer' => $referrer,
-            'session_started_at' => $sessionStarted ?? now(),
-            'last_seen_at' => now(),
-            'session_duration_seconds' => $duration ?? 0,
-        ], fn($value) => !is_null($value) && $value !== ''), $meta));
+        if (!$subscriber->status) {
+            $subscriber->status = $subscriber->confirmed_at ? 'confirmed' : 'pending';
+        }
+        if (!$subscriber->confirmation_token) {
+            $subscriber->confirmation_token = Str::random(64);
+        }
+        if (!$subscriber->manage_token) {
+            $subscriber->manage_token = Str::random(64);
+        }
 
-        return response()->json(['ok' => true, 'session_token' => $record['session_token'] ?? $token]);
+        if ($subscriber->status === 'unsubscribed') {
+            $subscriber->status = 'pending';
+            $subscriber->confirmed_at = null;
+            $subscriber->unsubscribed_at = null;
+        }
+
+        $subscriber->save();
+
+        $requiresConfirmation = !$subscriber->confirmed_at;
+        $message = 'Check your email to confirm your subscription.';
+
+        if ($requiresConfirmation) {
+            $shouldSend = !$subscriber->confirmation_sent_at || $subscriber->confirmation_sent_at->lt(now()->subMinutes(10));
+            if ($shouldSend) {
+                $subscriber->confirmation_sent_at = now();
+                $subscriber->save();
+                TransactionalMail::subscriberConfirm($subscriber);
+            }
+        } else {
+            $message = 'You’re all set — you’re already confirmed.';
+        }
+
+        if ($isPractitioner === true) {
+            TransactionalMail::subscriberPractitionerInterest($subscriber);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'session_token' => $subscriber->session_token,
+            'status' => $subscriber->status,
+            'requires_confirmation' => $requiresConfirmation,
+            'message' => $message,
+        ]);
     }
 
     public function track(Request $request)
@@ -203,5 +296,29 @@ class V3SubscriberController extends Controller
         ];
 
         return array_filter($meta, fn ($value) => !is_null($value) && $value !== '');
+    }
+
+    protected function normalizeBoolean($value): ?bool
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            $value = trim($value);
+            if ($value === '') {
+                return null;
+            }
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value === 1;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
     }
 }

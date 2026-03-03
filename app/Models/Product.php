@@ -28,10 +28,12 @@ class Product extends Model
         'is_lgbtq_friendly', // Added field
         'tags_list',
         'meta_json',
+        'by_need',
     ];
 
     protected $casts = [
         'meta_json' => 'array',
+        'by_need' => 'array',
     ];
 
 
@@ -116,9 +118,20 @@ class Product extends Model
      *
      * @return string
      */
-    public function getSummaryAttribute()
+    public function getSummaryAttribute(?string $value): ?string
     {
-        $cleanedText = strip_tags(html_entity_decode($this->body_html));
+        if (filled($value)) {
+            return $value;
+        }
+
+        $source = $this->description ?? $this->body_html ?? '';
+        $decoded = html_entity_decode($source, ENT_QUOTES | ENT_HTML5);
+        $cleanedText = trim(preg_replace('/\s+/', ' ', strip_tags($decoded) ?? ''));
+
+        if ($cleanedText === '') {
+            return null;
+        }
+
         return Str::limit(Str::words($cleanedText, 30, ''), 150, '...');
     }
 
@@ -199,20 +212,35 @@ class Product extends Model
             return asset('assets/img/no-product-image.jpg');
         }
 
-        // If already an absolute URL, return as-is
+        // Build a URL from known sources first
+        $url = null;
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-            return $path;
+            $url = $path; // absolute, will normalize host below
+        } else {
+            // Prefer serving from Backend's storage if configured
+            $backend = rtrim((string) env('BACKEND_ASSET_URL', env('BACKEND_URL', '')), '/');
+            $clean = ltrim($path, '/');
+            if ($backend) {
+                $url = $backend . '/storage/' . $clean;
+            } else {
+                // Fallback to local storage URL (requires public/storage symlink)
+                $url = asset('storage/' . $clean);
+            }
         }
 
-        // Prefer serving from Backend's storage if configured
-        $backend = rtrim((string) env('BACKEND_ASSET_URL', env('BACKEND_URL', '')), '/');
-        $clean = ltrim($path, '/');
-        if ($backend) {
-            return $backend . '/storage/' . $clean;
-        }
+        // Normalize all product image hosts to atease domain
+        $atease = rtrim((string) env('ATEASE_BASE_URL', env('ALT_STORAGE_BASE', 'https://atease.weofferwellness.co.uk')), '/');
+        try {
+            if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+                $parts = parse_url($url) ?: [];
+                $p = ($parts['path'] ?? '/') ?: '/';
+                $q = isset($parts['query']) && $parts['query'] !== '' ? ('?'.$parts['query']) : '';
+                return $atease . $p . $q;
+            }
+        } catch (\Throwable $e) {}
 
-        // Fallback to local storage URL (requires public/storage symlink)
-        return asset('storage/' . $clean);
+        // Relative or failed parse: ensure single leading slash
+        return $atease . '/' . ltrim((string) $url, '/');
     }
 
     /**

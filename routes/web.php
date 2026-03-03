@@ -17,12 +17,78 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Review;
 use App\Http\Controllers\Api\V3SubscriberController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CheckoutResultController;
+use App\Http\Controllers\SafetyContraindicationsController;
+use App\Http\Controllers\HelpCentreController;
+use App\Http\Controllers\AboutController;
+use App\Http\Controllers\NeedsController;
+use App\Http\Controllers\TherapiesController;
+use App\Http\Controllers\EventsController;
+use App\Http\Controllers\OnlineController;
+use App\Http\Controllers\LocationsController;
+use App\Http\Controllers\OnlineNearMeController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Api\ProductCardsController;
+use App\Http\Controllers\MindfulTimesController;
+use App\Http\Controllers\ProvidersController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CorporateController;
+use App\Http\Controllers\StaticPagesController;
+use App\Http\Controllers\ReviewsController;
+use App\Http\Controllers\HelpPagesController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\LandingRedirectsController;
+use App\Http\Controllers\CustomerAccountController;
+use App\Http\Controllers\SubscriberController;
 
-Route::get('/', function () {
-    return Inertia::render('Home', [
-        'mapboxKey' => env('MAPBOX_API_KEY'),
-    ]);
+Route::get('/', [HomeController::class, 'index']);
+
+Route::prefix('subscribe')->group(function () {
+    Route::get('/confirm/{token}', [SubscriberController::class, 'confirm'])->name('subscribe.confirm');
+    Route::get('/preferences/{token}', [SubscriberController::class, 'preferences'])->name('subscribe.preferences');
+    Route::post('/preferences/{token}', [SubscriberController::class, 'updatePreferences'])->name('subscribe.preferences.update');
+    Route::get('/unsubscribe/{token}', [SubscriberController::class, 'unsubscribe'])->name('subscribe.unsubscribe');
+    Route::get('/resubscribe/{token}', [SubscriberController::class, 'resubscribe'])->name('subscribe.resubscribe');
 });
+
+// Online & Near Me hub
+Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
+
+/** By Need */
+Route::get('/needs', [NeedsController::class, 'index'])->name('needs.index');
+Route::get('/needs/{slug}', [NeedsController::class, 'show'])
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
+    ->name('needs.show');
+// Back-compat: old slug variant without "and"
+Route::redirect('/needs/stress-anxiety', '/needs/stress-and-anxiety', 301);
+
+/** Therapies */
+Route::get('/therapies', [TherapiesController::class, 'index'])->name('therapies.index');
+Route::get('/therapies/{slug}', [TherapiesController::class, 'show'])
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
+    ->name('therapies.show');
+
+/** Events & Workshops */
+Route::get('/events-workshops', [EventsController::class, 'index'])->name('events.index');
+Route::get('/events-workshops/{slug}', [EventsController::class, 'show'])
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
+    ->name('events.show');
+
+/** Online */
+Route::get('/online', [OnlineController::class, 'index'])->name('online.index');
+
+/** Locations + Near Me */
+Route::get('/locations', [LocationsController::class, 'index'])->name('locations.index');
+Route::get('/locations/{slug}', [LocationsController::class, 'show'])
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
+    ->name('locations.show');
+Route::get('/near-me', [LocationsController::class, 'nearMe'])->name('nearMe');
+
+// Misc redirects for broken/legacy links
+Route::redirect('/help/which-therapy', '/plan', 301);
 
 // V3 holding page
 Route::get('/v3', function () {
@@ -35,51 +101,44 @@ Route::get('/v3', function () {
     ]);
 })->name('v3.holding');
 
-Route::get('/search', function (\Illuminate\Http\Request $request) {
-    // Normalise legacy/alternate params without touching the SPA code
-    $format = strtolower((string) $request->query('format', ''));
-    if ($format === 'online') {
-        // For the "Explore Anytime Options" CTA: route to classes hub, online only, anytime
-        return redirect('/classes?mode=online&anytime=1', 302);
-    }
-    // Support category landing via /search?category=Yoga[&type=classes]
-    if ($request->has('category')) {
-        $raw = trim((string) $request->query('category'));
-        if ($raw !== '') {
-            $slug = Str::slug($raw);
-            $type = strtolower((string) $request->query('type', 'therapies'));
-            $allowed = ['therapies','events','workshops','classes','retreats','gifts'];
-            if (!in_array($type, $allowed, true)) { $type = 'therapies'; }
-            return redirect('/'.$type.'/'.$slug, 302);
-        }
-    }
-    if ($format && !$request->has('mode')) {
-        // Map other format values to mode for search, e.g., format=in-person
-        $qs = $request->query();
-        $qs['mode'] = $format;
-        unset($qs['format']);
-        $to = url('/search') . '?' . http_build_query($qs);
-        return redirect($to, 302);
-    }
-    return Inertia::render('Search/Index', [
-        'mapsKey' => env('GOOGLE_MAPS_API_KEY'),
-    ]);
-})->name('search');
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+// Stripe Checkout session (web POST with CSRF)
+Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::redirect('/dashboard', '/account', 301)->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::prefix('account')->group(function () {
+        Route::get('/', [CustomerAccountController::class, 'dashboard'])->name('account.dashboard');
+        Route::get('/orders', [CustomerAccountController::class, 'orders'])->name('account.orders');
+        Route::get('/orders/{order}', [CustomerAccountController::class, 'showOrder'])
+            ->whereNumber('order')
+            ->name('account.orders.show');
+
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/photo', [ProfileController::class, 'uploadPhoto'])->name('profile.photo');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    });
+
+    // Legacy /profile URL support → redirect into /account/profile
+    Route::get('/profile', function () {
+        return redirect()->route('profile.edit');
+    })->name('profile.legacy');
+
+    // Admin utilities: backup and clear Pages with confirmation token
+    Route::get('/admin/pages/backup', [\App\Http\Controllers\Admin\PagesAdminController::class, 'backup'])
+        ->name('admin.pages.backup');
+    Route::post('/admin/pages/clear', [\App\Http\Controllers\Admin\PagesAdminController::class, 'clear'])
+        ->name('admin.pages.clear');
 });
 
 require __DIR__.'/auth.php';
 
 // Lightweight JSON endpoints for frontend
 Route::get('/api/products', [ProductController::class, 'index']);
+// HTML fragments: render product cards via Blade for dynamic sections (e.g., comfort rail)
+Route::get('/api/product-cards', [ProductCardsController::class, 'index']);
 Route::get('/api/articles', [ArticleController::class, 'index']);
 Route::get('/api/catalog', [CatalogController::class, 'index']);
 Route::get('/api/product-types', [ProductTypeController::class, 'index']);
@@ -96,60 +155,40 @@ Route::post('/api/geo', [\App\Http\Controllers\GeoController::class, 'update']);
 // Landing/Hubs and Universal Pattern pages
 // ------------------------------------------------------------------
 
-// Hubs (top-level)
-Route::get('/therapies', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'therapies'));
-Route::get('/events', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'events'));
-Route::get('/workshops', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'workshops'));
-Route::get('/classes', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'classes'));
-Route::get('/retreats', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'retreats'));
-Route::get('/gifts', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'gifts'));
-Route::get('/near-me', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->hub($r, 'near-me'));
+// Redirect legacy hubs to Blade counterparts where applicable
+Route::redirect('/events', '/events-workshops', 301);
+Route::redirect('/workshops', '/events-workshops', 301);
+Route::redirect('/classes', '/events-workshops', 301);
 // Pain-point landing pages
-Route::get('/need/{need}', fn(\Illuminate\Http\Request $r, string $need) => app(LandingController::class)->need($r, $need));
+Route::get('/need/{need}', [LandingController::class, 'need']);
 // Quiz plan results page
-Route::get('/plan', fn(\Illuminate\Http\Request $r) => app(LandingController::class)->plan($r));
+Route::get('/plan', [LandingController::class, 'plan']);
 
 // Singular → plural 301 redirects for hubs
 Route::get('/therapy', fn() => redirect('/therapies', 301));
-Route::get('/event', fn() => redirect('/events', 301));
-Route::get('/workshop', fn() => redirect('/workshops', 301));
-Route::get('/class', fn() => redirect('/classes', 301));
+Route::get('/event', fn() => redirect('/events-workshops', 301));
+Route::get('/workshop', fn() => redirect('/events-workshops', 301));
+Route::get('/class', fn() => redirect('/events-workshops', 301));
 Route::get('/retreat', fn() => redirect('/retreats', 301));
 Route::get('/gift', fn() => redirect('/gifts', 301));
 
-// Singular → plural 301 redirects for universal pattern
+// Singular → plural 301 redirects for legacy category paths
 Route::get('/therapy/{category}', fn(string $category) => redirect('/therapies/'.$category, 301));
-Route::get('/event/{category}', fn(string $category) => redirect('/events/'.$category, 301));
-Route::get('/workshop/{category}', fn(string $category) => redirect('/workshops/'.$category, 301));
-Route::get('/class/{category}', fn(string $category) => redirect('/classes/'.$category, 301));
+Route::get('/event/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
+Route::get('/workshop/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
+Route::get('/class/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
 Route::get('/retreat/{category}', fn(string $category) => redirect('/retreats/'.$category, 301));
 Route::get('/gift/{category}', fn(string $category) => redirect('/gifts/'.$category, 301));
 
 // Offering detail pages: /{type}/{id}-{slug}
-Route::get('/{type}/{offering}', function (\Illuminate\Http\Request $r, string $type, string $offering) {
-    $allowed = ['therapies','events','workshops','classes','retreats','gifts'];
-    if (!in_array(strtolower($type), $allowed, true)) { abort(404); }
-    return app(\App\Http\Controllers\LandingController::class)->offering($r, $type, $offering);
-})->where(['type' => 'therapies|events|workshops|classes|retreats|gifts', 'offering' => '\\d+-[A-Za-z0-9\-]+' ]);
+Route::get('/{type}/{offering}', [LandingController::class, 'offering'])
+    ->where(['type' => 'therapies|events|workshops|classes|retreats|gifts', 'offering' => '\\d+-[A-Za-z0-9\-]+' ]);
 
 // Legacy offering route support: /{type}/o/{handle} → 301 to /{type}/{id}-{slug}
-Route::get('/{type}/o/{handle}', function (\Illuminate\Http\Request $r, string $type, string $handle) {
-    $allowed = ['therapies','events','workshops','classes','retreats','gifts'];
-    if (!in_array(strtolower($type), $allowed, true)) { abort(404); }
-    $p = \App\Models\Product::query()->where('handle', $handle)
-        ->orWhere(fn($q)=>$q->where('id', is_numeric($handle) ? (int)$handle : 0))
-        ->first();
-    if (!$p) abort(404);
-    $slug = \Illuminate\Support\Str::slug($p->title ?: (string)$p->id);
-    return redirect('/'.strtolower($type).'/'.$p->id.'-'.$slug, 301);
-})->where('type', 'therapies|events|workshops|classes|retreats|gifts');
+Route::get('/{type}/o/{handle}', [LandingRedirectsController::class, 'offeringHandle'])
+    ->where('type', 'therapies|events|workshops|classes|retreats|gifts');
 
-// Universal pattern: /{type}/{category} (category slug may not start with digits to avoid clashing with offering route)
-Route::get('/{type}/{category}', function (\Illuminate\Http\Request $r, string $type, string $category) {
-    $allowed = ['therapies','events','workshops','classes','retreats','gifts'];
-    if (!in_array(strtolower($type), $allowed, true)) { abort(404); }
-    return app(LandingController::class)->category($r, $type, $category);
-})->where(['type' => 'therapies|events|workshops|classes|retreats|gifts', 'category' => '[A-Za-z][A-Za-z0-9\-]*' ]);
+// Removed universal category catch-all to avoid conflicts with Blade routes
 
 // City pages (limited whitelist to avoid conflicting with known routes)
 $cities = implode('|', [
@@ -160,105 +199,17 @@ Route::get('/{city}/{type}/{category}', [LandingController::class, 'cityCategory
     ->where(['city' => $cities, 'type' => 'therapies|events|workshops|classes']);
 
 // Legacy experiences → 301 redirects
-Route::get('/experiences', function () {
-    // Vanity landing: route to Gifts hub for now
-    return redirect('/gifts', 301);
-});
-Route::get('/experience', function () {
-    return redirect('/gifts', 301);
-});
-Route::get('/experience/{slug}', function (string $slug) {
-    return redirect('/experiences/'.ltrim($slug, '/'), 301);
-});
-Route::get('/experiences/{slug}', function (string $slug) {
-    $s = strtolower($slug);
-    // quick mapping heuristics
-    if (str_contains($s, 'sound-bath')) return redirect("/events/sound-bath", 301);
-    if ($s === 'reiki') return redirect('/therapies/reiki', 301);
-    if (str_contains($s, 'breathwork')) return redirect('/events/breathwork-workshops', 301);
-    if (str_contains($s, 'retreat')) return redirect('/retreats', 301);
-    // default guess: therapy
-    return redirect('/therapies/'.$s, 301);
-});
+Route::get('/experiences', [LandingRedirectsController::class, 'experiencesIndex']);
+Route::get('/experience', [LandingRedirectsController::class, 'experienceIndex']);
+Route::get('/experience/{slug}', [LandingRedirectsController::class, 'experienceSlug']);
+Route::get('/experiences/{slug}', [LandingRedirectsController::class, 'experiencesSlug']);
 
-// Static placeholders (trust/corporate/legal). These can be swapped to specific controllers later.
-Route::get('/corporate', function () {
-    return Inertia::render('Corporate/Hub');
-});
-Route::get('/corporate-wellness', function () {
-    return Inertia::render('Corporate/ComingSoon');
-});
 Route::redirect('/corporate-wellbeing', '/corporate-wellness', 301);
-
-Route::get('/events-and-workshops', function () {
-    return Inertia::render('EventsAndWorkshops');
-});
-Route::redirect('/events-workshops', '/events-and-workshops', 301);
-
-Route::get('/gift-cards', function () {
-    return Inertia::render('GiftCards');
-});
+Route::redirect('/events-and-workshops', '/events-workshops', 301);
 Route::redirect('/gift-vouchers', '/gift-cards', 301);
 
-// Static pages via General/Page
-Route::get('/our-standards', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Our Standards',
-        'metaDescription' => 'How we vet practitioners and keep sessions safe and effective.',
-        'bodyHtml' => '<p>We set high standards for safety, qualifications and client care. Replace with full policy content.</p>',
-        'canonical' => url('/our-standards'),
-    ]);
-})->name('standards');
-Route::get('/safety-and-contraindications', function(){
-    return Inertia::render('SafetyAndContraindications', [
-        'meta' => [
-            'title' => 'Safety & Contraindications | We Offer Wellness',
-            'description' => 'Detailed guidance on when to seek medical advice, red flags to watch for and how we vet practitioners.',
-            'canonical' => url('/safety-and-contraindications'),
-        ],
-    ]);
-});
-Route::get('/refunds-and-cancellations', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Refunds & Cancellations',
-        'metaDescription' => 'How refunds and cancellations work on We Offer Wellness.',
-        'bodyHtml' => '<p>Policy overview and timelines. Replace with full policy.</p>',
-        'canonical' => url('/refunds-and-cancellations'),
-    ]);
-});
-
-Route::get('/reviews', function(){
-    $reviews = Review::with(['user:id,first_name,last_name,name,location', 'product:id,title,slug', 'vendor:id,vendor_name'])
-        ->whereNotNull('review_text')
-        ->orderByDesc('created_at')
-        ->get()
-        ->map(function(Review $review) {
-            $user = $review->user;
-            $customerName = $user ? trim(($user->first_name ?? '').' '.($user->last_name ?? '')) : null;
-            if (!$customerName) {
-                $customerName = $user?->name ?: 'Verified client';
-            }
-            return [
-                'id' => $review->id,
-                'quote' => trim($review->review_text),
-                'rating' => $review->rating ? (int) $review->rating : null,
-                'customer' => $customerName,
-                'location' => $user->location ?? null,
-                'product' => $review->product?->title,
-                'product_slug' => $review->product?->slug,
-                'vendor' => $review->vendor?->vendor_name,
-                'created_at' => optional($review->created_at)->toIso8601String(),
-            ];
-        });
-
-    return Inertia::render('Reviews/Index', [
-        'reviews' => $reviews,
-        'meta' => [
-            'title' => 'Client Reviews | We Offer Wellness',
-            'description' => 'Read real stories from people who booked therapies, classes, workshops and retreats with We Offer Wellness.',
-        ],
-    ]);
-})->name('reviews.index');
+Route::get('/reviews', [ReviewsController::class, 'index'])->name('reviews.index');
+if (config('wow.enable_static_pages')) {
 Route::get('/about', function(){
     return Inertia::render('General/Page', [
         'title' => 'About We Offer Wellness',
@@ -343,182 +294,58 @@ Route::get('/corporate/{slug}', function (string $slug) {
 Route::redirect('/legal/privacy', '/privacy', 301);
 Route::redirect('/legal/terms', '/terms', 301);
 Route::view('/404', 'app');
+}
 
 // Cart page
-Route::get('/cart', function () {
-    return Inertia::render('Cart/Index', [
-        'sessionPromo' => session('cart_promo_code'),
-        'sessionGift'  => session('cart_gift_code'),
-    ]);
-});
+Route::get('/cart', [CartController::class, 'page']);
 
-// Cart code persistence in session
-Route::post('/api/cart/promo', function (Request $request) {
-    $code = strtoupper(trim((string)$request->input('code', '')));
-    if ($code !== '') session(['cart_promo_code' => $code]); else session()->forget('cart_promo_code');
-    return response()->json(['ok' => true, 'code' => $code]);
-});
-// V3 subscriber opt-in API (CSRF-protected; same-domain)
-Route::post('/api/v3-subscribers', [V3SubscriberController::class, 'store'])->name('api.v3-subscribers.store');
-Route::post('/api/v3-subscribers/track', [V3SubscriberController::class, 'track'])->name('api.v3-subscribers.track');
-Route::post('/api/cart/gift', function (Request $request) {
-    $code = strtoupper(trim((string)$request->input('code', '')));
-    if ($code !== '') session(['cart_gift_code' => $code]); else session()->forget('cart_gift_code');
-    return response()->json(['ok' => true, 'code' => $code]);
-});
+// Checkout routes
+Route::post('/checkout', [CheckoutController::class, 'create']);
+Route::get('/checkout/success', [CheckoutResultController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/cancel', [CheckoutResultController::class, 'cancel'])->name('checkout.cancel');
 
-// Providers (directory/profile)
-Route::get('/providers', function(){
-    return Inertia::render('Providers/Index', [
-        'title' => 'Practitioners',
-        'metaDescription' => 'Find trusted wellness practitioners across therapies and modalities.',
-    ]);
-});
-Route::get('/provider/{slug}', function(string $slug){
-    return Inertia::render('Providers/Show', [
-        'slug' => $slug,
-    ]);
-});
+// API routes moved to routes/api.php
 
-// Help / Partners
-Route::get('/help', function(){
-    $body = <<<'HTML'
-<p>Need a hand with bookings, accounts or vouchers? Start with our FAQ, then reach out if you still need support.</p>
-<ul>
-  <li><a href="/help/faq">Read the FAQ</a> for booking, payment and cancellation answers.</li>
-  <li><a href="/contact?topic=support">Contact support</a> if you need personalised help.</li>
-  <li><a href="/help/gift-cards">Gift card help</a> covers delivery, redemption and balances.</li>
-</ul>
-HTML;
-    return Inertia::render('General/Page', [
-        'title' => 'Help Centre',
-        'metaDescription' => 'FAQs and support for bookings and account.',
-        'bodyHtml' => $body,
-        'canonical' => url('/help'),
-    ]);
-});
-Route::get('/help/faq', function(){
-    $body = <<<'HTML'
-<h2>Frequently asked questions</h2>
-<p><strong>How do I manage a booking?</strong><br>Visit your confirmation email to reschedule or cancel, or message the practitioner directly from your account.</p>
-<p><strong>What if I need to cancel?</strong><br>Each listing includes a cancellation window. If you cannot find it, <a href="/contact?topic=support">contact support</a>.</p>
-<p><strong>Do I need any equipment?</strong><br>Most therapies only require comfortable clothing and a quiet space. Classes will note props if needed.</p>
-HTML;
-    return Inertia::render('General/Page', [
-        'title' => 'FAQ',
-        'metaDescription' => 'Common booking, payment and account questions.',
-        'bodyHtml' => $body,
-        'canonical' => url('/help/faq'),
-    ]);
-});
-Route::get('/help/gift-cards', function(){
-    $body = <<<'HTML'
-<p>WOW gift cards arrive instantly by email with your personalised message. Gift cards never expire and can be redeemed on therapies, classes, events and workshops.</p>
-<ul>
-  <li><strong>How to send:</strong> Choose an amount, enter the recipient’s name and email, and schedule delivery or send immediately.</li>
-  <li><strong>How to redeem:</strong> Recipients enter the unique code at checkout. Balances can be used across multiple bookings.</li>
-  <li><strong>Need a custom amount?</strong> <a href="/contact?topic=gifting">Contact the team</a> for bulk or corporate gifting.</li>
-</ul>
-HTML;
-    return Inertia::render('General/Page', [
-        'title' => 'Gift Card Help',
-        'metaDescription' => 'How WOW gift vouchers work and how to redeem them.',
-        'bodyHtml' => $body,
-        'canonical' => url('/help/gift-cards'),
-    ]);
-});
-Route::get('/partners', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Partners',
-        'metaDescription' => 'Partner with We Offer Wellness for referrals and corporate programmes.',
-        'bodyHtml' => '<p>Tell partners how to work with you. Replace with full program details.</p>',
-        'canonical' => url('/partners'),
-    ]);
-});
+// Providers handled via ProvidersController below
+
+// Help / Partners (guarded)
+Route::get('/partners', [StaticPagesController::class, 'partners']);
 
 // XML sitemap
-Route::get('/sitemap.xml', function () {
-    $base = url('');
-    $now = now()->toAtomString();
-    $urls = [];
-
-    // Top-level hubs & key pages
-    foreach (['/','/therapies','/events','/workshops','/classes','/retreats','/gifts','/gift-cards','/events-and-workshops','/corporate','/corporate-wellness','/search'] as $p) {
-        $urls[] = [ 'loc' => $base.$p, 'lastmod' => $now ];
-    }
-
-    // City pages (limited whitelist)
-    foreach (['london','manchester','birmingham','leeds','bristol','brighton','liverpool','glasgow','edinburgh','cardiff','kent'] as $city) {
-        $urls[] = [ 'loc' => $base.'/'.rawurlencode($city), 'lastmod' => $now ];
-    }
-
-    // Therapy categories (top N by product count)
-    try {
-        $cats = ProductCategory::query()
-            ->withCount('products')
-            ->orderByDesc('products_count')->orderBy('name')
-            ->limit(120)->get();
-        foreach ($cats as $c) {
-            $slug = Str::slug($c->name ?? '');
-            if ($slug) $urls[] = [ 'loc' => $base.'/therapies/'.$slug, 'lastmod' => $now ];
-        }
-    } catch (\Throwable $e) {}
-
-    // Offerings (cap to keep sitemap lean)
-    try {
-        $items = Product::query()->select(['id','title','product_type','tags_list','updated_at'])->latest('updated_at')->limit(1000)->get();
-        foreach ($items as $p) {
-            $t = strtolower((string) $p->product_type);
-            $tags = strtolower((string) $p->tags_list);
-            if (str_contains($t, 'workshop')) $seg = 'workshops';
-            elseif (str_contains($t, 'event')) $seg = 'events';
-            elseif (str_contains($t, 'class')) $seg = 'classes';
-            elseif (str_contains($t, 'retreat')) $seg = 'retreats';
-            elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $seg = 'gifts';
-            else $seg = 'therapies';
-            $slug = Str::slug($p->title ?: (string)$p->id);
-            $urls[] = [ 'loc' => $base.'/'.$seg.'/'.$p->id.'-'.$slug, 'lastmod' => optional($p->updated_at)->toAtomString() ?: $now ];
-        }
-    } catch (\Throwable $e) {}
-
-    $xml = '<?xml version="1.0" encoding="UTF-8"?>'.
-           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-    foreach ($urls as $u) {
-        $xml .= '<url>'
-              . '<loc>'.htmlspecialchars($u['loc'], ENT_XML1).'</loc>'
-              . (isset($u['lastmod']) ? '<lastmod>'.htmlspecialchars($u['lastmod'], ENT_XML1).'</lastmod>' : '')
-              . '</url>';
-    }
-    $xml .= '</urlset>';
-    return response($xml, 200)->header('Content-Type', 'application/xml');
-});
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
 
-// General content pages (privacy, terms, cookies, about, contact, help, partners)
-Route::get('/privacy', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Privacy Policy',
-        'metaDescription' => 'How We Offer Wellness collects, uses and protects your information.',
-        'bodyHtml' => '<p>This page describes how we handle your data. Replace with your full policy.</p>',
-        'canonical' => url('/privacy'),
-    ]);
-});
-Route::get('/terms', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Terms & Conditions',
-        'metaDescription' => 'Terms for using We Offer Wellness services and bookings.',
-        'bodyHtml' => '<p>These are your terms. Replace with your full terms of service.</p>',
-        'canonical' => url('/terms'),
-    ]);
-});
-Route::get('/cookies', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'Cookies',
-        'metaDescription' => 'Information about cookies and controls.',
-        'bodyHtml' => '<p>We use cookies to improve your experience. Replace with your cookie policy and consent details.</p>',
-        'canonical' => url('/cookies'),
-    ]);
-});
+// General content pages (always available)
+Route::get('/privacy', [StaticPagesController::class, 'privacy']);
+Route::get('/terms', [StaticPagesController::class, 'terms']);
+Route::get('/cookies', [StaticPagesController::class, 'cookies']);
+Route::get('/refunds-and-cancellations', [StaticPagesController::class, 'refunds']);
+
+Route::get('/safety-and-contraindications', [SafetyContraindicationsController::class, 'index'])
+    ->name('safety-and-contraindications');
+
+Route::get('/help', [HelpCentreController::class, 'index'])->name('help');
+
+Route::get('/about', [AboutController::class, 'index'])
+    ->name('about');
+
+// Mindful Times (simple hub)
+Route::get('/mindful-times', [MindfulTimesController::class, 'index']);
+
+// Providers directory
+Route::get('/providers', [ProvidersController::class, 'index']);
+Route::get('/provider/{slug}', [ProvidersController::class, 'show']);
+
+// Contact
+Route::get('/contact', [ContactController::class, 'index']);
+
+// Corporate
+Route::get('/corporate', [CorporateController::class, 'hub']);
+Route::get('/corporate-wellness', [CorporateController::class, 'comingSoon']);
+
+// Gift cards
+Route::get('/gift-cards', [StaticPagesController::class, 'giftCards']);
 
 // Dynamic CMS-like pages stored in shared DB (from Backend admin)
-Route::fallback([\App\Http\Controllers\PageController::class, 'show']);
+Route::fallback([\App\Http\Controllers\PageController::class, 'show'])
+    ->where('fallbackPlaceholder', '^(?!api\/).*$');

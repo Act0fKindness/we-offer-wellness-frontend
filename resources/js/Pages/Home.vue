@@ -160,6 +160,9 @@ const sessions = [
 const posts = ref([])
 const featuredArticle = computed(() => (posts.value && posts.value.length ? posts.value[0] : null))
 const secondaryArticles = computed(() => (posts.value || []).slice(1, 3))
+// Mindful Times (tabloid layout slices)
+const mtHero = computed(() => (posts.value && posts.value.length ? posts.value[0] : null))
+const mtRest = computed(() => (posts.value || []).slice(1, 4))
 const painpoints = ref([])
 const selectedPain = ref(null)
 const quizOpen = ref(false)
@@ -396,7 +399,7 @@ onMounted(async () => {
     giftsUnder50.value = []
   }
   try {
-    posts.value = await fetchArticles(3)
+    posts.value = await fetchArticles(4)
   } catch (error) {
     recordHomeError('articles', error)
     posts.value = []
@@ -938,71 +941,56 @@ onBeforeUnmount(() => {
       <FeatureBand v-if="abVariant==='B'" :painpoint="selectedPain" />
     </template>
 
-    <!-- Journal highlights -->
-    <section id="mindful-times" class="section">
+    <!-- Mindful Times (Tabloid layout) -->
+    <section id="mindful-times" class="section" aria-label="Mindful Times">
       <div class="container-page">
-          <div class="mb-8 flex items-end justify-between">
-            <div>
-              <div class="kicker">Mindful Times</div>
-              <h2>Guides, practitioner interviews and tools to help you feel better</h2>
+        <div class="mb-8 flex items-end justify-between">
+          <div>
+            <div class="kicker">Mindful Times</div>
+            <h2>Guides, practitioner interviews and tools to help you feel better</h2>
+          </div>
+          <a class="btn-wow btn-wow--outline btn-sm btn-arrow" :href="mindfulTimesUrl">
+            <span class="btn-label">Visit Mindful Times</span>
+            <span class="btn-icon-wrap" aria-hidden="true">
+              <svg class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/></svg>
+              <svg class="btn-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12l-4 4m4-4-4-4"/></svg>
+            </span>
+            <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
+          </a>
+        </div>
+
+        <div v-if="mtHero" class="tabloid-wrap">
+          <a class="wow-link tabloid-hero" :href="mtHero.href || '#'" aria-label="Featured article">
+            <div class="bg">
+              <img v-if="mtHero.img" :src="mtHero.img" :alt="mtHero.title" />
             </div>
-            <a class="btn-wow btn-wow--outline btn-sm btn-arrow" :href="mindfulTimesUrl">
-              <span class="btn-label">Visit Mindful Times</span>
-              <span class="btn-icon-wrap" aria-hidden="true">
-                <svg class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/>
-                </svg>
-                <svg class="btn-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12l-4 4m4-4-4-4"/>
-                </svg>
-              </span>
-              <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
+            <div class="content">
+              <div class="strap">
+                <span class="tag tag--exclusive">FEATURED</span>
+                <span class="tag" style="background:rgba(255,255,255,.92)">{{ mtHero.tag || 'MindfulTimes' }}</span>
+              </div>
+              <p class="bigword">INSIGHT</p>
+              <h3 class="wow-h wow-h--hero" style="color:#fff">{{ mtHero.title }}</h3>
+              <div class="wow-meta"><span class="cat">{{ mtHero.tag || 'MindfulTimes' }}</span></div>
+            </div>
+          </a>
+
+          <div class="tabloid-row" aria-label="More stories">
+            <a v-for="a in mtRest" :key="a.id" class="wow-link tabloid-small" :href="a.href || '#'">
+              <div class="wow-media">
+                <img v-if="a.img" :src="a.img" :alt="a.title" />
+              </div>
+              <div>
+                <h4 class="wow-h">{{ a.title }}</h4>
+                <div class="wow-meta"><span class="cat">{{ a.tag || 'MindfulTimes' }}</span></div>
+              </div>
             </a>
           </div>
-        <div
-          class="mindful-layout"
-          :class="{ 'mindful-layout--single': secondaryArticles.length === 0 }"
-          v-if="featuredArticle || secondaryArticles.length > 0"
-        >
-          <article class="mindful-feature mindful-feature--embed">
-            <div class="mindful-embed">
-              <iframe
-                :src="podcastEmbedSrc"
-                width="100%"
-                height="200"
-                frameborder="0"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-                title="Seeking Wellness podcast"
-              ></iframe>
-            </div>
-            <div v-if="featuredArticle" class="mindful-feature-latest">
-              <a :href="featuredArticle.href || '#'" class="mindful-feature-latest-link">
-                <div class="mindful-feature-latest-media" v-if="featuredArticle.img">
-                  <img :src="featuredArticle.img" alt="" />
-                </div>
-                <div class="mindful-feature-latest-body">
-                  <div class="chip">{{ featuredArticle.tag || 'MindfulTimes' }}</div>
-                  <h3>{{ featuredArticle.title }}</h3>
-                  <p v-if="featuredArticle.excerpt">{{ featuredArticle.excerpt }}</p>
-                  <span class="mindful-feature-latest-cta">Read article</span>
-                </div>
-              </a>
-            </div>
-          </article>
-          <div class="mindful-stack" v-if="secondaryArticles.length > 0">
-            <article v-for="p in secondaryArticles" :key="p.id" class="mindful-card">
-              <a :href="p.href || '#'" class="mindful-card-link">
-                <div class="mindful-card-media">
-                  <img v-if="p.img" :src="p.img" alt="" />
-                </div>
-                <div class="mindful-card-body">
-                  <div class="chip">{{ p.tag || 'MindfulTimes' }}</div>
-                  <h4>{{ p.title }}</h4>
-                </div>
-              </a>
-            </article>
-          </div>
+        </div>
+
+        <div v-else class="card p-4">
+          <h3 class="wow-h" style="font-size:18px">Loading stories…</h3>
+          <p class="text-ink-600 mt-2">Please check back in a moment.</p>
         </div>
       </div>
     </section>
@@ -1174,4 +1162,34 @@ onBeforeUnmount(() => {
 .seg{ appearance:none; border:0; background:transparent; padding:6px 12px; border-radius:999px; color: var(--ink-700); font-weight:600; font-size:.9rem; transition: all .15s ease; }
 .seg:hover{ background:#eef2f7 }
 .seg.active{ background: linear-gradient(180deg, #549483, #3b7768); color:#fff; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset }
+
+/* ===== Mindful Times Tabloid layout (scoped) ===== */
+.tabloid-wrap{ display:grid; gap:16px; }
+.tabloid-hero{ position:relative; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,.18); background:#0b1220; box-shadow:0 18px 50px rgba(16,24,40,.22); min-height:360px; }
+.tabloid-hero .bg{ position:absolute; inset:0; opacity:.95 }
+.tabloid-hero .bg img{ width:100%; height:100%; object-fit:cover; filter:contrast(1.06) saturate(1.05); transform:scale(1.01) }
+.tabloid-hero::after{ content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.05) 0%, rgba(0,0,0,.55) 55%, rgba(0,0,0,.82) 100%); }
+.tabloid-hero .content{ position:relative; z-index:2; padding:24px; display:flex; flex-direction:column; justify-content:flex-end; gap:10px; min-height:360px }
+.tabloid-hero .strap{ display:flex; align-items:center; gap:10px }
+.tabloid-hero .bigword{ font-weight:900; letter-spacing:.06em; text-transform:uppercase; font-size: clamp(34px, 5vw, 72px); line-height:.95; margin:0; color:#fff; text-shadow:0 16px 50px rgba(0,0,0,.35) }
+.tabloid-hero .wow-meta{ color: rgba(255,255,255,.78) }
+.tabloid-hero .wow-meta .cat{ color:#9fd0ff }
+
+.tabloid-row{ display:grid; gap:14px; grid-template-columns: repeat(3, 1fr); }
+.tabloid-small{ display:grid; gap:10px; padding:12px; border-radius:6px; border:1px solid var(--ink-200, rgba(16,24,40,.12)); background:#fff; box-shadow:0 12px 30px rgba(16,24,40,.08) }
+.tabloid-small .wow-media{ height:150px; width:100%; border-radius:3px }
+
+.wow-link{ color:inherit; text-decoration:none }
+.wow-h{ margin:0; font-weight:800; letter-spacing:-.02em; line-height:1.2; font-size:16px }
+.wow-h--hero{ font-size: clamp(28px, 3vw, 44px) }
+.wow-meta{ display:flex; gap:10px; align-items:center; margin-top:6px; font-size:12px; color:rgba(11,18,32,.55); flex-wrap:wrap; font-weight:700 }
+.wow-meta .cat{ color:#d0021b; font-weight:900 }
+.tag{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid rgba(16,24,40,.12); background:rgba(255,255,255,.9); font-weight:900; font-size:12px; letter-spacing:.02em; text-transform:uppercase; box-shadow:0 10px 24px rgba(16,24,40,.14) }
+.tag--exclusive{ color:#fff; background:#e11d48; border-color:transparent }
+
+@media (max-width: 992px){
+  .tabloid-hero, .tabloid-hero .content{ min-height:320px }
+  .tabloid-row{ grid-template-columns: 1fr }
+  .tabloid-small .wow-media{ height:190px }
+}
 </style>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\Recaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -27,8 +28,25 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
             'password' => ['required', 'string'],
+            'g-recaptcha-response' => [new Recaptcha()],
+        ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $email = (string) $this->input('email');
+
+        $this->merge([
+            'email' => Str::lower(trim($email)),
+        ]);
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'g-recaptcha-response' => 'reCAPTCHA verification',
         ];
     }
 

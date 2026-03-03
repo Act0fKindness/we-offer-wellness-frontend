@@ -173,8 +173,13 @@ function typeSingularLabel(){
 
 function categoryLabelForProduct(){
   const p = props.product || {}
-  const cat = p.category || p.category_name
+  const cat = p.category || p.category_name || p.category_label
   if (typeof cat === 'string' && cat.trim()) return cat.trim()
+  if (cat && typeof cat === 'object') {
+    const candidates = [cat.name, cat.label, cat.title, cat.slug]
+    const first = candidates.find((val) => typeof val === 'string' && val.trim())
+    if (first) return first.trim()
+  }
   if (Array.isArray(p.categories) && p.categories.length) {
     const first = String(p.categories[0] || '').trim()
     if (first) return first

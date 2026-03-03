@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Support\ProductSearchFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -63,7 +64,19 @@ class ProductController extends Controller
 
         $tag = $request->string('tag')->toString();
         if ($tag) {
-            $query->where('tags_list', 'like', "%{$tag}%");
+            $lc = strtolower($tag);
+            if (in_array($lc, ['gift','gifts'], true)) {
+                // Treat "gift" broadly: gift, gifts, voucher, card, present
+                $query->where(function($q){
+                    $q->whereRaw("LOWER(COALESCE(tags_list,'')) like '%gift%'")
+                      ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%voucher%'")
+                      ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%card%'")
+                      ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like '%present%'");
+                });
+            } else {
+                $safe = str_replace(['%','_'], ['\\%','\\_'], strtolower($tag));
+                $query->whereRaw("LOWER(COALESCE(tags_list,'')) like ?", ['%'.$safe.'%']);
+            }
         }
 
         // Mode (Online / In-person) derived from options meta 'locations'
@@ -75,38 +88,41 @@ class ProductController extends Controller
                 $q->where('meta_name', 'locations')
                   ->whereHas('values', function ($q2) use ($mode) {
                       if ($mode === 'online') {
-                          $q2->where('value', 'Online');
+                          $q2->whereRaw('LOWER(value) = ?', ['online']);
                       } else {
-                          $q2->where('value', '!=', 'Online');
+                          $q2->whereRaw('LOWER(value) != ?', ['online']);
                       }
                   });
             });
         }
 
-        if ($where = $request->string('where')->toString()) {
-            $places = collect(preg_split('/[|,]/', $where))
-                ->map(fn($part) => trim((string) $part))
-                ->filter();
-            if ($places->isNotEmpty()) {
-                $query->where(function($outer) use ($places) {
-                    foreach ($places as $place) {
-                        $outer->orWhereHas('options', function ($q) use ($place) {
-                            $q->where('meta_name', 'locations')
-                              ->whereHas('values', function ($q2) use ($place) {
-                                  $q2->where('value', 'like', "%{$place}%");
-                              });
-                        });
-                    }
-                });
-            }
-        }
+        $whereInput = $request->string('where')->toString();
+        ProductSearchFilters::applyWhereFilter($query, $whereInput);
+
+        $adults = $request->has('adults') ? (int) $request->input('adults') : null;
+        $groupType = $request->has('group_type') ? $request->string('group_type')->toString() : null;
+        ProductSearchFilters::applyWhoFilter($query, $adults, $groupType);
 
         if ($request->filled('price_max')) {
             $pm = (float) $request->input('price_max');
-            // Support prices stored in pennies (<= pm*100) or pounds (<= pm)
+            // Unit-aware price filter:
+            // - Treat values < 1000 as pounds
+            // - Treat values >= 1000 as pennies
             $query->where(function($q) use ($pm) {
-                $q->where('price', '<=', $pm)
-                  ->orWhere('price', '<=', $pm * 100);
+                $q->where(function($qp) use ($pm){
+                        $qp->where('price', '<', 1000)->where('price', '<=', $pm);
+                    })
+                  ->orWhere(function($qp) use ($pm){
+                        $qp->where('price', '>=', 1000)->where('price', '<=', $pm * 100);
+                    })
+                  ->orWhereHas('variants', function($qv) use ($pm){
+                        $qv->where(function($qq) use ($pm){
+                                $qq->where('price', '<', 1000)->where('price', '<=', $pm);
+                            })
+                           ->orWhere(function($qq) use ($pm){
+                                $qq->where('price', '>=', 1000)->where('price', '<=', $pm * 100);
+                            });
+                    });
             });
         }
 
@@ -171,35 +187,32 @@ class ProductController extends Controller
                     $q->where('meta_name', 'locations')
                       ->whereHas('values', function ($q2) use ($mode) {
                           if ($mode === 'online') {
-                              $q2->where('value', 'Online');
+                              $q2->whereRaw('LOWER(value) = ?', ['online']);
                           } else {
-                              $q2->where('value', '!=', 'Online');
+                              $q2->whereRaw('LOWER(value) != ?', ['online']);
                           }
                       });
                 });
             }
-            if ($where = $request->string('where')->toString()) {
-                $places = collect(preg_split('/[|,]/', $where))
-                    ->map(fn($part) => trim((string) $part))
-                    ->filter();
-                if ($places->isNotEmpty()) {
-                    $retry->where(function($outer) use ($places) {
-                        foreach ($places as $place) {
-                            $outer->orWhereHas('options', function ($q) use ($place) {
-                                $q->where('meta_name', 'locations')
-                                  ->whereHas('values', function ($q2) use ($place) {
-                                      $q2->where('value', 'like', "%{$place}%");
-                                  });
-                            });
-                        }
-                    });
-                }
-            }
+            ProductSearchFilters::applyWhereFilter($retry, $whereInput);
+            ProductSearchFilters::applyWhoFilter($retry, $adults, $groupType);
             if ($request->filled('price_max')) {
                 $pm = (float) $request->input('price_max');
                 $retry->where(function($q) use ($pm) {
-                    $q->where('price', '<=', $pm)
-                      ->orWhere('price', '<=', $pm * 100);
+                    $q->where(function($qp) use ($pm){
+                            $qp->where('price', '<', 1000)->where('price', '<=', $pm);
+                        })
+                      ->orWhere(function($qp) use ($pm){
+                            $qp->where('price', '>=', 1000)->where('price', '<=', $pm * 100);
+                        })
+                      ->orWhereHas('variants', function($qv) use ($pm){
+                            $qv->where(function($qq) use ($pm){
+                                    $qq->where('price', '<', 1000)->where('price', '<=', $pm);
+                                })
+                               ->orWhere(function($qq) use ($pm){
+                                    $qq->where('price', '>=', 1000)->where('price', '<=', $pm * 100);
+                                });
+                        });
                 });
             }
             if ($request->filled('category_id')) {
@@ -245,6 +258,15 @@ class ProductController extends Controller
             elseif (str_contains($t, 'retreat')) $typeSeg = 'retreats';
             elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $typeSeg = 'gifts';
             $slug = Str::slug($p->title ?: (string)$p->id);
+            // Normalize prices (always GBP pounds)
+            $norm = function($v){ if(!is_numeric($v)) return null; $n = (float)$v; if($n >= 1000) $n = $n/100; return $n; };
+            $pPrice = $norm($p->price ?? null);
+            $vMin = $norm($p->variants_min_price ?? null);
+            $vMax = $norm($p->variants_max_price ?? null);
+            $minPrice = null; $maxPrice = null;
+            foreach ([$pPrice, $vMin] as $cand) { if($cand !== null) { $minPrice = $minPrice === null ? $cand : min($minPrice, $cand); } }
+            foreach ([$pPrice, $vMax] as $cand) { if($cand !== null) { $maxPrice = $maxPrice === null ? $cand : max($maxPrice, $cand); } }
+
             return [
                 'id' => $p->id,
                 'title' => $p->title,
@@ -258,9 +280,9 @@ class ProductController extends Controller
                 'date' => $date,
                 'start_date' => $start,
                 'end_date' => $end,
-                'price' => $p->price ?? null,
-                'price_min' => $p->variants_min_price ?? ($p->price ?? null),
-                'price_max' => $p->variants_max_price ?? ($p->price ?? null),
+                'price' => $minPrice,
+                'price_min' => $minPrice,
+                'price_max' => $maxPrice,
                 'compare_at_price' => $meta['compare_at_price'] ?? null,
                 'currency' => $meta['currency'] ?? 'GBP',
                 'rating' => round((float)($p->reviews_avg_rating ?? 0), 1) ?: null,

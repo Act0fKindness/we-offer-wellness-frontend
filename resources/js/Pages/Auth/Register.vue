@@ -24,12 +24,13 @@ const submit = async () => {
         await axios.get('/sanctum/csrf-cookie');
 
         // 2) Read CSRF token cookie (scoped to .weofferwellness.co.uk)
-        const getCookie = (name) =>
-            document.cookie
-                .split('; ')
+        const getCookie = (name) => {
+            const raw = document.cookie
+                .split(';')
                 .map((c) => c.trim())
-                .find((c) => c.startsWith(name + '='))
-                ?.split('=')[1] || '';
+                .find((c) => c.startsWith(name + '='));
+            return raw ? raw.slice(name.length + 1) : '';
+        };
         const xsrf = decodeURIComponent(getCookie('XSRF-TOKEN'));
 
         // 3) Cross-origin form POST directly to AtEase /register

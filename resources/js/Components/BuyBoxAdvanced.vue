@@ -1187,7 +1187,7 @@ onMounted(() => {
   ;(function seed(){ try { const day = new Date(Date.UTC(2025,9,7,0,0,0)); const d = ensureDay(day); d.booked.add('16:28'); const reservedStart = new Date(Date.UTC(2025,9,7,16,30)); d.reserved['16:30'] = { until: new Date(reservedStart.getTime()+HOLD_MINUTES*60000) } } catch {} })()
 
   const calendarState={viewYear:new Date().getFullYear(),viewMonth:new Date().getMonth(),selectedDate:null,selectedTime:null,tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/London'}
-  
+
   function exitMobileTimesMode(){ bookingModalContent?.classList.remove('mobile-times') }
   function clearBookingSelection(){
     if (bookingChoice) bookingChoice.value='later'
@@ -1771,7 +1771,7 @@ onMounted(() => {
           <div class="modal-header">
             <div>
               <div class="text-muted small">Select a Date & Time</div>
-              <h5 class="modal-title" id="bookingModalLabel">Discovery Call — We Offer Wellness™</h5>
+              <h5 class="modal-title" id="bookingModalLabel">Discovery Call — We Offer Wellness®</h5>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
