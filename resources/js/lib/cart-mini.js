@@ -71,19 +71,21 @@
   };
 
   function serverAdd(payload){
+    const qty = Number(payload.qty || 1) || 1;
     return fetch('/api/cart/add', {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN': csrf() },
       credentials:'same-origin',
-      body: JSON.stringify({ id: payload.id, qty: payload.qty||1 })
+      body: JSON.stringify({ id: payload.id, qty })
     }).then(r => r.json()).catch(()=>{ throw new Error('server failed'); });
   }
 
   function addToCart(payload){
+    const qty = Number(payload.qty || 1) || 1;
     // Always update local storage for resilience
-    upsertItem(payload);
+    upsertItem({ ...payload, qty });
     // Try server add; on success refresh count; on failure, use LS count
-    serverAdd(payload).then(()=>{
+    serverAdd({ id: payload.id, qty }).then(()=>{
       fetchCountAndUpdateBadge();
     }).catch(()=>{
       updateBadgeUI(countItems());
@@ -111,7 +113,8 @@
     const price = Number(btn.getAttribute('data-price')||'0');
     const image = btn.getAttribute('data-image')||'';
     const url = btn.getAttribute('data-url')||'';
-    addToCart({ id, title, price, image, url, qty:1 });
+    const qty = Number(btn.getAttribute('data-qty')||'1') || 1;
+    addToCart({ id, title, price, image, url, qty });
   }
   // Delegate add-to-cart clicks (capture to beat anchor navigation)
   document.addEventListener('click', function(e){

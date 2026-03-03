@@ -1,5 +1,13 @@
 @php
     $hasVendorReviews = (($product['review_count'] ?? 0) > 0) && ($product['rating'] ?? null) !== null;
+    $initialVariant = $product['variants'][0] ?? null;
+    $initialVariantId = $initialVariant['id'] ?? ($product['id'] ?? null);
+    $initialPrice = $product['variants_min_price'] ?? ($product['price'] ?? 0);
+    if (is_numeric($initialPrice) && $initialPrice > 1000) { $initialPrice = $initialPrice / 100; }
+    $initialPriceFormatted = is_numeric($initialPrice) ? number_format((float)$initialPrice, 2, '.', '') : '0.00';
+    $primaryImage = $product['images'][0] ?? ($product['image'] ?? '');
+    $productTitleSafe = $product['title'] ?? 'Experience';
+    $productUrlCurrent = url()->current();
 @endphp
 
 <style>
@@ -183,7 +191,14 @@
             </div>
 
             <div class="d-grid gap-2 mb-2" id="ctaWrap">
-                <button class="btn btn-basket btn-lg" id="addBtn">Add to basket</button>
+                <button class="btn btn-basket btn-lg js-add-to-cart" id="addBtn"
+                        data-id="{{ $initialVariantId }}"
+                        data-title="{{ e($productTitleSafe) }}"
+                        data-price="{{ $initialPriceFormatted }}"
+                        data-image="{{ $primaryImage }}"
+                        data-url="{{ $productUrlCurrent }}"
+                        data-qty="1"
+                >Add to cart</button>
                 <button class="btn btn-main btn-lg" id="buyNow">Book now</button>
             </div>
 
@@ -210,7 +225,14 @@
         </div>
     </div>
     <div class="m-right">
-        <button class="btn btn-main" id="mobileAdd">Add to basket</button>
+        <button class="btn btn-main js-add-to-cart" id="mobileAdd"
+                data-id="{{ $initialVariantId }}"
+                data-title="{{ e($productTitleSafe) }}"
+                data-price="{{ $initialPriceFormatted }}"
+                data-image="{{ $primaryImage }}"
+                data-url="{{ $productUrlCurrent }}"
+                data-qty="1"
+        >Add to cart</button>
     </div>
 </div>
 
@@ -348,6 +370,9 @@ try{
   if(bbRating!=null) product.rating = Number(bbRating)||0;
   if(bbRatingCount!=null) product.ratingCount = Number(bbRatingCount)||0;
 }catch(e){}
+const BASE_PRODUCT_TITLE = @json($product['title'] ?? 'Experience');
+const BASE_PRODUCT_IMAGE = @json($product['images'][0] ?? ($product['image'] ?? ''));
+const BASE_PRODUCT_URL = @json(url()->current());
 const HOLD_MINUTES=10;const bookings={};function dateKey(d){return d.toISOString().slice(0,10)}function ensureDay(d){const k=dateKey(d);if(!bookings[k])bookings[k]={booked:new Set(),reserved:{}};return bookings[k]}(function seed(){const day=new Date(Date.UTC(2025,9,7,0,0,0));const d=ensureDay(day);d.booked.add("16:28");const reservedStart=new Date(Date.UTC(2025,9,7,16,30));d.reserved["16:30"]={until:new Date(reservedStart.getTime()+HOLD_MINUTES*60000)}})();
 const state={mode:"evoucher",selected:product.options.map(o=>o.values[0]),qty:1,variant:null,groupCount:3,recur:{cadence:"none",length:1}};const priceEl=document.getElementById("price"),compareEl=document.getElementById("compare"),optionsWrap=document.getElementById("options"),addBtn=document.getElementById("addBtn"),buyNow=document.getElementById("buyNow"),qty=document.getElementById("qty"),dec=document.getElementById("dec"),inc=document.getElementById("inc"),toastEl=document.getElementById("addToast"),stars=document.getElementById("stars"),ratingText=document.getElementById("ratingText"),groupRange=document.getElementById("groupRange"),groupCount=document.getElementById("groupCount"),groupInc=document.getElementById("groupInc"),groupDec=document.getElementById("groupDec");
 const mPrice=document.getElementById('mPrice'),mStars=document.getElementById('mStars'),mRatingText=document.getElementById('mRatingText'),mobileAdd=document.getElementById('mobileAdd');
@@ -774,9 +799,26 @@ function updatePriceUI(){
   if(t.cmpUnit && t.cmpUnit>t.unit){ compareEl.textContent=fmt(t.cmpUnit); compareEl.style.display="inline"; }
   else { compareEl.textContent=""; compareEl.style.display="none"; }
   updateSheetSubtotal();
+  syncCartButtons();
   try { document.dispatchEvent(new CustomEvent('wow:price', { detail: { unit: t.unit, compare: t.cmpUnit } })); } catch(e) {}
 }
 function updateSheetSubtotal(){if(!sheetSubtotal) return;const t=totals();sheetSubtotal.textContent=`Subtotal: ${fmt(t.total)}`}
+function syncCartButtons(){
+  const variantId = state.variant && state.variant.id ? state.variant.id : (product?.variants?.[0]?.id ?? product?.id ?? '');
+  const qtyVal = Math.max(1, Number(state.qty||1)||1);
+  const pricePennies = unitPriceWithMode();
+  const pricePounds = (pricePennies >= 0 ? (pricePennies/100).toFixed(2) : '0.00');
+  [addBtn, mobileAdd].forEach(function(btn){
+    if(!btn) return;
+    btn.dataset.id = String(variantId);
+    btn.dataset.title = BASE_PRODUCT_TITLE || '';
+    btn.dataset.price = pricePounds;
+    btn.dataset.image = BASE_PRODUCT_IMAGE || '';
+    btn.dataset.url = BASE_PRODUCT_URL || window.location.pathname;
+    btn.dataset.qty = String(qtyVal);
+    btn.classList.add('js-add-to-cart');
+  });
+}
 function updateVariant(){
   state.variant=findVariant();
   const show=isGroup();
@@ -785,7 +827,7 @@ function updateVariant(){
     else{groupRange.style.display="none";state.groupCount=3;if(groupCount) groupCount.value=3;}
   }
   addBtn.disabled=!state.variant || !state.variant.available;
-  addBtn.textContent=(state.variant && state.variant.available)?"Add to basket":"Sold out";
+  addBtn.textContent=(state.variant && state.variant.available)?"Add to cart":"Sold out";
   updatePriceUI();
   try { syncFormatUI(); } catch(e) {}
   // Notify helper of current selection + variant id
