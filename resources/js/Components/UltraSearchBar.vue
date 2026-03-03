@@ -789,6 +789,12 @@ onBeforeUnmount(() => {
   gap:5px;
   flex-wrap:wrap;
 }
+@media (min-width: 992px){
+  .wow-ultra .bar{
+    border-radius:19px;
+    border:3px solid rgba(0,0,0,0.1);
+  }
+}
 .wow-ultra .bar-compact{ gap:4px; padding:4px }
 
 .wow-ultra .seg{

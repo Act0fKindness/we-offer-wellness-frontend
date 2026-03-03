@@ -22928,16 +22928,22 @@
         --brand-accent:#2c6bed;
         --accent-600:#e3572f;
     }
+.wow-ultra .bar{
+    background:#fff;
+    border-radius:18px;
+    padding:5px;
+    box-shadow:var(--shadow);
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+}
+@media (min-width: 992px){
     .wow-ultra .bar{
-        background:#fff;
-        border-radius:18px;
-        padding:5px;
-        box-shadow:var(--shadow);
-        display:flex;
-        gap:5px;
-        flex-wrap:wrap;
+        border-radius:19px;
+        border:3px solid rgba(0,0,0,0.1);
     }
-    .wow-ultra .bar-compact{ gap:4px; padding:4px }
+}
+.wow-ultra .bar-compact{ gap:4px; padding:4px }
     .wow-ultra .seg{
         flex:1 1 220px; display:flex; gap:10px; align-items:center;
         background:#fff; border:1px solid rgba(15,23,42,.12); border-radius:var(--radius);

@@ -88,13 +88,11 @@
 @media (min-width: 992px){
   .wow-ultra .bar{
     background: rgba(255,255,255,.14);
-    border: none;
-    border-top: 1px solid rgba(255,255,255,.50);
-    border-bottom: 1px solid rgba(0,0,0,.08);
+    border-radius: 19px;
+    border:3px solid rgba(0,0,0,0.1);
     position: fixed;
     top: 126px;
     z-index: 30;
-    border-radius: 18px;
     left: 50%; transform: translateX(-50%);
     width: min(1200px, calc(100vw - 32px));
     -webkit-backdrop-filter: blur(14px);

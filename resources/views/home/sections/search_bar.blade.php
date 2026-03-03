@@ -211,7 +211,8 @@
 
 @media (min-width: 992px){
   .wow-ultra .bar{
-    border: none;
+    border-radius:19px;
+    border:3px solid rgba(0,0,0,0.1);
   }
 }
 </style>

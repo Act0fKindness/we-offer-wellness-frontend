@@ -23138,13 +23138,18 @@ a:hover {
 }
 .wow-ultra .bar{
     background:#fff;
-    border-radius:23px;
+    border-radius:18px;
     padding:5px;
-    border:3px solid rgba(0, 0, 0, 0.1);
     box-shadow:var(--shadow);
     display:flex;
     gap:5px;
     flex-wrap:wrap;
+}
+@media (min-width: 992px){
+    .wow-ultra .bar{
+        border-radius:19px;
+        border:3px solid rgba(0,0,0,0.1);
+    }
 }
 .wow-ultra .bar-compact{ gap:4px; padding:4px }
 .wow-ultra .seg{
