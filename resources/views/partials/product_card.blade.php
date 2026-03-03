@@ -42,18 +42,10 @@
     $priceMin = $product->variants_min_price ?? ($product->price ?? null);
     // Normalise pennies to pounds where needed
     if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) { $priceMin = $priceMin / 100; }
-    $rating = data_get($product, 'rating');
-    if ($rating === null && isset($product->reviews_avg_rating)) {
-        $rating = round((float)$product->reviews_avg_rating, 1);
-    }
-    $reviewCount = (int) (data_get($product, 'review_count') ?? ($product->reviews_count ?? 0));
-    $vendorReviewCount = (int) (
-        data_get($product, 'vendor_reviews_count')
-        ?? data_get($product, 'vendor.reviews_count')
-        ?? 0
-    );
-    $vendorRating = data_get($product, 'vendor_reviews_avg_rating')
-        ?? data_get($product, 'vendor.reviews_avg_rating');
+    // Ratings/count should be provided by controller (eager-loaded aggregates).
+    // Avoid triggering relations or additional queries in Blade.
+    $rating = data_get($product, 'reviews_avg_rating');
+    $reviewCount = (int) data_get($product, 'reviews_count', 0);
 
     // Helper: shorten physical address to "Place, City" (or just City)
     $shortLocation = function($address){
@@ -449,8 +441,6 @@
           @include('components.product.card_rating', [
               'rating' => $rating,
               'reviews' => $reviewCount,
-              'vendorRating' => $vendorRating,
-              'vendorReviews' => $vendorReviewCount,
           ])
 
         </div>

@@ -44,18 +44,10 @@
     $compareMin = $product->variants_min_compare ?? ($product->compare_at_price ?? null);
     if (is_numeric($compareMin) && $compareMin > 1000 && $compareMin % 100 === 0) { $compareMin = $compareMin / 100; }
 
-    $rating = data_get($product, 'rating');
-    if ($rating === null && isset($product->reviews_avg_rating)) {
-        $rating = round((float)$product->reviews_avg_rating, 1);
-    }
-    $reviewCount = (int) (data_get($product, 'review_count') ?? ($product->reviews_count ?? 0));
-    $vendorReviewCount = (int) (
-        data_get($product, 'vendor_reviews_count')
-        ?? data_get($product, 'vendor.reviews_count')
-        ?? 0
-    );
-    $vendorRating = data_get($product, 'vendor_reviews_avg_rating')
-        ?? data_get($product, 'vendor.reviews_avg_rating');
+    // Ratings/count should be supplied by controller (aggregates).
+    // Avoid any vendor relationship touches here to prevent lazy queries.
+    $rating = data_get($product, 'reviews_avg_rating');
+    $reviewCount = (int) data_get($product, 'reviews_count', 0);
 
     // Provider
     $provider = $product->vendor_name
@@ -299,8 +291,6 @@
           @include('components.product.card_rating', [
               'rating' => $rating,
               'reviews' => $reviewCount,
-              'vendorRating' => $vendorRating,
-              'vendorReviews' => $vendorReviewCount,
           ])
       </div>
   </div>
