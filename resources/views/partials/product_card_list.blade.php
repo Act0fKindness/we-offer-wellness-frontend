@@ -44,8 +44,11 @@
     $compareMin = $product->variants_min_compare ?? ($product->compare_at_price ?? null);
     if (is_numeric($compareMin) && $compareMin > 1000 && $compareMin % 100 === 0) { $compareMin = $compareMin / 100; }
 
-    $rating = isset($product->reviews_avg_rating) ? round((float)$product->reviews_avg_rating, 1) : null;
-    $reviewCount = (int) ($product->reviews_count ?? 0);
+    $rating = data_get($product, 'rating');
+    if ($rating === null && isset($product->reviews_avg_rating)) {
+        $rating = round((float)$product->reviews_avg_rating, 1);
+    }
+    $reviewCount = (int) (data_get($product, 'review_count') ?? ($product->reviews_count ?? 0));
     $vendorReviewCount = (int) (
         data_get($product, 'vendor_reviews_count')
         ?? data_get($product, 'vendor.reviews_count')
