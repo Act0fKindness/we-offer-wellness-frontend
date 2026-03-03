@@ -311,7 +311,10 @@ class TransactionalMail
             if (!$email) {
                 continue;
             }
-
+            $items = self::itemsForVendor($group);
+            if (empty($items)) {
+                continue;
+            }
             MailService::send(
                 $email,
                 'New We Offer Wellness booking (Order #'.$order->id.')',
@@ -319,7 +322,7 @@ class TransactionalMail
                 [
                     'order' => $order,
                     'vendor' => $group['vendor'],
-                    'items' => $group['items'],
+                    'items' => $items,
                     'customerEmail' => $order->email,
                 ],
                 null,
@@ -349,6 +352,10 @@ class TransactionalMail
             if (!$email) {
                 continue;
             }
+            $items = self::itemsForVendor($group);
+            if (empty($items)) {
+                continue;
+            }
 
             $cc = array_values(array_filter([
                 ['email' => $customerEmail, 'name' => $customerName ?: $customerEmail],
@@ -374,13 +381,13 @@ class TransactionalMail
                 'Booking introduction for Order #'.$order->id,
                 'emails.order-introduction',
                 [
-                    'order' => $order,
-                    'vendor' => $group['vendor'],
-                    'items' => $group['items'],
-                    'customerEmail' => $customerEmail,
-                    'customerName' => $customerName,
-                    'supportEmail' => $supportEmail,
-                ],
+                'order' => $order,
+                'vendor' => $group['vendor'],
+                'items' => $items,
+                'customerEmail' => $customerEmail,
+                'customerName' => $customerName,
+                'supportEmail' => $supportEmail,
+            ],
                 null,
                 null,
                 $options
@@ -530,15 +537,16 @@ class TransactionalMail
                 ];
             }
 
-            $groups[$key]['items'][] = self::formatVendorItem($item);
+            $groups[$key]['items'][] = self::formatVendorItem($item, $vendor, $productId);
         }
 
         return array_values($groups);
     }
 
-    protected static function formatVendorItem(OrderItem $item): array
+    protected static function formatVendorItem(OrderItem $item, ?VendorDetail $resolvedVendor = null, ?int $productId = null): array
     {
         $meta = is_array($item->meta) ? $item->meta : [];
+        $productId = $productId ?? self::extractProductId($item);
         return [
             'name' => $item->name,
             'quantity' => (int) $item->quantity,
@@ -546,7 +554,21 @@ class TransactionalMail
             'variant' => $meta['variant_label'] ?? null,
             'url' => $meta['url'] ?? null,
             'image' => $meta['image'] ?? null,
+            'vendor_id' => (int) ($resolvedVendor->id ?? $item->vendor_id ?? $meta['vendor_id'] ?? 0) ?: null,
+            'product_id' => $productId,
         ];
+    }
+
+    protected static function itemsForVendor(array $group): array
+    {
+        $vendorId = (int) ($group['vendor']->id ?? 0);
+        if ($vendorId === 0) {
+            return [];
+        }
+
+        return array_values(array_filter($group['items'] ?? [], function ($item) use ($vendorId) {
+            return (int) ($item['vendor_id'] ?? 0) === $vendorId;
+        }));
     }
 
     protected static function extractProductId(OrderItem $item): ?int
