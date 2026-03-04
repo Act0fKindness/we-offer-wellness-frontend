@@ -204,7 +204,7 @@
                     @endif
                     <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/online-near-me">Online &amp; Near
                         Me</a></div>
-                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/mindful-times">Mindful
+                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="https://times.weofferwellness.co.uk">Mindful
                         Times</a></div>
                 </nav>
             </div>
@@ -432,7 +432,7 @@
                         <div class="menu-col">
                             <div class="mega-kicker mb-2">Guides</div>
                             <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/mindful-times">Mindful Times</a></li>
+                                <li><a class="menu-link" href="https://times.weofferwellness.co.uk">Mindful Times</a></li>
                                 <li><a class="menu-link" href="/help">Help centre</a></li>
                             </ul>
                         </div>
@@ -648,7 +648,7 @@
                         <li><a class="mobile-menu__link" href="/events-workshops">Events &amp; Workshops</a></li>
                     @endif
                     <li><a class="mobile-menu__link" href="/online-near-me">Online &amp; Near Me</a></li>
-                    <li><a class="mobile-menu__link" href="/mindful-times">Mindful Times</a></li>
+                    <li><a class="mobile-menu__link" href="https://times.weofferwellness.co.uk">Mindful Times</a></li>
                 </ul>
                 <div class="mobile-menu__section">
                     <div class="mobile-menu__section-title">Help &amp; Info</div>
