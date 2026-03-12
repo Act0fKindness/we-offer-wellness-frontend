@@ -10,7 +10,7 @@
     <div style="width:76px;height:76px;border-radius:18px;overflow:hidden;background:#fff;
                 box-shadow:0 10px 30px rgba(11,18,32,.10);margin:0 auto;">
       <img
-        src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/fef435d7-4888-4cbe-b961-ba7e31bc183d.png?v=3"
+        src="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png?v=2"
         alt="We Offer Wellness Studio"
         width="76" height="76"
         loading="eager"

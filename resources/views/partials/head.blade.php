@@ -72,7 +72,7 @@
 
 <!-- Preload the boot logo so it appears ASAP (reduces “white screen” time) -->
 <link rel="preload" as="image"
-      href="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/fef435d7-4888-4cbe-b961-ba7e31bc183d.png?v=3">
+      href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png?v=2">
 
 <style>
   /* PWA boot/splash overlay */
