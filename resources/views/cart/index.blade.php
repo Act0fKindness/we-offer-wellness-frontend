@@ -386,6 +386,8 @@
         var code = err?.message || '';
         if(code==='invalid_email'){ guestError.textContent='That email looks invalid. Please try again.'; }
         else if(code==='email_required'){ guestError.textContent='We need an email to send your receipt.'; }
+        else if(code==='order_failed'){ guestError.textContent='Checkout is temporarily unavailable. Please try again in a moment.'; }
+        else if(code==='stripe_failed'){ guestError.textContent='Secure payment is unavailable right now. Please try again.'; }
         else { guestError.textContent='Could not start checkout. Try again.'; }
         guestSubmitBtn.disabled=false; guestSubmitBtn.textContent='Continue as guest'; checkoutBusy=false;
       });
@@ -422,9 +424,14 @@
           throw new Error('no url');
         })
         .catch(function(err){
-          const msg = err?.message === 'email_required'
+          const code = err?.message || '';
+          const msg = code === 'email_required'
             ? 'Please update your account email before checking out.'
-            : 'Could not start checkout. Please try again.';
+            : (code === 'order_failed'
+              ? 'Checkout is temporarily unavailable. Please try again in a moment.'
+              : (code === 'stripe_failed'
+                ? 'Secure payment is unavailable right now. Please try again.'
+                : 'Could not start checkout. Please try again.'));
           alert(msg);
           btn.disabled=false; btn.style.opacity='1'; btn.textContent=prev;
         });

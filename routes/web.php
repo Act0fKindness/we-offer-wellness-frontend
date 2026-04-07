@@ -103,6 +103,7 @@ Route::get('/v3', function () {
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 // Stripe Checkout session (web POST with CSRF)
+Route::get('/checkout/session', fn() => redirect('/cart', 302))->name('checkout.session.get');
 Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
 
 Route::redirect('/dashboard', '/account', 301)->middleware(['auth', 'verified'])->name('dashboard');
@@ -300,6 +301,7 @@ Route::view('/404', 'app');
 Route::get('/cart', [CartController::class, 'page']);
 
 // Checkout routes
+Route::get('/checkout', fn() => redirect('/cart', 302))->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'create']);
 Route::get('/checkout/success', [CheckoutResultController::class, 'success'])->name('checkout.success');
 Route::get('/checkout/cancel', [CheckoutResultController::class, 'cancel'])->name('checkout.cancel');

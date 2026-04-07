@@ -8,6 +8,7 @@ use App\Services\CheckoutOrderService;
 use App\Services\TransactionalMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Stripe\Checkout\Session as StripeSession;
 use Stripe\Stripe;
 
@@ -32,7 +33,7 @@ class CheckoutResultController extends Controller
         $order = Order::with('items')->where('stripe_session_id', $sessionId)->first();
 
         if (!$order) {
-            $attempt = CheckoutAttempt::where('stripe_session_id', $sessionId)->first();
+            $attempt = $this->findAttemptBySessionId($sessionId);
             if (!$attempt) {
                 abort(404);
             }
@@ -96,7 +97,7 @@ class CheckoutResultController extends Controller
         $sessionId = (string) $request->query('session_id', '');
         if ($sessionId !== '') {
             $order = Order::with('items')->where('stripe_session_id', $sessionId)->first();
-            $attempt = CheckoutAttempt::where('stripe_session_id', $sessionId)->first();
+            $attempt = $this->findAttemptBySessionId($sessionId);
             if ($attempt && $attempt->status === 'pending') {
                 $attempt->status = 'cancelled';
                 $attempt->save();
@@ -122,5 +123,31 @@ class CheckoutResultController extends Controller
     public static function tokenForOrder(Order $order): string
     {
         return hash_hmac('sha256', $order->id.'|'.$order->amount_total, config('app.key', 'secret'));
+    }
+
+    protected function hasCheckoutAttemptsTable(): bool
+    {
+        static $hasTable = null;
+        if ($hasTable !== null) {
+            return $hasTable;
+        }
+
+        try {
+            $hasTable = Schema::hasTable((new CheckoutAttempt())->getTable());
+        } catch (\Throwable $e) {
+            Log::warning('checkout.result.attempt_table_check_failed', ['e' => $e->getMessage()]);
+            $hasTable = false;
+        }
+
+        return $hasTable;
+    }
+
+    protected function findAttemptBySessionId(string $sessionId): ?CheckoutAttempt
+    {
+        if ($sessionId === '' || !$this->hasCheckoutAttemptsTable()) {
+            return null;
+        }
+
+        return CheckoutAttempt::where('stripe_session_id', $sessionId)->first();
     }
 }

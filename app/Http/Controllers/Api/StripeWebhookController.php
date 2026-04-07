@@ -10,6 +10,7 @@ use App\Services\TransactionalMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Stripe\Webhook;
 
 class StripeWebhookController extends Controller
@@ -119,7 +120,10 @@ class StripeWebhookController extends Controller
                 case 'payment_intent.payment_failed': {
                     $obj = $event->data->object;
                     $pi = (string)($obj->id ?? $obj->payment_intent ?? '');
-                    $attempt = $pi ? CheckoutAttempt::where('stripe_payment_intent_id', $pi)->first() : null;
+                    $attempt = null;
+                    if ($pi && $this->hasCheckoutAttemptsTable()) {
+                        $attempt = CheckoutAttempt::where('stripe_payment_intent_id', $pi)->first();
+                    }
                     $order = $pi ? Order::where('stripe_payment_intent_id', $pi)->first() : null;
                     $reason = $obj->last_payment_error->message
                         ?? $obj->cancellation_reason
@@ -195,6 +199,10 @@ class StripeWebhookController extends Controller
 
     protected function resolveAttemptFromSession($session): ?CheckoutAttempt
     {
+        if (!$this->hasCheckoutAttemptsTable()) {
+            return null;
+        }
+
         $attemptId = (int)($session->metadata->attempt_id ?? 0);
         if ($attemptId) {
             $attempt = CheckoutAttempt::find($attemptId);
@@ -224,5 +232,22 @@ class StripeWebhookController extends Controller
         }
 
         return CheckoutAttempt::where('stripe_session_id', $sessionId)->first();
+    }
+
+    protected function hasCheckoutAttemptsTable(): bool
+    {
+        static $hasTable = null;
+        if ($hasTable !== null) {
+            return $hasTable;
+        }
+
+        try {
+            $hasTable = Schema::hasTable((new CheckoutAttempt())->getTable());
+        } catch (\Throwable $e) {
+            Log::warning('stripe.webhook.attempt_table_check_failed', ['e' => $e->getMessage()]);
+            $hasTable = false;
+        }
+
+        return $hasTable;
     }
 }

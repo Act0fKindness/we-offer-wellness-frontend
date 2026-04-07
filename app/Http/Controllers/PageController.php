@@ -8,6 +8,7 @@ use App\Models\PageRedirect;
 use App\Support\BotPathMatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 class PageController extends Controller
@@ -27,14 +28,37 @@ class PageController extends Controller
 
         // Handle redirects first (exact path match)
         $path = '/'.$slug;
-        if ($redir = PageRedirect::query()->where('from_path', $path)->first()) {
+        $redir = null;
+        try {
+            static $hasPageRedirectsTable = null;
+            if ($hasPageRedirectsTable === null) {
+                $hasPageRedirectsTable = Schema::hasTable((new PageRedirect())->getTable());
+            }
+            if ($hasPageRedirectsTable) {
+                $redir = PageRedirect::query()->where('from_path', $path)->first();
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+        if ($redir) {
             return redirect()->to($redir->to_path, $redir->http_code ?? 301);
         }
 
-        $page = Page::query()
-            ->where('slug', $slug)
-            ->where('status', 'published')
-            ->first();
+        $page = null;
+        try {
+            static $hasPagesTable = null;
+            if ($hasPagesTable === null) {
+                $hasPagesTable = Schema::hasTable((new Page())->getTable());
+            }
+            if ($hasPagesTable) {
+                $page = Page::query()
+                    ->where('slug', $slug)
+                    ->where('status', 'published')
+                    ->first();
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         if (!$page) {
             $this->logLegacyMiss($request, $slug);
@@ -170,6 +194,15 @@ class PageController extends Controller
             if (BotPathMatcher::shouldBlock($request)) {
                 return;
             }
+
+            static $hasLegacyPageVisitsTable = null;
+            if ($hasLegacyPageVisitsTable === null) {
+                $hasLegacyPageVisitsTable = Schema::hasTable((new LegacyPageVisit())->getTable());
+            }
+            if (!$hasLegacyPageVisitsTable) {
+                return;
+            }
+
             $attemptedPath = '/'.ltrim((string) $request->path(), '/');
             if ($attemptedPath === '//') {
                 $attemptedPath = '/';

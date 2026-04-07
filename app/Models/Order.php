@@ -19,6 +19,7 @@ class Order extends Model
         'email',
         'currency',
         'amount_total',
+        'total_price',
         'status',
         'stripe_session_id',
         'stripe_payment_intent_id',

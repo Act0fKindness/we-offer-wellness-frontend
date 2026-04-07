@@ -15,7 +15,9 @@
       gtag('config', 'G-MZMQNETBYH');
     </script>
     <title>@yield('page-title', 'We Offer Wellness™')</title>
-    @php($favicon = config('app.favicon_url', '/favicon.ico'))
+    @php
+        $favicon = config('app.favicon_url', '/favicon.ico');
+    @endphp
     <link rel="icon" type="image/png" href="{{ $favicon }}">
     <link rel="shortcut icon" href="{{ $favicon }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
