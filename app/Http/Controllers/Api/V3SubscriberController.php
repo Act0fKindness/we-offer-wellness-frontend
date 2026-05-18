@@ -8,6 +8,7 @@ use App\Models\V3Subscriber;
 use App\Services\TransactionalMail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
 class V3SubscriberController extends Controller
@@ -178,6 +179,11 @@ class V3SubscriberController extends Controller
         }
 
         $subscriber->save();
+        $this->syncBackendSubscriber(
+            $subscriber,
+            $this->buildBackendSubscriberPayload($subscriber, $isPractitioner === true, $data),
+            $isPractitioner === true
+        );
 
         $requiresConfirmation = !$subscriber->confirmed_at;
         $message = 'Check your email to confirm your subscription.';
@@ -296,6 +302,62 @@ class V3SubscriberController extends Controller
         ];
 
         return array_filter($meta, fn ($value) => !is_null($value) && $value !== '');
+    }
+
+    protected function buildBackendSubscriberPayload(V3Subscriber $subscriber, bool $isPractitioner, array $data): array
+    {
+        $displayName = $subscriber->name ?: trim(($subscriber->first_name ?? '') . ' ' . ($subscriber->last_name ?? ''));
+
+        $payload = [
+            'email' => $subscriber->email,
+            'name' => $displayName !== '' ? $displayName : null,
+            'first_name' => $subscriber->first_name,
+            'last_name' => $subscriber->last_name,
+            'business_name' => $subscriber->business_name,
+            'source' => 'frontend:v3-subscribers',
+            'status' => $subscriber->status ?: 'pending',
+        ];
+
+        if ($isPractitioner) {
+            $sessionModes = [];
+            if ($this->normalizeBoolean($data['offers_online'] ?? null)) {
+                $sessionModes[] = 'online';
+            }
+            if ($this->normalizeBoolean($data['offers_in_person'] ?? null)) {
+                $sessionModes[] = 'in_person';
+            }
+
+            $payload = array_merge($payload, [
+                'business_name' => $subscriber->business_name ?: ($data['business_name'] ?? null),
+                'session_modes' => array_values(array_unique($sessionModes)),
+                'in_person_area' => $subscriber->in_person_locations ?: ($data['in_person_locations'] ?? null),
+            ]);
+        }
+
+        return array_filter($payload, fn ($value) => !is_null($value) && $value !== '');
+    }
+
+    protected function syncBackendSubscriber(V3Subscriber $subscriber, array $payload, bool $isPractitioner): void
+    {
+        $backendUrl = rtrim((string) env('BACKEND_URL', env('BACKEND_ASSET_URL', '')), '/');
+        if ($backendUrl === '') {
+            return;
+        }
+
+        $endpoint = $isPractitioner ? '/api/v3-subscribers/practitioner-interest' : '/api/v3-subscribers';
+
+        try {
+            Http::timeout(5)
+                ->acceptJson()
+                ->asJson()
+                ->post($backendUrl . $endpoint, $payload);
+        } catch (\Throwable $e) {
+            logger()->warning('subscriber.backend_sync_failed', [
+                'email' => $subscriber->email,
+                'endpoint' => $endpoint,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     protected function normalizeBoolean($value): ?bool

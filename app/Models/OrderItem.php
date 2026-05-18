@@ -13,4 +13,9 @@ class OrderItem extends Model
     protected $casts = [ 'meta' => 'array' ];
 
     public function order(){ return $this->belongsTo(Order::class); }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

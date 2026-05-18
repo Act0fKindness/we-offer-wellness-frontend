@@ -54,7 +54,7 @@ class ArticleController extends Controller
       }
 
       // 2) Fallback to local DB if remote not available
-      $base = Article::query()->with(['featuredMedia', 'category']);
+      $base = Article::query()->with(['featuredMedia', 'backendFeaturedMedia', 'category']);
       $queryPublished = (clone $base)
         ->where(function($q){
           $q->where('status', 'published')
@@ -73,8 +73,15 @@ class ArticleController extends Controller
       $norm = $normalizeImg; // import into closure
       $items = $articles->map(function(Article $a) use ($norm){
         $img = null;
-        if ($a->relationLoaded('featuredMedia') && $a->featuredMedia) {
-          $media = $a->featuredMedia;
+        $resolvedMedia = null;
+        if ($a->relationLoaded('backendFeaturedMedia') && $a->backendFeaturedMedia) {
+          $resolvedMedia = $a->backendFeaturedMedia;
+        } elseif ($a->relationLoaded('featuredMedia') && $a->featuredMedia) {
+          $resolvedMedia = $a->featuredMedia;
+        }
+
+        if ($resolvedMedia) {
+          $media = $resolvedMedia;
           $path = $media->url ?? $media->path ?? $media->media_url ?? null;
           if ($path) {
             if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
@@ -87,6 +94,19 @@ class ArticleController extends Controller
           }
         }
         // Fallback: first from media()
+        if (!$img && method_exists($a, 'backendMedia') && $a->backendMedia()->exists()) {
+          $m = $a->backendMedia()->first();
+          $p = $m->url ?? $m->path ?? $m->media_url ?? null;
+          if ($p) {
+            if (str_starts_with($p, 'http://') || str_starts_with($p, 'https://')) {
+              $img = $p;
+            } else {
+              $backend = rtrim((string) env('BACKEND_ASSET_URL', env('BACKEND_URL', '')), '/');
+              $clean = ltrim($p, '/');
+              $img = $backend ? ($backend . '/storage/' . $clean) : asset('storage/'.$clean);
+            }
+          }
+        }
         if (!$img && method_exists($a, 'media') && $a->media()->exists()) {
           $m = $a->media()->first();
           $p = $m->url ?? $m->path ?? $m->media_url ?? null;

@@ -89,6 +89,7 @@ class CustomerAccountController extends Controller
 
         return Order::query()
             ->forCustomer($user)
+            ->visibleToCustomer()
             ->latest('created_at');
     }
 }

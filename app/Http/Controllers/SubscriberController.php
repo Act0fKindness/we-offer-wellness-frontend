@@ -10,6 +10,7 @@ use App\Services\TransactionalMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 
 class SubscriberController extends Controller
@@ -30,6 +31,8 @@ class SubscriberController extends Controller
             $subscriber->manage_token = Str::random(64);
         }
         $subscriber->save();
+
+        $this->syncBackendSubscriber($subscriber);
 
         if (!$wasConfirmed) {
             TransactionalMail::subscriberWelcome($subscriber);
@@ -117,6 +120,7 @@ class SubscriberController extends Controller
         $subscriber->unsubscribed_at = now();
         $subscriber->confirmed_at = null;
         $subscriber->save();
+        $this->syncBackendSubscriber($subscriber);
 
         TransactionalMail::subscriberUnsubscribed($subscriber);
 
@@ -139,6 +143,7 @@ class SubscriberController extends Controller
         $subscriber->confirmed_at = now();
         $subscriber->unsubscribed_at = null;
         $subscriber->save();
+        $this->syncBackendSubscriber($subscriber);
 
         TransactionalMail::subscriberResubscribed($subscriber);
 
@@ -177,7 +182,7 @@ class SubscriberController extends Controller
                 ->where(function ($q) {
                     $q->whereHas('status', function ($qs) {
                         $qs->whereIn('status', ['live', 'approved']);
-                    })->orWhereNull('product_status_id');
+                    });
                 })
                 ->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
                 ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
@@ -200,5 +205,36 @@ class SubscriberController extends Controller
             'cta' => $cta,
             'ctaUrl' => $ctaUrl,
         ]);
+    }
+
+    protected function syncBackendSubscriber(V3Subscriber $subscriber): void
+    {
+        $backendUrl = rtrim((string) env('BACKEND_URL', env('BACKEND_ASSET_URL', '')), '/');
+        if ($backendUrl === '') {
+            return;
+        }
+
+        $displayName = $subscriber->name ?: trim(($subscriber->first_name ?? '') . ' ' . ($subscriber->last_name ?? ''));
+        $payload = array_filter([
+            'email' => $subscriber->email,
+            'name' => $displayName !== '' ? $displayName : null,
+            'first_name' => $subscriber->first_name,
+            'last_name' => $subscriber->last_name,
+            'business_name' => $subscriber->business_name,
+            'source' => 'frontend:v3-subscribers',
+            'status' => $subscriber->status ?: 'pending',
+        ], fn ($value) => !is_null($value) && $value !== '');
+
+        try {
+            Http::timeout(5)
+                ->acceptJson()
+                ->asJson()
+                ->post($backendUrl . '/api/v3-subscribers', $payload);
+        } catch (\Throwable $e) {
+            logger()->warning('subscriber.backend_sync_failed', [
+                'email' => $subscriber->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

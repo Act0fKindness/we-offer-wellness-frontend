@@ -38,17 +38,32 @@ async function addToCart(detail){
     ...(detail?.selected ? { selected: detail.selected } : {}),
     ...(detail?.groupCount ? { groupCount: detail.groupCount } : {}),
     ...(detail?.variantId ? { variantId: detail.variantId } : {}),
+    ...(detail?.reservationId ? { reservationId: detail.reservationId } : {}),
+    ...(detail?.holdExpiresAt ? { holdExpiresAt: detail.holdExpiresAt } : {}),
     displayType: typeDisplayLabel.value,
     practitioner: practitionerName.value,
     format: detail?.selected?.find(sel => /online|person/i.test(sel)) || bookingFormat.value,
     duration: bookingDuration.value,
     location: detail?.location || bookingLocation.value,
     nextAvailability: bookingNextAvailability.value,
+    product_id: p.id,
+    variant_label: Array.isArray(detail?.selected) ? detail.selected.join(' • ') : null,
   }
   // Make cart items unique per variant selection so different prices don't merge
   const variantKey = detail?.variantId ? `v${detail.variantId}` : (detail?.selected ? `sel:${detail.selected.join('|')}` : 'base')
   const itemId = `${p.id}:${variantKey}`
-  cart.add({ id: itemId, title: p.title, price: unitPrice, image: p.image, url: window.location.pathname, qty: qtyVal, meta })
+  cart.add({
+    id: itemId,
+    product_id: p.id,
+    variant_id: detail?.variantId || null,
+    variant_label: Array.isArray(detail?.selected) ? detail.selected.join(' • ') : '',
+    title: p.title,
+    price: unitPrice,
+    image: p.image,
+    url: window.location.pathname,
+    qty: qtyVal,
+    meta,
+  })
   /* disabled analytics event */
   setTimeout(() => adding.value = false, 250)
 }

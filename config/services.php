@@ -1,5 +1,16 @@
 <?php
 
+$stripeTesting = env('STRIPE_TESTING', false);
+$stripeLiveKey = env('STRIPE_KEY');
+$stripeLiveSecret = env('STRIPE_SECRET');
+$stripeLiveWebhookSecret = env('STRIPE_WEBHOOK_SECRET');
+$stripeTestPublishableKey = env('TESTING_STRIPE_PUBLISHABLE_KEY', env('TESTING_STRIPE_KEY'));
+$stripeTestSecret = env('TESTING_STRIPE_SECRET', env('TESTING_STRIPE_KEY'));
+$stripeTestWebhookSecret = env('TESTING_STRIPE_WEBHOOK_SECRET');
+$resolvedStripeWebhookSecret = $stripeTesting
+    ? ($stripeTestWebhookSecret ?: $stripeLiveWebhookSecret)
+    : $stripeLiveWebhookSecret;
+
 return [
 
     /*
@@ -19,17 +30,21 @@ return [
     ],
 
     'stripe' => [
+        'testing' => $stripeTesting,
+
         // Publishable key (pk_live_... / pk_test_...)
-        'key' => env('STRIPE_KEY'),
+        // Some existing environments still store the test secret in TESTING_STRIPE_KEY,
+        // so keep that as a fallback while preferring TESTING_STRIPE_PUBLISHABLE_KEY.
+        'key' => $stripeTesting ? $stripeTestPublishableKey : $stripeLiveKey,
 
         // Secret key (sk_live_... / sk_test_...)
-        'secret' => env('STRIPE_SECRET'),
+        'secret' => $stripeTesting ? $stripeTestSecret : $stripeLiveSecret,
 
         // Webhook signing secret (whsec_...)
         // Keep both keys for compatibility with different codebases/packages.
-        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'webhook_secret' => $resolvedStripeWebhookSecret,
         'webhook' => [
-            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+            'secret' => $resolvedStripeWebhookSecret,
         ],
     ],
 

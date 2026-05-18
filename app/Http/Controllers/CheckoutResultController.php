@@ -31,13 +31,20 @@ class CheckoutResultController extends Controller
     protected function successFromSession(string $sessionId)
     {
         $order = Order::with('items')->where('stripe_session_id', $sessionId)->first();
+        $attempt = $this->findAttemptBySessionId($sessionId);
 
-        if (!$order) {
-            $attempt = $this->findAttemptBySessionId($sessionId);
-            if (!$attempt) {
-                abort(404);
-            }
+        if ($order && $order->status === 'paid' && $order->stripe_payment_intent_id) {
+            session()->forget('cart.items');
+            session()->forget('cart_promo_code');
+            session()->forget('cart_gift_code');
 
+            $response = response()->view('checkout.success', compact('order'));
+            $response->withCookie(cookie('wow_cart', json_encode([]), 60*24*30));
+
+            return $response;
+        }
+
+        if ($order || $attempt) {
             try {
                 Stripe::setApiKey(config('services.stripe.secret'));
                 $session = StripeSession::retrieve($sessionId);
@@ -53,10 +60,18 @@ class CheckoutResultController extends Controller
                 abort(404);
             }
 
-            $order = $this->orderService->finalizePaidAttempt($attempt, [
-                'stripe_session_id' => $sessionId,
-                'stripe_payment_intent_id' => (string)($session->payment_intent ?? ''),
-            ]);
+            if ($order) {
+                $order = $this->orderService->reconcilePaidOrder($order, [
+                    'email' => $order->email,
+                    'stripe_session_id' => $sessionId,
+                    'stripe_payment_intent_id' => (string) ($session->payment_intent ?? ''),
+                ]);
+            } elseif ($attempt) {
+                $order = $this->orderService->finalizePaidAttempt($attempt, [
+                    'stripe_session_id' => $sessionId,
+                    'stripe_payment_intent_id' => (string) ($session->payment_intent ?? ''),
+                ]);
+            }
         }
 
         if (!$order) {

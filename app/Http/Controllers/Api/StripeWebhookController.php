@@ -35,11 +35,15 @@ class StripeWebhookController extends Controller
         if (!$eventId) return response('ok', 200);
 
         // Idempotency guard
-        try {
-            $dup = DB::table('stripe_webhook_events')->where('event_id', $eventId)->first();
-            if ($dup) return response('ok', 200);
-            DB::table('stripe_webhook_events')->insert([ 'event_id' => $eventId, 'type' => $event->type ?? null, 'created_at' => now(), 'updated_at' => now() ]);
-        } catch (\Throwable $e) { Log::error('stripe.webhook.store_error', ['e'=>$e->getMessage()]); }
+        if ($this->hasWebhookEventsTable()) {
+            try {
+                $dup = DB::table('stripe_webhook_events')->where('event_id', $eventId)->first();
+                if ($dup) return response('ok', 200);
+                DB::table('stripe_webhook_events')->insert([ 'event_id' => $eventId, 'type' => $event->type ?? null, 'created_at' => now(), 'updated_at' => now() ]);
+            } catch (\Throwable $e) {
+                Log::error('stripe.webhook.store_error', ['e' => $e->getMessage()]);
+            }
+        }
 
         $type = $event->type;
         try {
@@ -55,20 +59,19 @@ class StripeWebhookController extends Controller
                         ]);
                     } else {
                         $orderId = (int)($sess->metadata->order_id ?? 0);
+                        $order = null;
                         if ($orderId) {
                             $order = Order::find($orderId);
-                            if ($order) {
-                                $statusChanged = false;
-                                if ($order->status !== 'paid') {
-                                    $order->status = 'paid';
-                                    $statusChanged = true;
-                                }
-                                $order->stripe_payment_intent_id = (string)($sess->payment_intent ?? '');
-                                $order->save();
-                                if ($statusChanged) {
-                                    TransactionalMail::orderReceipt($order->fresh('items'));
-                                }
-                            }
+                        }
+                        if (! $order && ! empty($sess->id)) {
+                            $order = Order::where('stripe_session_id', (string) $sess->id)->first();
+                        }
+                        if ($order) {
+                            $this->orderService->reconcilePaidOrder($order, [
+                                'email' => (string) ($sess->customer_details->email ?? $order->email ?? ''),
+                                'stripe_session_id' => (string) ($sess->id ?? ''),
+                                'stripe_payment_intent_id' => (string) ($sess->payment_intent ?? ''),
+                            ]);
                         }
                     }
                     break;
@@ -245,6 +248,23 @@ class StripeWebhookController extends Controller
             $hasTable = Schema::hasTable((new CheckoutAttempt())->getTable());
         } catch (\Throwable $e) {
             Log::warning('stripe.webhook.attempt_table_check_failed', ['e' => $e->getMessage()]);
+            $hasTable = false;
+        }
+
+        return $hasTable;
+    }
+
+    protected function hasWebhookEventsTable(): bool
+    {
+        static $hasTable = null;
+        if ($hasTable !== null) {
+            return $hasTable;
+        }
+
+        try {
+            $hasTable = Schema::hasTable('stripe_webhook_events');
+        } catch (\Throwable $e) {
+            Log::warning('stripe.webhook.events_table_check_failed', ['e' => $e->getMessage()]);
             $hasTable = false;
         }
 

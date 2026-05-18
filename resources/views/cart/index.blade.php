@@ -111,10 +111,14 @@
   <div class="guest-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle">
     <button type="button" class="btn-wow btn-wow--ghost is-square btn-sm guest-modal__close" aria-label="Close" data-guest-close>×</button>
     <h2 id="guestModalTitle">Almost there</h2>
-    <p>Please tell us where to send your order confirmation. You can create an account later with the same email.</p>
+    <p>Please tell us who this order is for and where to send the confirmation. You can create an account later with the same email.</p>
     <form id="guestCheckoutForm">
-      <label for="guestEmail">Email address</label>
-      <input id="guestEmail" type="email" required placeholder="you@example.com">
+      <label for="guestFirstName">First name <span aria-hidden="true">*</span></label>
+      <input id="guestFirstName" type="text" required placeholder="First name" autocomplete="given-name">
+      <label for="guestLastName">Last name</label>
+      <input id="guestLastName" type="text" placeholder="Last name" autocomplete="family-name">
+      <label for="guestEmail">Email address <span aria-hidden="true">*</span></label>
+      <input id="guestEmail" type="email" required placeholder="you@example.com" autocomplete="email">
       <div id="guestError" class="guest-modal__error" role="alert"></div>
       <button type="submit" class="btn-wow btn-wow--cta" id="guestSubmitBtn">Continue as guest</button>
       <div class="guest-modal__links">
@@ -159,6 +163,13 @@
     var rawPrice = Number(x.price_min ?? x.price ?? x.unit ?? 0);
     if(rawPrice>=1000) rawPrice = rawPrice/100;
     var variantLabel = x.variant_label || x.variantLabel || x.options_label || '';
+    var meta = (x.meta && typeof x.meta === 'object') ? x.meta : {};
+    if (x.booking && typeof x.booking === 'object' && !meta.booking) meta.booking = x.booking;
+    if (Array.isArray(x.selected) && !meta.selected) meta.selected = x.selected;
+    if ((x.groupCount ?? x.group_count) != null && meta.group_count == null && meta.groupCount == null) meta.group_count = x.groupCount ?? x.group_count;
+    if ((x.reservationId ?? x.reservation_id) != null && meta.reservation_id == null && meta.reservationId == null) meta.reservation_id = x.reservationId ?? x.reservation_id;
+    if ((x.holdExpiresAt ?? x.hold_expires_at) != null && meta.hold_expires_at == null && meta.holdExpiresAt == null) meta.hold_expires_at = x.holdExpiresAt ?? x.hold_expires_at;
+    if (x.location && !meta.location) meta.location = x.location;
     return {
       id: id,
       title: x.title || x.name || 'Item',
@@ -166,14 +177,16 @@
       img: x.image || x.img || '',
       unit: Number(rawPrice)||0,
       qty: Number(x.qty || x.quantity || 1) || 1,
-      product_id: x.product_id || x.productId || null,
-      variant_id: x.variant_id || x.variantId || null,
-      variant_label: variantLabel,
+      product_id: x.product_id || x.productId || meta.product_id || null,
+      variant_id: x.variant_id || x.variantId || meta.variant_id || null,
+      variant_label: variantLabel || meta.variant_label || '',
+      meta: meta,
     };
   }
   function readLocalCart(){
     try{
       var raw = localStorage.getItem('wow_cart');
+      if (!raw) raw = localStorage.getItem('wow_cart_v1');
       if (raw){
         var data = JSON.parse(raw);
         var items = (data && (data.items||data.cart||data)) || [];
@@ -208,23 +221,45 @@
   function writeLocalFromCart(){
     try{
       var items = (cart||[]).map(function(it){
+        var meta = (it && typeof it.meta === 'object') ? it.meta : {};
         return {
           id:String(it.id),
-          product_id: it.product_id || null,
-          variant_id: it.variant_id || null,
-          variant_label: it.variant_label || '',
+          product_id: it.product_id || meta.product_id || null,
+          variant_id: it.variant_id || meta.variant_id || null,
+          variant_label: it.variant_label || meta.variant_label || '',
           title:String(it.title||''),
           qty:Number(it.qty||1)||1,
           price:Number(it.unit||0),
           image:it.img||'',
-          url:it.url||'#'
+          url:it.url||'#',
+          meta: meta
         };
       });
       var bag = { items: items };
       items.forEach(function(it){ bag[String(it.id)] = it; });
       localStorage.setItem('wow_cart', JSON.stringify(bag));
       var cookieObj = {};
-      items.forEach(function(it){ cookieObj[String(it.id)] = { id: it.id, product_id: it.product_id, variant_id: it.variant_id, variant_label: it.variant_label, title: it.title, price: it.price, qty: it.qty, image: it.image, url: it.url }; });
+      items.forEach(function(it){
+        var meta = (it && typeof it.meta === 'object') ? it.meta : {};
+        cookieObj[String(it.id)] = {
+          id: it.id,
+          product_id: it.product_id,
+          variant_id: it.variant_id,
+          variant_label: it.variant_label,
+          title: it.title,
+          price: it.price,
+          qty: it.qty,
+          image: it.image,
+          url: it.url,
+          meta: meta,
+          booking: meta.booking || {},
+          selected: Array.isArray(meta.selected) ? meta.selected : [],
+          groupCount: meta.groupCount ?? meta.group_count ?? null,
+          reservationId: meta.reservationId ?? meta.reservation_id ?? null,
+          holdExpiresAt: meta.holdExpiresAt ?? meta.hold_expires_at ?? null,
+          location: meta.location || null
+        };
+      });
       try{ document.cookie = 'wow_cart='+encodeURIComponent(JSON.stringify(cookieObj))+'; Path=/; Max-Age='+(60*60*24*30)+'; SameSite=Lax'; }catch(_){ }
       try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items, source:'cart:page' } })); } catch(_){ }
     }catch(_){ }
@@ -236,16 +271,25 @@
       cart.forEach(function(it){
         var id = (it && it.id != null) ? String(it.id) : '';
         if(!id) return;
+        var meta = (it && typeof it.meta === 'object') ? it.meta : {};
         map[id] = {
           id: it.id,
-          product_id: it.product_id || null,
-          variant_id: it.variant_id || null,
-          variant_label: it.variant_label || '',
+          product_id: it.product_id || meta.product_id || null,
+          variant_id: it.variant_id || meta.variant_id || null,
+          variant_label: it.variant_label || meta.variant_label || '',
           title: it.title || '',
           price: Number(it.unit || it.price || 0),
           qty: Number(it.qty || 1) || 1,
           image: it.img || it.image || '',
-          url: it.url || '#'
+          url: it.url || '#',
+          meta: meta,
+          booking: meta.booking || {},
+          selected: Array.isArray(meta.selected) ? meta.selected : [],
+          groupCount: meta.groupCount ?? meta.group_count ?? null,
+          reservationId: meta.reservationId ?? meta.reservation_id ?? null,
+          holdExpiresAt: meta.holdExpiresAt ?? meta.hold_expires_at ?? null,
+          location: meta.location || null,
+          options: Array.isArray(meta.variant_options) ? meta.variant_options : []
         };
       });
     }catch(_){ }
@@ -346,16 +390,20 @@
 
   const guestModal = document.getElementById('guestCheckoutModal');
   const guestForm = document.getElementById('guestCheckoutForm');
+  const guestFirstNameInput = document.getElementById('guestFirstName');
+  const guestLastNameInput = document.getElementById('guestLastName');
   const guestEmailInput = document.getElementById('guestEmail');
   const guestError = document.getElementById('guestError');
   const guestSubmitBtn = document.getElementById('guestSubmitBtn');
 
   function openGuestModal(){
     guestError.textContent='';
+    guestFirstNameInput.value='';
+    guestLastNameInput.value='';
     guestEmailInput.value='';
     guestModal.classList.add('show');
     guestModal.setAttribute('aria-hidden','false');
-    guestEmailInput.focus();
+    guestFirstNameInput.focus();
   }
   function closeGuestModal(){
     guestModal.classList.remove('show');
@@ -370,13 +418,38 @@
 
   guestForm?.addEventListener('submit', function(e){
     e.preventDefault(); if(checkoutBusy) return;
+    const firstName = guestFirstNameInput.value.trim();
+    const lastName = guestLastNameInput.value.trim();
     const email = guestEmailInput.value.trim();
-    if(!isValidEmail(email)) { guestError.textContent = 'Enter a valid email address.'; return; }
+    guestFirstNameInput.value = firstName;
+    guestLastNameInput.value = lastName;
+    guestEmailInput.value = email;
+    guestFirstNameInput.setCustomValidity('');
+    guestEmailInput.setCustomValidity('');
+    if(!firstName) {
+      guestFirstNameInput.setCustomValidity('Enter your first name.');
+    }
+    if(!email) {
+      guestEmailInput.setCustomValidity('Enter your email address.');
+    } else if(!isValidEmail(email)) {
+      guestEmailInput.setCustomValidity('Enter a valid email address.');
+    }
+    if(!guestForm.reportValidity()) {
+      guestError.textContent = guestFirstNameInput.validationMessage || guestEmailInput.validationMessage || '';
+      guestFirstNameInput.setCustomValidity('');
+      guestEmailInput.setCustomValidity('');
+      return;
+    }
     guestError.textContent='';
     checkoutBusy = true;
     guestSubmitBtn.disabled=true;
     guestSubmitBtn.textContent='Redirecting…';
-      post('/checkout/session', { items: serializeCartForCheckout(), email: email })
+      post('/checkout/session', {
+        items: serializeCartForCheckout(),
+        first_name: firstName,
+        last_name: lastName,
+        email: email
+      })
       .then(function(res){
         if(res && res.url){ window.location.assign(res.url); return; }
         if(res && res.error){ throw new Error(res.error); }
@@ -384,7 +457,8 @@
       })
       .catch(function(err){
         var code = err?.message || '';
-        if(code==='invalid_email'){ guestError.textContent='That email looks invalid. Please try again.'; }
+        if(code==='first_name_required'){ guestError.textContent='We need your first name for the booking.'; }
+        else if(code==='invalid_email'){ guestError.textContent='That email looks invalid. Please try again.'; }
         else if(code==='email_required'){ guestError.textContent='We need an email to send your receipt.'; }
         else if(code==='order_failed'){ guestError.textContent='Checkout is temporarily unavailable. Please try again in a moment.'; }
         else if(code==='stripe_failed'){ guestError.textContent='Secure payment is unavailable right now. Please try again.'; }

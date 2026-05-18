@@ -46,7 +46,12 @@ class Article extends Model
 
     public function media()
     {
-        return $this->hasMany(UserMedia::class);
+        return $this->hasMany(UserMedia::class)->orderByDesc('id');
+    }
+
+    public function backendMedia()
+    {
+        return $this->hasMany(Media::class, 'article_id', 'id')->orderByDesc('id');
     }
 
     public function featuredMedia()
@@ -58,6 +63,22 @@ class Article extends Model
                   ->orWhere('mime_type', 'like', 'image%');
             })
             ->latest('id');
+    }
+
+    public function backendFeaturedMedia()
+    {
+        return $this->hasOne(Media::class, 'article_id', 'id')
+            ->where(function ($q) {
+                $q->where('type', 'image')
+                  ->orWhere('type', 'like', 'image%')
+                  ->orWhere('mime_type', 'like', 'image%');
+            })
+            ->latest('id');
+    }
+
+    public function resolvedFeaturedMedia()
+    {
+        return $this->backendFeaturedMedia ?: $this->featuredMedia;
     }
 
     // Define the relationship
