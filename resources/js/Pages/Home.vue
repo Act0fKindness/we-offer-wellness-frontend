@@ -64,6 +64,7 @@ const heroPromo = ref(null)
 const homeLocationValue = ref('')
 const homeLocationSelection = ref(null)
 const homeLocationBusy = ref(false)
+const homeLocationGeoBusy = ref(false)
 const homeLocationError = ref('')
 const showWhatsOnSection = false
 const reviewsHref = '/reviews'
@@ -218,6 +219,63 @@ async function submitHomeLocation() {
     window.location.href = target
   } finally {
     homeLocationBusy.value = false
+  }
+}
+
+async function useMyHomeLocation() {
+  homeLocationGeoBusy.value = true
+  homeLocationError.value = ''
+  try {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      homeLocationError.value = 'Location access is not available in this browser.'
+      return
+    }
+
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: false,
+        timeout: 6000,
+        maximumAge: 60000,
+      })
+    })
+
+    const lat = position.coords.latitude
+    const lng = position.coords.longitude
+    let name = 'Current location'
+    let region = ''
+    let country = ''
+
+    try {
+      const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json`)
+      url.searchParams.set('access_token', mapboxKey)
+      url.searchParams.set('limit', '1')
+      const res = await fetch(url)
+      const data = await res.json()
+      const feature = data?.features?.[0]
+      if (feature) {
+        name = feature.place_name || feature.text || name
+        const ctx = Array.isArray(feature.context) ? feature.context : []
+        region = ctx.find((item) => String(item?.id || '').startsWith('region.'))?.text || ''
+        country = ctx.find((item) => String(item?.id || '').startsWith('country.'))?.text || ''
+      }
+    } catch (error) {
+      console.warn('[home] reverse geocode failed', error)
+    }
+
+    const place = { name, lat, lng, context: [] }
+    homeLocationValue.value = name
+    homeLocationSelection.value = place
+    await persistLocationChoice({ ...place, region, country })
+
+    const slug = inferLocationSlug(name)
+    window.location.href = slug
+      ? `/locations/${slug}`
+      : `/near-me?city=${encodeURIComponent(name)}`
+  } catch (error) {
+    console.warn('[home] geolocation failed', error)
+    homeLocationError.value = 'We could not read your location. Try typing your city or postcode.'
+  } finally {
+    homeLocationGeoBusy.value = false
   }
 }
 
@@ -742,45 +800,6 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <section class="section py-4 py-lg-5">
-      <div class="container-page">
-        <div class="home-location-chooser">
-          <div class="home-location-chooser__copy">
-            <div class="kicker">Your location first</div>
-            <h2>Tell us where you are and we’ll tailor what you see</h2>
-            <p>
-              Enter your city or postcode and we’ll take you straight to the therapies, classes and events that fit your area.
-              You can browse everything from the comfort of your own home.
-            </p>
-          </div>
-
-          <div class="home-location-chooser__panel">
-            <form class="home-location-chooser__form" @submit.prevent="submitHomeLocation">
-              <label class="home-location-chooser__label" for="home-location-input">Location</label>
-              <div class="home-location-chooser__input-wrap">
-                <LocationAutocomplete
-                  id-prefix="home-location"
-                  v-model="homeLocationValue"
-                  :access-token="mapboxKey"
-                  placeholder="Enter city or postcode"
-                  input-class="home-location-chooser__input"
-                  @select="onHomeLocationSelect"
-                />
-                <button class="btn-wow btn-wow--primary home-location-chooser__submit" type="submit" :disabled="homeLocationBusy">
-                  {{ homeLocationBusy ? 'Loading…' : 'Show local picks' }}
-                </button>
-              </div>
-              <p v-if="homeLocationError" class="home-location-chooser__error">{{ homeLocationError }}</p>
-              <div class="home-location-chooser__links">
-                <span class="text-ink-600">Popular cities:</span>
-                <a v-for="item in quickLocationLinks" :key="item.href" :href="item.href">{{ item.label }}</a>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section v-if="showMindfulTimesRibbon" class="mindful-times-ribbon" aria-label="Mindful Times update">
       <div class="container">
         <div class="ribbon-inner">
@@ -830,6 +849,54 @@ onBeforeUnmount(() => {
       cta-label="Find a thoughtful gift"
       cta-href="/search?tag=Gift&price_max=50"
     />
+
+    <section class="section py-4 py-lg-5">
+      <div class="container-page">
+        <div class="home-location-chooser">
+          <div class="home-location-chooser__copy">
+            <div class="kicker">Your location first</div>
+            <h2>Show me what is nearby</h2>
+            <p>
+              Use Mapbox to enter your city or postcode, or let us detect your location, and we’ll populate the near me section with therapies, classes and events close to you.
+            </p>
+          </div>
+
+          <div class="home-location-chooser__panel">
+            <form class="home-location-chooser__form" @submit.prevent="submitHomeLocation">
+              <label class="home-location-chooser__label" for="home-location-input">Location</label>
+              <div class="home-location-chooser__input-wrap">
+                <LocationAutocomplete
+                  id-prefix="home-location"
+                  v-model="homeLocationValue"
+                  :access-token="mapboxKey"
+                  placeholder="Enter city or postcode"
+                  input-class="home-location-chooser__input"
+                  @select="onHomeLocationSelect"
+                />
+                <button class="btn-wow btn-wow--primary home-location-chooser__submit" type="submit" :disabled="homeLocationBusy">
+                  {{ homeLocationBusy ? 'Loading…' : 'Show local picks' }}
+                </button>
+              </div>
+              <div class="home-location-chooser__actions">
+                <button
+                  class="btn-wow btn-wow--outline home-location-chooser__geo"
+                  type="button"
+                  :disabled="homeLocationGeoBusy"
+                  @click="useMyHomeLocation"
+                >
+                  {{ homeLocationGeoBusy ? 'Detecting…' : 'Use my location' }}
+                </button>
+              </div>
+              <p v-if="homeLocationError" class="home-location-chooser__error">{{ homeLocationError }}</p>
+              <div class="home-location-chooser__links">
+                <span class="text-ink-600">Popular cities:</span>
+                <a v-for="item in quickLocationLinks" :key="item.href" :href="item.href">{{ item.label }}</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Comfort of your own home (Tabbed) -->
     <section class="section" aria-labelledby="comfort-title">
@@ -1288,6 +1355,16 @@ onBeforeUnmount(() => {
   height:52px;
   border-radius:16px;
 }
+.home-location-chooser__actions{
+  display:flex;
+  justify-content:flex-start;
+  margin-top:12px;
+}
+.home-location-chooser__geo{
+  min-width:168px;
+  height:48px;
+  border-radius:16px;
+}
 .home-location-chooser__error{
   margin:10px 0 0;
   color:#b91c1c;
@@ -1358,6 +1435,7 @@ onBeforeUnmount(() => {
   .home-location-chooser{ grid-template-columns:1fr; }
   .home-location-chooser__input-wrap{ flex-direction:column; align-items:stretch; }
   .home-location-chooser__submit{ width:100%; min-width:0; }
+  .home-location-chooser__geo{ width:100%; min-width:0; }
 }
 
 .whero-radial { position:absolute; inset:0; z-index:-1; display:grid; place-items:center; overflow:hidden; perspective:420px; background-image: radial-gradient(circle at 18% -12%, #dbeafe, #ffffff00 22em), conic-gradient(#7bf, #7fb, #b7f, #bf7, #f7b, #fb7, #7bf); opacity:.9; }
