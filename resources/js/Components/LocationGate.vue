@@ -2,9 +2,9 @@
 import { ref, onMounted } from 'vue'
 
 const open = ref(false)
-const mode = ref('mixed') // 'online' or 'mixed'
 const status = ref('idle') // 'idle' | 'locating' | 'saving'
 const error = ref('')
+const promptCookieName = 'wow_location_prompt'
 
 function cookieGet(name){
   const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
@@ -19,13 +19,18 @@ function csrfToken(){
   catch { return window.__csrfToken || '' }
 }
 
+function markPromptSeen(){
+  cookieSet(promptCookieName, '1', 30)
+  cookieSet('wow_geo_done', '1', 30)
+}
+
 async function save(data){
   status.value = 'saving'
   try {
     const res = await fetch('/api/geo', { method:'POST', headers: { 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken() }, body: JSON.stringify(data) })
     if (!res.ok) throw new Error('geo '+res.status)
   } catch(e){ /* ignore */ }
-  cookieSet('wow_geo_done','1', 365*5)
+  markPromptSeen()
   open.value = false
   window.location.reload()
 }
@@ -54,64 +59,124 @@ async function useMyLocation(){
         }
       }
     } catch {}
-    await save({ lat, lng, city, region, country, mode: mode.value })
+    await save({ lat, lng, city, region, country, mode: 'mixed' })
   }, () => { status.value='idle'; error.value = 'We couldn\'t get your location.' }, { enableHighAccuracy:false, timeout:6000, maximumAge:60000 })
 }
 
-function chooseOnline(){ mode.value='online' }
-function chooseMixed(){ mode.value='mixed' }
-function saveOnlineOnly(){ save({ mode: 'online' }) }
+function allowLocation(){
+  void useMyLocation()
+}
+
+function skipLocation(){
+  markPromptSeen()
+  open.value = false
+}
 
 onMounted(() => {
-  const done = cookieGet('wow_geo_done') === '1'
-  const reask = cookieGet('wow_geo_reask') === '1'
-  if (!done || reask) { open.value = true }
+  const seen = cookieGet(promptCookieName) === '1'
+  if (!seen) { open.value = true }
 })
 </script>
 
 <template>
-  <div v-if="open" class="lgate-overlay" @click.self="open=false">
-    <div class="lgate">
-      <div class="lgate-header">
-        <img src="https://cdn.shopify.com/s/files/1/0820/3947/2469/files/logo.png?v=1738109013" alt="We Offer Wellness" />
-      </div>
-      <div class="lgate-body">
-        <h3>Tailor your experience</h3>
-        <p class="lead">Looking for <strong>Online only</strong> or <strong>Online & In‑person</strong> near you?</p>
-
-        <div class="choice-row">
-          <button :class="['chip', mode==='online' ? 'chip-brand' : '']" @click="chooseOnline">Online only</button>
-          <button :class="['chip', mode==='mixed' ? 'chip-brand' : '']" @click="chooseMixed">Online & In‑person</button>
-        </div>
-
-        <div v-if="mode==='mixed'" class="action-row">
-          <button class="btn btn-primary" :disabled="status!=='idle'" @click="useMyLocation">
+  <div v-if="open" class="wow-location-banner" data-location-banner aria-hidden="false">
+    <div class="wow-location-banner__panel" role="dialog" aria-modal="true" aria-labelledby="wowLocationTitle">
+      <div class="wow-location-banner__simple">
+        <p class="wow-location-banner__eyebrow">Your location</p>
+        <h2 id="wowLocationTitle">Help us find locations near you</h2>
+        <p>Share your location and we’ll show therapies, classes and events close to you first. We’ll remember your choice for 30 days.</p>
+        <div class="wow-location-banner__actions actions">
+          <button type="button" class="wow-location-btn wow-location-btn--primary" :disabled="status!=='idle'" @click="allowLocation">
             <span v-if="status==='locating'">Locating…</span>
-            <span v-else>Use my location</span>
+            <span v-else>Allow location</span>
           </button>
-          <div class="muted">We’ll remember this and show nearby options first.</div>
+          <button type="button" class="wow-location-btn" @click="skipLocation">Not now</button>
         </div>
-        <div v-else class="action-row">
-          <button class="btn btn-primary" :disabled="status!=='idle'" @click="saveOnlineOnly">Save preference</button>
-          <div class="muted">You can change this anytime from the menu.</div>
-        </div>
-
-        <div v-if="error" class="error">{{ error }}</div>
+        <div v-if="error" class="wow-location-banner__error">{{ error }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.lgate-overlay{ position:fixed; inset:0; background:rgba(17,24,39,.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); z-index: 1000; display:flex; align-items:center; justify-content:center; padding: 2rem }
-.lgate{ width:min(720px, 96vw); background:#fff; border-radius:18px; border:1px solid var(--ink-200); box-shadow: 0 20px 50px rgba(0,0,0,.15); overflow:hidden }
-.lgate-header{ padding: 10px 14px; border-bottom:1px solid var(--ink-200); display:flex; align-items:center }
-.lgate-header img{ height:28px; width:auto }
-.lgate-body{ padding: 20px }
-.lgate-body h3{ margin:0; font-size: 1.5rem; font-weight: 700 }
-.lgate-body .lead{ margin:.35rem 0 0; color: var(--ink-700) }
-.choice-row{ display:flex; gap:.5rem; margin-top: 1rem }
-.action-row{ display:flex; align-items:center; gap:.75rem; margin-top: 1rem }
-.muted{ color: var(--ink-500); font-size: .9rem }
-.error{ color: var(--danger); margin-top:.75rem }
+.wow-location-banner{
+  position:fixed;
+  left:20px;
+  bottom:20px;
+  z-index:1200;
+  width:min(460px, calc(100% - 32px));
+  font-family:'Manrope',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+.wow-location-banner[hidden]{ display:none !important; }
+.wow-location-banner__panel{
+  background:#fff;
+  color:#0b1220;
+  border-radius:3px;
+  border:1px solid rgba(15,23,42,.12);
+  box-shadow:0 30px 80px rgba(15,23,42,.18);
+  padding:24px;
+}
+.wow-location-banner__eyebrow{
+  text-transform:uppercase;
+  letter-spacing:.24em;
+  font-size:11px;
+  color:#64748b;
+  margin:0 0 8px;
+}
+.wow-location-banner__simple h2{
+  margin:0 0 8px;
+  font-size:1.35rem;
+}
+.wow-location-banner__simple p{
+  margin:0 0 16px;
+  font-size:12px;
+  color:#475569;
+}
+.wow-location-banner__actions.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.wow-location-banner__actions .wow-location-btn{
+  flex:1 1 auto;
+  min-width:110px;
+}
+.wow-location-btn{
+  appearance:none;
+  border:1px solid #cbd5e1;
+  background:#fff;
+  color:#0f172a;
+  border-radius:999px;
+  min-height:42px;
+  padding:.7rem 1rem;
+  font-weight:700;
+  cursor:pointer;
+}
+.wow-location-btn:hover{
+  border-color:#94a3b8;
+}
+.wow-location-btn--primary{
+  background:#0f62fe;
+  color:#fff;
+  border-color:#0f62fe;
+}
+.wow-location-btn:disabled{
+  opacity:.7;
+  cursor:not-allowed;
+}
+.wow-location-banner__error{
+  margin-top:12px;
+  color:#b91c1c;
+  font-size:12px;
+}
+@media (max-width: 640px){
+  .wow-location-banner{
+    left:16px;
+    right:16px;
+    width:auto;
+  }
+  .wow-location-banner__actions .wow-location-btn{
+    width:100%;
+  }
+}
 </style>
