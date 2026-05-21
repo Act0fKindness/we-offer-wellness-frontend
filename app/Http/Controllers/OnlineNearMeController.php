@@ -13,8 +13,8 @@ class OnlineNearMeController extends Controller
     {
         return view('online-near-me.index', [
             'seo' => [
-                'title' => 'Online & Near Me | We Offer Wellness™',
-                'description' => 'Choose online experiences you can join anywhere, or find wellness experiences near you.',
+                'title' => 'Online & Near Me | We Offer Wellness®',
+                'description' => 'Choose online experiences you can join anywhere, or find wellness experiences near you with a postcode search.',
                 'robots' => 'index,follow',
                 'canonical' => url('/online-near-me'),
             ],
