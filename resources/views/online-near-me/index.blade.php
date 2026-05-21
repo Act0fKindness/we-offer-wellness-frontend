@@ -410,7 +410,6 @@
     <section class="wow-quick-browse" aria-label="Quick browse links">
       <a href="{{ url('/therapies') }}" class="wow-quick-card">
         <div>
-          <span class="wow-tag">Therapies</span>
           <h3>Therapies</h3>
           <p>Explore massage, reiki, breathwork, coaching, yoga and more.</p>
         </div>
@@ -419,7 +418,6 @@
 
       <a href="{{ url('/feel') }}" class="wow-quick-card">
         <div>
-          <span class="wow-tag wow-tag--blue">By need</span>
           <h3>By Need</h3>
           <p>Find support for stress, sleep, pain, energy and emotional wellbeing.</p>
         </div>
@@ -428,7 +426,6 @@
 
       <a href="{{ url('/events') }}" class="wow-quick-card">
         <div>
-          <span class="wow-tag">Events</span>
           <h3>Events</h3>
           <p>Discover wellness events, workshops, retreats and classes.</p>
         </div>
@@ -437,7 +434,6 @@
 
       <a href="{{ url('/search?mode=online&max_price=50') }}" class="wow-quick-card">
         <div>
-          <span class="wow-tag wow-tag--blue">Under £50</span>
           <h3>Affordable</h3>
           <p>Start with lower-cost online sessions and accessible options.</p>
         </div>
