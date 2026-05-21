@@ -65,6 +65,7 @@ const homeLocationValue = ref('')
 const homeLocationSelection = ref(null)
 const homeLocationBusy = ref(false)
 const homeLocationGeoBusy = ref(false)
+const homeLocationAutoRequested = ref(false)
 const homeLocationError = ref('')
 const showWhatsOnSection = false
 const reviewsHref = '/reviews'
@@ -277,6 +278,17 @@ async function useMyHomeLocation() {
   } finally {
     homeLocationGeoBusy.value = false
   }
+}
+
+function maybeAutoRequestHomeLocation() {
+  if (homeLocationAutoRequested.value) return
+  homeLocationAutoRequested.value = true
+  if (cookieGet('wow_geo_done') === '1' && cookieGet('wow_geo_reask') !== '1') return
+  if (typeof window === 'undefined') return
+  window.setTimeout(() => {
+    if (homeLocationGeoBusy.value) return
+    void useMyHomeLocation()
+  }, 900)
 }
 
 function onHomeLocationSelect(place) {
@@ -670,6 +682,7 @@ function sizePanelMarquee() {
 onMounted(() => {
   setTimeout(sizePanelMarquee, 0)
   window.addEventListener('resize', sizePanelMarquee)
+  maybeAutoRequestHomeLocation()
 })
 
 // Sticky search visibility (desktop)
