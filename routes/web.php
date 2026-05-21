@@ -315,6 +315,7 @@ Route::get('/partners', [StaticPagesController::class, 'partners']);
 
 // XML sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
+Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
 Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
 
 // General content pages (always available)

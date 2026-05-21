@@ -60,5 +60,43 @@ class SitemapController extends Controller
         $xml .= '</urlset>';
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }
-}
 
+    public function pages()
+    {
+        $base = url('');
+        $now = now()->toAtomString();
+        $urls = [];
+
+        foreach ([
+            '/',
+            '/about',
+            '/contact',
+            '/help',
+            '/privacy',
+            '/terms',
+            '/cookies',
+            '/refunds-and-cancellations',
+            '/safety-and-contraindications',
+            '/gift-cards',
+            '/corporate',
+            '/corporate-wellness',
+            '/search',
+        ] as $p) {
+            $urls[] = ['loc' => $base.$p, 'lastmod' => $now];
+        }
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'.
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+        foreach ($urls as $u) {
+            $xml .= '<url>'
+                . '<loc>'.htmlspecialchars($u['loc'], ENT_XML1).'</loc>'
+                . '<lastmod>'.htmlspecialchars($u['lastmod'], ENT_XML1).'</lastmod>'
+                . '</url>';
+        }
+
+        $xml .= '</urlset>';
+
+        return response($xml, 200)->header('Content-Type', 'application/xml');
+    }
+}

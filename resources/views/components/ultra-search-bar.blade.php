@@ -1,28 +1,23 @@
 @php
   $prefix = $prefix ?? 'search-top';
+  $barClass = $barClass ?? 'bar';
   $stickyTopDesktop = $stickyTopDesktop ?? '115px';
   $stickyTopMobile = $stickyTopMobile ?? '84px';
   $reserveDesktop = $reserveDesktop ?? '0px';
   $reserveMobile = $reserveMobile ?? '0px';
+  $showSevenDayChip = $showSevenDayChip ?? true;
 @endphp
 
 <div class="wow-ultra" style="--ultra-top-desktop: {{ $stickyTopDesktop }}; --ultra-top-mobile: {{ $stickyTopMobile }}; --ultra-reserve-desktop: {{ $reserveDesktop }}; --ultra-reserve-mobile: {{ $reserveMobile }};">
-  <form class="bar" role="search">
+  <form class="{{ $barClass }}" role="search">
     <div class="seg" id="{{ $prefix }}-seg-what">
       <i class="bi bi-stars fs-5 text-muted"></i>
       <div class="flex-grow-1">
         <div class="seg-label">What</div>
-        <input id="{{ $prefix }}-what" type="text" autocomplete="off" placeholder="Massage, yoga, breathwork…" aria-expanded="false" aria-controls="{{ $prefix }}-what-pane">
+        <input id="{{ $prefix }}-what" name="what" type="text" autocomplete="off" placeholder="Massage, yoga, breathwork…" aria-expanded="false" aria-controls="{{ $prefix }}-what-pane" required>
       </div>
       <div id="{{ $prefix }}-what-pane" class="pane narrow d-none" role="listbox" aria-label="What suggestions">
-        <div id="{{ $prefix }}-what-list" class="listy">
-          <div class="section-title">Therapies</div>
-          <div>
-            <button type="button" class="item" role="option" data-value="Sound Bath"><i class="bi bi-dot"></i><span class="title">Sound Bath</span><span class="type">Group</span></button>
-            <button type="button" class="item" role="option" data-value="Massage"><i class="bi bi-dot"></i><span class="title">Massage</span><span class="type">Therapy</span></button>
-            <button type="button" class="item" role="option" data-value="Breathwork"><i class="bi bi-dot"></i><span class="title">Breathwork</span><span class="type">Workshop</span></button>
-          </div>
-        </div>
+        <div id="{{ $prefix }}-what-list" class="listy"></div>
       </div>
     </div>
 
@@ -39,6 +34,8 @@
           <button type="button" class="item" data-value="Online"><i class="bi bi-wifi"></i><span class="title">Online</span><span class="text-muted ms-2">Virtual</span></button>
           <button type="button" class="item" data-value="London"><i class="bi bi-geo-alt"></i><span class="title">London</span><span class="text-muted ms-2">United Kingdom</span></button>
           <button type="button" class="item" data-value="Manchester"><i class="bi bi-geo-alt"></i><span class="title">Manchester</span><span class="text-muted ms-2">United Kingdom</span></button>
+          <button type="button" class="item" data-value="Brighton &amp; Hove"><i class="bi bi-geo-alt"></i><span class="title">Brighton &amp; Hove</span><span class="text-muted ms-2">United Kingdom</span></button>
+          <button type="button" class="item" data-value="Kent"><i class="bi bi-geo-alt"></i><span class="title">Kent</span><span class="text-muted ms-2">United Kingdom</span></button>
         </div>
       </div>
     </div>
@@ -50,19 +47,21 @@
         <input id="{{ $prefix }}-when" type="text" placeholder="Select dates" readonly aria-haspopup="dialog">
       </div>
       <div id="{{ $prefix }}-when-pane" class="pane d-none" aria-label="Calendar">
-        <div class="cal-head">
-          <button type="button" class="cal-col active" id="{{ $prefix }}-tab-calendar" aria-pressed="true">Calendar</button>
-          <button type="button" class="cal-col" id="{{ $prefix }}-tab-flex" aria-pressed="false">I'm flexible</button>
-        </div>
-        <div class="cal-body">
-          <div id="{{ $prefix }}-calendarMount"></div>
-          <div class="flexible-pane" style="display:none;"><p class="mb-2">We’ll look across the next few weeks so you see more options.</p><p class="text-muted m-0">Switch back to Calendar for exact dates.</p></div>
-        </div>
-        <div class="cal-foot">
-          <button type="button" class="chip chip-sm primary" id="{{ $prefix }}-chip-exact">Exact dates</button>
-          <button type="button" class="chip chip-sm dur" data-days="1"><i class="bi bi-plus-lg"></i>1 day</button>
-          <button type="button" class="chip chip-sm dur" data-days="2"><i class="bi bi-plus-lg"></i>2 days</button>
-          <button type="button" class="chip chip-sm dur" data-days="3"><i class="bi bi-plus-lg"></i>3 days</button>
+        <div class="cal-body cal-body--range">
+          <div id="{{ $prefix }}-calendarMount" class="wow-search-calendar-mount">
+            <div class="wow-range-calendar wow-range-calendar--loading">
+              <div class="wow-range-calendar__toolbar">
+                <div class="wow-range-calendar__toolbar-title">
+                  <i class="bi bi-calendar3" aria-hidden="true"></i>
+                  <div>
+                    <div class="wow-range-calendar__eyebrow">Select a Date &amp; Time</div>
+                    <div class="wow-range-calendar__headline">Pick a range</div>
+                  </div>
+                </div>
+              </div>
+              <div class="wow-range-calendar__loading">Loading calendar...</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -71,7 +70,7 @@
       <i class="bi bi-person fs-5 text-muted"></i>
       <div class="flex-grow-1">
         <div class="seg-label">Who</div>
-        <div id="{{ $prefix }}-who-summary" class="summary">2 adults · Couple</div>
+        <div id="{{ $prefix }}-who-summary" class="summary" data-placeholder="Add guests"></div>
       </div>
       <div id="{{ $prefix }}-who-pane" class="pane narrow d-none" aria-label="Guests">
         <div class="section-title">Guests</div>
@@ -83,14 +82,14 @@
             </div>
             <div class="counter">
               <button type="button" class="btn btn-counter" data-dec="adults" aria-label="Decrease adults"><i class="bi bi-dash"></i></button>
-              <span id="{{ $prefix }}-adults-val" class="fw-semibold">2</span>
+              <span id="{{ $prefix }}-adults-val" class="fw-semibold">0</span>
               <button type="button" class="btn btn-counter" data-inc="adults" aria-label="Increase adults"><i class="bi bi-plus"></i></button>
             </div>
           </div>
           <div class="section-title">Group type</div>
           <div id="{{ $prefix }}-group-type-list">
             <button type="button" class="item" data-group="Solo" aria-selected="false"><i class="bi bi-person"></i><span class="title">Solo</span></button>
-            <button type="button" class="item" data-group="Couple" aria-selected="true"><i class="bi bi-heart"></i><span class="title">Couple</span></button>
+            <button type="button" class="item" data-group="Couple" aria-selected="false"><i class="bi bi-heart"></i><span class="title">Couple</span></button>
             <button type="button" class="item" data-group="Group" aria-selected="false"><i class="bi bi-people"></i><span class="title">Group</span></button>
           </div>
         </div>
@@ -100,7 +99,7 @@
       </div>
     </div>
 
-    <button class="btn-wow is-squarish btn-xl" data-loader-init="1">
+    <button class="btn-wow is-squarish btn-xl" data-loader-init="1" type="submit">
       <span class="btn-label">Search</span>
       <span class="btn-icon" aria-hidden="true">
         <svg class="icon-search" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">

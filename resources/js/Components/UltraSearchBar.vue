@@ -1,8 +1,8 @@
 <script setup>
-import { onMounted, onBeforeUnmount, ref } from 'vue'
-import flatpickr from 'flatpickr'
+import { onMounted, onBeforeUnmount, ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { fetchLocations } from '@/services/locations'
+import SearchRangeCalendar from './SearchRangeCalendar.vue'
 
 const props = defineProps({
   idPrefix: { type: String, default: 'ultra' },
@@ -23,6 +23,8 @@ const props = defineProps({
 
 const root = ref(null)
 const isFlexible = ref(false)
+const whatValue = ref('')
+const WHAT_LIMIT = 6
 
 const state = {
   who: { adults: 2, children: 0 },
@@ -30,7 +32,6 @@ const state = {
   groupType: 'Solo',
 }
 
-let fp = null
 let detachGlobal = null
 let groupTypeTouched = false
 let lastExactWhen = ''
@@ -39,6 +40,8 @@ let lastExactWhen = ''
 const q = (sel) => root.value?.querySelector(sel)
 const qa = (sel) => Array.from(root.value?.querySelectorAll(sel) || [])
 const id = (name) => `${props.idPrefix}-${name}`
+
+const whatFilled = computed(() => whatValue.value.trim().length > 0)
 
 function closeAll() {
   qa('.pane').forEach((p) => p.classList.add('d-none'))
@@ -52,19 +55,35 @@ function parseWhereValues(raw = '') {
 }
 
 function payload() {
-  const what = q(`#${id('what')}`)?.value?.trim() || ''
+  const what = whatValue.value.trim()
   const whereList = parseWhereValues(q(`#${id('where')}`)?.value || '')
-  const when = isFlexible.value ? '' : (q(`#${id('when')}`)?.value?.trim() || '')
-  return { what, whereList, when, flexible: isFlexible.value, who: { ...state.who } }
+  const whenInput = q(`#${id('when')}`)
+  const when = isFlexible.value ? '' : (whenInput?.value?.trim() || '')
+  const whenStart = whenInput?.dataset?.rangeStart || ''
+  const whenEnd = whenInput?.dataset?.rangeEnd || ''
+  return { what, whereList, when, whenStart, whenEnd, flexible: isFlexible.value, who: { ...state.who } }
 }
 
 function onSubmit() {
+  const whatInput = q(`#${id('what')}`)
+  if (!whatFilled.value) {
+    if (whatInput) {
+      whatInput.setCustomValidity('Please enter what you want to search for.')
+      whatInput.reportValidity()
+      whatInput.setCustomValidity('')
+      whatInput.focus()
+    }
+    return
+  }
+
   const p = payload()
   const params = new URLSearchParams()
   if (p.what) params.set('what', p.what)
   if (p.whereList.length) params.set('where', p.whereList.join(','))
   if (p.flexible) params.set('flexible', '1')
   else if (p.when) params.set('when', p.when)
+  if (p.whenStart) params.set('when_start', p.whenStart)
+  if (p.whenEnd) params.set('when_end', p.whenEnd)
   params.set('adults', String(p.who.adults))
   // No children parameter (UI removed)
   // Include group_type from the Who panel selection
@@ -72,49 +91,10 @@ function onSubmit() {
   router.visit(`/search?${params.toString()}`, { method: 'get' })
 }
 
-function initCalendar() {
-  const mount = q(`#${id('calendarMount')}`)
-  const input = q(`#${id('when')}`)
-  if (!mount || fp) return
-  fp = flatpickr(mount, {
-    inline: true,
-    mode: 'range',
-    minDate: 'today',
-    showMonths: 2,
-    dateFormat: 'j M Y',
-    onChange: (sel) => {
-      if (sel.length === 2) {
-        state.range.start = sel[0]
-        state.range.end = sel[1]
-        input.value = `${fp.formatDate(state.range.start, 'j M Y')} — ${fp.formatDate(state.range.end, 'j M Y')}`
-      } else if (sel.length === 1) {
-        state.range.start = sel[0]
-        state.range.end = null
-        input.value = fp.formatDate(state.range.start, 'j M Y')
-      } else {
-        state.range.start = state.range.end = null
-        input.value = ''
-      }
-    },
-  })
-}
-
 function setDuration(days) {
-  if (!state.range.start || !fp) return
-  const end = new Date(state.range.start)
-  end.setDate(end.getDate() + days)
-  fp.setDate([state.range.start, end], true)
-}
-
-function updateWhenInputDisplay() {
-  const input = q(`#${id('when')}`)
-  if (!input) return
-  if (isFlexible.value) {
-    input.value = `I'm flexible`
-  } else if (lastExactWhen) {
-    input.value = lastExactWhen
-  } else {
-    input.value = ''
+  const api = typeof window !== 'undefined' ? window.__WOWRangeCalendars?.[props.idPrefix] : null
+  if (api?.setDuration) {
+    api.setDuration(days)
   }
 }
 
@@ -126,7 +106,6 @@ function setFlexible(flag) {
   } else {
     q(`#${id('chip-exact')}`)?.classList.add('primary')
   }
-  updateWhenInputDisplay()
 }
 
 // Update the WHO summary/counts in the UI from state
@@ -173,6 +152,39 @@ function fuzzyMatch(qs, s) {
   return { ok: i === q.length, ranges }
 }
 
+function normalizeSearchText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function matchesSearchQuery(query, item) {
+  return searchScore(query, item) < 999
+}
+
+function searchScore(query, item) {
+  const q = normalizeSearchText(query)
+  if (!q) return 999
+  const title = normalizeSearchText(item.title)
+  const hay = [
+    item.title,
+    item.cat,
+    item.search,
+  ]
+    .map(normalizeSearchText)
+    .join(' ')
+  const tokens = q.split(/\s+/).filter(Boolean)
+  if (title === q) return 0
+  if (title.startsWith(q)) return 1
+  if (title.split(/\s+/).some((token) => token.startsWith(q))) return 2
+  if (title.includes(q)) return 3
+  if (hay.includes(q)) return 4
+  if (tokens.length && tokens.every((token) => hay.includes(token))) return 5
+  return 999
+}
+
 function highlight(text, ranges) {
   if (!ranges.length) return text
   let out = '', last = 0
@@ -183,29 +195,13 @@ function highlight(text, ranges) {
   return out + text.slice(last)
 }
 
-import { fetchProductTypes } from '@/services/types'
 import { fetchCatalog } from '@/services/catalog'
-let whatStatic = [
-  { cat: 'Experiences', title: 'Sound Bath', type: 'Group' },
-  { cat: 'Experiences', title: 'Ice Bath', type: 'Workshop' },
-  { cat: 'Experiences', title: 'Forest Walk', type: 'Nature' },
-]
-let whatDynamic = []
 let whatCategories = []
-let whatProducts = []
 
 function toTitleCase(s){
   return (s||'')
     .toLowerCase()
     .replace(/(^|\s|[-_/])([a-z])/g, (_, a, b) => (a || '') + b.toUpperCase())
-}
-function pluralizeType(t){
-  const x = (t||'').toLowerCase()
-  if (x === 'class') return 'Classes'
-  if (x === 'therapy') return 'Therapies'
-  if (x === 'experience') return 'Experiences'
-  // naive fallback
-  return toTitleCase(x.endsWith('s') ? x : x + 's')
 }
 
 // WHERE chips helpers
@@ -319,39 +315,39 @@ function renderWhereList(items){
 
 function renderWhat(qs = '') {
   const list = q(`#${id('what-list')}`)
-  if (!list) return
-  const full = [
-    ...whatDynamic,
-    ...whatCategories,
-    ...whatProducts,
-    ...whatStatic,
-  ]
-  const filtered = full.filter((x) => fuzzyMatch(qs, x.title).ok || fuzzyMatch(qs, x.cat).ok || fuzzyMatch(qs, x.type).ok)
-  const grouped = filtered.reduce((m, x) => {
-    ;(m[x.cat] ??= []).push(x)
-    return m
-  }, {})
-  const cats = Object.keys(grouped).sort()
+  if (!list) return false
+  const query = (qs || '').trim()
+  if (!query) {
+    list.innerHTML = ''
+    return false
+  }
+  let filtered = whatCategories
+    .map((item) => ({ item, score: searchScore(query, item) }))
+    .filter((row) => row.score < 999)
+    .sort((a, b) => (a.score - b.score) || a.item.title.localeCompare(b.item.title))
+    .slice(0, WHAT_LIMIT)
+    .map((row) => row.item)
   let html = ''
-  if (cats.length === 0) {
-    html = `<div class="section-title">No matches</div>`
+  if (!filtered.length) {
+    list.innerHTML = ''
+    closeAll()
+    return false
   } else {
-    cats.forEach((cat) => {
-      html += `<div class="section-title">${cat}</div><div>`
-      grouped[cat].forEach((x) => {
-        const m = fuzzyMatch(qs, x.title)
-        const titleHTML = highlight(x.title, m.ranges)
-        html += `
-          <button type="button" class="item" role="option" data-value="${x.title}">
-            <i class="bi bi-dot"></i>
-            <span class="title">${titleHTML}</span>
-            <span class="type">${x.type}</span>
-          </button>`
-      })
-      html += `</div>`
+    html += `<div class="section-title">Categories</div><div>`
+    filtered.forEach((x) => {
+      const m = fuzzyMatch(query, x.title)
+      const titleHTML = highlight(x.title, m.ranges)
+      html += `
+        <button type="button" class="item" role="option" data-value="${x.title}">
+          <i class="bi bi-tag"></i>
+          <span class="title">${titleHTML}</span>
+          <span class="text-muted ms-2">Category</span>
+        </button>`
     })
+    html += `</div>`
   }
   list.innerHTML = html
+  return true
 }
 
 function bindInteractions() {
@@ -383,9 +379,6 @@ function bindInteractions() {
     if (e.target.closest('.pane')) return
     closeAll()
     whenPane?.classList.remove('d-none')
-    // when-pane is centered via CSS; no adaptive align needed
-    initCalendar()
-    setTimeout(() => fp && fp.redraw(), 0)
   })
 
   qa(`#${id('seg-when')} .dur`).forEach((b) =>
@@ -398,6 +391,8 @@ function bindInteractions() {
     if (isFlexible.value) return
     qa(`#${id('seg-when')} .chip`).forEach((c) => c.classList.remove('primary'))
     e.currentTarget.classList.add('primary')
+    const api = typeof window !== 'undefined' ? window.__WOWRangeCalendars?.[props.idPrefix] : null
+    if (api?.clearSelection) api.clearSelection()
   })
 
   // WHERE
@@ -521,49 +516,51 @@ function bindInteractions() {
   const whatPane = q(`#${id('what-pane')}`)
   const whatList = q(`#${id('what-list')}`)
 
-  renderWhat('')
   segWhat?.addEventListener('click', () => {
     closeAll()
-    whatPane?.classList.remove('d-none')
     whatInput?.focus()
+    if (renderWhat(whatValue.value || whatInput?.value || '')) {
+      whatPane?.classList.remove('d-none')
+    }
   })
-  whatInput?.addEventListener('input', () => renderWhat(whatInput.value))
+  whatInput?.addEventListener('focus', () => {
+    if (renderWhat(whatValue.value || whatInput.value)) {
+      whatPane?.classList.remove('d-none')
+    }
+    else closeAll()
+  })
+  whatInput?.addEventListener('input', () => {
+    whatValue.value = whatInput.value
+    if (renderWhat(whatValue.value)) whatPane?.classList.remove('d-none')
+    else closeAll()
+  })
   whatList?.addEventListener('click', (e) => {
     const btn = e.target.closest('.item')
     if (!btn) return
     if (whatInput) whatInput.value = btn.dataset.value || ''
+    whatValue.value = whatInput?.value || ''
     closeAll()
     whereEditor?.focus()
   })
 }
 
 onMounted(async () => {
-  // Load product types and map into suggestion items
-  try {
-    const types = await fetchProductTypes()
-    whatDynamic = types.map(t => ({ cat: 'Types', title: t, type: 'Type' }))
-  } catch {}
+  whatCategories = []
 
-  // Load categories and products to power WHAT suggestions
+  // Load categories to power WHAT suggestions
   try {
     const catalog = await fetchCatalog({ all: true, product_limit: 200 })
-    // Categories
-    whatCategories = (catalog || []).map(c => ({ cat: 'Categories', title: c?.name || '', type: 'Category' }))
-                                    .filter(x => x.title)
-    // Products grouped by product_type label
-    const seen = new Set()
-    const products = []
-    ;(catalog || []).forEach(c => {
-      (c?.products || []).forEach(p => {
-        const title = p?.title || ''
-        if (!title || seen.has(title)) return
-        seen.add(title)
-        const group = pluralizeType(p?.type || '') || 'Experiences'
-        products.push({ cat: group, title, type: 'Product' })
+    const categories = Array.isArray(catalog) ? catalog : (Array.isArray(catalog?.categories) ? catalog.categories : [])
+    const categoryMap = new Map()
+    ;(categories || []).forEach((c) => {
+      const name = (c?.name || '').trim()
+      if (name) categoryMap.set(name.toLowerCase(), { cat: 'Categories', title: name, type: 'Category', search: name })
+      ;(c?.products || []).forEach((p) => {
+        const productCategory = (p?.category?.name || '').trim()
+        if (productCategory) categoryMap.set(productCategory.toLowerCase(), { cat: 'Categories', title: productCategory, type: 'Category', search: productCategory })
       })
     })
-    // Limit to keep dropdown snappy
-    whatProducts = products.slice(0, 200)
+    whatCategories = Array.from(categoryMap.values()).sort((a, b) => a.title.localeCompare(b.title))
   } catch {}
 
   bindInteractions()
@@ -582,6 +579,7 @@ onMounted(async () => {
     if (whatVal) {
       const whatInput = q(`#${id('what')}`)
       if (whatInput) whatInput.value = whatVal
+      whatValue.value = whatVal
     }
     // WHERE (comma-separated)
     const whereVal = urlParams.get('where') || ''
@@ -618,7 +616,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (detachGlobal) detachGlobal()
-  if (fp) fp.destroy()
 })
 </script>
 
@@ -630,10 +627,10 @@ onBeforeUnmount(() => {
         <i class="bi bi-stars fs-5 text-muted"></i>
         <div class="flex-grow-1">
           <div class="seg-label">What</div>
-          <input :id="id('what')" type="text" autocomplete="off" placeholder="Massage, yoga, breathwork…" aria-expanded="false" :aria-controls="id('what-pane')">
+          <input :id="id('what')" name="what" type="text" autocomplete="off" placeholder="Massage, yoga, breathwork…" aria-expanded="false" :aria-controls="id('what-pane')" required :aria-invalid="!whatFilled">
         </div>
         <!-- Inline Search button when onlyWhat mode -->
-        <button v-if="props.onlyWhat" type="submit" class="btn-wow is-squarish btn-xl d-flex align-items-center gap-2" aria-label="Search">
+        <button v-if="props.onlyWhat" type="submit" class="btn-wow is-squarish btn-xl d-flex align-items-center gap-2" aria-label="Search" :disabled="!whatFilled" :aria-disabled="!whatFilled">
           <span class="btn-label">Search</span>
           <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
         </button>
@@ -665,37 +662,8 @@ onBeforeUnmount(() => {
         </div>
 
         <div :id="id('when-pane')" class="pane d-none" aria-label="Calendar">
-          <div class="cal-head">
-            <button type="button"
-                    class="cal-col"
-                    :class="{ active: !isFlexible }"
-                    :id="id('tab-calendar')"
-                    :aria-pressed="(!isFlexible).toString()"
-                    @click.stop="setFlexible(false)">
-              Calendar
-            </button>
-            <button type="button"
-                    class="cal-col"
-                    :class="{ active: isFlexible }"
-                    :id="id('tab-flex')"
-                    :aria-pressed="isFlexible.toString()"
-                    @click.stop="setFlexible(true)">
-              I'm flexible
-            </button>
-          </div>
-          <div class="cal-body">
-            <div v-show="!isFlexible" :id="id('calendarMount')"></div>
-            <div v-show="isFlexible" class="flexible-pane">
-              <p class="mb-2">We’ll look across the next few weeks so you see more options.</p>
-              <p class="text-muted m-0">Switch back to Calendar for exact dates.</p>
-            </div>
-          </div>
-          <div class="cal-foot" :class="{ 'is-disabled': isFlexible }">
-            <button type="button" class="chip chip-sm primary" :id="id('chip-exact')" :disabled="isFlexible">Exact dates</button>
-            <button type="button" class="chip chip-sm dur" data-days="1" :disabled="isFlexible"><i class="bi bi-plus-lg"></i>1 day</button>
-            <button type="button" class="chip chip-sm dur" data-days="2" :disabled="isFlexible"><i class="bi bi-plus-lg"></i>2 days</button>
-            <button type="button" class="chip chip-sm dur" data-days="3" :disabled="isFlexible"><i class="bi bi-plus-lg"></i>3 days</button>
-            <button type="button" class="chip chip-sm dur" data-days="7" :disabled="isFlexible"><i class="bi bi-plus-lg"></i>7 days</button>
+          <div class="cal-body cal-body--range">
+            <SearchRangeCalendar :prefix="props.idPrefix" />
           </div>
         </div>
       </div>
@@ -747,7 +715,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <button v-if="!props.onlyWhat" class="btn-wow is-squarish btn-xl">
+      <button v-if="!props.onlyWhat" class="btn-wow is-squarish btn-xl" :disabled="!whatFilled" :aria-disabled="!whatFilled">
         <span class="btn-label">Search</span>
         <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
       </button>
@@ -829,6 +797,11 @@ onBeforeUnmount(() => {
 .wow-ultra .chip-x:hover{ background:#f3f4f6; color:#111827 }
 .wow-ultra .summary{ color:#374151; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 .wow-ultra .btn-search:focus{ box-shadow:var(--ring) }
+.wow-ultra .btn-wow:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  filter:saturate(.75);
+}
 
 /* Inline search button now uses .btn-wow classes */
 .wow-ultra.only-what .seg{ flex:1 1 100% }
@@ -872,7 +845,7 @@ onBeforeUnmount(() => {
 .wow-ultra .btn-counter:hover{ background:#f9fafb }
 .wow-ultra .btn-counter .bi{ font-size:14px; line-height:1 }
 
-.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; max-width:min(980px, 96vw); border-radius:18px }
+.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; width:min(680px, 96vw); max-width:min(980px, 96vw); border-radius:18px }
 .wow-ultra [id$='who-pane']{ left:auto; right:0; max-width:min(560px, 96vw); border-radius:18px }
 @media (max-width: 768px){
   /* On small screens, make WHO pane span the segment width to avoid overflow */

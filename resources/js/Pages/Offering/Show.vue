@@ -46,6 +46,7 @@ async function addToCart(detail){
     duration: bookingDuration.value,
     location: detail?.location || bookingLocation.value,
     nextAvailability: bookingNextAvailability.value,
+    source_version: p.source_version || 'legacy',
     product_id: p.id,
     variant_label: Array.isArray(detail?.selected) ? detail.selected.join(' • ') : null,
   }
@@ -64,6 +65,25 @@ async function addToCart(detail){
     qty: qtyVal,
     meta,
   })
+  try {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || ''
+    await fetch('/api/cart/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        id: p.id,
+        qty: qtyVal,
+        variant_id: detail?.variantId || null,
+        variant_label: Array.isArray(detail?.selected) ? detail.selected.join(' • ') : '',
+        source_version: p.source_version === 'v3' ? 'v3' : null,
+      }),
+    })
+  } catch {}
   /* disabled analytics event */
   setTimeout(() => adding.value = false, 250)
 }
@@ -481,9 +501,12 @@ const ldProduct = computed(() => {
   const obj = {
     '@context': 'https://schema.org',
     '@type': 'Product',
+    '@id': canonical.value ? `${canonical.value}#product` : undefined,
     'name': p.title,
     'description': plain(p.summary || p.description || p.body_html || ''),
     'image': images,
+    'url': canonical.value || undefined,
+    'mainEntityOfPage': canonical.value || undefined,
     'category': p?.category?.name || undefined,
     'brand': { '@type': 'Brand', 'name': 'We Offer Wellness' },
     'offers': offerPrice ? {
@@ -514,6 +537,7 @@ const ldEvent = computed(() => {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Event',
+    '@id': canonical.value ? `${canonical.value}#event` : undefined,
     'name': p.title,
     'eventAttendanceMode': attendance,
     'startDate': p.start_date || p.date,

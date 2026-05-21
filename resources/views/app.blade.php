@@ -91,12 +91,14 @@
         
         <!-- Organization JSON-LD -->
         @php
+          $siteUrl = url('/');
           $orgLd = [
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
+            '@id' => $siteUrl . '#organization',
             'name' => $appName,
-            'url' => url('/'),
-            'logo' => '//www.weofferwellness.co.uk/cdn/shop/files/logo-google-icon_05080e3a-98e5-42cd-b479-3b443028308c.png',
+            'url' => $siteUrl,
+            'logo' => 'https://www.weofferwellness.co.uk/cdn/shop/files/logo-google-icon_05080e3a-98e5-42cd-b479-3b443028308c.png',
             'sameAs' => [
               'https://www.instagram.com/weofferwellness',
               'https://www.tiktok.com/@weofferwellness',
@@ -104,8 +106,24 @@
               'https://www.facebook.com/WeOfferWellness',
             ],
           ];
+          $siteLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            '@id' => $siteUrl . '#website',
+            'url' => $siteUrl,
+            'name' => $appName,
+            'publisher' => [
+              '@id' => $siteUrl . '#organization',
+            ],
+            'potentialAction' => [
+              '@type' => 'SearchAction',
+              'target' => $siteUrl . 'search?what={search_term_string}',
+              'query-input' => 'required name=search_term_string',
+            ],
+          ];
         @endphp
         <script type="application/ld+json">{!! json_encode($orgLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
+        <script type="application/ld+json">{!! json_encode($siteLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
         @inertiaHead
     </head>
     <body class="antialiased">

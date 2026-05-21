@@ -75,13 +75,193 @@
 </script>
 <script>
 (function(){
+  var WOW_ULTRA_SEARCH_SOURCE_PROMISE = null;
+  var WOW_ULTRA_SEARCH_SOURCE_CACHE = null;
+
+  function wowUltraNormalize(value){
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  function wowUltraEscapeHtml(value){
+    return String(value ?? '').replace(/[&<>"']/g, function(ch){
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+    });
+  }
+
+  function wowUltraCanonicalPlanKey(value){
+    var normalized = String(value || '').toLowerCase().trim().replace(/[_ ]+/g, '-');
+    switch (normalized) {
+      case 'community':
+      case 'starter':
+      case 'standard':
+      case 'free-starter':
+      case 'starter-package':
+        return 'starter';
+      case 'core':
+      case 'business-accelerator':
+      case 'business-accelerator-package':
+      case 'businessaccelerator':
+        return 'business-accelerator';
+      case 'premium':
+      case 'premium-accelerator':
+      case 'premiumaccelerator':
+        return 'premium-accelerator';
+      case 'become-partner':
+      case 'partner':
+        return 'become-partner';
+      default:
+        return normalized;
+    }
+  }
+
+  function wowUltraPlanTitle(value){
+    switch (wowUltraCanonicalPlanKey(value)) {
+      case 'starter': return 'Starter';
+      case 'business-accelerator': return 'Business Accelerator';
+      case 'premium-accelerator': return 'Premium Accelerator';
+      case 'become-partner': return 'Become Partner';
+      default:
+        return String(value || '')
+          .replace(/[-_]+/g, ' ')
+          .replace(/\b\w/g, function(m){ return m.toUpperCase(); }) || 'Plan';
+    }
+  }
+
+  function wowUltraTypeLabel(value){
+    var x = String(value || '').toLowerCase();
+    if (x.indexOf('class') !== -1) return 'Class';
+    if (x.indexOf('workshop') !== -1) return 'Workshop';
+    if (x.indexOf('event') !== -1) return 'Event';
+    if (x.indexOf('retreat') !== -1) return 'Retreat';
+    if (x.indexOf('gift') !== -1) return 'Gift';
+    return 'Therapy';
+  }
+
+  function wowUltraGroupLabel(value){
+    var x = String(value || '').toLowerCase();
+    if (x.indexOf('class') !== -1) return 'Classes';
+    if (x.indexOf('workshop') !== -1) return 'Workshops';
+    if (x.indexOf('event') !== -1) return 'Events';
+    if (x.indexOf('retreat') !== -1) return 'Retreats';
+    if (x.indexOf('gift') !== -1) return 'Gifts';
+    return 'Therapies';
+  }
+
+  function wowUltraMatches(query, item){
+    return wowUltraSearchScore(query, item) < 999;
+  }
+
+  function wowUltraSearchScore(query, item){
+    var q = wowUltraNormalize(query);
+    if (!q) return 999;
+    var hay = [
+      item.title,
+      item.cat,
+      item.type,
+      item.vendor_name,
+      item.plan_label,
+      item.subtitle,
+    ].map(wowUltraNormalize).join(' ');
+    var tokens = q.split(/\s+/).filter(Boolean);
+    var title = wowUltraNormalize(item.title);
+    if (title === q) return 0;
+    if (title.indexOf(q) === 0) return 1;
+    if (title.split(/\s+/).some(function(token){ return token.indexOf(q) === 0; })) return 2;
+    if (title.indexOf(q) !== -1) return 3;
+    if (hay.indexOf(q) !== -1) return 4;
+    if (tokens.length && tokens.every(function(token){ return hay.indexOf(token) !== -1; })) return 5;
+    return 999;
+  }
+
+  function wowUltraBuildSearchSource(payload){
+    var categories = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.categories) ? payload.categories : []);
+    var offerings = Array.isArray(payload && payload.offerings) ? payload.offerings : [];
+    var categoryMap = new Map();
+
+    function addUnique(map, key, item){
+      var normalized = wowUltraNormalize(key);
+      if (!normalized || map.has(normalized)) return;
+      map.set(normalized, item);
+    }
+
+    categories.forEach(function(cat){
+      var catName = (cat && cat.name ? String(cat.name) : '').trim();
+      if (catName) {
+        addUnique(categoryMap, catName, {
+          cat: 'Categories',
+          title: catName,
+          type: 'Category',
+          value: catName,
+          search: catName
+        });
+      }
+
+      (cat && Array.isArray(cat.products) ? cat.products : []).forEach(function(product){
+        var title = (product && product.category && product.category.name ? String(product.category.name).trim() : '');
+        if (!title) return;
+        addUnique(categoryMap, title, {
+          cat: 'Categories',
+          title: title,
+          type: 'Category',
+          value: title,
+          search: title,
+        });
+      });
+    });
+
+    offerings.forEach(function(offering){
+      var offeringCategory = (offering && offering.category && offering.category.name ? String(offering.category.name).trim() : '');
+      if (offeringCategory) {
+        addUnique(categoryMap, offeringCategory, {
+          cat: 'Categories',
+          title: offeringCategory,
+          type: 'Category',
+          value: offeringCategory,
+          search: offeringCategory
+        });
+      }
+    });
+
+    return {
+      categories: Array.from(categoryMap.values()).sort(function(a, b){ return a.title.localeCompare(b.title); }),
+    };
+  }
+
+  function wowUltraLoadSearchSource(){
+    if (WOW_ULTRA_SEARCH_SOURCE_CACHE) return Promise.resolve(WOW_ULTRA_SEARCH_SOURCE_CACHE);
+    if (WOW_ULTRA_SEARCH_SOURCE_PROMISE) return WOW_ULTRA_SEARCH_SOURCE_PROMISE;
+
+    WOW_ULTRA_SEARCH_SOURCE_PROMISE = fetch('/api/catalog?all=true&product_limit=250', { cache: 'no-store' })
+      .then(function(res){ if (!res.ok) throw new Error('catalog ' + res.status); return res.json(); })
+      .then(function(payload){
+        WOW_ULTRA_SEARCH_SOURCE_CACHE = wowUltraBuildSearchSource(payload);
+        return WOW_ULTRA_SEARCH_SOURCE_CACHE;
+      })
+      .catch(function(){
+        WOW_ULTRA_SEARCH_SOURCE_CACHE = { categories: [] };
+        return WOW_ULTRA_SEARCH_SOURCE_CACHE;
+      });
+
+    return WOW_ULTRA_SEARCH_SOURCE_PROMISE;
+  }
+
+  // Warm the cache immediately so the autocomplete feels instant once users start typing.
+  wowUltraLoadSearchSource();
+
   function setupUltraSearchBar(prefix){
     var root = document.querySelector('[id^="'+prefix+'-seg-"]')?.closest('.wow-ultra') || document.querySelector('#'+prefix+'-seg-what')?.closest('.wow-ultra');
     // If structure not found, bail
     if(!root) return;
+    if (root.dataset.wowUltraBound === '1') return;
+    root.dataset.wowUltraBound = '1';
 
     function byId(s){ return document.getElementById(prefix + '-' + s) }
     var panes = ['what-pane','where-pane','when-pane','who-pane'];
+    var WHAT_LIMIT_PER_SECTION = 6;
 
     function hideAll(){
       panes.forEach(function(id){ var el = byId(id); if(el) el.classList.add('d-none') })
@@ -96,11 +276,77 @@
 
     // Open on clicks/focus
     var whatInput = byId('what');
+    var whatSource = null;
+    var whatSourceReady = false;
+
+    function renderWhat(qs){
+      var list = byId('what-list');
+      if (!list) return false;
+
+      var query = (qs || '').trim();
+      if (!query) {
+        list.innerHTML = '';
+        return false;
+      }
+
+      if (!whatSourceReady) {
+        list.innerHTML = '';
+        return false;
+      }
+
+      var categories = (whatSource && whatSource.categories ? whatSource.categories : []);
+      categories = categories
+        .map(function(item){ return { item: item, score: wowUltraSearchScore(query, item) }; })
+        .filter(function(row){ return row.score < 999; })
+        .sort(function(a, b){
+          if (a.score !== b.score) return a.score - b.score;
+          return String(a.item.title || '').localeCompare(String(b.item.title || ''));
+        })
+        .slice(0, WHAT_LIMIT_PER_SECTION)
+        .map(function(row){ return row.item; });
+
+      if (!categories.length) {
+        list.innerHTML = '';
+        hideAll();
+        return false;
+      }
+
+      var html = '<div class="section-title">Categories</div><div>';
+      categories.forEach(function(item){
+        html += '<button type="button" class="item" role="option" data-value="' + wowUltraEscapeHtml(item.value || item.title || '') + '">'
+          + '<i class="bi bi-tag"></i>'
+          + '<span class="title">' + wowUltraEscapeHtml(item.title || '') + '</span>'
+          + '<span class="text-muted ms-2">Category</span>'
+          + '</button>';
+      });
+      html += '</div>';
+      list.innerHTML = html;
+      return true;
+    }
+
+    function refreshWhat(){
+      var qs = whatInput ? whatInput.value : '';
+      var hasResults = renderWhat(qs);
+      if (hasResults) {
+        openPane('what');
+      } else {
+        hideAll();
+      }
+    }
+
+    wowUltraLoadSearchSource().then(function(source){
+      whatSource = source;
+      whatSourceReady = true;
+      if (whatInput && (whatInput.value || '').trim() && renderWhat(whatInput.value) && document.activeElement === whatInput) {
+        openPane('what');
+      }
+    });
+
     if(whatInput){
-      whatInput.addEventListener('focus', function(e){ openPane('what') });
-      whatInput.addEventListener('input', function(e){ openPane('what') });
+      whatInput.addEventListener('focus', function(e){ refreshWhat(); });
+      whatInput.addEventListener('input', function(e){ refreshWhat(); });
       var segWhat = byId('seg-what');
-      if(segWhat){ segWhat.addEventListener('click', function(){ openPane('what') }) }
+      if(segWhat){ segWhat.addEventListener('click', function(){ refreshWhat(); }) }
     }
 
     var whereEditor = byId('where-editor');
@@ -153,6 +399,98 @@
     }
     var whoDone = byId('who-done');
     if(whoDone){ whoDone.addEventListener('click', function(){ hideAll() }) }
+
+    // Shared Who controls: adults counter + group type selection
+    (function initWhoControls(){
+      var pane = byId('who-pane');
+      var adultsEl = byId('adults-val');
+      var groupList = byId('group-type-list') || byId('group-type-list') || document.getElementById(prefix + '-group-type-list');
+      var summaryEl = byId('who-summary');
+      if (!pane || !adultsEl || pane.dataset.wowWhoBound === '1') return;
+
+      var groupTouched = false;
+
+      function clampAdults(n){
+        var num = Number(n);
+        if (!Number.isFinite(num)) return 0;
+        return Math.max(0, Math.min(20, Math.round(num)));
+      }
+
+      function getAdults(){
+        return clampAdults((adultsEl.textContent || adultsEl.value || '0').trim());
+      }
+
+      function setGroupSelection(name){
+        if (!groupList) return;
+        var target = name == null ? '' : String(name || '');
+        Array.from(groupList.querySelectorAll('[data-group]')).forEach(function(btn){
+          var isMatch = String(btn.getAttribute('data-group')) === target;
+          btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+        });
+      }
+
+      function groupForAdults(n){
+        if (n <= 0) return '';
+        if (n === 1) return 'Solo';
+        if (n === 2) return 'Couple';
+        return 'Group';
+      }
+
+      function getSelectedGroup(){
+        if (!groupList) return '';
+        var sel = groupList.querySelector('[data-group][aria-selected="true"]');
+        return (sel?.getAttribute?.('data-group') || '').trim();
+      }
+
+      function updateSummary(){
+        if (!summaryEl) return;
+        var adults = getAdults();
+        var group = getSelectedGroup();
+        var parts = [];
+        if (adults > 0) parts.push(adults + ' ' + (adults === 1 ? 'adult' : 'adults'));
+        if (group) parts.push(group);
+        summaryEl.textContent = parts.length ? parts.join(' · ') : 'Add guests';
+      }
+
+      function applyAdults(n){
+        var next = clampAdults(n);
+        adultsEl.textContent = String(next);
+        if (!groupTouched) setGroupSelection(groupForAdults(next));
+        updateSummary();
+      }
+
+      pane.addEventListener('click', function(event){
+        var dec = event.target.closest('[data-dec="adults"]');
+        var inc = event.target.closest('[data-inc="adults"]');
+        if (!dec && !inc) return;
+        event.preventDefault();
+        var current = getAdults();
+        applyAdults(current + (inc ? 1 : -1));
+      });
+
+      if (groupList) {
+        groupList.addEventListener('click', function(event){
+          var btn = event.target.closest('[data-group]');
+          if (!btn) return;
+          var group = (btn.getAttribute('data-group') || '').trim();
+          if (!group) return;
+          groupTouched = true;
+          if (group === 'Solo') {
+            setGroupSelection('Solo');
+            applyAdults(1);
+          } else if (group === 'Couple') {
+            setGroupSelection('Couple');
+            applyAdults(2);
+          } else {
+            setGroupSelection('Group');
+            applyAdults(Math.max(3, getAdults() || 3));
+          }
+        });
+      }
+
+      updateSummary();
+      pane.dataset.wowWhoBound = '1';
+    })();
     // Ensure panes start closed on load
     try{ hideAll(); } catch(_){ }
 
@@ -162,9 +500,21 @@
       if(form){
         form.addEventListener('submit', function(e){
           try { e.preventDefault(); } catch(_) {}
+          var whatEl = byId('what');
+          var what = (whatEl && whatEl.value ? whatEl.value : '').trim();
+          if(!what){
+            try {
+              if (whatEl) {
+                whatEl.setCustomValidity('Please enter what you want to search for.');
+                whatEl.reportValidity();
+                whatEl.focus();
+                whatEl.setCustomValidity('');
+              }
+            } catch(_e) {}
+            return;
+          }
           var params = new URLSearchParams();
           // what
-          var what = byId('what')?.value?.trim();
           if(what) params.set('what', what);
           // where
           var whereHidden = byId('where');
@@ -172,8 +522,11 @@
           var where = (whereHidden && whereHidden.value) ? whereHidden.value : (whereText || '');
           if(where) params.set('where', where);
           // when (as-is string)
-          var when = byId('when')?.value?.trim();
+          var whenEl = byId('when');
+          var when = whenEl?.value?.trim();
           if(when) params.set('when', when);
+          if (whenEl?.dataset?.rangeStart) params.set('when_start', whenEl.dataset.rangeStart);
+          if (whenEl?.dataset?.rangeEnd) params.set('when_end', whenEl.dataset.rangeEnd);
           // group type
           var groupList = byId('group-type-list') || document.getElementById(prefix + '-group-type-list');
           if(groupList){
@@ -195,8 +548,10 @@
     } catch(err) { /* no-op */ }
   }
 
+  try { window.setupUltraSearchBar = setupUltraSearchBar; } catch (_) {}
+
   // Initialize bars present on the page
-  ['home-template','home-sticky','search-top'].forEach(function(prefix){
+  ['home-template','home-sticky','search-top','header-search'].forEach(function(prefix){
     try { setupUltraSearchBar(prefix) } catch(err) { /* no-op */ }
   });
 
@@ -282,7 +637,34 @@
       }
       var open = false;
       function closeMobile(){ mobile.style.display = 'none'; burger.classList.remove('opened'); burger.setAttribute('aria-expanded','false'); setBodyScroll(false); syncHamburger(false); open = false; }
-      function openMobile(){ mobile.style.display = 'block'; burger.classList.add('opened'); burger.setAttribute('aria-expanded','true'); setBodyScroll(true); syncHamburger(true); open = true; }
+      function openMobile(){
+        try {
+          if (typeof window.__WOWCloseMobileSearch === 'function') {
+            window.__WOWCloseMobileSearch();
+          }
+          const searchDrawer = document.getElementById('mobile-search-drawer');
+          if (searchDrawer) {
+            searchDrawer.classList.remove('is-visible');
+            searchDrawer.setAttribute('aria-hidden', 'true');
+          }
+          const searchTrigger = document.querySelector('[data-mobile-search-trigger]');
+          if (searchTrigger) {
+            searchTrigger.classList.remove('is-open');
+            searchTrigger.setAttribute('aria-expanded', 'false');
+            searchTrigger.setAttribute('aria-label', 'Search');
+            const searchIcon = searchTrigger.querySelector('.mobile-search-trigger__icon--search');
+            const closeIcon = searchTrigger.querySelector('.mobile-search-trigger__icon--close');
+            if (searchIcon) searchIcon.hidden = false;
+            if (closeIcon) closeIcon.hidden = true;
+          }
+        } catch(_err){}
+        mobile.style.display = 'block';
+        burger.classList.add('opened');
+        burger.setAttribute('aria-expanded','true');
+        setBodyScroll(true);
+        syncHamburger(true);
+        open = true;
+      }
       burger.addEventListener('click', function(){ open ? closeMobile() : openMobile(); });
       document.addEventListener('keydown', function(e){ if(e.key==='Escape' && open){ closeMobile(); }});
       mobile.addEventListener('click', function(e){ var a = e.target.closest('a'); if(a){ closeMobile(); }});
