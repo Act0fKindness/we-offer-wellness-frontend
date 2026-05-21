@@ -21,8 +21,7 @@ class ProductCardsController extends Controller
             ->withMin('variants', 'price')
             ->with(['media','options.values','category'])
             ->where(function ($w) {
-                $w->whereHas('status', function ($qs) { $qs->whereIn('status', ['live','approved']); })
-                  ->orWhereNull('product_status_id');
+                $w->whereHas('status', function ($qs) { $qs->whereIn('status', ['live','approved']); });
             });
 
         if ($mode === 'online') {
@@ -56,17 +55,5 @@ class ProductCardsController extends Controller
             $html .= view('partials.product_card', ['product' => $p])->render();
         }
         return response($html)->header('Content-Type', 'text/html');
-    }
-
-    private function typeSegment(Product $p): string
-    {
-        $t = strtolower((string) $p->product_type);
-        $tags = strtolower((string) $p->tags_list);
-        if (str_contains($t, 'workshop')) return 'workshops';
-        if (str_contains($t, 'event')) return 'events';
-        if (str_contains($t, 'class')) return 'classes';
-        if (str_contains($t, 'retreat')) return 'retreats';
-        if (str_contains($t, 'gift') || str_contains($tags, 'gift')) return 'gifts';
-        return 'therapies';
     }
 }

@@ -2,14 +2,8 @@
     // Derive URL segment from product_type or tags
     $t = strtolower((string) ($product->product_type ?? ''));
     $tags = strtolower((string) ($product->tags_list ?? ''));
-    $seg = 'therapies';
-    if (str_contains($t, 'workshop')) $seg = 'workshops';
-    elseif (str_contains($t, 'event')) $seg = 'events';
-    elseif (str_contains($t, 'class')) $seg = 'classes';
-    elseif (str_contains($t, 'retreat')) $seg = 'retreats';
-    elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $seg = 'gifts';
     $slug = \Illuminate\Support\Str::slug($product->title ?: (string) $product->id);
-    $url = url('/'.$seg.'/'.$product->id.'-'.$slug);
+    $url = url('/offerings/' . $product->id . '-' . $slug);
 
     $image = $product->getFirstImageUrl();
     $title = $product->title ?? 'Untitled';

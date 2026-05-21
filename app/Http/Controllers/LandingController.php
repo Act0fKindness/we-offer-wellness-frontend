@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\OfferingV3;
 use App\Models\ProductCategory;
 use App\Models\Review;
+use App\Models\VendorDetail;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class LandingController extends Controller
@@ -36,7 +40,7 @@ class LandingController extends Controller
                     'name' => $cat->name,
                     'slug' => $this->slugify($cat->name),
                     'count' => (int)($cat->products_count ?? 0),
-                    'url' => url("/{$type}/".$this->slugify($cat->name)),
+                    'url' => url('/' . $this->slugify($cat->name) . '/' . $type . '/'),
                 ];
             })->values();
 
@@ -61,7 +65,7 @@ class LandingController extends Controller
                         'name' => $cat->name,
                         'slug' => $this->slugify($cat->name),
                         'count' => (int)($row->cnt ?? 0),
-                        'url' => url("/{$type}/".$this->slugify($cat->name)),
+                        'url' => url('/' . $this->slugify($cat->name) . '/' . $type . '/'),
                     ];
                 })->filter()->values();
             } catch (\Throwable $e) {
@@ -109,6 +113,181 @@ class LandingController extends Controller
             'mapsKey' => env('GOOGLE_MAPS_API_KEY'),
             'geoStatus' => $geoStatus,
             'userCity' => $cookieCity,
+        ]);
+    }
+
+    public function categoryHub(Request $request, string $category)
+    {
+        $category = trim($category);
+        $cat = $this->findCategoryBySlug($category);
+
+        if (!$cat) {
+            abort(404);
+        }
+
+        $slug = $this->slugify($cat->name);
+        $products = $this->queryProducts(null, $cat->id, $request)->limit(12)->get()->map(fn ($p) => $this->transformProduct($p));
+
+        return view('landing.show', [
+            'seo' => [
+                'title' => $cat->name . ' | We Offer Wellness',
+                'description' => $cat->name . ' therapies, classes, events, workshops and retreats on We Offer Wellness.',
+                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) ? 'noindex,follow' : 'index,follow',
+                'canonical' => url('/' . $slug . '/'),
+            ],
+            'landing' => [
+                'kicker' => 'Category',
+                'title' => $cat->name,
+                'intro' => 'Browse ' . $cat->name . ' experiences across therapies, classes, events, workshops and retreats.',
+                'points' => [
+                    'Therapies, classes and events in one place',
+                    'Online and in-person listings',
+                    'Browse by format or location',
+                ],
+                'primary_cta' => ['label' => 'Browse ' . $cat->name, 'href' => '#' . 'landing-products'],
+                'secondary_cta' => ['label' => 'View therapies', 'href' => '/' . $slug . '/therapies/'],
+            ],
+            'type' => 'therapies',
+            'categories' => ProductCategory::query()
+                ->withCount(['products as products_count' => function ($q) {
+                    $this->applyTypeFilter($q, null);
+                }])
+                ->orderByDesc('products_count')
+                ->orderBy('name')
+                ->take(8)
+                ->get()
+                ->map(function (ProductCategory $category) {
+                    $name = trim((string) ($category->name ?? ''));
+                    return [
+                        'name' => $name,
+                        'slug' => $this->slugify($name),
+                        'count' => (int) ($category->products_count ?? 0),
+                    ];
+                })
+                ->filter(fn (array $category) => $category['count'] > 0)
+                ->values(),
+            'products' => $products,
+        ]);
+    }
+
+    public function categoryType(Request $request, string $category, string $type)
+    {
+        $type = strtolower(trim($type));
+        if (!in_array($type, self::TYPES, true)) {
+            abort(404);
+        }
+
+        $cat = $this->findCategoryBySlug($category);
+        if (!$cat) {
+            abort(404);
+        }
+
+        $slug = $this->slugify($cat->name);
+        $products = $this->queryProducts($type, $cat->id, $request)->limit(12)->get()->map(fn ($p) => $this->transformProduct($p));
+
+        $title = $cat->name . ' ' . ucfirst($type);
+
+        return view('landing.show', [
+            'seo' => [
+                'title' => $title . ' | We Offer Wellness',
+                'description' => $cat->name . ' ' . ucfirst($type) . ' options on We Offer Wellness.',
+                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) ? 'noindex,follow' : 'index,follow',
+                'canonical' => url('/' . $slug . '/' . $type . '/'),
+            ],
+            'landing' => [
+                'kicker' => ucfirst($type),
+                'title' => $title,
+                'intro' => 'Browse ' . $cat->name . ' ' . $type . ' listings across trusted practitioners.',
+                'points' => [
+                    'Curated and search-friendly',
+                    'Online and in-person availability',
+                    'Popular results surfaced first',
+                ],
+                'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
+                'secondary_cta' => ['label' => 'View category', 'href' => '/' . $slug . '/'],
+            ],
+            'type' => $type,
+            'categories' => ProductCategory::query()
+                ->withCount(['products as products_count' => function ($q) use ($type) {
+                    $this->applyTypeFilter($q, $type);
+                }])
+                ->orderByDesc('products_count')
+                ->orderBy('name')
+                ->take(8)
+                ->get()
+                ->map(function (ProductCategory $category) use ($type) {
+                    $name = trim((string) ($category->name ?? ''));
+                    return [
+                        'name' => $name,
+                        'slug' => $this->slugify($name),
+                        'count' => (int) ($category->products_count ?? 0),
+                        'url' => url('/' . $this->slugify($name) . '/' . $type . '/'),
+                    ];
+                })
+                ->filter(fn (array $category) => $category['count'] > 0)
+                ->values(),
+            'products' => $products,
+        ]);
+    }
+
+    public function categoryTypeLocation(Request $request, string $category, string $type, string $location)
+    {
+        $type = strtolower(trim($type));
+        if (!in_array($type, self::TYPES, true)) {
+            abort(404);
+        }
+
+        $cat = $this->findCategoryBySlug($category);
+        if (!$cat) {
+            abort(404);
+        }
+
+        $slug = $this->slugify($cat->name);
+        $locationName = trim(str_replace(['-', '+'], ' ', $location));
+        $products = $this->queryProducts($type, $cat->id, $request, $locationName)->limit(12)->get()->map(fn ($p) => $this->transformProduct($p));
+        $title = $cat->name . ' ' . ucfirst($type) . ' in ' . ucwords($locationName);
+
+        return view('landing.show', [
+            'seo' => [
+                'title' => $title . ' | We Offer Wellness',
+                'description' => $cat->name . ' ' . ucfirst($type) . ' in ' . ucwords($locationName) . '.',
+                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) ? 'noindex,follow' : 'index,follow',
+                'canonical' => url('/' . $slug . '/' . $type . '/' . Str::slug($locationName) . '/'),
+            ],
+            'landing' => [
+                'kicker' => ucfirst($type),
+                'title' => $title,
+                'intro' => 'Browse ' . $cat->name . ' ' . $type . ' in ' . ucwords($locationName) . '.',
+                'points' => [
+                    'Ranked for the selected location',
+                    'Online fallback available',
+                    'Trusted practitioners and venues',
+                ],
+                'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
+                'secondary_cta' => ['label' => 'View category', 'href' => '/' . $slug . '/'],
+            ],
+            'type' => $type,
+            'city' => ucwords($locationName),
+            'categories' => ProductCategory::query()
+                ->withCount(['products as products_count' => function ($q) use ($type) {
+                    $this->applyTypeFilter($q, $type);
+                }])
+                ->orderByDesc('products_count')
+                ->orderBy('name')
+                ->take(8)
+                ->get()
+                ->map(function (ProductCategory $category) use ($type) {
+                    $name = trim((string) ($category->name ?? ''));
+                    return [
+                        'name' => $name,
+                        'slug' => $this->slugify($name),
+                        'count' => (int) ($category->products_count ?? 0),
+                        'url' => url('/' . $this->slugify($name) . '/' . $type . '/'),
+                    ];
+                })
+                ->filter(fn (array $category) => $category['count'] > 0)
+                ->values(),
+            'products' => $products,
         ]);
     }
 
@@ -680,7 +859,6 @@ class LandingController extends Controller
         $isOnline = in_array('Online', $locations, true);
         $physical = array_values(array_filter($locations, fn($l)=> $l !== 'Online'));
         $meta = $p->meta_json ?? [];
-        $typeSeg = $this->typeSegment($p);
         $slug = $this->slugify($p->title ?? (string)$p->id);
         return [
             'id' => $p->id,
@@ -697,7 +875,7 @@ class LandingController extends Controller
             'review_count' => (int)($p->reviews_count ?? 0),
             'image' => method_exists($p, 'getFirstImageUrl') ? $p->getFirstImageUrl() : null,
             'tags' => $p->tags_list ? array_map('trim', explode(',', $p->tags_list)) : [],
-            'url' => url('/'.$typeSeg.'/' . $p->id . '-' . $slug),
+            'url' => $this->canonicalOfferingUrl($p->id, $slug),
         ];
     }
 
@@ -725,7 +903,7 @@ class LandingController extends Controller
         }
 
         $query = Product::query()
-            ->with(['media','options.values','variants','reviews.user','category','vendor'])
+            ->with(['media','options.values','variants','reviews.user','category','vendor.user.tier'])
             ->withCount('reviews')
             ->withAvg('reviews', 'rating');
         if ($id) {
@@ -734,8 +912,19 @@ class LandingController extends Controller
             $query->where('handle', $handle);
         }
         $product = $query->first();
-        if (!$product) abort(404);
+        if (!$product) {
+            $offering = $this->resolveV3Offering($id, (string) $handle);
+            if (!$offering) {
+                abort(404);
+            }
 
+            return view('offering.show', [
+                'type' => $type,
+                'product' => $this->transformV3Offering($offering, $type),
+            ]);
+        }
+
+        $slug = $this->slugify($product->title ?: (string) $product->id);
         $meta = $product->meta_json ?? [];
         $locations = $product->getLocations();
         $isOnline = in_array('Online', $locations, true);
@@ -963,15 +1152,7 @@ class LandingController extends Controller
             'date' => $meta['date'] ?? null,
             'start_date' => $meta['start_date'] ?? null,
             'end_date' => $meta['end_date'] ?? null,
-            'practitioner' => $vendor ? [
-                'name' => $vendor->name ?? '',
-                'pronouns' => $vendor->pronouns ?? null,
-                'bio' => $vendor->bio ?? $vendor->about ?? '',
-                'credentials' => $vendor->credentials ?? $vendor->qualifications ?? '',
-                'photo' => $vendor->photo_url ?? $vendor->headshot_url ?? $vendor->avatar_url ?? null,
-                'location' => $vendor->location ?? '',
-                'specialties' => is_array($vendor->specialties ?? null) ? array_values(array_filter($vendor->specialties)) : [],
-            ] : null,
+            'practitioner' => $this->practitionerPayload($vendor, $vendor?->user),
             'reviews' => $product->reviews->map(function($r){
                 return [
                     'id' => $r->id,
@@ -985,11 +1166,367 @@ class LandingController extends Controller
                 ];
             })->values(),
             'client_reviews' => $clientReviews,
+            'url' => $this->canonicalOfferingUrl($product->id, $slug),
         ];
 
         return view('offering.show', [
             'type' => $type,
             'product' => $data,
         ]);
+    }
+
+    private function resolveV3Offering(?int $id, string $handle): ?OfferingV3
+    {
+        $query = OfferingV3::query()->with(['category', 'type', 'vendor.user.tier', 'media', 'coverMedia']);
+
+        if ($id) {
+            $query->where('id', $id);
+        } else {
+            $query->where('slug', $handle);
+        }
+
+        $offering = $query->first();
+        if ($offering && in_array((string) $offering->status, ['live', 'approved'], true)) {
+            return $offering;
+        }
+
+        return null;
+    }
+
+    private function transformV3Offering(OfferingV3 $offering, string $type): array
+    {
+        $channels = DB::table('offering_channels')
+            ->where('offering_id', $offering->id)
+            ->where('is_enabled', true)
+            ->pluck('channel')
+            ->all();
+        $locations = method_exists($offering, 'getLocations') ? $offering->getLocations() : [];
+        $isOnline = in_array('Online', $locations, true);
+        $physical = array_values(array_filter($locations, fn ($l) => $l !== 'Online'));
+        $images = $offering->media
+            ->map(function ($m) {
+                $url = (string) ($m->media_url ?? '');
+                if ($url === '') return null;
+                if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) return $url;
+                $backend = rtrim((string) env('BACKEND_ASSET_URL', env('BACKEND_URL', '')), '/');
+                $clean = ltrim($url, '/');
+                return $backend ? $backend . '/storage/' . $clean : asset('storage/' . $clean);
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        $meta = DB::table('offering_meta')->where('offering_id', $offering->id)->first();
+        $details = DB::table('offering_details')->where('offering_id', $offering->id)->first();
+        $priceOptions = DB::table('offering_price_options')
+            ->where('offering_id', $offering->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+        $priceTiers = DB::table('offering_price_tiers')
+            ->whereIn('price_option_id', $priceOptions->pluck('id'))
+            ->get();
+        $formatValues = [];
+        if (in_array('online', $channels, true)) {
+            $formatValues[] = 'Online';
+        }
+        if (in_array('in_person', $channels, true) || (! empty($physical) && ! in_array('In-person', $formatValues, true))) {
+            $formatValues[] = 'In-person';
+        }
+        $formatValues = array_values(array_unique($formatValues));
+
+        $buildPeopleLabel = function (string $audienceType, string $pricingType, $option, $tierRow = null): ?string {
+            $audienceType = strtolower(trim($audienceType));
+            $pricingType = strtolower(trim($pricingType));
+            if ($tierRow) {
+                $min = (int) ($tierRow->min_qty ?? 0);
+                $max = $tierRow->max_qty !== null ? (int) $tierRow->max_qty : null;
+                if ($min > 0) {
+                    if ($min === 1) {
+                        return '1 Person';
+                    }
+                    if ($min === 2) {
+                        return '2 Persons';
+                    }
+                    if ($max === null || $max <= $min) {
+                        return $min >= 3 ? (($min === 3) ? '3+ Group' : $min . ' People') : null;
+                    }
+                    return $min . '-' . $max . ' Group';
+                }
+            }
+
+            if ($audienceType === 'solo') {
+                return '1 Person';
+            }
+            if ($audienceType === 'couple') {
+                return '2 Persons';
+            }
+            if ($audienceType === 'group') {
+                if ($pricingType === 'per_person') {
+                    return '3+ Group';
+                }
+
+                $minPeople = (int) ($option->min_qty ?? 0);
+                if ($minPeople >= 3) {
+                    return $minPeople === 3 ? '3+ Group' : $minPeople . ' People';
+                }
+
+                return '3+ Group';
+            }
+
+            return null;
+        };
+
+        $formatLabelForOption = function ($option): ?string {
+            $channel = strtolower(trim((string) ($option->channel ?? '')));
+            if ($channel === 'online') {
+                return 'Online';
+            }
+            if ($channel === 'in_person') {
+                return 'In-person';
+            }
+
+            return null;
+        };
+
+        $peopleValues = [];
+        $variants = [];
+        $groupPriceOptionIds = [];
+        foreach ($priceOptions as $option) {
+            $audienceType = strtolower(trim((string) ($option->audience_type ?? '')));
+            $pricingType = strtolower(trim((string) ($option->pricing_type ?? '')));
+            $formatLabel = $formatLabelForOption($option);
+            if ($formatLabel === null && count($formatValues) === 1) {
+                $formatLabel = $formatValues[0];
+            }
+            $basePeopleLabel = $buildPeopleLabel($audienceType, $pricingType, $option);
+            $tierRows = $priceTiers->where('price_option_id', (int) $option->id)->values();
+
+            if ($audienceType === 'group' && $pricingType === 'per_person' && $tierRows->isNotEmpty()) {
+                $groupPriceOptionIds[] = (int) $option->id;
+
+                foreach ($tierRows as $tierRow) {
+                    $peopleLabel = $buildPeopleLabel($audienceType, $pricingType, $option, $tierRow);
+                    if ($peopleLabel !== null) {
+                        $peopleValues[] = $peopleLabel;
+                    }
+
+                    $variantOptions = [];
+                    if ($formatLabel !== null) {
+                        $variantOptions[] = $formatLabel;
+                    }
+                    if ($peopleLabel !== null) {
+                        $variantOptions[] = $peopleLabel;
+                    }
+
+                    $variants[] = [
+                        'id' => 'po_' . (string) $option->id . '_tier_' . (string) $tierRow->id,
+                        'options' => $variantOptions,
+                        'price' => (float) ($tierRow->price_amount ?? $option->price_amount ?? 0),
+                        'compare' => null,
+                        'available' => (bool) ($option->is_active ?? true),
+                    ];
+                }
+
+                continue;
+            }
+
+            if ($basePeopleLabel !== null) {
+                $peopleValues[] = $basePeopleLabel;
+            }
+
+            $variants[] = [
+                'id' => 'po_' . (string) $option->id,
+                'options' => array_values(array_filter([$formatLabel, $basePeopleLabel], fn ($v) => $v !== null && $v !== '')),
+                'price' => (float) ($option->price_amount ?? 0),
+                'compare' => null,
+                'available' => (bool) ($option->is_active ?? true),
+            ];
+        }
+        $peopleValues = array_values(array_unique(array_filter($peopleValues)));
+        if (empty($peopleValues)) {
+            $peopleValues[] = '1 Person';
+        }
+
+        $options = [];
+        if (! empty($formatValues)) {
+            $options[] = [
+                'name' => 'Format',
+                'meta_name' => 'format',
+                'values' => $formatValues,
+            ];
+        }
+        $options[] = [
+            'name' => 'People',
+            'meta_name' => 'people',
+            'values' => $peopleValues,
+        ];
+
+        $minPrice = collect([$offering->price])
+            ->merge($priceOptions->pluck('price_amount'))
+            ->merge($priceTiers->pluck('price_amount'))
+            ->filter(fn ($v) => is_numeric($v))
+            ->map(fn ($v) => (float) $v)
+            ->min();
+        $maxPrice = collect([$offering->price])
+            ->merge($priceOptions->pluck('price_amount'))
+            ->merge($priceTiers->pluck('price_amount'))
+            ->filter(fn ($v) => is_numeric($v))
+            ->map(fn ($v) => (float) $v)
+            ->max();
+
+        return [
+            'id' => $offering->id,
+            'title' => $offering->title,
+            'source_version' => 'v3',
+            'type' => $offering->type?->name ?: 'experience',
+            'category' => $offering->category ? ['id' => $offering->category->id, 'name' => $offering->category->name] : null,
+            'rating' => null,
+            'review_count' => 0,
+            'vendor_rating' => null,
+            'vendor_review_count' => 0,
+            'price' => $offering->price ?? null,
+            'price_min' => $minPrice ?? $offering->price ?? null,
+            'price_max' => $maxPrice ?? $offering->price ?? null,
+            'compare_at_price' => null,
+            'currency' => 'GBP',
+            'image' => $offering->getFirstImageUrl(),
+            'images' => $images,
+            'options' => $options,
+            'variants' => $variants,
+            'mode' => $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null),
+            'location' => $physical[0] ?? ($isOnline ? 'Online' : null),
+            'locations' => $locations,
+            'description' => (string) ($details->description ?? ''),
+            'summary' => (string) ($offering->summary ?? ''),
+            'body_html' => (string) ($details->description ?? ''),
+            'what_to_expect' => (string) ($details->what_to_expect ?? ''),
+            'included' => (string) ($details->whats_included ?? ''),
+            'aftercare' => '',
+            'duration' => $meta->duration_minutes ?? null,
+            'tags' => array_values(array_filter(array_map('trim', array_filter([
+                $offering->type?->name,
+                $offering->category?->name,
+            ])))),
+            'benefits' => [],
+            'who_for' => [],
+            'who_not_for' => [],
+            'faq' => [],
+            'safety_notes' => '',
+            'contraindications' => '',
+            'date' => null,
+            'start_date' => null,
+            'end_date' => null,
+            'practitioner' => $this->practitionerPayload($offering->vendor, $offering->vendor?->user),
+            'reviews' => collect(),
+            'client_reviews' => [],
+            'url' => $this->canonicalOfferingUrl($offering->id, $this->slugify($offering->title ?: (string) $offering->id)),
+        ];
+    }
+
+    public function offeringCanonical(Request $request, string $offering)
+    {
+        $id = null;
+        if (preg_match('/^(\d+)(?:-.+)?$/', (string) $offering, $match)) {
+            $id = (int) $match[1];
+        }
+
+        $product = Product::query()
+            ->with(['media', 'options.values', 'variants', 'reviews.user', 'category', 'vendor.user.tier'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating');
+
+        if ($id) {
+            $product->where('id', $id);
+        } else {
+            $product->where('handle', $offering);
+        }
+
+        $resolvedProduct = $product->first();
+        if ($resolvedProduct) {
+            return $this->offering($request, $this->typeSegment($resolvedProduct), (string) ($resolvedProduct->id ?? $offering));
+        }
+
+        $resolvedOffering = $this->resolveV3Offering($id, (string) $offering);
+        if ($resolvedOffering) {
+            return $this->offering($request, $this->offeringTypeSegment((string) ($resolvedOffering->type?->name ?? $resolvedOffering->category?->name ?? 'experience')), (string) ($resolvedOffering->id ?? $offering));
+        }
+
+        abort(404);
+    }
+
+    private function canonicalOfferingUrl(int|string $id, string $slug): string
+    {
+        return url('/offerings/' . $id . '-' . $this->slugify($slug));
+    }
+
+    private function practitionerPayload(?VendorDetail $vendor, ?\App\Models\User $user = null): ?array
+    {
+        if (! $vendor && ! $user) {
+            return null;
+        }
+
+        $user ??= $vendor?->user;
+        $firstName = trim((string) ($user?->first_name ?: Str::of((string) ($user?->name ?? ''))->before(' ')));
+        $fullName = trim((string) (($user?->name ?: '') ?: ($vendor?->vendor_name ?? '')));
+        $planKey = $this->normalizePlanKey(
+            $user?->tier?->tier
+                ?? $user?->account_type
+                ?? ($vendor?->tiers()->orderByDesc('plan_started_at')->orderByDesc('id')->value('tier'))
+        );
+        $profilePicture = $user?->profile_picture ? $this->profilePhotoUrl($user->profile_picture) : null;
+
+        return [
+            'name' => $fullName !== '' ? $fullName : ($vendor?->vendor_name ?? ''),
+            'first_name' => $firstName !== '' ? $firstName : $fullName,
+            'bio' => $vendor?->bio ?? $vendor?->about ?? '',
+            'credentials' => $vendor?->credentials ?? $vendor?->qualifications ?? '',
+            'photo' => $profilePicture ?? ($vendor?->photo_url ?? $vendor?->headshot_url ?? $vendor?->avatar_url ?? null),
+            'location' => $vendor?->location ?? '',
+            'specialties' => is_array($vendor?->specialties ?? null) ? array_values(array_filter($vendor->specialties)) : [],
+            'plan_key' => $planKey,
+            'plan_label' => $this->planTitleForKey($planKey),
+            'is_paid_plan' => ! in_array($planKey, ['starter', ''], true),
+        ];
+    }
+
+    private function normalizePlanKey(?string $value): string
+    {
+        $normalized = strtolower(trim((string) $value));
+        $normalized = str_replace(['_', ' '], '-', $normalized);
+
+        return match ($normalized) {
+            'community', 'starter', 'standard', 'free-starter', 'starter-package' => 'starter',
+            'core', 'business-accelerator', 'business-accelerator-package', 'businessaccelerator' => 'business-accelerator',
+            'premium', 'premium-accelerator', 'premiumaccelerator' => 'premium-accelerator',
+            'become-partner', 'partner' => 'become-partner',
+            default => $normalized,
+        };
+    }
+
+    private function planTitleForKey(?string $value): string
+    {
+        return match ($this->normalizePlanKey($value)) {
+            'starter' => 'Starter',
+            'business-accelerator' => 'Business Accelerator',
+            'premium-accelerator' => 'Premium Accelerator',
+            'become-partner' => 'Become Partner',
+            default => Str::headline(trim((string) $value)) ?: 'Plan',
+        };
+    }
+
+    private function profilePhotoUrl(?string $path): ?string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $assetHost = rtrim((string) (config('app.asset_url') ?: config('services.asset_host') ?: 'https://atease.weofferwellness.co.uk'), '/');
+        return $assetHost.'/storage/'.ltrim($path, '/');
     }
 }

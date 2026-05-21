@@ -1,5 +1,8 @@
 import { gsap } from 'gsap';
+import { createApp } from 'vue';
+import ui from '@nuxt/ui/vue-plugin';
 import { initSubscriberForms } from './lib/subscriber-forms';
+import SearchRangeCalendar from './Components/SearchRangeCalendar.vue';
 
 function runIdle(fn) {
   try {
@@ -271,6 +274,9 @@ function initMobileMenu() {
 }
 
 function setupUltraSearchBar(prefix) {
+  if (typeof window !== 'undefined' && window.setupUltraSearchBar && window.setupUltraSearchBar !== setupUltraSearchBar) {
+    try { return window.setupUltraSearchBar(prefix); } catch (_) {}
+  }
   // Find the specific ultra-search container for this prefix
   const root = (
     document.querySelector(`#${prefix}-root`) ||
@@ -278,6 +284,7 @@ function setupUltraSearchBar(prefix) {
     document.getElementById(`${prefix}-what`)?.closest('.wow-ultra') ||
     null
   );
+  if (root && root.dataset && root.dataset.wowUltraBound === '1') return;
   function byId(s){ return document.getElementById(prefix + '-' + s); }
   const panes = ['what-pane','where-pane','when-pane','who-pane'];
   function hideAll(){ panes.forEach((id) => { const el = byId(id); if (el) el.classList.add('d-none'); }); const what = byId('what'); if (what) what.setAttribute('aria-expanded','false'); }
@@ -301,19 +308,21 @@ function setupUltraSearchBar(prefix) {
     const summaryEl = byId('who-summary');
     if (!pane || !adultsEl || pane.dataset.wowWhoBound === '1') return;
 
+    let groupTouched = false;
+
     function clampAdults(n){
       const num = Number(n);
-      if (!Number.isFinite(num)) return 1;
-      return Math.max(1, Math.min(20, Math.round(num)));
+      if (!Number.isFinite(num)) return 0;
+      return Math.max(0, Math.min(20, Math.round(num)));
     }
 
     function getAdults(){
-      return clampAdults((adultsEl.textContent || adultsEl.value || '1').trim());
+      return clampAdults((adultsEl.textContent || adultsEl.value || '0').trim());
     }
 
     function setGroupSelection(name){
       if (!groupList) return;
-      const target = String(name || '');
+      const target = name == null ? '' : String(name || '');
       Array.from(groupList.querySelectorAll('[data-group]')).forEach((btn) => {
         const isMatch = String(btn.getAttribute('data-group')) === target;
         btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
@@ -321,22 +330,33 @@ function setupUltraSearchBar(prefix) {
     }
 
     function groupForAdults(n){
-      if (n <= 1) return 'Solo';
+      if (n <= 0) return '';
+      if (n === 1) return 'Solo';
       if (n === 2) return 'Couple';
       return 'Group';
     }
 
-    function updateSummary(n){
-      if (!summaryEl) return;
-      const label = groupForAdults(n);
-      summaryEl.textContent = `${n} ${n === 1 ? 'adult' : 'adults'} · ${label}`;
+    function getSelectedGroup(){
+      if (!groupList) return '';
+      const sel = groupList.querySelector('[data-group][aria-selected="true"]');
+      return (sel?.getAttribute?.('data-group') || '').trim();
     }
 
-    function applyAdults(n, { syncGroup = true } = {}){
+    function updateSummary(){
+      if (!summaryEl) return;
+      const adults = getAdults();
+      const group = getSelectedGroup();
+      const parts = [];
+      if (adults > 0) parts.push(`${adults} ${adults === 1 ? 'adult' : 'adults'}`);
+      if (group) parts.push(group);
+      summaryEl.textContent = parts.length ? parts.join(' · ') : 'Add guests';
+    }
+
+    function applyAdults(n){
       const next = clampAdults(n);
       adultsEl.textContent = String(next);
-      if (syncGroup) setGroupSelection(groupForAdults(next));
-      updateSummary(next);
+      if (!groupTouched) setGroupSelection(groupForAdults(next));
+      updateSummary();
     }
 
     pane.addEventListener('click', (event) => {
@@ -352,19 +372,24 @@ function setupUltraSearchBar(prefix) {
       groupList.addEventListener('click', (event) => {
         const btn = event.target.closest('[data-group]');
         if (!btn) return;
-        const group = btn.getAttribute('data-group') || '';
+        const group = (btn.getAttribute('data-group') || '').trim();
+        if (!group) return;
+        groupTouched = true;
         if (group === 'Solo') {
+          setGroupSelection('Solo');
           applyAdults(1);
         } else if (group === 'Couple') {
+          setGroupSelection('Couple');
           applyAdults(2);
         } else {
-          applyAdults(Math.max(3, getAdults()));
+          setGroupSelection('Group');
+          applyAdults(Math.max(3, getAdults() || 3));
         }
       });
     }
 
     // Initial sync
-    applyAdults(getAdults());
+    updateSummary();
     pane.dataset.wowWhoBound = '1';
   })();
 }
@@ -426,10 +451,30 @@ function initAccountDropdown() {
   });
 }
 
+function mountSearchRangeCalendars() {
+  try {
+    document.querySelectorAll('[id$="-calendarMount"]').forEach((el) => {
+      if (!el || el.dataset.wowMounted === '1') return;
+      const prefix = String(el.id || '').replace(/-calendarMount$/, '');
+      if (!prefix) return;
+      el.dataset.wowMounted = '1';
+      try {
+        createApp(SearchRangeCalendar, { prefix }).use(ui).mount(el);
+      } catch (err) {
+        el.dataset.wowMounted = '0';
+        console.warn('[WOW] calendar mount failed', err);
+      }
+    });
+  } catch (err) {
+    console.warn('[WOW] calendar bootstrap skipped', err);
+  }
+}
+
 onDocumentReady(() => {
   runIdle(() => { try { initMegaMenu(); } catch (e) {} });
   runIdle(() => { try { initMobileMenu(); } catch (e) {} });
   runIdle(() => { try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {} });
+  runIdle(() => { try { mountSearchRangeCalendars(); } catch (e) {} });
   runIdle(() => { try { initAccountDropdown(); } catch (e) {} });
   runIdle(() => { try { initSubscriberForms(); } catch (e) {} });
 
@@ -636,7 +681,7 @@ onDocumentReady(() => {
           wrapU.innerHTML = list.map(function(it){
             var p = Number(it.price_min ?? it.price ?? 0); if(p>=1000) p=p/100;
             var img = it.image || (it.images && it.images[0]) || '';
-            var url = it.url || ('/therapies/'+it.id);
+            var url = it.url || ('/offerings/'+it.id);
             var title = esc(it.title||'');
             return '<div class="upsell-item">'
               + (img?('<img src="'+img+'" alt="">'):'<div style="width:46px;height:46px;border-radius:8px;background:#f3f5f7;border:1px solid #eceff3"></div>')

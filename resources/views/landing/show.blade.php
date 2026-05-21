@@ -5,6 +5,46 @@
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
   @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
+  @php
+    $pageCanonical = $seo['canonical'] ?? url()->current();
+    $itemListLd = [
+      '@context' => 'https://schema.org',
+      '@type' => 'ItemList',
+      'itemListElement' => collect($products ?? [])
+        ->values()
+        ->take(24)
+        ->values()
+        ->map(fn ($product, $index) => [
+          '@type' => 'ListItem',
+          'position' => $index + 1,
+          'url' => $product['url'] ?? '',
+          'name' => $product['title'] ?? '',
+        ])
+        ->filter(fn (array $item) => !empty($item['url']))
+        ->values()
+        ->all(),
+    ];
+    $breadcrumbLd = [
+      '@context' => 'https://schema.org',
+      '@type' => 'BreadcrumbList',
+      'itemListElement' => [
+        [
+          '@type' => 'ListItem',
+          'position' => 1,
+          'name' => 'Home',
+          'item' => url('/'),
+        ],
+        [
+          '@type' => 'ListItem',
+          'position' => 2,
+          'name' => $landing['title'] ?? 'Wellness',
+          'item' => $pageCanonical,
+        ],
+      ],
+    ];
+  @endphp
+  <script type="application/ld+json">{!! json_encode($breadcrumbLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
+  <script type="application/ld+json">{!! json_encode($itemListLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
 
 @section('content')
@@ -63,7 +103,7 @@
               <h4 class="text-base font-semibold mb-2">Popular categories</h4>
               <div class="flex flex-wrap gap-2">
                 @foreach($categories as $category)
-                  <a class="chip" href="{{ url('/search?type=' . urlencode($type) . '&category=' . urlencode($category['slug'])) }}">
+                  <a class="chip" href="{{ url('/' . $category['slug'] . '/' . $type . '/') }}">
                     {{ $category['name'] }}
                   </a>
                 @endforeach

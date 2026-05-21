@@ -251,12 +251,6 @@ class ProductController extends Controller
             // Map type to URL segment
             $t = strtolower((string) $p->product_type);
             $tags = strtolower((string) $p->tags_list);
-            $typeSeg = 'therapies';
-            if (str_contains($t, 'workshop')) $typeSeg = 'workshops';
-            elseif (str_contains($t, 'event')) $typeSeg = 'events';
-            elseif (str_contains($t, 'class')) $typeSeg = 'classes';
-            elseif (str_contains($t, 'retreat')) $typeSeg = 'retreats';
-            elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $typeSeg = 'gifts';
             $slug = Str::slug($p->title ?: (string)$p->id);
             // Normalize prices (always GBP pounds)
             $norm = function($v){ if(!is_numeric($v)) return null; $n = (float)$v; if($n >= 1000) $n = $n/100; return $n; };
@@ -289,7 +283,7 @@ class ProductController extends Controller
                 'review_count' => (int)($p->reviews_count ?? 0),
                 'image' => $p->getFirstImageUrl(),
                 'tags' => $p->tags_list ? array_map('trim', explode(',', $p->tags_list)) : [],
-                'url' => url('/'.$typeSeg.'/' . $p->id . '-' . $slug),
+                'url' => url('/offerings/' . $p->id . '-' . $slug),
             ];
         });
 

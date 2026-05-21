@@ -2,14 +2,8 @@
     // Derive URL segment from product_type or tags
     $t = strtolower((string) ($product->product_type ?? ''));
     $tags = strtolower((string) ($product->tags_list ?? ''));
-    $seg = 'therapies';
-    if (str_contains($t, 'workshop')) $seg = 'workshops';
-    elseif (str_contains($t, 'event')) $seg = 'events';
-    elseif (str_contains($t, 'class')) $seg = 'classes';
-    elseif (str_contains($t, 'retreat')) $seg = 'retreats';
-    elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $seg = 'gifts';
     $slug = \Illuminate\Support\Str::slug($product->title ?: (string) $product->id);
-    $url = url('/'.$seg.'/'.$product->id.'-'.$slug);
+    $url = url('/offerings/' . $product->id . '-' . $slug);
 
     $image = $product->getFirstImageUrl();
     $title = $product->title ?? 'Untitled';
@@ -143,6 +137,26 @@
             box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
             margin-bottom: 0px !important;
         }
+        button.btn-primary-list {
+            height: 38px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 400;
+            border: 1px solid rgba(0, 0, 0, .10);
+            background: #549483 !important;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 22px rgba(16, 24, 40, .08);
+        }
+        button.btn-primary-list:hover,
+        button.btn-primary-list:focus {
+            background: #4a8575 !important;
+            color: #fff;
+            border-color: rgba(0, 0, 0, .10);
+        }
 
     .wow-row-media {
         grid-column: 1;
@@ -225,6 +239,7 @@
     .wow-meta .label{ display:inline-block; max-width:140px; letter-spacing:normal; margin-left:0; font-size:12px; padding-left:0; font-weight:400; text-transform:capitalize; overflow:hidden; text-overflow:ellipsis; }
     .wow-row-bottom{ grid-column:3; padding:var(--pad); padding-right:22px; border-left:1px solid rgba(16,24,40,.10); background:#fff; display:flex; flex-direction:column; justify-content:space-between; gap:14px; }
     .wow-fomo{ margin:0 0 6px; font-size:12px; font-weight:800; color:rgba(11,18,32,.84); }
+    .wow-fomo--hidden{ display:none; }
     .wow-price{ display:flex; align-items:baseline; gap:8px; margin:0; }
     .wow-price .from{ font-size:var(--from); color:rgba(11,18,32,.70); }
     .wow-price .now{ font-size:var(--priceNow); font-weight:600; letter-spacing:-.02em; }
@@ -314,7 +329,7 @@
   <!-- Col 3 -->
   <div class="wow-row-bottom">
       <div>
-        <p class="wow-fomo">Click to find out more information</p>
+        <p class="wow-fomo wow-fomo--hidden">Click to find out more</p>
         @if($priceMin)
             <p class="wow-price">
                 <span class="from">From</span>

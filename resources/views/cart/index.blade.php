@@ -46,6 +46,7 @@
           <div class="panel" id="summaryWrap" style="{{ empty($serverCart) ? 'display:none' : '' }}">
             <div class="sum-row"><span>Subtotal</span><strong id="sum-subtotal">£0.00</strong></div>
             <div class="sum-row"><span>Discounts</span><strong id="sum-discount">-£0.00</strong></div>
+            <div class="sum-row"><span>WOW Booking fee (5%)</span><strong id="sum-booking-fee">£0.00</strong></div>
             <div class="sum-row muted"><span>Taxes</span><span>Included where applicable</span></div>
             <div class="sum-sep"></div>
             <div class="sum-row total"><span>Total</span><strong id="sum-total">£0.00</strong></div>
@@ -170,6 +171,7 @@
     if ((x.reservationId ?? x.reservation_id) != null && meta.reservation_id == null && meta.reservationId == null) meta.reservation_id = x.reservationId ?? x.reservation_id;
     if ((x.holdExpiresAt ?? x.hold_expires_at) != null && meta.hold_expires_at == null && meta.holdExpiresAt == null) meta.hold_expires_at = x.holdExpiresAt ?? x.hold_expires_at;
     if (x.location && !meta.location) meta.location = x.location;
+    if ((x.source_version ?? x.sourceVersion) != null && meta.source_version == null) meta.source_version = x.source_version ?? x.sourceVersion;
     return {
       id: id,
       title: x.title || x.name || 'Item',
@@ -181,6 +183,7 @@
       variant_id: x.variant_id || x.variantId || meta.variant_id || null,
       variant_label: variantLabel || meta.variant_label || '',
       meta: meta,
+      source_version: x.source_version || x.sourceVersion || meta.source_version || null,
     };
   }
   function readLocalCart(){
@@ -209,6 +212,7 @@
   var sumHeadTitle = document.getElementById('sumHeadTitle');
   var sumSubtotal = document.getElementById('sum-subtotal');
   var sumDiscount = document.getElementById('sum-discount');
+  var sumBookingFee = document.getElementById('sum-booking-fee');
   var sumTotal = document.getElementById('sum-total');
   var upsellListFull = document.getElementById('upsellListFull');
   var upsellListEmpty = document.getElementById('upsellListEmpty');
@@ -216,7 +220,9 @@
 
   function subtotal(){ return cart.reduce(function(s,it){ return s + (Number(it.unit||0) * Number(it.qty||1)); }, 0); }
   function discountAmount(){ return subtotal() * (promo.pct||0); }
-  function total(){ return Math.max(0, subtotal() - discountAmount()); }
+  function feeBase(){ return Math.max(0, subtotal() - discountAmount()); }
+  function bookingFeeAmount(){ return Math.round(feeBase() * 0.05 * 100) / 100; }
+  function total(){ return Math.max(0, feeBase() + bookingFeeAmount()); }
 
   function writeLocalFromCart(){
     try{
@@ -257,7 +263,8 @@
           groupCount: meta.groupCount ?? meta.group_count ?? null,
           reservationId: meta.reservationId ?? meta.reservation_id ?? null,
           holdExpiresAt: meta.holdExpiresAt ?? meta.hold_expires_at ?? null,
-          location: meta.location || null
+          location: meta.location || null,
+          source_version: meta.source_version || null,
         };
       });
       try{ document.cookie = 'wow_cart='+encodeURIComponent(JSON.stringify(cookieObj))+'; Path=/; Max-Age='+(60*60*24*30)+'; SameSite=Lax'; }catch(_){ }
@@ -289,6 +296,7 @@
           reservationId: meta.reservationId ?? meta.reservation_id ?? null,
           holdExpiresAt: meta.holdExpiresAt ?? meta.hold_expires_at ?? null,
           location: meta.location || null,
+          source_version: meta.source_version || null,
           options: Array.isArray(meta.variant_options) ? meta.variant_options : []
         };
       });
@@ -299,6 +307,7 @@
   function renderSummary(){
     sumSubtotal.textContent = money(subtotal());
     sumDiscount.textContent = '-' + money(discountAmount());
+    sumBookingFee.textContent = money(bookingFeeAmount());
     sumTotal.textContent = money(total());
     var checkoutBtn = document.getElementById('checkoutBtn');
     checkoutBtn.disabled = cart.length === 0;
@@ -312,7 +321,7 @@
     target.innerHTML = list.map(function(it){
       var p = Number(it.price_min ?? it.price ?? 0); if(p>=1000) p=p/100;
       var img = it.image || (it.images && it.images[0]) || '';
-      var url = it.url || ('/therapies/'+it.id);
+      var url = it.url || ('/offerings/'+it.id);
       var title = escapeHtml(it.title||'');
       return '<div class="upsell-item" data-upsell="'+it.id+'">'
         + (img?('<img src="'+img+'" alt="">'):'<div style="width:52px;height:52px;border-radius:14px;background:#f3f5f7;border:1px solid #eceff3"></div>')
@@ -521,7 +530,7 @@
       var ex = cart.find(function(x){ return String(x.id)===cartId });
       if(ex){ ex.qty = Math.max(1, Number(ex.qty||1)+1); }
       else {
-        cart.unshift({ id:cartId, product_id:Number(uid)||uid, variant_id:null, variant_label:'', title:String(u.title||''), url:(u.url||('/therapies/'+uid)), img:(u.image||(u.images&&u.images[0])||''), unit:unit, qty:1 });
+        cart.unshift({ id:cartId, product_id:Number(uid)||uid, variant_id:null, variant_label:'', title:String(u.title||''), url:(u.url||('/offerings/'+uid)), img:(u.image||(u.images&&u.images[0])||''), unit:unit, qty:1 });
       }
       try{ post('/api/cart/add', { id: Number(uid)||uid, qty:1 }); }catch(_){}
       add.classList.add('is-added'); add.textContent='Added'; setTimeout(function(){ add.textContent='Add'; add.classList.remove('is-added'); }, 700);
@@ -552,7 +561,12 @@
 .cart-side{ flex:0 1 auto; flex-basis: var(--sideBasis); min-width:0; position:sticky; transition:flex-basis var(--dur) var(--ease), transform var(--dur) var(--ease); }
 .cart-grid.is-empty{ --gap:0px; --sideBasis:100%; }
 .cart-grid.is-empty .cart-main{ max-width:0; opacity:0; transform: translateX(-10px) scale(.98); pointer-events:none; overflow:hidden; }
-@media (max-width: 991.98px){ .cart-grid{ flex-direction:column; gap:14px; } .cart-side{ position:static; } .cart-grid.is-empty .cart-main{ max-width:100%; opacity:1; transform:none; pointer-events:auto; overflow:visible; } }
+@media (max-width: 991.98px){
+  .cart-grid{ flex-direction:column; gap:14px; }
+  .cart-side{ position:static; order:0; }
+  .cart-main{ order:-1; }
+  .cart-grid.is-empty .cart-main{ max-width:100%; opacity:1; transform:none; pointer-events:auto; overflow:visible; }
+}
 
 .cart-head{ display:grid; grid-template-columns: 1fr 150px 120px; gap:12px; padding:14px 16px; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color: var(--ink-600); border-bottom:1px solid rgba(16,24,40,.10); background: linear-gradient(180deg, rgba(255,255,255,.80), rgba(255,255,255,.52)); }
 .cart-body{ padding:10px; display:flex; flex-direction:column; gap:10px; }
@@ -625,6 +639,12 @@
 }
 
 @media (max-width: 767.98px){ .cart-head{ display:none; } .cart-row{ grid-template-columns: 1fr; gap:10px; } .cart-amt{ text-align:left; } .cart-qty{ justify-content:flex-start; } .cart-item{ grid-template-columns: 70px 1fr; } .cart-img{ width:70px;height:70px; } }
+@media (max-width: 767.98px){
+  #cartMain{ width:100%; max-width:100%; }
+  .cart-main{ width:100%; max-width:100%; }
+  .cart-body{ padding-left:0; padding-right:0; }
+  .cart-row{ grid-template-columns: 1fr; }
+}
 @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
 
 /* Upsell block styling (align with template) */

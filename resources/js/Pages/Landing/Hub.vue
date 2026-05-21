@@ -147,8 +147,10 @@ const meta = computed(() => heads[props.type] || { title: 'Discover Wellness', k
 const categoriesFiltered = computed(() => (Array.isArray(props.categories) ? props.categories : []).filter(c => Number(c.count||0) > 0))
 const productsTitle = computed(() => props.type === 'therapies' ? 'All therapies' : 'Popular right now')
 const canonical = computed(() => {
-  const path = '/' + (props.type || '').toString()
-  try { return window.location.origin + path } catch { return path }
+  try { return window.location.href.split('#')[0] } catch {
+    const path = '/' + (props.type || '').toString()
+    return path
+  }
 })
 const desc = computed(() => meta.value.desc)
 const items = computed(() => Array.isArray(props.products) ? props.products : (props.products?.data || []))

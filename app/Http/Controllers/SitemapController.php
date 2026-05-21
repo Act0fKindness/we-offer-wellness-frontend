@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OfferingV3;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Support\Str;
@@ -53,29 +54,59 @@ class SitemapController extends Controller
         $urls = collect($urls)->unique('loc')->values()->all();
 
         try {
-            $cats = ProductCategory::query()
-                ->withCount('products')
-                ->orderByDesc('products_count')->orderBy('name')
-                ->limit(120)->get();
-            foreach ($cats as $c) {
-                $slug = Str::slug($c->name ?? '');
-                if ($slug) $urls[] = [ 'loc' => $base.'/therapies/'.$slug, 'lastmod' => $now ];
+            $catalogProducts = Product::query()
+                ->select(['id', 'title', 'product_type', 'tags_list', 'updated_at', 'category_id'])
+                ->whereHas('status', function ($q) {
+                    $q->whereIn('status', ['live', 'approved']);
+                })
+                ->with(['category:id,name'])
+                ->get();
+
+            $catalogProducts
+                ->filter(fn (Product $product): bool => $product->category !== null)
+                ->groupBy(fn (Product $product): string => Str::slug((string) ($product->category?->name ?? '')))
+                ->each(function ($rows, string $categorySlug) use (&$urls, $base, $now) {
+                    if ($categorySlug === '') {
+                        return;
+                    }
+
+                    $categoryUpdated = optional($rows->max('updated_at'))->toAtomString() ?: $now;
+                    $urls[] = [
+                        'loc' => $base . '/' . $categorySlug . '/',
+                        'lastmod' => $categoryUpdated,
+                    ];
+
+                    $typeSegments = $rows->map(function (Product $product): string {
+                        return $this->typeSegmentFromRecord((string) ($product->product_type ?? ''), (string) ($product->tags_list ?? ''));
+                    })->filter()->unique()->values();
+
+                    foreach ($typeSegments as $typeSegment) {
+                        $urls[] = [
+                            'loc' => $base . '/' . $categorySlug . '/' . $typeSegment . '/',
+                            'lastmod' => $categoryUpdated,
+                        ];
+                    }
+                });
+        } catch (\Throwable $e) {}
+
+        try {
+            $items = Product::query()->select(['id','title','product_type','tags_list','updated_at'])->latest('updated_at')->get();
+            foreach ($items as $p) {
+                $slug = Str::slug($p->title ?: (string)$p->id);
+                $urls[] = [ 'loc' => $base.'/offerings/'.$p->id.'-'.$slug, 'lastmod' => optional($p->updated_at)->toAtomString() ?: $now ];
             }
         } catch (\Throwable $e) {}
 
         try {
-            $items = Product::query()->select(['id','title','product_type','tags_list','updated_at'])->latest('updated_at')->limit(1000)->get();
-            foreach ($items as $p) {
-                $t = strtolower((string) $p->product_type);
-                $tags = strtolower((string) $p->tags_list);
-                if (str_contains($t, 'workshop')) $seg = 'workshops';
-                elseif (str_contains($t, 'event')) $seg = 'events';
-                elseif (str_contains($t, 'class')) $seg = 'classes';
-                elseif (str_contains($t, 'retreat')) $seg = 'retreats';
-                elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $seg = 'gifts';
-                else $seg = 'therapies';
-                $slug = Str::slug($p->title ?: (string)$p->id);
-                $urls[] = [ 'loc' => $base.'/'.$seg.'/'.$p->id.'-'.$slug, 'lastmod' => optional($p->updated_at)->toAtomString() ?: $now ];
+            $offerings = OfferingV3::query()
+                ->whereIn('status', ['live', 'approved'])
+                ->get();
+            foreach ($offerings as $offering) {
+                $slug = Str::slug($offering->title ?: (string) $offering->id);
+                $urls[] = [
+                    'loc' => $base . '/offerings/' . $offering->id . '-' . $slug,
+                    'lastmod' => optional($offering->updated_at)->toAtomString() ?: $now,
+                ];
             }
         } catch (\Throwable $e) {}
 
@@ -128,5 +159,29 @@ class SitemapController extends Controller
         $xml .= '</urlset>';
 
         return response($xml, 200)->header('Content-Type', 'application/xml');
+    }
+
+    private function typeSegmentFromRecord(string $productType, string $tagsList = ''): string
+    {
+        $t = strtolower(trim($productType));
+        $tags = strtolower(trim($tagsList));
+
+        if (str_contains($t, 'workshop')) {
+            return 'workshops';
+        }
+        if (str_contains($t, 'event')) {
+            return 'events';
+        }
+        if (str_contains($t, 'class')) {
+            return 'classes';
+        }
+        if (str_contains($t, 'retreat')) {
+            return 'retreats';
+        }
+        if (str_contains($t, 'gift') || str_contains($tags, 'gift')) {
+            return 'gifts';
+        }
+
+        return 'therapies';
     }
 }

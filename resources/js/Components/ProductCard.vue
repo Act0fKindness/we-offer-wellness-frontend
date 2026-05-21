@@ -20,6 +20,7 @@ function deriveType(p){
     if (raw.includes('therapy')) return 'therapy'
   }
   const url = String(p?.url || '').toLowerCase()
+  if (url.includes('/offerings/')) return 'therapy'
   if (url.includes('/events/')) return 'event'
   if (url.includes('/workshops/')) return 'workshop'
   if (url.includes('/classes/')) return 'class'

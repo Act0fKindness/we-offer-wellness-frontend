@@ -48,7 +48,7 @@ function setMode(m) {
 
 // SEO
 const canonical = computed(() => {
-  try { return window.location.origin + window.location.pathname } catch { return '' }
+  try { return window.location.href.split('#')[0] } catch { return '' }
 })
 const desc = computed(() => (heading.value ? `${heading.value} — curated by We Offer Wellness.` : 'Curated results from We Offer Wellness.'))
 const items = computed(() => Array.isArray(props.products) ? props.products : (props.products?.data || []))

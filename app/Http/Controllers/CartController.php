@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OfferingV3;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 class CartController extends Controller
@@ -77,48 +79,152 @@ class CartController extends Controller
     public function add(Request $request)
     {
         $items = $this->getCartItems();
-        $id = (int) $request->input('id');
-        $variantId = (int) $request->input('variant_id');
+        $id = $request->input('id');
+        $sourceVersion = strtolower(trim((string) $request->input('source_version', '')));
+        $variantId = $request->input('variant_id');
         $qty = max(1, (int)$request->input('qty', 1));
-        if ($id <= 0) return response()->json(['ok'=>false,'error'=>'invalid'], 400);
-        $product = Product::query()->with(['variants'])->withMin('variants','price')->find($id);
-        if (!$product) return response()->json(['ok'=>false,'error'=>'not_found'], 404);
+        if (!is_numeric($id) || (int) $id <= 0) {
+            return response()->json(['ok'=>false,'error'=>'invalid'], 400);
+        }
 
-        $price = $product->variants_min_price ?? $product->price ?? 0;
-        $price = $this->formatPrice($price);
-        $variant = null;
         $variantLabel = trim((string)$request->input('variant_label', '')) ?: null;
         $variantOptions = [];
-        if ($variantId > 0) {
-            $variant = $product->variants?->firstWhere('id', $variantId);
-            if (!$variant) {
-                $variant = ProductVariant::query()
-                    ->where('id', $variantId)
-                    ->where('product_id', $product->id)
-                    ->first();
-            }
+        $image = null;
+        $url = '#';
+        $vendorId = null;
+        $productId = (int) $id;
+        $price = 0.0;
+        $key = null;
+        $offeringVariantId = is_string($variantId) ? trim($variantId) : (string) $variantId;
+        $variant = null;
+
+        $product = null;
+        $offering = null;
+        if ($sourceVersion === 'v3') {
+            $offering = OfferingV3::query()->with(['vendor', 'type', 'category', 'media', 'coverMedia'])->find((int) $id);
         }
-        if ($variant) {
-            $price = $this->formatPrice($variant->price ?? $price);
-            $opts = $variant->options;
-            if (is_string($opts)) {
-                $decoded = json_decode($opts, true);
-                $opts = is_array($decoded) ? array_values($decoded) : [];
-            } elseif (!is_array($opts)) {
-                $opts = [];
+        if (! $offering) {
+            $product = Product::query()->with(['variants'])->withMin('variants','price')->find((int) $id);
+        }
+        if (! $product && ! $offering) {
+            $offering = OfferingV3::query()->with(['vendor', 'type', 'category', 'media', 'coverMedia'])->find((int) $id);
+        }
+        if (! $product && ! $offering) {
+            return response()->json(['ok'=>false,'error'=>'not_found'], 404);
+        }
+
+        if ($product) {
+            $price = $product->variants_min_price ?? $product->price ?? 0;
+            $price = $this->formatPrice($price);
+            if (is_numeric($variantId) && (int) $variantId > 0) {
+                $variant = $product->variants?->firstWhere('id', (int) $variantId);
+                if (! $variant) {
+                    $variant = ProductVariant::query()
+                        ->where('id', (int) $variantId)
+                        ->where('product_id', $product->id)
+                        ->first();
+                }
             }
-            $variantOptions = $opts;
-            if (!$variantLabel) {
-                $variantLabel = $this->buildVariantLabel($variant->title ?? null, $variantOptions);
+            if ($variant) {
+                $price = $this->formatPrice($variant->price ?? $price);
+                $opts = $variant->options;
+                if (is_string($opts)) {
+                    $decoded = json_decode($opts, true);
+                    $opts = is_array($decoded) ? array_values($decoded) : [];
+                } elseif (!is_array($opts)) {
+                    $opts = [];
+                }
+                $variantOptions = $opts;
+                if (! $variantLabel) {
+                    $variantLabel = $this->buildVariantLabel($variant->title ?? null, $variantOptions);
+                }
+            }
+
+            $slug = \Illuminate\Support\Str::slug($product->title ?: (string)$product->id);
+            $url = url('/offerings/'.$product->id.'-'.$slug);
+            $image = method_exists($product,'getFirstImageUrl') ? $product->getFirstImageUrl() : null;
+            $vendorId = $product->vendor_id ?? null;
+            $key = $this->cartKey($product->id, $variant?->id);
+            $productId = (int) $product->id;
+        } else {
+            $productId = (int) $offering->id;
+            $vendorId = $offering->vendor_id ?? null;
+            $image = method_exists($offering, 'getFirstImageUrl') ? $offering->getFirstImageUrl() : null;
+            $url = url('/offerings/'.$offering->id.'-'.Str::slug($offering->title ?: (string) $offering->id));
+
+            $priceOptions = DB::table('offering_price_options')
+                ->where('offering_id', $offering->id)
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+            $tiers = DB::table('offering_price_tiers')
+                ->whereIn('price_option_id', $priceOptions->pluck('id'))
+                ->get()
+                ->keyBy('id');
+            $selectedOption = null;
+            $selectedTier = null;
+            $matchedPriceOptionId = null;
+            if ($offeringVariantId !== '') {
+                if (preg_match('/^po_(\d+)(?:_tier_(\d+))?$/', $offeringVariantId, $m)) {
+                    $matchedPriceOptionId = (int) $m[1];
+                    if (! empty($m[2])) {
+                        $selectedTier = $tiers->get((int) $m[2]);
+                        if ($selectedTier) {
+                            $matchedPriceOptionId = (int) $selectedTier->price_option_id;
+                        }
+                    }
+                } elseif (preg_match('/^(\d+)$/', $offeringVariantId, $m)) {
+                    $matchedPriceOptionId = (int) $m[1];
+                }
+            }
+            if ($matchedPriceOptionId) {
+                $selectedOption = $priceOptions->firstWhere('id', $matchedPriceOptionId);
+            }
+            if (! $selectedOption) {
+                $selectedOption = $priceOptions->first();
+            }
+            if ($selectedOption) {
+                $price = $selectedTier ? (float) ($selectedTier->price_amount ?? $selectedOption->price_amount ?? 0) : (float) ($selectedOption->price_amount ?? 0);
+                $formatLabel = null;
+                $channel = strtolower(trim((string) ($selectedOption->channel ?? '')));
+                if ($channel === 'online') {
+                    $formatLabel = 'Online';
+                } elseif ($channel === 'in_person') {
+                    $formatLabel = 'In-person';
+                }
+                $audienceType = strtolower(trim((string) ($selectedOption->audience_type ?? '')));
+                $pricingType = strtolower(trim((string) ($selectedOption->pricing_type ?? '')));
+                $peopleLabel = null;
+                if ($selectedTier) {
+                    $minQty = (int) ($selectedTier->min_qty ?? 0);
+                    $maxQty = $selectedTier->max_qty !== null ? (int) $selectedTier->max_qty : null;
+                    if ($minQty === 1) {
+                        $peopleLabel = '1 Person';
+                    } elseif ($minQty === 2) {
+                        $peopleLabel = '2 Persons';
+                    } elseif ($maxQty === null || $maxQty <= $minQty) {
+                        $peopleLabel = $minQty === 3 ? '3+ Group' : ($minQty . ' People');
+                    } elseif ($minQty > 0) {
+                        $peopleLabel = $minQty . '-' . $maxQty . ' Group';
+                    }
+                } elseif ($audienceType === 'solo') {
+                    $peopleLabel = '1 Person';
+                } elseif ($audienceType === 'couple') {
+                    $peopleLabel = '2 Persons';
+                } elseif ($audienceType === 'group') {
+                    $peopleLabel = $pricingType === 'per_person' ? '3+ Group' : '3+ Group';
+                }
+                $variantOptions = array_values(array_filter([$formatLabel, $peopleLabel], fn ($v) => $v !== null && $v !== ''));
+                if (! $variantLabel) {
+                    $variantLabel = $selectedOption->name ?? $this->buildVariantLabel(null, $variantOptions);
+                }
+                $key = $this->cartKey($offering->id, $offeringVariantId !== '' ? $offeringVariantId : ('po_'.$selectedOption->id));
+            } else {
+                $price = (float) ($offering->price ?? 0);
+                $key = $this->cartKey($offering->id, $offeringVariantId !== '' ? $offeringVariantId : null);
             }
         }
 
-        $slug = \Illuminate\Support\Str::slug($product->title ?: (string)$product->id);
-        $t = strtolower((string)($product->product_type ?? '')); $tags = strtolower((string)($product->tags_list ?? '')); $seg='therapies';
-        if (str_contains($t,'workshop')) $seg='workshops'; elseif (str_contains($t,'event')) $seg='events'; elseif (str_contains($t,'class')) $seg='classes'; elseif (str_contains($t,'retreat')) $seg='retreats'; elseif (str_contains($t,'gift')||str_contains($tags,'gift')) $seg='gifts';
-        $url = url('/'.$seg.'/'.$product->id.'-'.$slug);
-        $image = method_exists($product,'getFirstImageUrl') ? $product->getFirstImageUrl() : null;
-        $key = $this->cartKey($product->id, $variant?->id);
         if(isset($items[$key])){
             $items[$key]['qty'] = (int)($items[$key]['qty'] ?? 1) + $qty;
             if($variantLabel){ $items[$key]['variant_label'] = $variantLabel; }
@@ -126,16 +232,17 @@ class CartController extends Controller
         else {
             $items[$key] = [
                 'id' => $key,
-                'product_id' => $product->id,
-                'variant_id' => $variant?->id,
+                'product_id' => $productId,
+                'variant_id' => $product ? ($variant?->id) : ($offeringVariantId !== '' ? $offeringVariantId : null),
                 'variant_label' => $variantLabel,
                 'options' => $variantOptions,
-                'title' => $product->title,
+                'title' => $product ? $product->title : $offering->title,
                 'price' => $price,
                 'qty' => $qty,
                 'image' => $image,
                 'url' => $url,
-                'vendor_id' => $product->vendor_id,
+                'vendor_id' => $vendorId,
+                'source_version' => $offering ? 'v3' : 'legacy',
             ];
         }
         session(['cart.items' => $items]);

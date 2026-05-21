@@ -182,6 +182,27 @@ Route::get('/gifts', [SeoLandingController::class, 'show'])
     ->defaults('type', 'gifts')
     ->name('gifts.index');
 
+// Canonical category-first landing pages
+Route::get('/offerings/{offering}', [LandingController::class, 'offeringCanonical'])
+    ->where('offering', '\d+-[A-Za-z0-9\-]+')
+    ->name('offerings.show');
+Route::get('/{category}/{type}', [LandingController::class, 'categoryType'])
+    ->where([
+        'category' => '[A-Za-z][A-Za-z0-9\-]*',
+        'type' => 'therapies|events|workshops|classes|retreats|gifts',
+    ])
+    ->name('landing.category-type');
+Route::get('/{category}/{type}/{location}', [LandingController::class, 'categoryTypeLocation'])
+    ->where([
+        'category' => '[A-Za-z][A-Za-z0-9\-]*',
+        'type' => 'therapies|events|workshops|classes|retreats|gifts',
+        'location' => '[A-Za-z][A-Za-z0-9\-]*',
+    ])
+    ->name('landing.category-type-location');
+Route::get('/{category}', [LandingController::class, 'categoryHub'])
+    ->where('category', '[A-Za-z][A-Za-z0-9\-]*')
+    ->name('landing.category');
+
 // Legacy hubs -> canonical pages
 Route::redirect('/events-and-workshops', '/events', 301);
 // Pain-point landing pages
@@ -198,15 +219,17 @@ Route::get('/retreat', fn() => redirect('/retreats', 301));
 Route::get('/gift', fn() => redirect('/gifts', 301));
 
 // Singular → plural 301 redirects for legacy category paths
-Route::get('/therapy/{category}', fn(string $category) => redirect('/therapies/'.$category, 301));
-Route::get('/event/{category}', fn(string $category) => redirect('/events/'.$category, 301));
-Route::get('/workshop/{category}', fn(string $category) => redirect('/workshops?category='.urlencode($category), 301));
-Route::get('/class/{category}', fn(string $category) => redirect('/classes?category='.urlencode($category), 301));
-Route::get('/retreat/{category}', fn(string $category) => redirect('/retreats?category='.urlencode($category), 301));
-Route::get('/gift/{category}', fn(string $category) => redirect('/gifts?category='.urlencode($category), 301));
+Route::get('/therapy/{category}', fn(string $category) => redirect('/' . $category . '/therapies/', 301));
+Route::get('/event/{category}', fn(string $category) => redirect('/' . $category . '/events/', 301));
+Route::get('/workshop/{category}', fn(string $category) => redirect('/' . $category . '/workshops/', 301));
+Route::get('/class/{category}', fn(string $category) => redirect('/' . $category . '/classes/', 301));
+Route::get('/retreat/{category}', fn(string $category) => redirect('/' . $category . '/retreats/', 301));
+Route::get('/gift/{category}', fn(string $category) => redirect('/' . $category . '/gifts/', 301));
 
-// Offering detail pages: /{type}/{id}-{slug}
-Route::get('/{type}/{offering}', [LandingController::class, 'offering'])
+// Old offering routes redirect to the canonical /offerings/{id}-{slug}
+Route::get('/{type}/{offering}', function (string $type, string $offering) {
+    return redirect('/offerings/' . $offering, 301);
+})
     ->where(['type' => 'therapies|events|workshops|classes|retreats|gifts', 'offering' => '\\d+-[A-Za-z0-9\-]+' ]);
 
 // Legacy offering route support: /{type}/o/{handle} → 301 to /{type}/{id}-{slug}

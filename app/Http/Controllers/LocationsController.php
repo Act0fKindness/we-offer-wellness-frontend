@@ -538,7 +538,6 @@ class LocationsController extends Controller
         $isOnline = in_array('Online', $locations, true);
         $physical = array_values(array_filter($locations, fn ($l) => $l !== 'Online'));
         $meta = $product->meta_json ?? [];
-        $typeSeg = $this->typeSegment($product);
         $slug = Str::slug($product->title ?: (string) $product->id);
 
         $product->setAttribute('type', $product->product_type ?: 'experience');
@@ -553,14 +552,13 @@ class LocationsController extends Controller
         $product->setAttribute('review_count', (int) ($product->reviews_count ?? 0));
         $product->setAttribute('image', method_exists($product, 'getFirstImageUrl') ? $product->getFirstImageUrl() : null);
         $product->setAttribute('tags', $product->tags_list ? array_map('trim', explode(',', $product->tags_list)) : []);
-        $product->setAttribute('url', url('/' . $typeSeg . '/' . $product->id . '-' . $slug));
+        $product->setAttribute('url', url('/offerings/' . $product->id . '-' . $slug));
 
         return $product;
     }
 
     private function decorateOffering(OfferingV3 $offering): OfferingV3
     {
-        $typeSeg = $this->offeringTypeSegment((string) ($offering->type?->name ?? $offering->category?->name ?? 'therapies'));
         $slug = Str::slug($offering->title ?: (string) $offering->id);
 
         $offering->setAttribute('product_type', (string) ($offering->type?->name ?? $offering->category?->name ?? 'experience'));
@@ -573,7 +571,7 @@ class LocationsController extends Controller
         $offering->setAttribute('variants_min_price', $offering->price);
         $offering->setAttribute('reviews_avg_rating', null);
         $offering->setAttribute('reviews_count', 0);
-        $offering->setAttribute('url', url('/' . $typeSeg . '/' . $offering->id . '-' . $slug));
+        $offering->setAttribute('url', url('/offerings/' . $offering->id . '-' . $slug));
         $offering->setAttribute('image', $offering->getFirstImageUrl());
         $offering->setAttribute('locations', $offering->getLocations());
         $offering->setAttribute('mode', $this->offeringMode($offering));
