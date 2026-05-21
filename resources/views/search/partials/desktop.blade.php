@@ -2,7 +2,7 @@
   <div class="container-page space-y-4">
     <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
       <div>
-        <div class="kicker mb-1 text-ink-600">Search results</div>
+        <div class="kicker mb-1 text-ink-600">{{ $resultsHeading ?? 'Search results' }}</div>
         <h1 class="text-ink-900" style="font-size:1.75rem;font-weight:700;">{{ $resultCount }} results</h1>
       </div>
       <div class="d-flex flex-wrap align-items-center gap-2" id="sr-tags"></div>
@@ -296,11 +296,17 @@
           if (input) input.setAttribute('aria-expanded','false');
         }
       });
-      // Open on focus
+      // The shared initializer controls typed category suggestions; keep focus closed until matches exist.
       var input = document.getElementById('search-top-what');
       var pane = document.getElementById('search-top-what-pane');
       if (input && pane){
-        input.addEventListener('focus', function(){ if (!mq.matches) return; pane.classList.remove('d-none'); input.setAttribute('aria-expanded','true'); });
+        input.addEventListener('focus', function(){
+          if (!mq.matches) return;
+          if (!(input.value || '').trim()) {
+            pane.classList.add('d-none');
+            input.setAttribute('aria-expanded','false');
+          }
+        });
       }
     }catch(_e){}
   }catch(e){}
@@ -348,6 +354,8 @@
     var qWhat = qp.get('what');
     var qWhere = qp.get('where');
     var qWhen = qp.get('when');
+    var qWhenStart = qp.get('when_start');
+    var qWhenEnd = qp.get('when_end');
     var qGroup = (qp.get('group_type')||'').toLowerCase(); // solo|couple|group
     var qAdults = qp.get('adults');
 
@@ -360,7 +368,11 @@
       if (hidWhere) hidWhere.value = qWhere;
     }
     var elWhen = document.getElementById('search-top-when');
-    if (elWhen && qWhen) elWhen.value = qWhen;
+    if (elWhen && qWhen) {
+      elWhen.value = qWhen;
+      if (qWhenStart) elWhen.dataset.rangeStart = qWhenStart;
+      if (qWhenEnd) elWhen.dataset.rangeEnd = qWhenEnd;
+    }
 
     // Sync Who (adults + group type)
     (function(){
@@ -384,6 +396,15 @@
     @php
       $mapData = [];
       foreach (($products ?? collect()) as $p) {
+          $t = strtolower((string) ($p->product_type ?? ''));
+          $tags = strtolower((string) ($p->tags_list ?? ''));
+          $seg = 'therapies';
+          if (str_contains($t, 'workshop')) $seg = 'workshops';
+          elseif (str_contains($t, 'event')) $seg = 'events';
+          elseif (str_contains($t, 'class')) $seg = 'classes';
+          elseif (str_contains($t, 'retreat')) $seg = 'retreats';
+          elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $seg = 'gifts';
+
           // Prefer vendor locations (multiple pins)
           $vendor = $p->vendor ?? null;
           $locs = $vendor && $vendor->relationLoaded('locations') ? $vendor->locations : [];
@@ -397,7 +418,7 @@
                       'lat' => (float) $lat,
                       'lng' => (float) $lng,
                       'label' => trim(($vl->city ?? '') . ', ' . ($vl->address ?? '')),
-                      'url' => url('/therapies/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
+                      'url' => url('/'.$seg.'/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
                   ];
                   $count++;
               }
@@ -413,7 +434,7 @@
                       'lat' => (float) $lat,
                       'lng' => (float) $lng,
                       'label' => $p->category->name ?? 'Location',
-                      'url' => url('/therapies/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
+                      'url' => url('/'.$seg.'/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
                   ];
               }
           }
