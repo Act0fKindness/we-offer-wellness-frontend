@@ -6,8 +6,9 @@
   $resolved = $locationSearch ?? null;
   $results = collect($locations ?? []);
   $physicalResults = $results->filter(fn ($location) => !($location['online'] ?? false))->values();
+  $searchPhysicalResults = $resolved ? $physicalResults->take(5)->values() : $physicalResults;
   $onlineResult = $results->first(fn ($location) => ($location['online'] ?? false) === true);
-  $mapItems = $physicalResults->take(8)->map(function ($location) {
+  $mapItems = $searchPhysicalResults->take(8)->map(function ($location) {
     return [
       'title' => $location['title'] ?? '',
       'slug' => $location['slug'] ?? '',
@@ -495,7 +496,7 @@
               <p>There aren’t strong physical matches nearby, so online support is highlighted first.</p>
               <div class="wow-location-card__footer">
                 <small>{{ $onlineResult['distance_label'] ?? 'Available anywhere' }}</small>
-                <a class="btn-wow btn-wow--cta" href="{{ route('locations.show', ['slug' => $onlineResult['slug'] ?? 'online']) }}">View online</a>
+                <a class="btn-wow btn-wow--cta" href="{{ url($onlineResult['path'] ?? '/online') }}">View online</a>
               </div>
             </div>
           @endif
@@ -515,7 +516,7 @@
         <p class="wow-locations-section__copy">These are ranked by distance from your selected location. If there’s a better local option later, the list updates automatically when you search again.</p>
 
         <div class="wow-location-list">
-          @foreach($physicalResults as $location)
+          @foreach($searchPhysicalResults as $location)
             <article class="wow-location-card">
               <div>
                 <div class="wow-location-card__top">
@@ -533,7 +534,7 @@
               </div>
               <div class="wow-location-card__footer">
                 <small>{{ $location['distance_label'] ?? 'Available nearby' }}</small>
-                <a class="btn-wow btn-wow--primary" href="{{ route('locations.show', ['slug' => $location['slug']]) }}">View location</a>
+                <a class="btn-wow btn-wow--primary" href="{{ url($location['path'] ?? ('/locations/' . $location['slug'])) }}">View location</a>
               </div>
             </article>
           @endforeach
@@ -545,7 +546,7 @@
         <p class="wow-locations-section__copy">Pick a location to see the nearest in-person and online wellness options for that area.</p>
         <div class="wow-directory-grid">
           @foreach($results as $loc)
-            <a href="{{ route('locations.show', ['slug' => $loc['slug']]) }}" class="wow-directory-card">
+            <a href="{{ url($loc['path'] ?? ('/locations/' . $loc['slug'])) }}" class="wow-directory-card">
               <h3>{{ $loc['title'] }}</h3>
               <p>{{ $loc['seo_description'] ?? ('Discover wellness support in ' . $loc['title'] . '.') }}</p>
               <span>View location →</span>

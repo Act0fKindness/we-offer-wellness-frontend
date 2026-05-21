@@ -83,6 +83,13 @@ Route::get('/online', [OnlineController::class, 'index'])->name('online.index');
 
 /** Locations + Near Me */
 Route::get('/locations', [LocationsController::class, 'index'])->name('locations.index');
+Route::get('/locations/{country}/{county?}/{town?}', [LocationsController::class, 'hierarchy'])
+    ->where([
+        'country' => 'united-kingdom',
+        'county' => '[A-Za-z][A-Za-z0-9\-]*',
+        'town' => '[A-Za-z][A-Za-z0-9\-]*',
+    ])
+    ->name('locations.hierarchy');
 Route::get('/locations/{slug}', [LocationsController::class, 'show'])
     ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('locations.show');

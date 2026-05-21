@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\OfferingV3;
 use App\Models\Product;
+use App\Models\VendorLocation;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -38,17 +40,7 @@ class LocationsController extends Controller
                 !empty($resolved['region'])
             )
         ) {
-            return redirect()->route('locations.index', array_merge($request->query(), [
-                'place' => $resolved['place'] ?? $query,
-                'postcode' => $request->query('postcode', $query),
-                'town' => $resolved['town'] ?? null,
-                'city' => $resolved['town'] ?? null,
-                'county' => $resolved['county'] ?? null,
-                'region' => $resolved['region'] ?? null,
-                'country' => $resolved['country'] ?? null,
-                'lat' => $resolved['lat'] ?? null,
-                'lng' => $resolved['lng'] ?? null,
-            ]));
+            return redirect()->to($this->hierarchyPathFromResolved($resolved));
         }
 
         $locations = $resolved ? $this->rankLocationsByDistance($resolved) : $this->locationsIndex();
@@ -75,10 +67,88 @@ class LocationsController extends Controller
         ]);
     }
 
+    public function hierarchy(Request $request, string $country, ?string $county = null, ?string $town = null)
+    {
+        $countrySlug = Str::slug($country);
+        abort_unless($countrySlug === 'united-kingdom', 404);
+
+        $countySlug = $county !== null ? Str::slug($county) : null;
+        $townSlug = $town !== null ? Str::slug($town) : null;
+
+        $canonicalPath = $this->canonicalLocationPath($countrySlug, $countySlug, $townSlug);
+        $requestedPath = $this->hierarchyPath($countrySlug, $countySlug, $townSlug);
+
+        if ($canonicalPath !== $requestedPath) {
+            $target = url($canonicalPath);
+            if ($request->getQueryString()) {
+                $target .= '?' . $request->getQueryString();
+            }
+
+            return redirect()->to($target, 301);
+        }
+
+        $countryLabel = 'United Kingdom';
+        $countyLabel = $countySlug ? Str::of(str_replace('-', ' ', $countySlug))->headline()->toString() : null;
+        $townLabel = $townSlug ? Str::of(str_replace('-', ' ', $townSlug))->headline()->toString() : null;
+        $placeLabel = $townLabel ?: $countyLabel ?: $countryLabel;
+        $query = trim(implode(', ', array_filter([$placeLabel, $countryLabel])));
+        $resolved = $this->resolveSearchOrigin($query) ?? [
+            'label' => $query,
+            'place' => $placeLabel,
+            'town' => $townLabel,
+            'city' => $townLabel,
+            'county' => $countyLabel,
+            'region' => $countyLabel,
+            'country' => $countryLabel,
+            'lat' => null,
+            'lng' => null,
+        ];
+
+        $resolved['country_slug'] = $countrySlug;
+        $resolved['county_slug'] = $countySlug;
+        $resolved['town_slug'] = $townSlug;
+        $resolved['path'] = $canonicalPath;
+        $resolved['label'] = $query;
+
+        $locations = $this->rankLocationsByDistance($resolved);
+        $nearbyPhysical = collect($locations)
+            ->filter(fn (array $location): bool => !($location['online'] ?? false) && isset($location['distance_miles']))
+            ->values();
+        $nearestDistance = (float) ($nearbyPhysical->first()['distance_miles'] ?? 0);
+        $onlinePreferred = ($nearbyPhysical->isEmpty() || $nearestDistance > 40);
+
+        return view('locations.index', [
+            'seo' => [
+                'title' => $this->seoTitleForHierarchy($countryLabel, $countyLabel, $placeLabel),
+                'description' => $this->seoDescriptionForHierarchy($countryLabel, $countyLabel, $placeLabel),
+                'robots' => 'index,follow',
+                'canonical' => url($resolved['path']),
+            ],
+            'locations' => $locations,
+            'locationSearch' => $resolved,
+            'locationQuery' => trim(implode(' ', array_filter([$placeLabel, $countryLabel]))),
+            'onlinePreferred' => $onlinePreferred,
+        ]);
+    }
+
+    public function locationPages(): array
+    {
+        return $this->locationsIndex();
+    }
+
     public function show(Request $request, string $slug)
     {
         $location = $this->findLocationBySlug($slug);
         abort_if($location === null, 404);
+
+        if (!empty($location['path'])) {
+            $target = url($location['path']);
+            if ($request->getQueryString()) {
+                $target .= '?' . $request->getQueryString();
+            }
+
+            return redirect()->to($target, 301);
+        }
 
         $filters = [
             'location' => $location['key'],
@@ -144,115 +214,88 @@ class LocationsController extends Controller
 
     private function locationsIndex(): array
     {
-        return [
-            [
+        return Cache::remember('wow.locations.catalog', now()->addHour(), function (): array {
+            $pages = [];
+
+            $pages[] = [
                 'key' => 'online',
                 'slug' => 'online',
                 'title' => 'Online',
                 'online' => true,
+                'path' => '/online',
                 'seo_title' => $this->seoTitleForLocation('Online'),
                 'seo_description' => 'Browse online experiences you can join from anywhere.',
-            ],
-            [
-                'key' => 'london',
-                'slug' => 'london',
-                'title' => 'London',
-                'lat' => 51.5072,
-                'lng' => -0.1276,
-                'seo_title' => $this->seoTitleForLocation('London'),
-                'seo_description' => 'Explore wellness experiences and therapies across London.',
-            ],
-            [
-                'key' => 'manchester',
-                'slug' => 'manchester',
-                'title' => 'Manchester',
-                'lat' => 53.4808,
-                'lng' => -2.2426,
-                'seo_title' => $this->seoTitleForLocation('Manchester'),
-                'seo_description' => 'Find wellness experiences and therapies across Manchester.',
-            ],
-            [
-                'key' => 'birmingham',
-                'slug' => 'birmingham',
-                'title' => 'Birmingham',
-                'lat' => 52.4862,
-                'lng' => -1.8904,
-                'seo_title' => $this->seoTitleForLocation('Birmingham'),
-                'seo_description' => 'Discover wellness experiences and therapies across Birmingham.',
-            ],
-            [
-                'key' => 'leeds',
-                'slug' => 'leeds',
-                'title' => 'Leeds',
-                'lat' => 53.8008,
-                'lng' => -1.5491,
-                'seo_title' => $this->seoTitleForLocation('Leeds'),
-                'seo_description' => 'Explore wellness experiences and therapies across Leeds.',
-            ],
-            [
-                'key' => 'bristol',
-                'slug' => 'bristol',
-                'title' => 'Bristol',
-                'lat' => 51.4545,
-                'lng' => -2.5879,
-                'seo_title' => $this->seoTitleForLocation('Bristol'),
-                'seo_description' => 'Discover wellness experiences and therapies across Bristol.',
-            ],
-            [
-                'key' => 'brighton',
-                'slug' => 'brighton',
-                'title' => 'Brighton',
-                'lat' => 50.8225,
-                'lng' => -0.1372,
-                'seo_title' => $this->seoTitleForLocation('Brighton'),
-                'seo_description' => 'Find wellness experiences and therapies across Brighton.',
-            ],
-            [
-                'key' => 'liverpool',
-                'slug' => 'liverpool',
-                'title' => 'Liverpool',
-                'lat' => 53.4084,
-                'lng' => -2.9916,
-                'seo_title' => $this->seoTitleForLocation('Liverpool'),
-                'seo_description' => 'Explore wellness experiences and therapies across Liverpool.',
-            ],
-            [
-                'key' => 'glasgow',
-                'slug' => 'glasgow',
-                'title' => 'Glasgow',
-                'lat' => 55.8642,
-                'lng' => -4.2518,
-                'seo_title' => $this->seoTitleForLocation('Glasgow'),
-                'seo_description' => 'Discover wellness experiences and therapies across Glasgow.',
-            ],
-            [
-                'key' => 'edinburgh',
-                'slug' => 'edinburgh',
-                'title' => 'Edinburgh',
-                'lat' => 55.9533,
-                'lng' => -3.1883,
-                'seo_title' => $this->seoTitleForLocation('Edinburgh'),
-                'seo_description' => 'Find wellness experiences and therapies across Edinburgh.',
-            ],
-            [
-                'key' => 'cardiff',
-                'slug' => 'cardiff',
-                'title' => 'Cardiff',
-                'lat' => 51.4816,
-                'lng' => -3.1791,
-                'seo_title' => $this->seoTitleForLocation('Cardiff'),
-                'seo_description' => 'Explore wellness experiences and therapies across Cardiff.',
-            ],
-            [
-                'key' => 'kent',
-                'slug' => 'kent',
-                'title' => 'Kent',
-                'lat' => 51.2745,
-                'lng' => 0.5210,
-                'seo_title' => $this->seoTitleForLocation('Kent'),
-                'seo_description' => 'Discover wellness experiences and therapies across Kent.',
-            ],
-        ];
+            ];
+
+            $rows = VendorLocation::query()
+                ->select(['city', 'county_region', 'country', 'lat', 'lng', 'label', 'formatted_address'])
+                ->where(function ($query): void {
+                    $query->whereNotNull('city')
+                        ->orWhereNotNull('county_region')
+                        ->orWhereNotNull('country');
+                })
+                ->orderByRaw("LOWER(COALESCE(country, ''))")
+                ->orderByRaw("LOWER(COALESCE(county_region, ''))")
+                ->orderByRaw("LOWER(COALESCE(city, ''))")
+                ->get();
+
+            $seen = [];
+
+            foreach ($rows as $row) {
+                $countryLabel = trim((string) ($row->country ?? ''));
+                $countyLabel = trim((string) ($row->county_region ?? ''));
+                $cityLabel = trim((string) ($row->city ?? ''));
+
+                $countrySlug = $this->normalizeCountrySlug($countryLabel);
+                $countySlug = $this->normalizeCountySlug($countyLabel);
+                $citySlug = Str::slug($cityLabel);
+
+                $path = $this->canonicalLocationPath($countrySlug, $countySlug, $citySlug);
+                if (isset($seen[$path])) {
+                    continue;
+                }
+
+                $title = $cityLabel !== ''
+                    ? $cityLabel
+                    : ($countyLabel !== '' ? Str::of($countyLabel)->headline()->toString() : Str::of($countryLabel ?: 'United Kingdom')->headline()->toString());
+
+                $placeSummary = collect(array_filter([
+                    $cityLabel !== '' ? $cityLabel : null,
+                    $countyLabel !== '' ? Str::of($countyLabel)->headline()->toString() : null,
+                    $this->labelForCountrySlug($countrySlug),
+                ]))->implode(', ');
+
+                $pages[] = [
+                    'key' => trim($path, '/'),
+                    'slug' => trim(str_replace('/locations/', '', $path), '/'),
+                    'title' => $title,
+                    'country_slug' => $countrySlug,
+                    'county_slug' => $countySlug ?: null,
+                    'town_slug' => $citySlug ?: null,
+                    'path' => $path,
+                    'lat' => isset($row->lat) ? (float) $row->lat : null,
+                    'lng' => isset($row->lng) ? (float) $row->lng : null,
+                    'seo_title' => $this->seoTitleForLocation($title),
+                    'seo_description' => 'Discover wellness experiences and therapies across ' . $placeSummary . '.',
+                ];
+
+                $seen[$path] = true;
+            }
+
+            usort($pages, function (array $left, array $right): int {
+                if (!empty($left['online']) && empty($right['online'])) {
+                    return -1;
+                }
+
+                if (empty($left['online']) && !empty($right['online'])) {
+                    return 1;
+                }
+
+                return strcasecmp((string) ($left['title'] ?? ''), (string) ($right['title'] ?? ''));
+            });
+
+            return $pages;
+        });
     }
 
     private function seoTitleForLocation(string $location): string
@@ -265,14 +308,67 @@ class LocationsController extends Controller
         return 'Holistic Health & Wellness Therapies, Classes & Events near ' . trim($location) . ' | We Offer Wellness';
     }
 
+    private function seoTitleForHierarchy(string $country, ?string $county = null, ?string $town = null): string
+    {
+        $parts = array_values(array_unique(array_filter([$town, $county, $country])));
+        $location = implode(', ', $parts);
+
+        return 'Holistic Health & Wellness Therapies, Classes & Events in ' . $location . ' | We Offer Wellness';
+    }
+
+    private function seoDescriptionForHierarchy(string $country, ?string $county = null, ?string $town = null): string
+    {
+        $parts = array_values(array_unique(array_filter([$town, $county, $country])));
+        $location = implode(', ', $parts);
+
+        return 'Discover holistic health and wellness therapies, classes and events in ' . $location . ', with online options when nearby choices are limited.';
+    }
+
     private function findLocationBySlug(string $slug): ?array
     {
+        $needle = trim(Str::of($slug)->lower()->replaceMatches('/[^a-z0-9]+/', ' ')->toString());
+
         foreach ($this->locationsIndex() as $location) {
-            if (($location['slug'] ?? null) === $slug) {
+            $slugValue = trim(Str::of((string) ($location['slug'] ?? ''))->lower()->replaceMatches('/[^a-z0-9]+/', ' ')->toString());
+            $titleValue = trim(Str::of((string) ($location['title'] ?? ''))->lower()->replaceMatches('/[^a-z0-9]+/', ' ')->toString());
+            if ($needle !== '' && ($needle === $slugValue || $needle === $titleValue)) {
                 return $location;
             }
         }
         return null;
+    }
+
+    private function hierarchyPath(string $countrySlug, ?string $countySlug = null, ?string $townSlug = null): string
+    {
+        $segments = ['/locations', trim($countrySlug, '/')];
+        $countySlug = $countySlug !== null ? trim($countySlug, '/') : null;
+        $townSlug = $townSlug !== null ? trim($townSlug, '/') : null;
+
+        $genericCounty = $countySlug !== null && $this->isGenericCountySlug($countySlug);
+        $sameAsTown = $countySlug !== null && $townSlug !== null && $countySlug === $townSlug;
+
+        if ($countySlug !== null && !$genericCounty && !$sameAsTown) {
+            $segments[] = $countySlug;
+        }
+
+        if ($townSlug !== null && $townSlug !== '') {
+            if ($townSlug !== $countrySlug) {
+                if ($townSlug !== $countySlug || $genericCounty || $sameAsTown) {
+                    $segments[] = $townSlug;
+                }
+            }
+        }
+
+        return implode('/', $segments);
+    }
+
+    private function hierarchyPathFromResolved(array $resolved): string
+    {
+        $countrySlug = $this->normalizeCountrySlug((string) ($resolved['country'] ?? ($resolved['country_slug'] ?? 'united-kingdom')));
+        $countySlug = $this->normalizeCountySlug((string) ($resolved['county_slug'] ?? ($resolved['county'] ?? $resolved['region'] ?? '')));
+        $townSlug = Str::slug((string) ($resolved['town_slug'] ?? ($resolved['town'] ?? $resolved['place'] ?? '')));
+
+        return $this->canonicalLocationPath($countrySlug, $countySlug, $townSlug);
     }
 
     private function fetchOfferings(array $query): array
@@ -673,9 +769,13 @@ class LocationsController extends Controller
                 'label' => $feature['place_name'] ?? $query,
                 'place' => $place ?: $query,
                 'town' => $locality !== '' ? $locality : $place,
+                'town_slug' => Str::slug($locality !== '' ? $locality : $place),
                 'county' => $county,
+                'county_slug' => Str::slug($county),
                 'region' => $region,
+                'region_slug' => Str::slug($region),
                 'country' => $country,
+                'country_slug' => $this->normalizeCountrySlug($country),
                 'lat' => $lat,
                 'lng' => $lng,
                 'raw' => $feature,
@@ -697,9 +797,13 @@ class LocationsController extends Controller
                     'label' => $location['title'] ?? $query,
                     'place' => $location['title'] ?? $query,
                     'town' => $location['title'] ?? $query,
+                    'town_slug' => Str::slug($location['title'] ?? $query),
                     'county' => $location['title'] ?? '',
+                    'county_slug' => Str::slug($location['title'] ?? $query),
+                    'region_slug' => '',
                     'region' => '',
                     'country' => 'United Kingdom',
+                    'country_slug' => 'united-kingdom',
                     'lat' => $location['lat'] ?? null,
                     'lng' => $location['lng'] ?? null,
                 ];
@@ -707,6 +811,76 @@ class LocationsController extends Controller
         }
 
         return null;
+    }
+
+    private function canonicalLocationPath(string $countrySlug, ?string $countySlug = null, ?string $townSlug = null): string
+    {
+        $countrySlug = $this->normalizeCountrySlug($countrySlug);
+        $countySlug = $countySlug !== null ? trim((string) $countySlug, '/') : null;
+        $townSlug = $townSlug !== null ? trim((string) $townSlug, '/') : null;
+
+        if ($countySlug !== null && $this->isGenericCountySlug($countySlug)) {
+            $countySlug = null;
+        }
+
+        if ($townSlug !== null && $townSlug !== '' && $townSlug === $countrySlug) {
+            $townSlug = null;
+        }
+
+        if ($townSlug !== null && $countySlug !== null && $townSlug === $countySlug) {
+            $countySlug = null;
+        }
+
+        if ($townSlug !== null && $townSlug === 'london') {
+            $countySlug = null;
+        }
+
+        $segments = ['/locations', $countrySlug];
+
+        if ($countySlug !== null && $countySlug !== '') {
+            $segments[] = $countySlug;
+        }
+
+        if ($townSlug !== null && $townSlug !== '') {
+            $segments[] = $townSlug;
+        }
+
+        return implode('/', $segments);
+    }
+
+    private function normalizeCountrySlug(string $country): string
+    {
+        $slug = Str::slug($country);
+
+        if ($slug === '' || in_array($slug, ['uk', 'u-k', 'gb', 'great-britain', 'united-kingdom', 'england', 'scotland', 'wales', 'northern-ireland'], true)) {
+            return 'united-kingdom';
+        }
+
+        return $slug;
+    }
+
+    private function normalizeCountySlug(string $county): ?string
+    {
+        $slug = Str::slug($county);
+
+        if ($slug === '' || $this->isGenericCountySlug($slug)) {
+            return null;
+        }
+
+        return $slug;
+    }
+
+    private function isGenericCountySlug(string $slug): bool
+    {
+        return in_array($slug, ['england', 'scotland', 'wales', 'northern-ireland', 'united-kingdom', 'uk', 'u-k', 'gb', 'great-britain'], true);
+    }
+
+    private function labelForCountrySlug(string $countrySlug): string
+    {
+        return match ($countrySlug) {
+            'united-kingdom' => 'United Kingdom',
+            default => Str::of($countrySlug)->headline()->toString(),
+        };
     }
 
     private function contextText(Collection $context, string $prefix): ?string

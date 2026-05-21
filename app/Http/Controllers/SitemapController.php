@@ -27,6 +27,7 @@ class SitemapController extends Controller
             '/corporate-wellness',
             '/locations',
             '/online',
+            '/online-near-me',
             '/near-me',
             '/needs',
             '/plan',
@@ -35,9 +36,21 @@ class SitemapController extends Controller
             $urls[] = [ 'loc' => $base.$p, 'lastmod' => $now ];
         }
 
-        foreach (['london','manchester','birmingham','leeds','bristol','brighton','liverpool','glasgow','edinburgh','cardiff','kent'] as $city) {
-            $urls[] = [ 'loc' => $base.'/locations/'.rawurlencode($city), 'lastmod' => $now ];
-        }
+        try {
+            foreach (app(LocationsController::class)->locationPages() as $location) {
+                $path = (string) ($location['path'] ?? '');
+                if ($path === '') {
+                    continue;
+                }
+
+                $urls[] = [
+                    'loc' => $base.$path,
+                    'lastmod' => $now,
+                ];
+            }
+        } catch (\Throwable $e) {}
+
+        $urls = collect($urls)->unique('loc')->values()->all();
 
         try {
             $cats = ProductCategory::query()
