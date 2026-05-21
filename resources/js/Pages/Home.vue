@@ -10,6 +10,7 @@ import ProductCard from '@/Components/ProductCard.vue'
 import { fetchProducts, byTag, underPrice, sortByRating, sortByNewest } from '@/services/products'
 import { fetchArticles } from '@/services/articles'
 import UltraSearchBar from '@/Components/UltraSearchBar.vue'
+import LocationAutocomplete from '@/Components/LocationAutocomplete.vue'
 import ClassSchedule from '@/Components/ClassSchedule.vue'
 import PainpointTiles from '@/Components/PainpointTiles.vue'
 import FeatureBand from '@/Components/FeatureBand.vue'
@@ -60,6 +61,10 @@ const metaDescription = 'Holistic therapy, done right: new classes daily, freque
 
 const heroSecondaryCopy = ref('Therapies, classes, and workshops curated by practitioners you can trust so you can feel better, faster.')
 const heroPromo = ref(null)
+const homeLocationValue = ref('')
+const homeLocationSelection = ref(null)
+const homeLocationBusy = ref(false)
+const homeLocationError = ref('')
 const showWhatsOnSection = false
 const reviewsHref = '/reviews'
 const mindfulTimesUrl = 'https://times.weofferwellness.co.uk'
@@ -105,6 +110,122 @@ const heroStats = [
   { label: 'sessions booked', value: '12k+' },
   { label: 'secure checkout', value: '100%' },
 ]
+
+const locationLandingSlugs = {
+  online: 'online',
+  london: 'london',
+  manchester: 'manchester',
+  birmingham: 'birmingham',
+  leeds: 'leeds',
+  bristol: 'bristol',
+  brighton: 'brighton',
+  liverpool: 'liverpool',
+  glasgow: 'glasgow',
+  edinburgh: 'edinburgh',
+  cardiff: 'cardiff',
+  kent: 'kent',
+}
+
+const quickLocationLinks = [
+  { label: 'London', href: '/locations/london' },
+  { label: 'Manchester', href: '/locations/manchester' },
+  { label: 'Birmingham', href: '/locations/birmingham' },
+  { label: 'Leeds', href: '/locations/leeds' },
+  { label: 'Bristol', href: '/locations/bristol' },
+]
+
+function csrfToken() {
+  try {
+    if (typeof window !== 'undefined' && window.__csrfToken) return window.__csrfToken
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+  } catch {
+    return ''
+  }
+}
+
+function normaliseLocationKey(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/,\s*(united kingdom|uk|england|scotland|wales|northern ireland)$/i, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function inferLocationSlug(placeName) {
+  const normalised = normaliseLocationKey(placeName)
+  if (!normalised) return ''
+  const key = normalised.split(' ')[0]
+  return locationLandingSlugs[key] || locationLandingSlugs[normalised] || ''
+}
+
+function mapboxContextValue(place, prefix) {
+  const ctx = Array.isArray(place?.context) ? place.context : []
+  const found = ctx.find((item) => String(item?.id || '').startsWith(`${prefix}.`))
+  return String(found?.text || '')
+}
+
+async function persistLocationChoice(place) {
+  const city = String(place?.name || homeLocationValue.value || '').trim()
+  const region = mapboxContextValue(place, 'region')
+  const country = mapboxContextValue(place, 'country')
+  const lat = Number.isFinite(Number(place?.lat)) ? Number(place.lat) : null
+  const lng = Number.isFinite(Number(place?.lng)) ? Number(place.lng) : null
+
+  if (!city && lat === null && lng === null) return
+
+  try {
+    await fetch('/api/geo', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken(),
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        city,
+        region,
+        country,
+        lat,
+        lng,
+        mode: 'mixed',
+      }),
+    })
+  } catch (error) {
+    console.warn('[home] geo persist failed', error)
+  }
+}
+
+async function submitHomeLocation() {
+  const placeName = String(homeLocationValue.value || '').trim()
+  if (!placeName) {
+    homeLocationError.value = 'Enter a city or postcode to continue.'
+    return
+  }
+
+  homeLocationBusy.value = true
+  homeLocationError.value = ''
+  try {
+    const place = homeLocationSelection.value || { name: placeName }
+    const slug = inferLocationSlug(place.name || placeName)
+
+    await persistLocationChoice(place)
+
+    const target = slug
+      ? `/locations/${slug}`
+      : `/search?where=${encodeURIComponent(placeName)}&mode=in-person`
+
+    window.location.href = target
+  } finally {
+    homeLocationBusy.value = false
+  }
+}
+
+function onHomeLocationSelect(place) {
+  homeLocationValue.value = place.name
+  homeLocationSelection.value = place
+  homeLocationError.value = ''
+}
 
 
 function handleHeroPromoClick() {
@@ -621,6 +742,45 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
+    <section class="section py-4 py-lg-5">
+      <div class="container-page">
+        <div class="home-location-chooser">
+          <div class="home-location-chooser__copy">
+            <div class="kicker">Your location first</div>
+            <h2>Tell us where you are and we’ll tailor what you see</h2>
+            <p>
+              Enter your city or postcode and we’ll take you straight to the therapies, classes and events that fit your area.
+              You can browse everything from the comfort of your own home.
+            </p>
+          </div>
+
+          <div class="home-location-chooser__panel">
+            <form class="home-location-chooser__form" @submit.prevent="submitHomeLocation">
+              <label class="home-location-chooser__label" for="home-location-input">Location</label>
+              <div class="home-location-chooser__input-wrap">
+                <LocationAutocomplete
+                  id-prefix="home-location"
+                  v-model="homeLocationValue"
+                  :access-token="mapboxKey"
+                  placeholder="Enter city or postcode"
+                  input-class="home-location-chooser__input"
+                  @select="onHomeLocationSelect"
+                />
+                <button class="btn-wow btn-wow--primary home-location-chooser__submit" type="submit" :disabled="homeLocationBusy">
+                  {{ homeLocationBusy ? 'Loading…' : 'Show local picks' }}
+                </button>
+              </div>
+              <p v-if="homeLocationError" class="home-location-chooser__error">{{ homeLocationError }}</p>
+              <div class="home-location-chooser__links">
+                <span class="text-ink-600">Popular cities:</span>
+                <a v-for="item in quickLocationLinks" :key="item.href" :href="item.href">{{ item.label }}</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section v-if="showMindfulTimesRibbon" class="mindful-times-ribbon" aria-label="Mindful Times update">
       <div class="container">
         <div class="ribbon-inner">
@@ -1058,6 +1218,95 @@ onBeforeUnmount(() => {
 
 .mindful-times-ribbon { padding:12px 0; background:linear-gradient(90deg,#ecfdf5,#fefce8); border-bottom:1px solid #e2e8f0; border-top:1px solid #e2e8f0; }
 .mindful-times-ribbon .container { max-width:960px; }
+.home-location-chooser{
+  display:grid;
+  grid-template-columns:minmax(0, 1.1fr) minmax(0, .9fr);
+  gap:24px;
+  align-items:stretch;
+  padding:24px;
+  border:1px solid rgba(148, 163, 184, .28);
+  border-radius:24px;
+  background:
+    radial-gradient(circle at top left, rgba(144, 185, 169, .14), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,.95), rgba(248,250,252,.92));
+  box-shadow:0 18px 48px rgba(15,23,42,.08);
+}
+.home-location-chooser__copy{ padding:10px 6px 10px 4px; }
+.home-location-chooser__copy h2{
+  margin:8px 0 0;
+  font-size:clamp(1.7rem, 1.3vw + 1.1rem, 2.4rem);
+  line-height:1.05;
+  letter-spacing:-.02em;
+}
+.home-location-chooser__copy p{
+  margin:14px 0 0;
+  max-width:58ch;
+  color:#475569;
+  font-size:1.02rem;
+  line-height:1.7;
+}
+.home-location-chooser__panel{
+  background:#fff;
+  border:1px solid rgba(148, 163, 184, .22);
+  border-radius:20px;
+  padding:22px;
+  display:flex;
+  align-items:center;
+}
+.home-location-chooser__form{ width:100%; }
+.home-location-chooser__label{
+  display:block;
+  font-size:.85rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:#64748b;
+  margin-bottom:8px;
+  font-weight:700;
+}
+.home-location-chooser__input-wrap{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.home-location-chooser__input-wrap input{
+  height:52px;
+  border-radius:16px;
+  border:1px solid #d8e0ea;
+  padding:0 16px;
+  background:#f8fafc;
+  font-size:1rem;
+  transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.home-location-chooser__input-wrap input:focus{
+  border-color:#90b9a9;
+  box-shadow:0 0 0 4px rgba(144, 185, 169, .16);
+  background:#fff;
+}
+.home-location-chooser__submit{
+  flex:0 0 auto;
+  min-width:168px;
+  height:52px;
+  border-radius:16px;
+}
+.home-location-chooser__error{
+  margin:10px 0 0;
+  color:#b91c1c;
+  font-size:.92rem;
+}
+.home-location-chooser__links{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px 12px;
+  margin-top:16px;
+  font-size:.95rem;
+}
+.home-location-chooser__links a{
+  color:#0f62fe;
+  text-decoration:none;
+  border-bottom:1px solid rgba(15,98,254,.25);
+}
+.home-location-chooser__links a:hover{ border-bottom-color:currentColor; }
 .ribbon-inner { display:flex; flex-wrap:wrap; gap:.75rem .5rem; align-items:center; justify-content:space-between; font-size:.95rem; }
 .ribbon-label { font-weight:600; color:#065f46; padding:4px 12px; border-radius:999px; background:#d1fae5; text-transform:uppercase; letter-spacing:.05em; font-size:.75rem; }
 .ribbon-links { display:flex; gap:.5rem; align-items:center; font-weight:600; }
@@ -1106,6 +1355,9 @@ onBeforeUnmount(() => {
   .mindful-card-media{ width:100%; height:160px; }
   .mindful-feature-latest-link{ flex-direction:column; }
   .mindful-feature-latest-media{ width:100%; height:200px; }
+  .home-location-chooser{ grid-template-columns:1fr; }
+  .home-location-chooser__input-wrap{ flex-direction:column; align-items:stretch; }
+  .home-location-chooser__submit{ width:100%; min-width:0; }
 }
 
 .whero-radial { position:absolute; inset:0; z-index:-1; display:grid; place-items:center; overflow:hidden; perspective:420px; background-image: radial-gradient(circle at 18% -12%, #dbeafe, #ffffff00 22em), conic-gradient(#7bf, #7fb, #b7f, #bf7, #f7b, #fb7, #7bf); opacity:.9; }

@@ -2,6 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 
 const props = defineProps({
+  idPrefix: { type: String, default: '' },
   modelValue: { type: String, default: '' },
   accessToken: { type: String, required: true },
   placeholder: { type: String, default: 'City or postcode' },
@@ -74,6 +75,7 @@ onMounted(() => {
 <template>
   <div class="relative">
     <input
+      :id="props.idPrefix ? `${props.idPrefix}-input` : undefined"
       :placeholder="placeholder"
       :class="['w-full bg-transparent outline-none text-sm text-ink-900 placeholder:text-ink-500', inputClass]"
       type="search"
