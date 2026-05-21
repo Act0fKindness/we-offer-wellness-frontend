@@ -14,12 +14,29 @@ class SitemapController extends Controller
         $now = now()->toAtomString();
         $urls = [];
 
-        foreach (['/','/therapies','/events-workshops','/retreats','/gifts','/gift-cards','/corporate','/corporate-wellness','/search'] as $p) {
+        foreach ([
+            '/',
+            '/therapies',
+            '/events',
+            '/workshops',
+            '/classes',
+            '/retreats',
+            '/gifts',
+            '/gift-cards',
+            '/corporate',
+            '/corporate-wellness',
+            '/locations',
+            '/online',
+            '/near-me',
+            '/needs',
+            '/plan',
+            '/search',
+        ] as $p) {
             $urls[] = [ 'loc' => $base.$p, 'lastmod' => $now ];
         }
 
         foreach (['london','manchester','birmingham','leeds','bristol','brighton','liverpool','glasgow','edinburgh','cardiff','kent'] as $city) {
-            $urls[] = [ 'loc' => $base.'/'.rawurlencode($city), 'lastmod' => $now ];
+            $urls[] = [ 'loc' => $base.'/locations/'.rawurlencode($city), 'lastmod' => $now ];
         }
 
         try {

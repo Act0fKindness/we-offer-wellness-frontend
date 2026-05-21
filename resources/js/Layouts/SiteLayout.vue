@@ -80,7 +80,7 @@ const nav = [
   { key: 'need', label: 'By Need', href: '/feel' },
   { key: 'therapies', label: 'Therapies', href: '/therapies' },
   { key: 'classes', label: 'Classes', href: '/classes' },
-  { key: 'events', label: 'Events & Workshops', href: '/events-and-workshops' },
+  { key: 'events', label: 'Events & Workshops', href: '/events' },
   { key: 'online', label: 'Online & Near Me', href: '/near-me' },
   { key: 'mindful', label: 'Mindful Times', href: '/mindful-times' },
 ]
@@ -163,24 +163,24 @@ const menus = {
   ],
   events: [
     { title: 'WOW-hosted', links: [
-      link('All WOW events', '/events-and-workshops?host=wow'),
+      link('All WOW events', '/events?host=wow'),
       link('Sound baths & journeys', '/events/wow/sound-baths'),
       link('Seasonal circles & ceremonies', '/events/wow/seasonal-circles'),
       link('Community & connection events', '/events/wow/community'),
       link('Special series (e.g. Summer Sound Bath Series)', '/events/wow/summer-sound-bath-series'),
     ]},
     { title: 'Practitioner workshops', links: [
-      link('All practitioner workshops', '/events-and-workshops?host=practitioner'),
+      link('All practitioner workshops', '/events?host=practitioner'),
       link('Workshops for clients', '/events/practitioner/client-workshops'),
       link('Trainings & CPD', '/events/practitioner/trainings'),
       link('Breathwork trainings', '/events/practitioner/breathwork-training'),
       link('Somatic & nervous system workshops', '/events/practitioner/somatic-workshops'),
     ]},
     { title: 'When & where', links: [
-      link('This week', '/events-and-workshops?timeframe=this-week'),
-      link('This month', '/events-and-workshops?timeframe=this-month'),
-      link('Online events', '/events-and-workshops?format=online'),
-      link('In-person events', '/events-and-workshops?format=in-person'),
+      link('This week', '/events?timeframe=this-week'),
+      link('This month', '/events?timeframe=this-month'),
+      link('Online events', '/events?format=online'),
+      link('In-person events', '/events?format=in-person'),
       link('Corporate wellness events (coming 2026)', '/corporate-wellness', { divider: true }),
     ]},
   ],
@@ -196,10 +196,10 @@ const menus = {
   online: [
     { title: 'Format & location', links: [
       link('Online therapies', '/therapies?format=online'),
-      link('Online classes & events', '/classes-and-events?format=online'),
+      link('Online classes & events', '/classes?format=online'),
       link('In-person therapies near me', '/therapies?format=in-person&near=me'),
       link('In-person classes near me', '/classes?format=in-person&near=me'),
-      link('In-person events near me', '/events-and-workshops?format=in-person&near=me'),
+      link('In-person events near me', '/events?format=in-person&near=me'),
       link('Explore by location', '/locations'),
     ]},
   ],
@@ -624,7 +624,7 @@ function openV3NotifyModal(event){
             <ul>
               <li><a href="/therapies">Therapies</a></li>
               <li><a href="/classes">Classes</a></li>
-              <li><a href="/events-and-workshops">Events &amp; Workshops</a></li>
+              <li><a href="/events">Events &amp; Workshops</a></li>
               <li><a :href="giftCardsUrl">WOW gift vouchers</a></li>
               <li><a :href="mindfulTimesUrl" target="_blank" rel="noopener">Mindful Times</a></li>
               <li><a :href="podcastUrl" target="_blank" rel="noopener">Podcast</a></li>

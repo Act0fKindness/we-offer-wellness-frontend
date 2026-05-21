@@ -36,8 +36,8 @@ class EventsController extends Controller
 
         return view('events.index', [
             'seo' => [
-                'title' => 'Events & Workshops | We Offer Wellness™',
-                'description' => 'Discover upcoming wellness events and workshops, online and near you.',
+                'title' => 'Events | We Offer Wellness™',
+                'description' => 'Discover upcoming wellbeing events, online and near you.',
                 'robots' => $hasFacets ? 'noindex,follow' : 'index,follow',
                 'canonical' => url('/events'),
             ],

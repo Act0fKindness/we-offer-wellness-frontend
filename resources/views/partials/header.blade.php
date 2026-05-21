@@ -99,9 +99,84 @@
     .practitioner-form__submit{ width:100%; display:inline-flex; justify-content:center; }
     .practitioner-modal__panel h2{ font-size:28px; margin:0; color:var(--ink-900); }
     .practitioner-modal__panel p{ margin:0; }
+    .mobile-search-drawer{
+        position:fixed;
+        left:0;
+        right:0;
+        top:var(--wow-header-offset, 0px);
+        z-index:1200;
+        height:100%;
+        background:rgba(0, 0, 0, 0.4);
+        display:none;
+    }
+    .mobile-search-drawer.is-visible{ display:block; }
+    .mobile-search-drawer__inner{
+        position:relative;
+        width:100%;
+        height:100%;
+        overflow:auto;
+        padding:12px 12px 16px;
+    }
+    .mobile-search-drawer__close{
+        position:absolute;
+        top:8px;
+        right:8px;
+        width:38px;
+        height:38px;
+        border:none;
+        border-radius:9999px;
+        background:#fff;
+        color:#111827;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 8px 18px rgba(0,0,0,.12);
+        z-index:2;
+    }
+    .mobile-search-drawer__close:hover{ background:#f9fafb; }
+    .mobile-search-trigger{
+        position:relative;
+        width:40px;
+        height:40px;
+        border-radius:9999px;
+        transition:background-color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .mobile-search-trigger__icon{
+        position:absolute;
+        inset:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        transition:opacity .18s ease, transform .18s ease;
+    }
+    .mobile-search-trigger__icon--search svg{
+        width:24px;
+        height:24px;
+        color:#0f172a;
+    }
+    .mobile-search-trigger__icon--close{
+        opacity:0;
+        transform:scale(.82);
+    }
+    .mobile-search-trigger__icon--close svg{
+        width:24px;
+        height:24px;
+        color:#fff;
+    }
+    .mobile-search-trigger.is-open{
+        background:#dc2626;
+    }
+    .mobile-search-trigger.is-open .mobile-search-trigger__icon--search{
+        opacity:0;
+        transform:scale(.82);
+    }
+    .mobile-search-trigger.is-open .mobile-search-trigger__icon--close{
+        opacity:1;
+    }
     @media (max-width: 480px){
         .practice-mode{ flex-direction:column; }
         .practitioner-form .field-row{ grid-template-columns:1fr; }
+        .mobile-search-drawer__inner{ padding:10px 10px 14px; }
     }
 </style>
 <style>
@@ -199,7 +274,7 @@
                     </div>
                     <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/classes">Classes</a></div>
                     @if($eventsMenuVisible)
-                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events-workshops">Events
+                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events">Events
                             &amp; Workshops</a></div>
                     @endif
                     <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/online-near-me">Online &amp; Near
@@ -287,12 +362,23 @@
                 </div>
             </div><!---->
             <div class="flex items-center gap-3 md:hidden">
-                <a class="icon-btn position-relative cart-link" aria-label="View cart" href="/cart">
-                    <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"></path>
-                    </svg>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge bg-danger" style="display:none">0</span>
-                </a>
+                <button
+                    type="button"
+                    class="icon-btn position-relative mobile-search-trigger"
+                    aria-label="Search"
+                    aria-expanded="false"
+                    data-mobile-search-trigger>
+                    <span class="mobile-search-trigger__icon mobile-search-trigger__icon--search" aria-hidden="true">
+                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
+                        </svg>
+                    </span>
+                    <span class="mobile-search-trigger__icon mobile-search-trigger__icon--close" aria-hidden="true" hidden>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                </button>
                 <button
                     type="button"
                     class="inline-flex items-center justify-center p-2 rounded-md text-ink-700 hamburger"
@@ -363,7 +449,7 @@
                             <li><a class="menu-link" href="/therapies">All therapies</a></li>
                             <li><a class="menu-link" href="/online">Online therapies</a></li>
                             <li><a class="menu-link" href="/online-near-me">In-person therapies</a></li>
-                            <li><a class="menu-link" href="/events-workshops">Group sessions</a></li>
+                            <li><a class="menu-link" href="/events">Group sessions</a></li>
                             <li><a class="menu-link" href="/search?format=online">1:1 sessions</a></li>
                         </ul>
                     </div>
@@ -391,12 +477,12 @@
                         <div class="menu-col">
                             <div class="mega-kicker mb-2">Highlights</div>
                             <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/events-workshops">Upcoming events &amp; workshops</a></li>
+                                <li><a class="menu-link" href="/events">Upcoming events &amp; workshops</a></li>
                                 @if($eventsMenuLinks['workshops'] ?? false)
-                                    <li><a class="menu-link" href="/events-workshops?type=workshop">Workshops</a></li>
+                                    <li><a class="menu-link" href="/workshops">Workshops</a></li>
                                 @endif
                                 @if($eventsMenuLinks['events'] ?? false)
-                                    <li><a class="menu-link" href="/events-workshops?type=event">Events</a></li>
+                                    <li><a class="menu-link" href="/events">Events</a></li>
                                 @endif
                                 @if($eventsMenuLinks['classes'] ?? false)
                                     <li><a class="menu-link" href="/classes">Classes</a></li>
@@ -413,16 +499,16 @@
                             <div class="mega-kicker mb-2">Explore</div>
                             <ul class="list-unstyled m-0 p-0">
                                 @if($eventsMenuLinks['online'] ?? false)
-                                    <li><a class="menu-link" href="/events-workshops?format=online">Online</a></li>
+                                    <li><a class="menu-link" href="/events?format=online">Online</a></li>
                                 @endif
                                 @if($eventsMenuLinks['near_me'] ?? false)
-                                    <li><a class="menu-link" href="/events-workshops?format=in_person">Near me</a></li>
+                                    <li><a class="menu-link" href="/events?format=in_person">Near me</a></li>
                                 @endif
                                 @if($eventsMenuLinks['this_week'] ?? false)
-                                    <li><a class="menu-link" href="/events-workshops?date=this_week">This week</a></li>
+                                    <li><a class="menu-link" href="/events?date=this_week">This week</a></li>
                                 @endif
                                 @if($eventsMenuLinks['this_month'] ?? false)
-                                    <li><a class="menu-link" href="/events-workshops?date=this_month">This month</a></li>
+                                    <li><a class="menu-link" href="/events?date=this_month">This month</a></li>
                                 @endif
                                 @if(!$hasExploreLinks)
                                     <li><span class="menu-link menu-link--disabled" aria-disabled="true">New filters coming soon</span></li>
@@ -645,10 +731,11 @@
                     <li><a class="mobile-menu__link" href="/therapies">Therapies</a></li>
                     <li><a class="mobile-menu__link" href="/classes">Classes</a></li>
                     @if($eventsMenuVisible)
-                        <li><a class="mobile-menu__link" href="/events-workshops">Events &amp; Workshops</a></li>
+                        <li><a class="mobile-menu__link" href="/events">Events &amp; Workshops</a></li>
                     @endif
                     <li><a class="mobile-menu__link" href="/online-near-me">Online &amp; Near Me</a></li>
                     <li><a class="mobile-menu__link" href="https://times.weofferwellness.co.uk">Mindful Times</a></li>
+                    <li><a class="mobile-menu__link" href="/cart">Cart</a></li>
                 </ul>
                 <div class="mobile-menu__section">
                     <div class="mobile-menu__section-title">Help &amp; Info</div>
@@ -697,6 +784,12 @@
                     @endauth
                 </div>
             </nav>
+        </div>
+
+        <div id="mobile-search-drawer" class="mobile-search-drawer" aria-hidden="true">
+            <div class="mobile-search-drawer__inner">
+                <x-mobile-search-bar prefix="header-search" />
+            </div>
         </div>
 
         <div id="wowPractitionerModal" class="practitioner-modal" aria-hidden="true">
@@ -786,6 +879,79 @@
                     window.addEventListener('resize', updateOffset);
                 }
                 window.addEventListener('load', updateOffset);
+            })();
+        </script>
+
+        <script>
+            (function(){
+                if (typeof window === 'undefined' || typeof document === 'undefined') return;
+                const trigger = document.querySelector('[data-mobile-search-trigger]');
+                const modal = document.getElementById('mobile-search-drawer');
+                const searchIcon = trigger?.querySelector('.mobile-search-trigger__icon--search');
+                const closeIcon = trigger?.querySelector('.mobile-search-trigger__icon--close');
+                const mobileMenu = document.getElementById('mobile-menu');
+                const burger = document.querySelector('button[aria-label="Toggle menu"]');
+                if (!trigger || !modal) return;
+
+                const closeMobileMenu = () => {
+                    if (!mobileMenu) return;
+                    mobileMenu.style.display = 'none';
+                    burger?.setAttribute('aria-expanded', 'false');
+                    try {
+                        if (window.__WOWHamburger && typeof window.__WOWHamburger.set === 'function') {
+                            window.__WOWHamburger.set(false);
+                        }
+                    } catch (_) {}
+                };
+
+                const openSearch = () => {
+                    if (modal.classList.contains('is-visible')) {
+                        closeSearch();
+                        return;
+                    }
+                    closeMobileMenu();
+                    modal.classList.add('is-visible');
+                    modal.setAttribute('aria-hidden', 'false');
+                    trigger.setAttribute('aria-expanded', 'true');
+                    trigger.classList.add('is-open');
+                    trigger.setAttribute('aria-label', 'Close search');
+                    if (searchIcon) searchIcon.hidden = true;
+                    if (closeIcon) closeIcon.hidden = false;
+                    try {
+                        window.setupUltraSearchBar?.('header-search');
+                    } catch (_) {}
+                };
+
+                const closeSearch = () => {
+                    modal.classList.remove('is-visible');
+                    modal.setAttribute('aria-hidden', 'true');
+                    trigger.setAttribute('aria-expanded', 'false');
+                    trigger.classList.remove('is-open');
+                    trigger.setAttribute('aria-label', 'Search');
+                    if (searchIcon) searchIcon.hidden = false;
+                    if (closeIcon) closeIcon.hidden = true;
+                };
+                window.__WOWCloseMobileSearch = closeSearch;
+
+                if (burger) {
+                    burger.addEventListener('click', () => {
+                        closeSearch();
+                    }, true);
+                }
+
+                trigger.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    openSearch();
+                });
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) closeSearch();
+                });
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && modal.classList.contains('is-visible')) {
+                        closeSearch();
+                    }
+                });
             })();
         </script>
 

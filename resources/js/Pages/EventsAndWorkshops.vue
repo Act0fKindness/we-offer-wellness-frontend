@@ -330,7 +330,7 @@ onBeforeUnmount(() => {
 <template>
   <Head title="Events & Workshops">
     <meta name="description" content="Immersive wellness events planned like a creative studio: turnkey production, measurable impact." />
-    <link rel="canonical" :href="(typeof window !== 'undefined' ? window.location.origin : '') + '/events-and-workshops'" />
+    <link rel="canonical" :href="(typeof window !== 'undefined' ? window.location.origin : '') + '/events'" />
   </Head>
   <SiteLayout>
     <section class="section hero-section">

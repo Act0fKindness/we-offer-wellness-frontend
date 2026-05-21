@@ -37,7 +37,7 @@ const heroCtaMap = {
   ],
   events: [
     { label: 'See what’s on', href: '#hub-products', variant: 'cta', arrow: true },
-    { label: 'Plan with WOW', href: '/events-and-workshops', variant: 'ghost' },
+    { label: 'Plan with WOW', href: '/events', variant: 'ghost' },
   ],
   workshops: [
     { label: 'Explore workshops', href: '#hub-products', variant: 'cta', arrow: true },
@@ -85,7 +85,7 @@ const heroPanelMap = {
       'Corporate & private options',
       'Vetted facilitators',
     ],
-    cta: { label: 'Browse featured events', href: '/events-and-workshops', variant: 'outline', arrow: true },
+    cta: { label: 'Browse featured events', href: '/events', variant: 'outline', arrow: true },
   },
   workshops: {
     kicker: 'Hands-on learning',

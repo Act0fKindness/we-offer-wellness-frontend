@@ -23117,9 +23117,7 @@ a:hover {
 
 /* Components */
 /* Temporarily hide Retreats and Classes nav items */
-.link-wow--nav[href="/retreats"],
-.link-wow--nav[href="/classes"]{ display:none !important; }
-/* Hide What's on this week section if present */
+    /* Hide What's on this week section if present */
 #whats-on{ display:none !important; }
 /* Ultra search bar (ported from Vue) */
 .wow-ultra{
@@ -23147,6 +23145,15 @@ a:hover {
 .wow-ultra .item .title{
     font-family: 'Manrope', var(--bs-font-sans-serif) !important;
 }
+.wow-ultra .seg-label,
+.wow-ultra .seg input,
+.wow-ultra .where-editor,
+.wow-ultra .summary{
+    font-size: 12px;
+    line-height: 1.25;
+    font-weight: 400;
+    color: rgba(33, 37, 41, .75);
+}
 .wow-ultra .bar{
     background:#fff;
     border-radius:18px;
@@ -23170,19 +23177,34 @@ a:hover {
 }
 .wow-ultra .seg:focus-within{ box-shadow:var(--ring); border-color:transparent }
 .wow-ultra .seg-label{
-    font-weight:600;
-    color:#111827;
-    font-size:11px;
-    line-height:1;
+    font-weight:400;
+    color:rgba(33, 37, 41, .75);
+    font-size: 12px;
     margin:0 0 2px 0;
 }
 .wow-ultra .seg input{
     border:0; outline:0; width:100%; background:transparent;
-    font-size:1rem; line-height:1.25; padding:0; margin:0;
+    font-size:12px; line-height:1.25; padding:0; margin:0;
+    font-weight:400; color:rgba(33, 37, 41, .75);
 }
-.wow-ultra .where-editor{ outline:0; min-height:1.25rem; font-size:1rem; line-height:1.25; }
-.wow-ultra .where-editor:empty:before{ content: attr(data-placeholder); color:#9ca3af; }
-.wow-ultra .summary{ color:#374151; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.wow-ultra .where-editor{
+    outline:0; min-height:1.25rem; font-size:12px; line-height:1.25;
+    font-weight:400; color:rgba(33, 37, 41, .75);
+}
+.wow-ultra .where-editor:empty:before{
+    content: attr(data-placeholder);
+    color:rgba(33, 37, 41, .75);
+    font: inherit;
+}
+.wow-ultra .summary{
+    color:rgba(33, 37, 41, .75) !important;
+    font-weight:400;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis
+}
+.wow-ultra .summary:empty:before{
+    content: attr(data-placeholder);
+    color: rgba(33, 37, 41, .75) !important;
+}
 .wow-ultra.only-what .seg{ flex:1 1 100% }
 .wow-ultra.only-what .bar{ flex-wrap:nowrap }
 .wow-ultra .pane{
@@ -23211,7 +23233,7 @@ a:hover {
 .wow-ultra .item:hover, .wow-ultra .item[aria-selected="true"]{ background:#f2f5ff }
 .wow-ultra .item .title{ font-weight:600; color:#0f172a }
 .wow-ultra .item .type{ font-size:.75rem; padding:.1rem .5rem; border-radius:999px; background:#eef2ff; color:#2536eb; margin-left:.5rem }
-.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; max-width:min(980px, 96vw); border-radius:18px }
+.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; width:min(680px, 96vw); max-width:min(980px, 96vw); border-radius:18px }
 .wow-ultra [id$='who-pane']{ left:auto; right:0; max-width:min(560px, 96vw); border-radius:18px }
 @media (max-width: 768px){ .wow-ultra [id$='who-pane']{ left:0; right:0; max-width:100%; } }
 /* Utility bar */

@@ -86,7 +86,7 @@ const shopCategories = [
   },
   {
     title: 'Yoga & Movement',
-    href: '/classes/yoga',
+    href: '/classes?category=yoga',
     img: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1200&auto=format&fit=crop',
   },
   {

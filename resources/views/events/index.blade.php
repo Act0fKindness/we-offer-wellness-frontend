@@ -17,9 +17,9 @@
   <div class="container-page">
     <div class="mb-4">
       <div class="kicker">Browse</div>
-      <h1>Events & Workshops</h1>
+      <h1>Events</h1>
       <p class="text-ink-600 mt-2" style="max-width:70ch;">
-        Upcoming sessions, gatherings and workshops — online and near you.
+        Upcoming sessions and community gatherings — online and near you.
       </p>
     </div>
 

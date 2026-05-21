@@ -25,6 +25,7 @@ use App\Http\Controllers\AboutController;
 use App\Http\Controllers\NeedsController;
 use App\Http\Controllers\TherapiesController;
 use App\Http\Controllers\EventsController;
+use App\Http\Controllers\SeoLandingController;
 use App\Http\Controllers\OnlineController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\OnlineNearMeController;
@@ -72,10 +73,10 @@ Route::get('/therapies/{slug}', [TherapiesController::class, 'show'])
     ->name('therapies.show');
 
 /** Events & Workshops */
-Route::get('/events-workshops', [EventsController::class, 'index'])->name('events.index');
-Route::get('/events-workshops/{slug}', [EventsController::class, 'show'])
-    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
-    ->name('events.show');
+Route::redirect('/events-workshops', '/events', 301);
+Route::get('/events-workshops/{slug}', function (string $slug) {
+    return redirect('/events/'.$slug, 301);
+})->where('slug', '[A-Za-z][A-Za-z0-9\-]*');
 
 /** Online */
 Route::get('/online', [OnlineController::class, 'index'])->name('online.index');
@@ -156,10 +157,26 @@ Route::post('/api/geo', [\App\Http\Controllers\GeoController::class, 'update']);
 // Landing/Hubs and Universal Pattern pages
 // ------------------------------------------------------------------
 
-// Redirect legacy hubs to Blade counterparts where applicable
-Route::redirect('/events', '/events-workshops', 301);
-Route::redirect('/workshops', '/events-workshops', 301);
-Route::redirect('/classes', '/events-workshops', 301);
+// Canonical hub pages
+Route::get('/events', [EventsController::class, 'index'])->name('events.index');
+Route::get('/events/{slug}', [EventsController::class, 'show'])
+    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
+    ->name('events.show');
+Route::get('/workshops', [SeoLandingController::class, 'show'])
+    ->defaults('type', 'workshops')
+    ->name('workshops.index');
+Route::get('/classes', [SeoLandingController::class, 'show'])
+    ->defaults('type', 'classes')
+    ->name('classes.index');
+Route::get('/retreats', [SeoLandingController::class, 'show'])
+    ->defaults('type', 'retreats')
+    ->name('retreats.index');
+Route::get('/gifts', [SeoLandingController::class, 'show'])
+    ->defaults('type', 'gifts')
+    ->name('gifts.index');
+
+// Legacy hubs -> canonical pages
+Route::redirect('/events-and-workshops', '/events', 301);
 // Pain-point landing pages
 Route::get('/need/{need}', [LandingController::class, 'need']);
 // Quiz plan results page
@@ -167,19 +184,19 @@ Route::get('/plan', [LandingController::class, 'plan']);
 
 // Singular → plural 301 redirects for hubs
 Route::get('/therapy', fn() => redirect('/therapies', 301));
-Route::get('/event', fn() => redirect('/events-workshops', 301));
-Route::get('/workshop', fn() => redirect('/events-workshops', 301));
-Route::get('/class', fn() => redirect('/events-workshops', 301));
+Route::get('/event', fn() => redirect('/events', 301));
+Route::get('/workshop', fn() => redirect('/workshops', 301));
+Route::get('/class', fn() => redirect('/classes', 301));
 Route::get('/retreat', fn() => redirect('/retreats', 301));
 Route::get('/gift', fn() => redirect('/gifts', 301));
 
 // Singular → plural 301 redirects for legacy category paths
 Route::get('/therapy/{category}', fn(string $category) => redirect('/therapies/'.$category, 301));
-Route::get('/event/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
-Route::get('/workshop/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
-Route::get('/class/{category}', fn(string $category) => redirect('/events-workshops/'.$category, 301));
-Route::get('/retreat/{category}', fn(string $category) => redirect('/retreats/'.$category, 301));
-Route::get('/gift/{category}', fn(string $category) => redirect('/gifts/'.$category, 301));
+Route::get('/event/{category}', fn(string $category) => redirect('/events/'.$category, 301));
+Route::get('/workshop/{category}', fn(string $category) => redirect('/workshops?category='.urlencode($category), 301));
+Route::get('/class/{category}', fn(string $category) => redirect('/classes?category='.urlencode($category), 301));
+Route::get('/retreat/{category}', fn(string $category) => redirect('/retreats?category='.urlencode($category), 301));
+Route::get('/gift/{category}', fn(string $category) => redirect('/gifts?category='.urlencode($category), 301));
 
 // Offering detail pages: /{type}/{id}-{slug}
 Route::get('/{type}/{offering}', [LandingController::class, 'offering'])
@@ -195,9 +212,12 @@ Route::get('/{type}/o/{handle}', [LandingRedirectsController::class, 'offeringHa
 $cities = implode('|', [
     'london','manchester','birmingham','leeds','bristol','brighton','liverpool','glasgow','edinburgh','cardiff','kent',
 ]);
-Route::get('/{city}', [LandingController::class, 'city'])->where('city', $cities);
-Route::get('/{city}/{type}/{category}', [LandingController::class, 'cityCategory'])
-    ->where(['city' => $cities, 'type' => 'therapies|events|workshops|classes']);
+Route::get('/{city}', function (string $city) {
+    return redirect('/locations/'.$city, 301);
+})->where('city', $cities);
+Route::get('/{city}/{type}/{category}', function (string $city, string $type, string $category) {
+    return redirect('/locations/'.$city, 301);
+})->where(['city' => $cities, 'type' => 'therapies|events|workshops|classes']);
 
 // Legacy experiences → 301 redirects
 Route::get('/experiences', [LandingRedirectsController::class, 'experiencesIndex']);
@@ -206,7 +226,6 @@ Route::get('/experience/{slug}', [LandingRedirectsController::class, 'experience
 Route::get('/experiences/{slug}', [LandingRedirectsController::class, 'experiencesSlug']);
 
 Route::redirect('/corporate-wellbeing', '/corporate-wellness', 301);
-Route::redirect('/events-and-workshops', '/events-workshops', 301);
 Route::redirect('/gift-vouchers', '/gift-cards', 301);
 
 Route::get('/reviews', [ReviewsController::class, 'index'])->name('reviews.index');

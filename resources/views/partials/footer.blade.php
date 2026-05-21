@@ -85,8 +85,10 @@
                 <div class="title">Explore</div>
                 <ul>
                     <li><a href="/therapies">Therapies</a></li>
+                    <li><a href="/workshops">Workshops</a></li>
                     <li><a href="/classes">Classes</a></li>
-                    <li><a href="/events-and-workshops">Events &amp; Workshops</a></li>
+                    <li><a href="/events">Events &amp; Workshops</a></li>
+                    <li><a href="/retreats">Retreats</a></li>
                     <li><a href="/gift-cards">WOW gift vouchers</a></li>
                     <li><a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener">Mindful
                         Times</a></li>
