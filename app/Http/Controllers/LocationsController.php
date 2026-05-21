@@ -27,6 +27,30 @@ class LocationsController extends Controller
     {
         $query = trim((string) $request->query('place', $request->query('postcode', $request->query('q', ''))));
         $resolved = $query !== '' ? $this->resolveSearchOrigin($query) : null;
+
+        if (
+            $resolved !== null &&
+            !$request->hasAny(['town', 'city', 'county', 'country', 'region']) &&
+            (
+                !empty($resolved['town']) ||
+                !empty($resolved['county']) ||
+                !empty($resolved['country']) ||
+                !empty($resolved['region'])
+            )
+        ) {
+            return redirect()->route('locations.index', array_merge($request->query(), [
+                'place' => $resolved['place'] ?? $query,
+                'postcode' => $request->query('postcode', $query),
+                'town' => $resolved['town'] ?? null,
+                'city' => $resolved['town'] ?? null,
+                'county' => $resolved['county'] ?? null,
+                'region' => $resolved['region'] ?? null,
+                'country' => $resolved['country'] ?? null,
+                'lat' => $resolved['lat'] ?? null,
+                'lng' => $resolved['lng'] ?? null,
+            ]));
+        }
+
         $locations = $resolved ? $this->rankLocationsByDistance($resolved) : $this->locationsIndex();
         $nearbyPhysical = collect($locations)
             ->filter(fn (array $location): bool => !($location['online'] ?? false) && isset($location['distance_miles']))
@@ -640,7 +664,7 @@ class LocationsController extends Controller
             $country = (string) $this->contextText($context, 'country');
             $locality = (string) $this->contextText($context, 'place');
             $district = (string) $this->contextText($context, 'district');
-            $county = $region !== '' ? $region : ($district !== '' ? $district : '');
+            $county = $district !== '' ? $district : ($region !== '' ? $region : '');
             $coords = $feature['center'] ?? ($feature['geometry']['coordinates'] ?? null);
             $lng = is_array($coords) && isset($coords[0]) ? (float) $coords[0] : null;
             $lat = is_array($coords) && isset($coords[1]) ? (float) $coords[1] : null;
@@ -650,6 +674,7 @@ class LocationsController extends Controller
                 'place' => $place ?: $query,
                 'town' => $locality !== '' ? $locality : $place,
                 'county' => $county,
+                'region' => $region,
                 'country' => $country,
                 'lat' => $lat,
                 'lng' => $lng,
@@ -673,6 +698,7 @@ class LocationsController extends Controller
                     'place' => $location['title'] ?? $query,
                     'town' => $location['title'] ?? $query,
                     'county' => $location['title'] ?? '',
+                    'region' => '',
                     'country' => 'United Kingdom',
                     'lat' => $location['lat'] ?? null,
                     'lng' => $location['lng'] ?? null,

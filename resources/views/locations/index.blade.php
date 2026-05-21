@@ -7,7 +7,7 @@
   $results = collect($locations ?? []);
   $physicalResults = $results->filter(fn ($location) => !($location['online'] ?? false))->values();
   $onlineResult = $results->first(fn ($location) => ($location['online'] ?? false) === true);
-  $mapItems = $physicalResults->map(function ($location) {
+  $mapItems = $physicalResults->take(8)->map(function ($location) {
     return [
       'title' => $location['title'] ?? '',
       'slug' => $location['slug'] ?? '',
@@ -453,9 +453,15 @@
             <div id="wowLocationDropdown" class="wow-search-panel__dropdown" hidden></div>
           </div>
           <div class="wow-search-panel__helper">
-            Try “Maidstone”, “London”, “Cardiff” or a postcode. We’ll resolve the county, city and country for you.
+            Try “Maidstone”, “London”, “Cardiff” or a postcode. We’ll resolve the county, city, town and country for you.
           </div>
           <input type="hidden" name="postcode" id="wowLocationPostcode" value="">
+          <input type="hidden" name="town" id="wowLocationTown" value="">
+          <input type="hidden" name="city" id="wowLocationCity" value="">
+          <input type="hidden" name="county" id="wowLocationCounty" value="">
+          <input type="hidden" name="country" id="wowLocationCountry" value="">
+          <input type="hidden" name="lat" id="wowLocationLat" value="">
+          <input type="hidden" name="lng" id="wowLocationLng" value="">
         </form>
       </div>
     </header>
@@ -473,7 +479,9 @@
         <div class="wow-search-summary__meta">
           @if(!empty($resolved['place']))<span class="wow-pill">{{ $resolved['place'] }}</span>@endif
           @if(!empty($resolved['town']))<span class="wow-pill">{{ $resolved['town'] }}</span>@endif
+          @if(!empty($resolved['city']) && $resolved['city'] !== ($resolved['town'] ?? null))<span class="wow-pill">{{ $resolved['city'] }}</span>@endif
           @if(!empty($resolved['county']))<span class="wow-pill">{{ $resolved['county'] }}</span>@endif
+          @if(!empty($resolved['region']) && $resolved['region'] !== ($resolved['county'] ?? null))<span class="wow-pill">{{ $resolved['region'] }}</span>@endif
           @if(!empty($resolved['country']))<span class="wow-pill">{{ $resolved['country'] }}</span>@endif
         </div>
       </section>
@@ -558,6 +566,12 @@
   const input = document.getElementById('wowLocationQuery');
   const dropdown = document.getElementById('wowLocationDropdown');
   const postcodeInput = document.getElementById('wowLocationPostcode');
+  const townInput = document.getElementById('wowLocationTown');
+  const cityInput = document.getElementById('wowLocationCity');
+  const countyInput = document.getElementById('wowLocationCounty');
+  const countryInput = document.getElementById('wowLocationCountry');
+  const latInput = document.getElementById('wowLocationLat');
+  const lngInput = document.getElementById('wowLocationLng');
   const mapEl = document.getElementById('wowLocationsMap');
   const canMap = !!(mapEl && token);
 
@@ -605,8 +619,15 @@
 
   function setSelection(item) {
     selected = item;
-    input.value = item.text || item.place_name || input.value;
-    postcodeInput.value = item.text || item.place_name || input.value;
+    const place = item.text || item.place_name || input.value;
+    input.value = place;
+    postcodeInput.value = place;
+    townInput.value = contextLabel(item, 'place') || item.text || '';
+    cityInput.value = townInput.value;
+    countyInput.value = contextLabel(item, 'region') || contextLabel(item, 'district') || '';
+    countryInput.value = contextLabel(item, 'country') || '';
+    latInput.value = item.center?.[1] ?? item.geometry?.coordinates?.[1] ?? '';
+    lngInput.value = item.center?.[0] ?? item.geometry?.coordinates?.[0] ?? '';
     hideDropdown();
   }
 
@@ -646,6 +667,12 @@
     input.addEventListener('input', function () {
       selected = null;
       postcodeInput.value = '';
+      townInput.value = '';
+      cityInput.value = '';
+      countyInput.value = '';
+      countryInput.value = '';
+      latInput.value = '';
+      lngInput.value = '';
       searchPlaces();
     });
 
