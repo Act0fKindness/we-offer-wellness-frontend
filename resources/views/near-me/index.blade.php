@@ -15,15 +15,15 @@
       <div class="kicker">Find</div>
       <h1>Near Me</h1>
       <p class="text-ink-600 mt-2" style="max-width:70ch;">
-        Enter your postcode and we’ll show what’s available near you.
+        Enter your location and we’ll show what’s available near you.
       </p>
     </div>
 
     <div class="card p-4" style="border-radius:18px;">
-      <form method="get" action="{{ url('/near-me') }}">
-        <label class="form-label">Postcode</label>
+      <form method="get" action="{{ url('/locations') }}">
+        <label class="form-label">Location</label>
         <div class="flex gap-2">
-          <input class="form-control" name="postcode" placeholder="e.g. SW1A 1AA" value="{{ request()->query('postcode','') }}">
+          <input class="form-control" name="place" placeholder="e.g. Maidstone" value="{{ request()->query('place', request()->query('postcode','')) }}">
           <button class="btn btn-primary" type="submit">Search</button>
         </div>
         <p class="text-muted mt-2 mb-0" style="font-size:13px;">

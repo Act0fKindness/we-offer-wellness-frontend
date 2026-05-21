@@ -208,6 +208,7 @@
     .wow-postcode-form{
       max-width:520px;
       margin-top:24px;
+      position:relative;
       font-family:'Manrope', system-ui, sans-serif;
     }
     .wow-postcode-form label{
@@ -237,6 +238,47 @@
     .wow-postcode-form input:focus{
       border-color:#4f9381;
       box-shadow:0 0 0 3px rgba(79,147,129,.14);
+    }
+    .wow-search-panel__dropdown{
+      position:absolute;
+      left:0;
+      right:0;
+      top:calc(100% + 6px);
+      z-index:20;
+      background:#fff;
+      border:1px solid #dfe4ea;
+      border-radius:4px;
+      box-shadow:0 16px 36px rgba(16,24,40,.08);
+      overflow:hidden;
+    }
+    .wow-search-panel__dropdown button{
+      width:100%;
+      border:0;
+      border-bottom:1px solid #edf0f2;
+      background:#fff;
+      text-align:left;
+      color:#101828;
+      padding:12px 14px;
+      min-height:auto;
+      border-radius:0;
+      display:block;
+    }
+    .wow-search-panel__dropdown button:hover{
+      background:#f8fafc;
+    }
+    .wow-search-panel__dropdown strong{
+      display:block;
+      font-size:14px;
+      line-height:1.4;
+      margin-bottom:2px;
+      font-family:'Manrope', system-ui, sans-serif;
+    }
+    .wow-search-panel__dropdown span{
+      display:block;
+      color:#667085;
+      font-size:12px;
+      line-height:1.35;
+      font-family:'Manrope', system-ui, sans-serif;
     }
     .wow-quick-browse{
       display:grid;
@@ -377,7 +419,7 @@
 
         <footer class="wow-route-card__footer">
           <small>Best for remote support, busy schedules and quiet evenings at home.</small>
-          <a href="{{ url('/search?mode=online') }}" class="btn-wow btn-wow--cta">Browse online</a>
+          <a href="{{ url('/online') }}" class="btn-wow btn-wow--cta">Browse online</a>
         </footer>
       </article>
 
@@ -389,20 +431,21 @@
           </div>
 
           <h2>Find near me</h2>
-          <p>Search by postcode and discover wellness therapies, events, classes and practitioners nearby.</p>
+          <p>Search by location and discover wellness therapies, events, classes and practitioners nearby.</p>
 
-          <form class="wow-postcode-form" id="wowNearMeForm" method="get" action="{{ url('/near-me') }}">
-            <label for="wow-postcode">Your postcode</label>
+          <form class="wow-postcode-form" id="wowNearMeForm" method="get" action="{{ url('/locations') }}" autocomplete="off">
+            <label for="wow-postcode">Location</label>
             <div class="wow-postcode-form__row">
-              <input id="wow-postcode" name="postcode" type="text" placeholder="e.g. TN24 0HB" autocomplete="postal-code" required>
+              <input id="wow-postcode" name="place" type="search" placeholder="e.g. Maidstone" autocomplete="off" required>
               <button type="submit" class="btn-wow btn-wow--primary">Search</button>
             </div>
+            <div id="wowNearMeDropdown" class="wow-search-panel__dropdown" hidden></div>
           </form>
         </div>
 
         <footer class="wow-route-card__footer">
           <small>Best for local sessions, in-person events and practitioners close by.</small>
-          <a href="{{ url('/near-me') }}" class="btn-wow btn-wow--ghost">View nearby</a>
+          <a href="{{ url('/locations') }}" class="btn-wow btn-wow--ghost">View nearby</a>
         </footer>
       </article>
     </section>
@@ -432,7 +475,7 @@
         <span>Browse events →</span>
       </a>
 
-      <a href="{{ url('/search?mode=online&max_price=50') }}" class="wow-quick-card">
+      <a href="{{ url('/online') }}" class="wow-quick-card">
         <div>
           <h3>Affordable</h3>
           <p>Start with lower-cost online sessions and accessible options.</p>
@@ -458,16 +501,117 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('wowNearMeForm');
+    var input = document.getElementById('wow-postcode');
+    var dropdown = document.getElementById('wowNearMeDropdown');
+    var token = @json(config('services.mapbox.token'));
+    var timer = null;
+    var results = [];
+    var selected = null;
+
+    function contextLabel(place, prefix) {
+      var context = Array.isArray(place && place.context) ? place.context : [];
+      var match = context.find(function (item) {
+        return String(item && item.id || '').indexOf(prefix + '.') === 0;
+      });
+      return match && match.text ? String(match.text) : '';
+    }
+
+    function hideDropdown() {
+      if (!dropdown) return;
+      dropdown.hidden = true;
+      dropdown.innerHTML = '';
+    }
+
+    function showDropdown(items) {
+      if (!dropdown) return;
+      if (!items.length) {
+        hideDropdown();
+        return;
+      }
+
+      dropdown.hidden = false;
+      dropdown.innerHTML = items.map(function (item, index) {
+        var main = item.text || item.place_name || '';
+        var secondary = [contextLabel(item, 'place'), contextLabel(item, 'region'), contextLabel(item, 'country')].filter(Boolean).join(', ') || item.place_name || '';
+        return '<button type="button" data-index="' + index + '"><strong>' + main + '</strong><span>' + secondary + '</span></button>';
+      }).join('');
+    }
+
+    async function searchPlaces() {
+      if (!token) return;
+      var query = (input.value || '').trim();
+      if (query.length < 2) {
+        results = [];
+        hideDropdown();
+        return;
+      }
+
+      clearTimeout(timer);
+      timer = setTimeout(async function () {
+        try {
+          var url = new URL('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(query) + '.json');
+          url.searchParams.set('access_token', token);
+          url.searchParams.set('autocomplete', 'true');
+          url.searchParams.set('limit', '6');
+          url.searchParams.set('types', 'place,postcode,locality,region,district,country');
+          url.searchParams.set('country', 'gb');
+
+          var res = await fetch(url.toString());
+          if (!res.ok) throw new Error('geocode failed');
+          var data = await res.json();
+          results = Array.isArray(data.features) ? data.features : [];
+          showDropdown(results);
+        } catch (error) {
+          console.warn('[online-near-me] mapbox geocode error', error);
+          results = [];
+          hideDropdown();
+        }
+      }, 220);
+    }
+
     if (!form) return;
 
+    input.addEventListener('input', function () {
+      selected = null;
+      searchPlaces();
+    });
+
+    if (dropdown) {
+      dropdown.addEventListener('mousedown', function (event) {
+        var button = event.target.closest('button[data-index]');
+        if (!button) return;
+        var index = Number(button.getAttribute('data-index'));
+        if (!Number.isFinite(index) || !results[index]) return;
+        event.preventDefault();
+        selected = results[index];
+        input.value = selected.text || selected.place_name || input.value;
+        hideDropdown();
+        form.submit();
+      });
+    }
+
+    document.addEventListener('click', function (event) {
+      if (!dropdown) return;
+      if (!form.contains(event.target)) {
+        hideDropdown();
+        return;
+      }
+      if (!dropdown.contains(event.target) && event.target !== input) {
+        hideDropdown();
+      }
+    });
+
     form.addEventListener('submit', function (event) {
-      var input = form.querySelector('input[name="postcode"]');
-      var postcode = input ? input.value.trim() : '';
-      if (!postcode) return;
+      var query = input ? input.value.trim() : '';
+      if (!query) return;
 
       event.preventDefault();
-      var url = new URL(form.action || window.location.origin + '/near-me');
-      url.searchParams.set('postcode', postcode);
+      var url = new URL(form.action || window.location.origin + '/locations');
+      url.searchParams.set('place', query);
+      url.searchParams.set('postcode', query);
+      if (selected && selected.text && !query) {
+        url.searchParams.set('place', selected.text);
+      }
       window.location.href = url.toString();
     });
   });
