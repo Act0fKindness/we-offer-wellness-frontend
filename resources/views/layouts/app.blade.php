@@ -14,6 +14,9 @@
     || request()->is('workshops*')
     || request()->is('courses*')
     || request()->is('readings*');
+  $autoRequestLocation = request()->is('locations*')
+    || request()->is('near-me')
+    || request()->is('*-near-me*');
 @endphp
 
 <div id="pwa-boot"
@@ -162,6 +165,7 @@
   const errorEl = banner.querySelector('[data-wow-location-error]');
   const rememberDays = 3650;
   const promptCookieName = 'wow_location_prompt_v2';
+  const autoRequestLocation = @json($autoRequestLocation);
 
   function cookieGet(name){
     const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&') + '=([^;]*)'));
@@ -263,6 +267,14 @@
   });
 
   banner.hidden = !shouldShow();
+
+  if (autoRequestLocation && shouldShow()) {
+    window.setTimeout(function () {
+      if (!banner.hidden) {
+        void useMyLocation();
+      }
+    }, 250);
+  }
 })();
 </script>
 @endif
