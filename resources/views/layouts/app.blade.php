@@ -3,6 +3,18 @@
     @include('partials.head')
 </head>
 <body class="antialiased">
+@php
+  $showLocationPrompt = request()->is('locations*')
+    || request()->is('near-me')
+    || request()->is('*-near-me*')
+    || request()->is('therapies*')
+    || request()->is('classes*')
+    || request()->is('events*')
+    || request()->is('retreats*')
+    || request()->is('workshops*')
+    || request()->is('courses*')
+    || request()->is('readings*');
+@endphp
 
 <div id="pwa-boot"
      style="position:fixed;inset:0;display:grid;place-items:center;background:#fff;z-index:2147483647;">
@@ -42,6 +54,219 @@
       @include('partials.cookie-banner')
   </div>
 
+@if($showLocationPrompt)
+<div id="wow-location-banner" class="wow-location-banner" hidden>
+  <div class="wow-location-banner__panel" role="dialog" aria-modal="true" aria-labelledby="wowLocationTitle">
+    <div class="wow-location-banner__simple">
+      <p class="wow-location-banner__eyebrow">Your location</p>
+      <h2 id="wowLocationTitle">Help us find locations near you</h2>
+      <p>Share your location and we’ll show therapies, classes and events close to you first. We’ll remember your choice for future visits.</p>
+      <div class="wow-location-banner__actions actions">
+        <button type="button" class="wow-location-btn wow-location-btn--primary" data-wow-location-allow>
+          <span>Allow and remember</span>
+        </button>
+        <button type="button" class="wow-location-btn" data-wow-location-skip>Not now</button>
+      </div>
+      <div class="wow-location-banner__error" data-wow-location-error hidden></div>
+    </div>
+  </div>
+</div>
+<style>
+.wow-location-banner{
+  position:fixed;
+  left:20px;
+  bottom:20px;
+  z-index:1200;
+  width:min(460px, calc(100% - 32px));
+  font-family:'Manrope',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+.wow-location-banner__panel{
+  background:#fff;
+  color:#0b1220;
+  border-radius:3px;
+  border:1px solid rgba(15,23,42,.12);
+  box-shadow:0 30px 80px rgba(15,23,42,.18);
+  padding:24px;
+}
+.wow-location-banner__eyebrow{
+  text-transform:uppercase;
+  letter-spacing:.24em;
+  font-size:11px;
+  color:#64748b;
+  margin:0 0 8px;
+}
+.wow-location-banner__simple h2{
+  margin:0 0 8px;
+  font-size:1.35rem;
+}
+.wow-location-banner__simple p{
+  margin:0 0 16px;
+  font-size:12px;
+  color:#475569;
+}
+.wow-location-banner__actions.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.wow-location-banner__actions .wow-location-btn{
+  flex:1 1 auto;
+  min-width:110px;
+}
+.wow-location-btn{
+  appearance:none;
+  border:1px solid #cbd5e1;
+  background:#fff;
+  color:#0f172a;
+  border-radius:999px;
+  min-height:42px;
+  padding:.7rem 1rem;
+  font-weight:700;
+  cursor:pointer;
+}
+.wow-location-btn:hover{
+  border-color:#94a3b8;
+}
+.wow-location-btn--primary{
+  background:#0f62fe;
+  color:#fff;
+  border-color:#0f62fe;
+}
+.wow-location-btn:disabled{
+  opacity:.7;
+  cursor:not-allowed;
+}
+.wow-location-banner__error{
+  margin-top:12px;
+  color:#b91c1c;
+  font-size:12px;
+}
+@media (max-width: 640px){
+  .wow-location-banner{
+    left:16px;
+    right:16px;
+    width:auto;
+  }
+  .wow-location-banner__actions .wow-location-btn{
+    width:100%;
+  }
+}
+</style>
+<script>
+(function () {
+  const banner = document.getElementById('wow-location-banner');
+  if (!banner) return;
+
+  const allowBtn = banner.querySelector('[data-wow-location-allow]');
+  const skipBtn = banner.querySelector('[data-wow-location-skip]');
+  const errorEl = banner.querySelector('[data-wow-location-error]');
+  const rememberDays = 3650;
+  const promptCookieName = 'wow_location_prompt_v2';
+
+  function cookieGet(name){
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&') + '=([^;]*)'));
+    if (!match) return '';
+    try { return decodeURIComponent(match[1]); } catch { return match[1] || ''; }
+  }
+
+  function cookieSet(name, value, days){
+    const maxAge = days ? days * 24 * 60 * 60 : 60 * 60 * 24 * 365 * 5;
+    document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
+  }
+
+  function markPromptSeen() {
+    cookieSet(promptCookieName, '1', rememberDays);
+    cookieSet('wow_geo_done', '1', rememberDays);
+  }
+
+  function saveLocationCookie(payload) {
+    try {
+      cookieSet('wow_location', JSON.stringify(payload), rememberDays);
+    } catch {}
+  }
+
+  function hideBanner() {
+    banner.hidden = true;
+  }
+
+  async function persistGeo(data) {
+    try {
+      await fetch('/api/geo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || window.__csrfToken || '',
+        },
+        body: JSON.stringify(data),
+      });
+    } catch {}
+  }
+
+  async function useMyLocation() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+
+    if (!navigator.geolocation) {
+      errorEl.textContent = 'Geolocation is not available in this browser.';
+      errorEl.hidden = false;
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      let city = '';
+      let region = '';
+      let country = '';
+
+      try {
+        const key = window.WOW_MAPS_KEY || '';
+        if (key) {
+          const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json`);
+          url.searchParams.set('access_token', key);
+          url.searchParams.set('limit', '1');
+          const res = await fetch(url.toString());
+          const json = await res.json();
+          const feat = json?.features?.[0];
+          if (feat) {
+            const comps = feat?.context || [];
+            city = (comps.find(c => c.id?.startsWith('place'))?.text) || (comps.find(c => c.id?.startsWith('locality'))?.text) || '';
+            region = (comps.find(c => c.id?.startsWith('region'))?.text) || '';
+            country = (comps.find(c => c.id?.startsWith('country'))?.text) || '';
+            saveLocationCookie({ name: feat.place_name || city || 'Current location', coords: { lat, lng } });
+          }
+        }
+      } catch {}
+
+      await persistGeo({ lat, lng, city, region, country, mode: 'mixed' });
+      markPromptSeen();
+      hideBanner();
+      window.location.reload();
+    }, () => {
+      errorEl.textContent = 'We couldn’t get your location.';
+      errorEl.hidden = false;
+    }, { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 });
+  }
+
+  function shouldShow() {
+    return cookieGet(promptCookieName) !== '1' && cookieGet('wow_geo_done') !== '1';
+  }
+
+  allowBtn?.addEventListener('click', function () {
+    void useMyLocation();
+  });
+
+  skipBtn?.addEventListener('click', function () {
+    markPromptSeen();
+    hideBanner();
+  });
+
+  banner.hidden = !shouldShow();
+})();
+</script>
+@endif
+
 
 <script>
   (function () {
@@ -77,6 +302,8 @@
 (function(){
   var WOW_ULTRA_SEARCH_SOURCE_PROMISE = null;
   var WOW_ULTRA_SEARCH_SOURCE_CACHE = null;
+  var WOW_ULTRA_LOCATION_SOURCE_PROMISE = null;
+  var WOW_ULTRA_LOCATION_SOURCE_CACHE = null;
 
   function wowUltraNormalize(value){
     return String(value || '')
@@ -178,56 +405,33 @@
   }
 
   function wowUltraBuildSearchSource(payload){
-    var categories = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.categories) ? payload.categories : []);
-    var offerings = Array.isArray(payload && payload.offerings) ? payload.offerings : [];
-    var categoryMap = new Map();
-
-    function addUnique(map, key, item){
-      var normalized = wowUltraNormalize(key);
-      if (!normalized || map.has(normalized)) return;
-      map.set(normalized, item);
-    }
-
-    categories.forEach(function(cat){
-      var catName = (cat && cat.name ? String(cat.name) : '').trim();
-      if (catName) {
-        addUnique(categoryMap, catName, {
-          cat: 'Categories',
-          title: catName,
-          type: 'Category',
-          value: catName,
-          search: catName
-        });
-      }
-
-      (cat && Array.isArray(cat.products) ? cat.products : []).forEach(function(product){
-        var title = (product && product.category && product.category.name ? String(product.category.name).trim() : '');
-        if (!title) return;
-        addUnique(categoryMap, title, {
-          cat: 'Categories',
-          title: title,
-          type: 'Category',
-          value: title,
-          search: title,
-        });
-      });
-    });
-
-    offerings.forEach(function(offering){
-      var offeringCategory = (offering && offering.category && offering.category.name ? String(offering.category.name).trim() : '');
-      if (offeringCategory) {
-        addUnique(categoryMap, offeringCategory, {
-          cat: 'Categories',
-          title: offeringCategory,
-          type: 'Category',
-          value: offeringCategory,
-          search: offeringCategory
-        });
-      }
-    });
+    var categories = Array.isArray(payload && payload.categories) ? payload.categories : [];
 
     return {
-      categories: Array.from(categoryMap.values()).sort(function(a, b){ return a.title.localeCompare(b.title); }),
+      categories: categories.map(function(item){
+        var title = String(item && (item.title || item.label || item.value) || '').trim();
+        var counts = item && item.counts ? item.counts : {};
+        return {
+          cat: String((item && item.cat) || 'Modalities'),
+          title: title,
+          label: title,
+          value: String((item && item.value) || title),
+          type: String((item && item.type) || 'Modality'),
+          subtitle: String((item && item.subtitle) || ''),
+          slug: String((item && item.slug) || ''),
+          search: String((item && item.search) || [title, item && item.slug].filter(Boolean).join(' ')),
+          counts: {
+            products: Number(counts.products || 0),
+            offerings: Number(counts.offerings || 0),
+            total: Number(counts.total || 0)
+          }
+        };
+      }).filter(function(item){ return !!item.title; }).sort(function(a, b){
+        var at = Number(a.counts && a.counts.total || 0);
+        var bt = Number(b.counts && b.counts.total || 0);
+        if (at !== bt) return bt - at;
+        return String(a.title || '').localeCompare(String(b.title || ''));
+      }),
     };
   }
 
@@ -235,7 +439,7 @@
     if (WOW_ULTRA_SEARCH_SOURCE_CACHE) return Promise.resolve(WOW_ULTRA_SEARCH_SOURCE_CACHE);
     if (WOW_ULTRA_SEARCH_SOURCE_PROMISE) return WOW_ULTRA_SEARCH_SOURCE_PROMISE;
 
-    WOW_ULTRA_SEARCH_SOURCE_PROMISE = fetch('/api/catalog?all=true&product_limit=250', { cache: 'no-store' })
+    WOW_ULTRA_SEARCH_SOURCE_PROMISE = fetch('/cache/what-categories.json', { cache: 'no-store' })
       .then(function(res){ if (!res.ok) throw new Error('catalog ' + res.status); return res.json(); })
       .then(function(payload){
         WOW_ULTRA_SEARCH_SOURCE_CACHE = wowUltraBuildSearchSource(payload);
@@ -249,8 +453,65 @@
     return WOW_ULTRA_SEARCH_SOURCE_PROMISE;
   }
 
+  function wowUltraBuildLocationSource(payload){
+    var source = Array.isArray(payload && payload.flat) && payload.flat.length ? payload.flat : (Array.isArray(payload && payload.suggestions) ? payload.suggestions : []);
+    var seen = {};
+    return source.map(function(item){
+      var title = String((item && (item.title || item.label || item.slug)) || '').trim();
+      var country = String((item && item.country) || '').trim();
+      var county = String((item && (item.county || item.district || item.region)) || '').trim();
+      var slug = String((item && item.slug) || title || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      return {
+        title: title || 'Location',
+        label: title || 'Location',
+        value: title || 'Location',
+        subtitle: item && item.online ? 'Virtual' : [county, country].filter(Boolean).join(', '),
+        icon: item && item.online ? 'wifi' : 'geo',
+        path: item && item.path ? item.path : null,
+        slug: slug,
+        country: country,
+        county: county,
+        district: county,
+        region: String((item && item.region) || '').trim(),
+        online: !!(item && item.online),
+        total: Number((item && item.counts && (item.counts.total || item.counts.products || item.counts.offerings)) || 0),
+        search: [title, country, county, item && item.label, item && item.place_name, slug].filter(Boolean).join(' '),
+      };
+    }).filter(function(item){
+      var key = wowUltraNormalize(item.value);
+      if (!key || seen[key]) return false;
+      seen[key] = true;
+      return true;
+    }).sort(function(a, b){
+      if (a.online !== b.online) return a.online ? -1 : 1;
+      var at = Number(a.total || 0);
+      var bt = Number(b.total || 0);
+      if (at !== bt) return bt - at;
+      return String(a.title || '').localeCompare(String(b.title || ''));
+    });
+  }
+
+  function wowUltraLoadLocationSource(){
+    if (WOW_ULTRA_LOCATION_SOURCE_CACHE) return Promise.resolve(WOW_ULTRA_LOCATION_SOURCE_CACHE);
+    if (WOW_ULTRA_LOCATION_SOURCE_PROMISE) return WOW_ULTRA_LOCATION_SOURCE_PROMISE;
+
+    WOW_ULTRA_LOCATION_SOURCE_PROMISE = fetch('/cache/locations.json', { cache: 'no-store' })
+      .then(function(res){ if (!res.ok) throw new Error('locations ' + res.status); return res.json(); })
+      .then(function(payload){
+        WOW_ULTRA_LOCATION_SOURCE_CACHE = wowUltraBuildLocationSource(payload);
+        return WOW_ULTRA_LOCATION_SOURCE_CACHE;
+      })
+      .catch(function(){
+        WOW_ULTRA_LOCATION_SOURCE_CACHE = [];
+        return WOW_ULTRA_LOCATION_SOURCE_CACHE;
+      });
+
+    return WOW_ULTRA_LOCATION_SOURCE_PROMISE;
+  }
+
   // Warm the cache immediately so the autocomplete feels instant once users start typing.
   wowUltraLoadSearchSource();
+  wowUltraLoadLocationSource();
 
   function setupUltraSearchBar(prefix){
     var root = document.querySelector('[id^="'+prefix+'-seg-"]')?.closest('.wow-ultra') || document.querySelector('#'+prefix+'-seg-what')?.closest('.wow-ultra');
@@ -261,7 +522,7 @@
 
     function byId(s){ return document.getElementById(prefix + '-' + s) }
     var panes = ['what-pane','where-pane','when-pane','who-pane'];
-    var WHAT_LIMIT_PER_SECTION = 6;
+    var WHAT_LIMIT_PER_SECTION = 5;
 
     function hideAll(){
       panes.forEach(function(id){ var el = byId(id); if(el) el.classList.add('d-none') })
@@ -278,32 +539,31 @@
     var whatInput = byId('what');
     var whatSource = null;
     var whatSourceReady = false;
+    var whereSource = null;
+    var whereSourceReady = false;
 
     function renderWhat(qs){
       var list = byId('what-list');
       if (!list) return false;
 
       var query = (qs || '').trim();
-      if (!query) {
-        list.innerHTML = '';
-        return false;
-      }
-
       if (!whatSourceReady) {
-        list.innerHTML = '';
+        list.innerHTML = '<button type="button" class="item" aria-disabled="true"><span class="title">Loading modalities…</span></button>';
         return false;
       }
 
       var categories = (whatSource && whatSource.categories ? whatSource.categories : []);
-      categories = categories
-        .map(function(item){ return { item: item, score: wowUltraSearchScore(query, item) }; })
-        .filter(function(row){ return row.score < 999; })
-        .sort(function(a, b){
-          if (a.score !== b.score) return a.score - b.score;
-          return String(a.item.title || '').localeCompare(String(b.item.title || ''));
-        })
-        .slice(0, WHAT_LIMIT_PER_SECTION)
-        .map(function(row){ return row.item; });
+      categories = query.length < 2
+        ? categories.slice(0, WHAT_LIMIT_PER_SECTION)
+        : categories
+          .map(function(item){ return { item: item, score: wowUltraSearchScore(query, item) }; })
+          .filter(function(row){ return row.score < 999; })
+          .sort(function(a, b){
+            if (a.score !== b.score) return a.score - b.score;
+            return String(a.item.title || '').localeCompare(String(b.item.title || ''));
+          })
+          .slice(0, WHAT_LIMIT_PER_SECTION)
+          .map(function(row){ return row.item; });
 
       if (!categories.length) {
         list.innerHTML = '';
@@ -311,15 +571,54 @@
         return false;
       }
 
-      var html = '<div class="section-title">Categories</div><div>';
+      var html = '<div class="section-title">' + (query.length < 2 ? 'Trending modalities' : 'Modalities') + '</div><div>';
       categories.forEach(function(item){
+        var subtitle = item && item.subtitle ? item.subtitle : (item && item.counts && Number(item.counts.total || 0) ? Number(item.counts.total || 0) + ' uses' : 'Modality');
         html += '<button type="button" class="item" role="option" data-value="' + wowUltraEscapeHtml(item.value || item.title || '') + '">'
           + '<i class="bi bi-tag"></i>'
           + '<span class="title">' + wowUltraEscapeHtml(item.title || '') + '</span>'
-          + '<span class="text-muted ms-2">Category</span>'
+          + '<span class="text-muted ms-2">' + wowUltraEscapeHtml(subtitle) + '</span>'
           + '</button>';
       });
       html += '</div>';
+      list.innerHTML = html;
+      return true;
+    }
+
+    function renderWhere(qs){
+      var list = byId('where-list');
+      if (!list) return false;
+      var query = (qs || '').trim();
+      if (!whereSourceReady) {
+        list.innerHTML = '<button type="button" class="item" aria-disabled="true"><span class="title">Loading trending destinations…</span></button>';
+        return false;
+      }
+
+      var items = (whereSource || []).slice();
+      if (query) {
+        var needle = wowUltraNormalize(query);
+        items = items.filter(function(item){
+          return wowUltraNormalize([item.title, item.label, item.search, item.country, item.county, item.region].join(' ')).indexOf(needle) !== -1;
+        });
+      } else {
+        items = items.slice(0, 5);
+      }
+
+      if (!items.length) {
+        list.innerHTML = '<button type="button" class="item" aria-disabled="true"><span class="title">No locations found</span></button>';
+        return false;
+      }
+
+      var html = '';
+      items.slice(0, query ? 12 : 5).forEach(function(item){
+        var icon = item && item.online ? '<i class="bi bi-wifi"></i>' : '<i class="bi bi-geo-alt"></i>';
+        var sub = item && item.subtitle ? '<span class="text-muted ms-2">' + wowUltraEscapeHtml(item.subtitle) + '</span>' : '';
+        html += '<button type="button" class="item" role="option" data-value="' + wowUltraEscapeHtml(item.value || item.title || '') + '">'
+          + icon
+          + '<span class="title">' + wowUltraEscapeHtml(item.title || '') + '</span>'
+          + sub
+          + '</button>';
+      });
       list.innerHTML = html;
       return true;
     }
@@ -337,9 +636,14 @@
     wowUltraLoadSearchSource().then(function(source){
       whatSource = source;
       whatSourceReady = true;
-      if (whatInput && (whatInput.value || '').trim() && renderWhat(whatInput.value) && document.activeElement === whatInput) {
+      if (whatInput && renderWhat(whatInput.value || '') && document.activeElement === whatInput) {
         openPane('what');
       }
+    });
+    wowUltraLoadLocationSource().then(function(source){
+      whereSource = source;
+      whereSourceReady = true;
+      renderWhere((byId('where-editor') && byId('where-editor').textContent) || '');
     });
 
     if(whatInput){
@@ -351,8 +655,9 @@
 
     var whereEditor = byId('where-editor');
     if(whereEditor){
-      whereEditor.addEventListener('focus', function(){ openPane('where') });
-      whereEditor.addEventListener('click', function(){ openPane('where') });
+      whereEditor.addEventListener('focus', function(){ renderWhere(whereEditor.textContent || ''); openPane('where') });
+      whereEditor.addEventListener('click', function(){ renderWhere(whereEditor.textContent || ''); openPane('where') });
+      whereEditor.addEventListener('input', function(){ renderWhere(whereEditor.textContent || ''); openPane('where') });
     }
     // Also open when clicking the whole segment (icon/label area)
     var segWhere = byId('seg-where');
@@ -391,9 +696,11 @@
       byId('where-list').addEventListener('click', function(e){
         var btn = e.target.closest('.item');
         if(btn && btn.dataset.value){
+          try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
           whereEditor.textContent = btn.dataset.value;
           if(whereHidden) whereHidden.value = btn.dataset.value;
           hideAll();
+          try { whereEditor.blur(); } catch(_) {}
         }
       });
     }
@@ -520,7 +827,7 @@
           var whereHidden = byId('where');
           var whereText = byId('where-editor')?.textContent?.trim();
           var where = (whereHidden && whereHidden.value) ? whereHidden.value : (whereText || '');
-          if(where) params.set('where', where);
+          if (where) params.set('where', where);
           // when (as-is string)
           var whenEl = byId('when');
           var when = whenEl?.value?.trim();
@@ -538,8 +845,6 @@
           var adultsVal = document.getElementById(prefix + '-adults-val');
           var adults = adultsVal ? parseInt(adultsVal.textContent, 10) : NaN;
           if(Number.isFinite(adults) && adults > 0) params.set('adults', String(adults));
-          // Mode: Online shortcut
-          if(/^(online)$/i.test(where)){ params.set('mode','online'); }
           // Build URL and navigate
           var url = '/search' + (params.toString() ? ('?' + params.toString()) : '');
           try { window.location.assign(url); } catch(_) { window.location.href = url; }

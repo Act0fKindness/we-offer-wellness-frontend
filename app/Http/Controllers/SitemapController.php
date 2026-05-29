@@ -67,6 +67,8 @@ class SitemapController extends Controller
 
         try {
             $nearMeCategories = app(WhatCategoryCacheService::class)->build();
+            $catalog = app(LocationCatalogService::class)->load();
+            $locationNodes = $this->nearMeLocationNodes($catalog);
 
             foreach ((array) data_get($nearMeCategories, 'categories', []) as $category) {
                 $slug = Str::slug((string) ($category['slug'] ?? ''));
@@ -80,6 +82,18 @@ class SitemapController extends Controller
                     'loc' => $base . '/' . $slug . '-near-me',
                     'lastmod' => $now,
                 ];
+
+                foreach ($locationNodes as $locationNode) {
+                    $locationPath = (string) ($locationNode['path'] ?? '');
+                    if ($locationPath === '') {
+                        continue;
+                    }
+
+                    $urls[] = [
+                        'loc' => $base . '/' . $slug . '-near-me' . Str::after($locationPath, '/locations'),
+                        'lastmod' => $now,
+                    ];
+                }
             }
         } catch (\Throwable $e) {}
 
@@ -263,5 +277,34 @@ class SitemapController extends Controller
         }
 
         return 'therapies';
+    }
+
+    /**
+     * @param array<string, mixed> $catalog
+     * @return array<int, array<string, mixed>>
+     */
+    private function nearMeLocationNodes(array $catalog): array
+    {
+        $nodes = [];
+
+        foreach ((array) data_get($catalog, 'countries', []) as $country) {
+            if (!empty($country['path']) && !(bool) data_get($country, 'online', false) && (int) data_get($country, 'counts.total', 0) > 0) {
+                $nodes[] = $country;
+            }
+
+            foreach ((array) data_get($country, 'counties', []) as $county) {
+                if (!empty($county['path']) && (int) data_get($county, 'counts.total', 0) > 0) {
+                    $nodes[] = $county;
+                }
+
+                foreach ((array) data_get($county, 'towns', []) as $town) {
+                    if (!empty($town['path']) && (int) data_get($town, 'counts.total', 0) > 0) {
+                        $nodes[] = $town;
+                    }
+                }
+            }
+        }
+
+        return $nodes;
     }
 }

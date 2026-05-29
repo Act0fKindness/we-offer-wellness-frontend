@@ -28,10 +28,11 @@ class SeoMoneyPageController extends Controller
         return $this->renderPage($request, 'holistic-therapies-uk', $page, $products);
     }
 
-    public function showNearMe(Request $request, string $category)
+    public function showNearMe(Request $request, string $category, ?string $country = null, ?string $county = null, ?string $town = null)
     {
         $isFiltered = $request->hasAny(['place', 'postcode', 'city', 'region', 'county', 'country', 'lat', 'lng']);
-        $locationContext = $this->activeLocationContext($request);
+        $routeLocationContext = $this->routeLocationContext($country, $county, $town);
+        $locationContext = $this->activeLocationContext($request, $routeLocationContext);
         $specialPages = $this->specialNearMePages();
         $page = $specialPages[$category] ?? $this->genericNearMePage($category);
         $products = $this->queryListings($page, $locationContext)
@@ -60,25 +61,38 @@ class SeoMoneyPageController extends Controller
             abort(404);
         }
 
-        return $this->renderPage($request, $category . '-near-me', $page, $products, $locationContext, $isFiltered);
+        $canonicalPath = $this->buildNearMePath($category, $locationContext);
+        $queryKeys = array_values(array_diff(array_keys($request->query()), ['place', 'postcode', 'city', 'region', 'county', 'country', 'lat', 'lng']));
+
+        if ($routeLocationContext === [] && !empty($locationContext['path'] ?? '') && $queryKeys === []) {
+            return redirect()->to(url($canonicalPath), 301);
+        }
+
+        return $this->renderPage($request, $category . '-near-me', $page, $products, $locationContext, $isFiltered, $canonicalPath);
     }
 
-    private function renderPage(Request $request, string $slug, array $page, Collection $products, array $locationContext = [], bool $isFiltered = false)
+    private function renderPage(Request $request, string $slug, array $page, Collection $products, array $locationContext = [], bool $isFiltered = false, ?string $canonicalPath = null)
     {
+        $locationLabel = trim((string) data_get($locationContext, 'label', ''));
+        if ($locationLabel !== '') {
+            $page = $this->applyLocationToPage($page, $locationLabel);
+        }
+
         $popularLocations = $this->popularLocations($page, $locationContext, $slug);
         $catalog = app(LocationCatalogService::class)->load();
+        $canonicalPath = $canonicalPath ?: $this->buildNearMePath($slug, $locationContext);
 
         return view('seo-money.show', [
             'seo' => [
                 'title' => $page['title'],
                 'description' => $page['description'],
                 'robots' => $isFiltered ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/' . $slug),
+                'canonical' => url($canonicalPath),
             ],
             'page' => $page,
             'products' => $products,
             'popularLocations' => $popularLocations,
-            'catalogSuggestions' => data_get($catalog, 'suggestions', []),
+            'catalogSuggestions' => data_get($catalog, 'flat', []),
             'savedLocation' => $locationContext,
             'searchAction' => url('/' . $slug),
             'request' => $request,
@@ -641,21 +655,9 @@ class SeoMoneyPageController extends Controller
     private function locationSearchLink(array $location, string $slug): array
     {
         $base = url('/' . ltrim($slug, '/'));
-        $city = trim((string) ($location['town'] ?? $location['city'] ?? $location['title'] ?? ''));
-        $region = trim((string) ($location['county'] ?? $location['district'] ?? $location['region'] ?? ''));
-        $country = trim((string) ($location['country'] ?? ''));
-        $isGenericCountry = in_array(strtolower($country), ['united kingdom', 'uk', 'gb', 'great britain', 'britain'], true);
-        $params = array_filter([
-            'place' => (string) ($location['title'] ?? $location['label'] ?? ''),
-            'city' => $city,
-            'region' => $region,
-            'country' => ($city !== '' || $region !== '') && $isGenericCountry ? '' : $country,
-            'lat' => $location['lat'] ?? null,
-            'lng' => $location['lng'] ?? null,
-        ], static fn ($value): bool => $value !== null && trim((string) $value) !== '');
-
-        $location['search_url'] = $params !== []
-            ? $base . '?' . http_build_query($params)
+        $path = trim((string) ($location['path'] ?? ''));
+        $location['search_url'] = $path !== ''
+            ? $base . Str::after($path, '/locations')
             : $base;
 
         return $location;
@@ -690,25 +692,82 @@ class SeoMoneyPageController extends Controller
         $lat = $request->cookie('wow_lat');
         $lng = $request->cookie('wow_lng');
 
-        $label = trim(implode(', ', array_filter([$city, $region, $country])));
-        $terms = $this->locationContextTerms([
+        $locationContext = [
             'city' => $city,
             'region' => $region,
             'country' => $country,
-        ]);
+        ];
+
+        $label = trim(implode(', ', array_filter([$city, $region, $country])));
+        $terms = $this->locationContextTerms($locationContext);
+        $catalog = app(LocationCatalogService::class)->load();
+        $flat = collect((array) data_get($catalog, 'flat', []));
+        $matched = $this->locationContextMatch($flat, $locationContext);
+
+        if ($matched !== null) {
+            $label = trim((string) ($matched['title'] ?? $matched['label'] ?? $label));
+            $city = trim((string) ($matched['town'] ?? $matched['city'] ?? $city));
+            $region = trim((string) ($matched['county'] ?? $matched['district'] ?? $matched['region'] ?? $region));
+            $country = trim((string) ($matched['country'] ?? $country));
+            $lat = $matched['lat'] ?? $lat;
+            $lng = $matched['lng'] ?? $lng;
+        }
 
         return [
             'label' => $label,
             'city' => $city,
             'region' => $region,
             'country' => $country,
+            'path' => (string) ($matched['path'] ?? ''),
             'lat' => is_numeric($lat) ? (float) $lat : null,
             'lng' => is_numeric($lng) ? (float) $lng : null,
             'terms' => $terms,
         ];
     }
 
-    private function activeLocationContext(Request $request): array
+    private function routeLocationContext(?string $country, ?string $county = null, ?string $town = null): array
+    {
+        $segments = array_values(array_filter([
+            trim((string) $country),
+            trim((string) $county),
+            trim((string) $town),
+        ], static fn (string $segment): bool => $segment !== ''));
+
+        if ($segments === []) {
+            return [];
+        }
+
+        $path = '/locations/' . implode('/', $segments);
+        $catalog = app(LocationCatalogService::class)->load();
+        $node = $this->locationContextByPath($catalog, $path);
+
+        if ($node === null) {
+            return [
+                'label' => trim(implode(', ', array_map(fn (string $segment): string => Str::headline($segment), $segments))),
+                'city' => $town ? Str::headline($town) : '',
+                'region' => $county ? Str::headline($county) : '',
+                'country' => Str::headline($country ?: ''),
+                'path' => $path,
+            ];
+        }
+
+        return [
+            'label' => (string) ($node['title'] ?? $node['label'] ?? ''),
+            'city' => (string) ($node['town'] ?? $node['city'] ?? ''),
+            'region' => (string) ($node['county'] ?? $node['district'] ?? $node['region'] ?? ''),
+            'country' => (string) ($node['country'] ?? ''),
+            'lat' => is_numeric($node['lat'] ?? null) ? (float) $node['lat'] : null,
+            'lng' => is_numeric($node['lng'] ?? null) ? (float) $node['lng'] : null,
+            'path' => (string) ($node['path'] ?? $path),
+            'terms' => $this->locationContextTerms([
+                'city' => (string) ($node['town'] ?? $node['city'] ?? ''),
+                'region' => (string) ($node['county'] ?? $node['district'] ?? $node['region'] ?? ''),
+                'country' => (string) ($node['country'] ?? ''),
+            ]),
+        ];
+    }
+
+    private function activeLocationContext(Request $request, array $routeLocationContext = []): array
     {
         $city = trim((string) $request->query('city', ''));
         $region = trim((string) $request->query('region', $request->query('county', '')));
@@ -719,6 +778,21 @@ class SeoMoneyPageController extends Controller
 
         if ($city === '' && $place !== '') {
             $city = $place;
+        }
+
+        if ($routeLocationContext !== []) {
+            $locationContext = array_merge([
+                'label' => trim(implode(', ', array_filter([$city, $region, $country]))),
+                'city' => $city,
+                'region' => $region,
+                'country' => $country,
+                'lat' => is_numeric($lat) ? (float) $lat : null,
+                'lng' => is_numeric($lng) ? (float) $lng : null,
+            ], array_filter($routeLocationContext, static fn ($value): bool => $value !== null && $value !== ''));
+
+            $locationContext['terms'] = $this->locationContextTerms($locationContext);
+
+            return $locationContext;
         }
 
         $locationContext = [
@@ -754,11 +828,74 @@ class SeoMoneyPageController extends Controller
         return $locationContext;
     }
 
+    private function buildNearMePath(string $slug, array $locationContext = []): string
+    {
+        $base = '/' . ltrim($slug, '/');
+        $path = trim((string) data_get($locationContext, 'path', ''));
+        if ($path === '') {
+            return $base;
+        }
+
+        return $base . Str::after($path, '/locations');
+    }
+
+    private function applyLocationToPage(array $page, string $locationLabel): array
+    {
+        $locationLabel = trim($locationLabel);
+        if ($locationLabel === '') {
+            return $page;
+        }
+
+        $title = trim((string) ($page['title'] ?? ''));
+        if ($title !== '' && str_contains($title, ' | ')) {
+            [$lead, $tail] = array_pad(explode(' | ', $title, 2), 2, '');
+            if ($lead !== '' && $tail !== '') {
+                $page['title'] = trim($lead . ' in ' . $locationLabel . ' | ' . $tail);
+            }
+        }
+
+        $h1 = trim((string) ($page['h1'] ?? ''));
+        if ($h1 !== '' && !str_contains(strtolower($h1), strtolower($locationLabel))) {
+            if (str_contains($h1, 'Near You')) {
+                $page['h1'] = str_replace('Near You', 'Near You in ' . $locationLabel, $h1);
+            } elseif (str_contains($h1, 'Near Me')) {
+                $page['h1'] = str_replace('Near Me', 'Near Me in ' . $locationLabel, $h1);
+            } else {
+                $page['h1'] = trim($h1 . ' in ' . $locationLabel);
+            }
+        }
+
+        return $page;
+    }
+
+    private function locationContextByPath(array $catalog, string $path): ?array
+    {
+        foreach ((array) data_get($catalog, 'countries', []) as $country) {
+            if ((string) ($country['path'] ?? '') === $path) {
+                return $country;
+            }
+
+            foreach ((array) data_get($country, 'counties', []) as $county) {
+                if ((string) ($county['path'] ?? '') === $path) {
+                    return $county;
+                }
+
+                foreach ((array) data_get($county, 'towns', []) as $town) {
+                    if ((string) ($town['path'] ?? '') === $path) {
+                        return $town;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     private function locationContextTerms(array $locationContext): array
     {
-        $city = trim((string) ($locationContext['city'] ?? ''));
-        $region = trim((string) ($locationContext['region'] ?? ''));
-        $country = trim((string) ($locationContext['country'] ?? ''));
+        $city = $this->normalizeLocationSearchTerm((string) ($locationContext['city'] ?? ''));
+        $region = $this->normalizeLocationSearchTerm((string) ($locationContext['region'] ?? ''));
+        $country = $this->normalizeLocationSearchTerm((string) ($locationContext['country'] ?? ''));
         $isGenericCountry = in_array(strtolower($country), ['united kingdom', 'uk', 'gb', 'great britain', 'britain'], true);
 
         $terms = [];
@@ -776,6 +913,20 @@ class SeoMoneyPageController extends Controller
         }
 
         return array_values(array_unique(array_filter($terms, static fn (string $term): bool => $term !== '')));
+    }
+
+    private function normalizeLocationSearchTerm(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        $value = str_replace(['&', '/'], ' ', $value);
+        $value = preg_replace('/\b(and|of|the)\b/i', ' ', $value) ?? $value;
+        $value = preg_replace('/\s+/', ' ', $value) ?? $value;
+
+        return trim($value);
     }
 
     private function locationContextMatch(Collection $flat, array $locationContext): ?array

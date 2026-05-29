@@ -412,15 +412,21 @@
           @endif
         </div>
 
-        <form class="seo-money-search" method="get" action="{{ url('/locations') }}" id="moneyLocationSearchForm" autocomplete="off">
+        <form class="seo-money-search" method="get" action="{{ $searchAction ?? url()->current() }}" id="moneyLocationSearchForm" autocomplete="off">
           <label for="money-place">Location</label>
           <div class="row">
             <input id="money-place" name="place" type="text" placeholder="{{ $page['search_placeholder'] ?? 'e.g. Maidstone' }}" value="{{ request()->query('place', request()->query('postcode', $savedLocation['label'] ?? '')) }}">
             <button class="btn btn-primary" type="submit">Search</button>
           </div>
           <p class="text-muted mb-0" style="font-size:13px; line-height:1.45;">
-            We will use this to help you find nearby results and keep you on the canonical location path. We remember your location so you can come back to it later.
+            We will use this to help you filter {{ $page['result_label'] ?? 'live listings' }} by location and remember your choice for next time.
           </p>
+          <input type="hidden" id="money-city" name="city" value="{{ request()->query('city', $savedLocation['city'] ?? '') }}">
+          <input type="hidden" id="money-region" name="region" value="{{ request()->query('region', $savedLocation['region'] ?? '') }}">
+          <input type="hidden" id="money-country" name="country" value="{{ request()->query('country', $savedLocation['country'] ?? '') }}">
+          <input type="hidden" id="money-lat" name="lat" value="{{ request()->query('lat', $savedLocation['lat'] ?? '') }}">
+          <input type="hidden" id="money-lng" name="lng" value="{{ request()->query('lng', $savedLocation['lng'] ?? '') }}">
+          <input type="hidden" id="money-location-path" name="location_path" value="{{ ltrim((string) ($savedLocation['path'] ?? ''), '/') }}">
           <div id="moneyLocationDropdown" class="seo-money-search__dropdown" hidden></div>
         </form>
 
@@ -436,7 +442,7 @@
       <p>These location pages are useful starting points for finding live listings by county, town or region.</p>
       <div class="seo-money-links">
         @foreach($popularLocations as $location)
-          <a class="seo-money-linkcard" href="{{ url($location['path'] ?? '/') }}">
+          <a class="seo-money-linkcard" href="{{ $location['search_url'] ?? url($location['path'] ?? '/') }}">
             <strong>{{ $location['title'] ?? $location['label'] ?? 'Location' }}</strong>
             <span>{{ $location['country'] ?? 'We Offer Wellness' }}</span>
           </a>
@@ -497,15 +503,29 @@
   const token = @json(config('services.mapbox.token'));
   const form = document.getElementById('moneyLocationSearchForm');
   const input = document.getElementById('money-place');
+  const cityInput = document.getElementById('money-city');
+  const regionInput = document.getElementById('money-region');
+  const countryInput = document.getElementById('money-country');
+  const latInput = document.getElementById('money-lat');
+  const lngInput = document.getElementById('money-lng');
+  const pathInput = document.getElementById('money-location-path');
   const dropdown = document.getElementById('moneyLocationDropdown');
   const catalog = @json($catalogSuggestions->values());
+  const baseUrl = @json($searchAction ?? url()->current());
 
   let timer = null;
   let results = [];
   let selected = null;
 
   function normalizeText(value) {
-    return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\b(and|of|the)\b/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function contextLabel(place, prefix) {
@@ -562,47 +582,73 @@
     });
   }
 
-  async function geocodeQuery(query) {
-    if (!token || !query) return null;
-    try {
-      const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`);
-      url.searchParams.set('access_token', token);
-      url.searchParams.set('autocomplete', 'true');
-      url.searchParams.set('limit', '1');
-      url.searchParams.set('types', 'place,postcode,locality,region,district,country');
-      url.searchParams.set('country', 'gb');
-      const res = await fetch(url.toString());
-      if (!res.ok) return null;
-      const data = await res.json();
-      return Array.isArray(data.features) && data.features.length ? data.features[0] : null;
-    } catch (error) {
-      console.warn('[seo-money] mapbox geocode failed', error);
-      return null;
+  function setSelectionContext(item) {
+    const context = Array.isArray(item?.context) ? item.context : [];
+    const place = item?.text || item?.title || item?.place_name || input?.value || '';
+    const city = item?.city || context.find((c) => String(c?.id || '').startsWith('place.'))?.text || context.find((c) => String(c?.id || '').startsWith('locality.'))?.text || place;
+    const region = item?.region || context.find((c) => String(c?.id || '').startsWith('region.'))?.text || context.find((c) => String(c?.id || '').startsWith('district.'))?.text || item?.county || item?.district || '';
+    const country = item?.country || context.find((c) => String(c?.id || '').startsWith('country.'))?.text || '';
+    const lat = item?.center?.[1] ?? item?.geometry?.coordinates?.[1] ?? item?.lat ?? '';
+    const lng = item?.center?.[0] ?? item?.geometry?.coordinates?.[0] ?? item?.lng ?? '';
+    const catalogMatch = Array.isArray(catalog) ? catalog.find((entry) => {
+      const haystack = normalizeText([
+        entry?.title,
+        entry?.label,
+        entry?.country,
+        entry?.county,
+        entry?.district,
+        entry?.region,
+        entry?.city,
+        entry?.town,
+        entry?.slug,
+        item?.place_name,
+        item?.text,
+        city,
+        region,
+        country,
+      ].filter(Boolean).join(' '));
+
+      const needle = normalizeText([
+        item?.place_name,
+        item?.text,
+        city,
+        region,
+        country,
+      ].filter(Boolean).join(' '));
+
+      return needle && haystack.includes(needle);
+    }) : null;
+
+    if (input) input.value = place;
+    if (cityInput) cityInput.value = city || '';
+    if (regionInput) regionInput.value = region || '';
+    if (countryInput) countryInput.value = country || '';
+    if (latInput) latInput.value = lat || '';
+    if (lngInput) lngInput.value = lng || '';
+    if (pathInput) {
+      const resolvedPath = item?.path || catalogMatch?.path || '';
+      pathInput.value = resolvedPath ? String(resolvedPath).replace(/^\/locations\/?/, '') : '';
     }
   }
 
-  async function submitToCanonicalLocation() {
+  function submitToCategoryPage() {
     const query = (input?.value || '').trim();
     if (!query) return;
 
-    const localMatch = localSuggestions(query).find((item) => normalizeText(item.title || item.text) === normalizeText(query));
-    if (localMatch && localMatch.path) {
-      window.location.href = localMatch.path;
+    if (pathInput?.value) {
+      const nextPath = String(pathInput.value).replace(/^\/+/, '').replace(/^locations\/?/, '');
+      window.location.href = `${baseUrl.replace(/\/+$/, '')}/${nextPath}`;
       return;
     }
 
-    const place = selected || await geocodeQuery(query);
-    if (place) {
-      const canonical = place?.path || null;
-      if (canonical) {
-        window.location.href = canonical;
-        return;
-      }
-    }
-
-    const fallback = new URL(form?.action || window.location.origin + '/locations');
-    fallback.searchParams.set('place', query);
-    window.location.href = fallback.toString();
+    const target = new URL(baseUrl, window.location.origin);
+    target.searchParams.set('place', query);
+    if (cityInput?.value) target.searchParams.set('city', cityInput.value);
+    if (regionInput?.value) target.searchParams.set('region', regionInput.value);
+    if (countryInput?.value) target.searchParams.set('country', countryInput.value);
+    if (latInput?.value) target.searchParams.set('lat', latInput.value);
+    if (lngInput?.value) target.searchParams.set('lng', lngInput.value);
+    window.location.href = target.toString();
   }
 
   async function searchPlaces() {
@@ -648,6 +694,12 @@
   if (input) {
     input.addEventListener('input', function () {
       selected = null;
+      if (pathInput) pathInput.value = '';
+      if (cityInput) cityInput.value = '';
+      if (regionInput) regionInput.value = '';
+      if (countryInput) countryInput.value = '';
+      if (latInput) latInput.value = '';
+      if (lngInput) lngInput.value = '';
       searchPlaces();
     });
     input.addEventListener('focus', function () {
@@ -663,21 +715,52 @@
       if (!Number.isFinite(index) || !results[index]) return;
       event.preventDefault();
       selected = results[index];
-      if (selected?.path) {
-        window.location.href = selected.path;
-        return;
-      }
-      if (input && (selected.text || selected.place_name)) {
-        input.value = selected.text || selected.place_name || '';
-      }
-      submitToCanonicalLocation();
+      setSelectionContext(selected);
+      submitToCategoryPage();
     });
   }
 
   if (form) {
     form.addEventListener('submit', function (event) {
       event.preventDefault();
-      submitToCanonicalLocation();
+      const query = (input?.value || '').trim();
+      if (!query) return;
+
+      const localMatch = localSuggestions(query).find((item) => normalizeText(item.title || item.text) === normalizeText(query));
+      if (localMatch) {
+        selected = localMatch;
+        setSelectionContext(localMatch);
+        submitToCategoryPage();
+        return;
+      }
+
+      if (!token) {
+        submitToCategoryPage();
+        return;
+      }
+
+      (async () => {
+        try {
+          const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`);
+          url.searchParams.set('access_token', token);
+          url.searchParams.set('autocomplete', 'true');
+          url.searchParams.set('limit', '1');
+          url.searchParams.set('types', 'place,postcode,locality,region,district,country');
+          url.searchParams.set('country', 'gb');
+          const res = await fetch(url.toString());
+          if (res.ok) {
+            const data = await res.json();
+            const place = Array.isArray(data.features) && data.features.length ? data.features[0] : null;
+            if (place) {
+              selected = place;
+              setSelectionContext(place);
+            }
+          }
+        } catch (error) {
+          console.warn('[seo-money] mapbox geocode failed', error);
+        }
+        submitToCategoryPage();
+      })();
     });
   }
 

@@ -86,8 +86,13 @@ Route::get('/online', [OnlineController::class, 'index'])->name('online.index');
 Route::get('/holistic-therapies-uk', [SeoMoneyPageController::class, 'show'])
     ->defaults('slug', 'holistic-therapies-uk')
     ->name('seo-money.holistic-therapies-uk');
-Route::get('/{category}-near-me', [SeoMoneyPageController::class, 'showNearMe'])
-    ->where('category', '[A-Za-z][A-Za-z0-9\-]*')
+Route::get('/{category}-near-me/{country?}/{county?}/{town?}', [SeoMoneyPageController::class, 'showNearMe'])
+    ->where([
+        'category' => '[A-Za-z][A-Za-z0-9\-]*',
+        'country' => '[A-Za-z][A-Za-z0-9\-]*',
+        'county' => '[A-Za-z][A-Za-z0-9\-]*',
+        'town' => '[A-Za-z][A-Za-z0-9\-]*',
+    ])
     ->name('seo-money.near-me');
 
 /** Locations + Near Me */
