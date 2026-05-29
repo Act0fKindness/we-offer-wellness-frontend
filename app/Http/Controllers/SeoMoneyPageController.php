@@ -33,6 +33,10 @@ class SeoMoneyPageController extends Controller
         $isFiltered = $request->hasAny(['place', 'postcode', 'city', 'region', 'county', 'country', 'lat', 'lng']);
         $routeLocationContext = $this->routeLocationContext($country, $county, $town);
         $locationContext = $this->activeLocationContext($request, $routeLocationContext);
+        $hasExplicitLocation = $routeLocationContext !== []
+            || trim((string) data_get($locationContext, 'path', '')) !== ''
+            || trim((string) data_get($locationContext, 'label', '')) !== ''
+            || $isFiltered;
         $specialPages = $this->specialNearMePages();
         $page = $specialPages[$category] ?? $this->genericNearMePage($category);
         $products = $this->queryListings($page, $locationContext)
@@ -45,7 +49,7 @@ class SeoMoneyPageController extends Controller
 
         $products = ProductRanking::sortCollection($products)->values();
 
-        if ($products->isEmpty() && !empty($locationContext) && !$isFiltered) {
+        if ($products->isEmpty() && !$hasExplicitLocation) {
             $products = $this->queryListings($page)
                 ->take(12)
                 ->values()
