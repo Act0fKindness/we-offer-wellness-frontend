@@ -13,13 +13,14 @@
       'itemListElement' => collect($products ?? [])
         ->values()
         ->take(24)
-        ->values()
-        ->map(fn ($product, $index) => [
-          '@type' => 'ListItem',
-          'position' => $index + 1,
-          'url' => $product['url'] ?? '',
-          'name' => $product['title'] ?? '',
-        ])
+        ->map(function ($product, $index) {
+          return [
+            '@type' => 'ListItem',
+            'position' => $index + 1,
+            'url' => data_get($product, 'url', ''),
+            'name' => data_get($product, 'title', ''),
+          ];
+        })
         ->filter(fn (array $item) => !empty($item['url']))
         ->values()
         ->all(),
@@ -42,9 +43,272 @@
         ],
       ],
     ];
+    $slug = $slug ?? request()->route('slug');
   @endphp
   <script type="application/ld+json">{!! json_encode($breadcrumbLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
   <script type="application/ld+json">{!! json_encode($itemListLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
+  <style>
+    .landing-wow{
+      --ink:#101828;
+      --muted:#596275;
+      --line:#dfe4ea;
+      --line-soft:#edf0f2;
+      --green:#4f9381;
+      --green-dark:#417c6d;
+      --green-soft:#e8f5f1;
+      --gold-soft:#ffe5b3;
+      --gold-text:#6f4b10;
+      --blue-soft:#e8f0ff;
+      --blue-text:#254a85;
+      --radius:18px;
+      --shadow:0 18px 54px rgba(16,24,40,.07);
+      padding:0 0 72px;
+      background:
+        radial-gradient(circle at top left, rgba(79,147,129,.08), transparent 28%),
+        radial-gradient(circle at top right, rgba(255,181,73,.09), transparent 24%),
+        #fff;
+    }
+    .landing-wow__hero{
+      padding:68px 0 24px;
+    }
+    .landing-wow__hero-grid{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) minmax(320px, .95fr);
+      gap:22px;
+      align-items:stretch;
+    }
+    .landing-wow__hero-copy,
+    .landing-wow__hero-panel{
+      background:rgba(255,255,255,.98);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+    }
+    .landing-wow__hero-copy{
+      padding:32px;
+    }
+    .landing-wow__kicker{
+      margin:0 0 10px;
+      color:#344054;
+      font-size:13px;
+      font-weight:300;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+    .landing-wow__hero-copy h1,
+    .landing-wow__hero-panel h3,
+    .landing-wow__results h2{
+      margin:0;
+      color:var(--ink);
+      font-family:"Playfair Display", Georgia, "Times New Roman", serif;
+      font-weight:500;
+      letter-spacing:-.055em;
+    }
+    .landing-wow__hero-copy h1{
+      max-width:12ch;
+      font-size:clamp(42px, 5.8vw, 78px);
+      line-height:.94;
+    }
+    .landing-wow__hero-copy p,
+    .landing-wow__hero-panel p,
+    .landing-wow__results p{
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .landing-wow__hero-copy p{
+      max-width:68ch;
+      margin:16px 0 0;
+      font-size:17px;
+    }
+    .landing-wow__points{
+      display:grid;
+      gap:10px;
+      margin-top:24px;
+    }
+    .landing-wow__point{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      color:#344054;
+      font-size:14px;
+      line-height:1.45;
+    }
+    .landing-wow__point::before{
+      content:"✓";
+      width:22px;
+      height:22px;
+      flex:0 0 22px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      background:var(--green-soft);
+      color:var(--green);
+      font-size:12px;
+      font-weight:800;
+      margin-top:1px;
+    }
+    .landing-wow__actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:26px;
+    }
+    .landing-wow__hero-panel{
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:18px;
+      padding:26px;
+      background:linear-gradient(180deg, rgba(232,245,241,.72), rgba(255,255,255,.96));
+    }
+    .landing-wow__hero-panel h3{
+      font-size:clamp(34px, 4vw, 54px);
+      line-height:.96;
+    }
+    .landing-wow__hero-panel p{
+      margin:14px 0 0;
+      font-size:15px;
+      line-height:1.55;
+    }
+    .landing-wow__panel-list{
+      display:grid;
+      grid-auto-flow:column;
+      grid-auto-columns:calc((100% - 24px) / 3);
+      gap:12px;
+      margin-top:18px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      padding-bottom:6px;
+      scroll-snap-type:x proximity;
+      -webkit-overflow-scrolling:touch;
+    }
+    .landing-wow__panel-item{
+      min-height:100%;
+      padding:14px 15px;
+      border-radius:16px;
+      background:#fff;
+      border:1px solid var(--line-soft);
+      box-shadow:0 10px 26px rgba(16,24,40,.04);
+      text-decoration:none;
+      scroll-snap-align:start;
+    }
+    .landing-wow__panel-item strong{
+      display:block;
+      color:var(--ink);
+      font-size:14px;
+      line-height:1.35;
+    }
+    .landing-wow__panel-item span{
+      display:block;
+      margin-top:4px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.4;
+    }
+    .landing-wow__results{
+      padding:26px;
+      margin-top:0;
+      background:transparent;
+      border:0;
+      border-radius:0;
+      box-shadow:none;
+    }
+    .landing-wow__results-head{
+      display:flex;
+      flex-wrap:wrap;
+      gap:18px;
+      align-items:end;
+      justify-content:space-between;
+      margin-bottom:18px;
+    }
+    .landing-wow__results h2{
+      font-size:clamp(34px, 4.4vw, 58px);
+      line-height:.96;
+    }
+    .landing-wow__results p{
+      max-width:72ch;
+      margin:12px 0 0;
+      font-size:12.75px;
+    }
+    .landing-wow__filters{
+      padding:18px;
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(248,250,252,.95), rgba(255,255,255,.98));
+      margin-bottom:22px;
+    }
+    .landing-wow__filters .form-label{
+      font-weight:600;
+      color:var(--ink);
+    }
+    .landing-wow__filters .form-control{
+      border-radius:14px;
+      border-color:#d8dee5;
+      min-height:44px;
+      box-shadow:none;
+    }
+    .landing-wow__filters .btn{
+      min-height:44px;
+      border-radius:14px;
+    }
+    .landing-wow__grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:24px;
+    }
+    .landing-wow__empty{
+      padding:18px;
+      border:1px dashed var(--line);
+      border-radius:16px;
+      color:var(--muted);
+      background:#fff;
+    }
+    @media (max-width: 991px){
+      .landing-wow__hero-grid,
+      .landing-wow__grid{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+      .landing-wow__panel-list{
+        grid-auto-columns:calc((100% - 12px) / 2);
+      }
+    }
+    @media (max-width: 720px){
+      .landing-wow__grid{
+        grid-template-columns:1fr;
+      }
+      .landing-wow__panel-list{
+        grid-auto-columns:88%;
+      }
+    }
+    @media (max-width: 640px){
+      .landing-wow__hero{
+        padding-top:38px;
+      }
+      .landing-wow__hero-grid{
+        grid-template-columns:1fr;
+      }
+      .landing-wow__hero-copy,
+      .landing-wow__hero-panel{
+        padding:20px;
+        border-radius:20px;
+      }
+      .landing-wow__panel-list{
+        display:grid;
+        grid-template-columns:1fr;
+        grid-auto-flow:row;
+        grid-auto-columns:initial;
+        overflow:visible;
+        padding-bottom:0;
+      }
+      .landing-wow__results-head{
+        display:block;
+      }
+      .landing-wow__filters{
+        padding:14px;
+      }
+    }
+  </style>
 @endpush
 
 @section('content')
@@ -53,24 +317,24 @@
   $landing = $landing ?? [];
 @endphp
 
-<section class="section">
-  <div class="container-page">
-    <div class="wow-hero-card">
-      <div class="grid md:grid-cols-2 gap-6 items-start">
-        <div>
-          <div class="kicker">{{ $landing['kicker'] ?? 'Explore' }}</div>
-          <h1 class="mt-2">{{ $landing['title'] ?? 'Wellness' }}</h1>
-          <p class="text-ink-600 mt-3" style="max-width:70ch;">{{ $landing['intro'] ?? ($seo['description'] ?? '') }}</p>
+<div class="landing-wow">
+  <section class="landing-wow__hero">
+    <div class="container-page">
+      <div class="landing-wow__hero-grid">
+        <div class="landing-wow__hero-copy">
+          <div class="landing-wow__kicker">{{ $landing['kicker'] ?? 'Explore' }}</div>
+          <h1>{{ $landing['title'] ?? 'Wellness' }}</h1>
+          <p>{{ $landing['intro'] ?? ($seo['description'] ?? '') }}</p>
 
           @if(!empty($landing['points']))
-            <ul class="mt-4 space-y-2 text-ink-700">
+            <div class="landing-wow__points">
               @foreach($landing['points'] as $point)
-                <li>• {{ $point }}</li>
+                <div class="landing-wow__point">{{ $point }}</div>
               @endforeach
-            </ul>
+            </div>
           @endif
 
-          <div class="mt-5 flex flex-wrap gap-3">
+          <div class="landing-wow__actions">
             @if(!empty($landing['primary_cta']))
               <a href="{{ $landing['primary_cta']['href'] }}" class="btn-wow btn-wow--cta btn-arrow">
                 <span class="btn-label">{{ $landing['primary_cta']['label'] }}</span>
@@ -92,46 +356,104 @@
           </div>
         </div>
 
-        <div class="wow-hero-panel">
-          <div class="kicker mb-2">Search-friendly</div>
-          <h3 class="m-0">{{ $landing['title'] ?? 'Wellness' }} now easier to find</h3>
-          <p class="text-ink-600 mt-2">
-            This page is the canonical SEO landing page for {{ strtolower((string)($landing['title'] ?? 'wellness')) }} on We Offer Wellness.
-          </p>
+        <div class="landing-wow__hero-panel">
+          <div>
+            <div class="landing-wow__kicker">Search-friendly</div>
+            <h3>Wellness, sorted with a calmer rhythm</h3>
+            <p>Browse curated results, then refine by format or location without losing the visual language of the newer homepage sections.</p>
+          </div>
+
           @if(!empty($categories) && count($categories))
-            <div class="mt-4">
-              <h4 class="text-base font-semibold mb-2">Popular categories</h4>
-              <div class="flex flex-wrap gap-2">
-                @foreach($categories as $category)
-                  <a class="chip" href="{{ url('/' . $category['slug'] . '/' . $type . '/') }}">
-                    {{ $category['name'] }}
-                  </a>
-                @endforeach
-              </div>
+            <div class="landing-wow__panel-list">
+              @foreach($categories as $category)
+                <a class="landing-wow__panel-item" href="{{ url('/' . $category['slug'] . '/' . $type . '/') }}">
+                  <strong>{{ $category['name'] }}</strong>
+                  <span>{{ number_format((int) ($category['count'] ?? 0)) }} listings</span>
+                </a>
+              @endforeach
             </div>
           @endif
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section">
-  <div class="container-page">
-    <div class="mb-4">
-      <div class="kicker">Featured results</div>
-      <h2 class="section-title">{{ $landing['title'] ?? 'Listings' }}</h2>
-    </div>
-
-    <div id="landing-products" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      @forelse($items as $product)
-        @include('partials.product_card_sm', ['product' => $product])
-      @empty
-        <div class="card p-4" style="border-radius:18px;">
-          <div class="text-muted">No listings available yet. Try the search page for more results.</div>
+  <section class="landing-wow__results">
+    <div class="container-page">
+      <div class="landing-wow__results-head">
+        <div>
+          <div class="landing-wow__kicker">Featured results</div>
+          <h2>{{ $landing['title'] ?? 'Listings' }}</h2>
+          <p>{{ $seo['description'] ?? ($landing['intro'] ?? '') }}</p>
         </div>
-      @endforelse
+      </div>
+
+      <form method="get" action="{{ url('/' . $slug . '/' . ($type ?? 'therapies') . '/') }}" class="landing-wow__filters">
+        <div class="grid md:grid-cols-3 gap-3 items-end">
+          <div class="col-span-3 md:col-span-1">
+            <label class="form-label">Format</label>
+            <select class="form-control" name="format">
+              <option value="" @selected(($filters['format'] ?? '') === '')>All</option>
+              <option value="online" @selected(($filters['format'] ?? '') === 'online')>Online</option>
+              <option value="in_person" @selected(($filters['format'] ?? '') === 'in_person')>Near me</option>
+            </select>
+          </div>
+          <div class="col-span-3 md:col-span-1">
+            <label class="form-label">Location</label>
+            <input class="form-control" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="e.g. London, Kent">
+          </div>
+          <div class="col-span-3 md:col-span-1">
+            <label class="form-label">Sort</label>
+            <div class="flex gap-2">
+              <select class="form-control" name="sort">
+                <option value="" @selected(($filters['sort'] ?? '') === '')>Recommended</option>
+                <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price: Low → High</option>
+                <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price: High → Low</option>
+                <option value="rating_desc" @selected(($filters['sort'] ?? '') === 'rating_desc')>Top rated</option>
+              </select>
+              <div class="flex gap-2">
+                <button class="btn btn-primary" type="submit">Apply</button>
+                <a class="btn btn-light" href="{{ url('/' . $slug . '/' . ($type ?? 'therapies') . '/') }}">Reset</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      @if($items->count())
+        <div id="landing-products" class="landing-wow__grid">
+          @foreach($items as $product)
+            @include('partials.product_card_v4', [
+              'product' => $product,
+              'preferredLocation' => $filters['location'] ?? null,
+            ])
+          @endforeach
+        </div>
+
+        @php
+          $meta = $results['meta'] ?? [];
+          $current = (int)($meta['current_page'] ?? request()->query('page', 1));
+          $last = (int)($meta['last_page'] ?? ($meta['total_pages'] ?? 1));
+          $q = request()->query();
+        @endphp
+
+        @if($last > 1)
+          <div class="flex items-center justify-center gap-3 mt-5">
+            @if($current > 1)
+              <a class="btn btn-light" href="{{ request()->url() . '?' . http_build_query(array_merge($q, ['page' => $current - 1])) }}">← Prev</a>
+            @endif
+            <span class="text-muted">Page {{ $current }} of {{ $last }}</span>
+            @if($current < $last)
+              <a class="btn btn-light" href="{{ request()->url() . '?' . http_build_query(array_merge($q, ['page' => $current + 1])) }}">Next →</a>
+            @endif
+          </div>
+        @endif
+      @else
+        <div class="landing-wow__empty">
+          No results yet. Try changing format, location or resetting filters.
+        </div>
+      @endif
     </div>
-  </div>
-</section>
+  </section>
+</div>
 @endsection
