@@ -489,10 +489,11 @@ class SeoMoneyPageController extends Controller
         $query->where(function ($inner) use ($keywords, $categorySlug): void {
             if ($categorySlug !== '') {
                 $needle = '%' . str_replace('-', ' ', mb_strtolower($categorySlug)) . '%';
+                $slugNeedle = '%' . Str::slug($categorySlug) . '%';
                 $inner->orWhereRaw("LOWER(COALESCE(title,'')) like ?", [$needle])
                     ->orWhereRaw("LOWER(COALESCE(product_type,'')) like ?", [$needle])
                     ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like ?", [$needle])
-                    ->orWhereRaw("LOWER(COALESCE(meta_json->therapy_slug, '')) like ?", [Str::slug($categorySlug)])
+                    ->orWhereRaw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.therapy_slug')), '')) like ?", [$slugNeedle])
                     ->orWhereHas('category', function ($categoryQuery) use ($needle): void {
                         $categoryQuery->whereRaw("LOWER(COALESCE(name,'')) like ?", [$needle]);
                     });
@@ -500,10 +501,11 @@ class SeoMoneyPageController extends Controller
 
             foreach ($keywords as $keyword) {
                 $needle = '%' . mb_strtolower($keyword) . '%';
+                $slugNeedle = '%' . Str::slug($keyword) . '%';
                 $inner->orWhereRaw("LOWER(COALESCE(title,'')) like ?", [$needle])
                     ->orWhereRaw("LOWER(COALESCE(product_type,'')) like ?", [$needle])
                     ->orWhereRaw("LOWER(COALESCE(tags_list,'')) like ?", [$needle])
-                    ->orWhereRaw("LOWER(COALESCE(meta_json->therapy_slug, '')) like ?", [Str::slug($keyword)])
+                    ->orWhereRaw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.therapy_slug')), '')) like ?", [$slugNeedle])
                     ->orWhereHas('category', function ($categoryQuery) use ($needle): void {
                         $categoryQuery->whereRaw("LOWER(COALESCE(name,'')) like ?", [$needle]);
                     });

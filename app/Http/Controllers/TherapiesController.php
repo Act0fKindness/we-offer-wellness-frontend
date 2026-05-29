@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Support\ProductRanking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -12,6 +13,28 @@ class TherapiesController extends Controller
     public function index(Request $request)
     {
         $therapies = $this->therapiesIndex();
+        $offeringCount = Product::query()
+            ->whereHas('status', function ($qs) {
+                $qs->whereIn('status', ['live', 'approved']);
+            })
+            ->where(function ($q) {
+                $q->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'");
+            })
+            ->count();
+        $featuredOfferings = Product::query()
+            ->with(['media', 'category', 'options.values', 'vendor.tiers', 'vendor.user.settings'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->withMin('variants', 'price')
+            ->whereHas('status', function ($qs) {
+                $qs->whereIn('status', ['live', 'approved']);
+            })
+            ->where(function ($q) {
+                $q->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'");
+            })
+            ->get();
+
+        $featuredOfferings = ProductRanking::sortCollection($featuredOfferings)->take(8)->values();
 
         return view('therapies.index', [
             'seo' => [
@@ -20,6 +43,8 @@ class TherapiesController extends Controller
                 'robots' => 'index,follow',
             ],
             'therapies' => $therapies,
+            'featuredOfferings' => $featuredOfferings,
+            'offeringCount' => $offeringCount,
         ]);
     }
 
@@ -160,7 +185,7 @@ class TherapiesController extends Controller
             $page    = max(1, (int)($query['page'] ?? 1));
 
             $builder = Product::query()
-                ->with(['media', 'category', 'options.values'])
+                ->with(['media', 'category', 'options.values', 'vendor.tiers', 'vendor.user.settings'])
                 ->withCount('reviews')
                 ->withAvg('reviews', 'rating')
                 ->withMin('variants', 'price')
@@ -175,13 +200,13 @@ class TherapiesController extends Controller
                     } else {
                         $slug = strtolower($therapyKey);
                         $q->whereRaw("LOWER(COALESCE(tags_list,'')) like ?", ['%'.$slug.'%'])
-                          ->orWhereRaw("LOWER(COALESCE(meta_json->therapy_slug, '')) = ?", [$slug]);
+                          ->orWhereRaw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.therapy_slug')), '')) = ?", [$slug]);
                     }
                 })
                 ->where(function ($q) {
                     $q->whereHas('status', function ($qs) {
                         $qs->whereIn('status', ['live', 'approved']);
-                    })->orWhereNull('product_status_id');
+                    });
                 });
 
             $format = strtolower((string) ($query['format'] ?? ''));
@@ -211,20 +236,9 @@ class TherapiesController extends Controller
             }
 
             $sort = $query['sort'] ?? '';
-            if ($sort === 'price_asc') {
-                $builder->orderByRaw('COALESCE(variants_min_price, price) asc');
-            } elseif ($sort === 'price_desc') {
-                $builder->orderByRaw('COALESCE(variants_min_price, price) desc');
-            } elseif ($sort === 'rating_desc') {
-                $builder->orderByRaw('COALESCE(reviews_avg_rating, 0) desc nulls last');
-            } else {
-                $builder->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                        ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                        ->orderByRaw('COALESCE(reviews_count, 0) DESC');
-            }
-
-            $total = (clone $builder)->count();
-            $items = $builder->forPage($page, $perPage)->get();
+            $items = ProductRanking::sortCollection($builder->get(), $sort);
+            $total = $items->count();
+            $items = $items->forPage($page, $perPage)->values();
 
             $lastPage = max(1, (int) ceil($total / max(1, $perPage)));
 
