@@ -63,7 +63,8 @@
             $physicalShort[] = $short;
         }
     }
-    $primary = $physicalShort[0] ?? null;
+    $matchedLocation = trim((string) ($product->matched_location_label ?? ''));
+    $primary = $matchedLocation !== '' ? $matchedLocation : ($physicalShort[0] ?? null);
     $remainingCount = max(0, count($physicalShort) - ($primary ? 1 : 0));
     $exclusiveOnline = $hasOnline && count($physicalShort) === 0;
 

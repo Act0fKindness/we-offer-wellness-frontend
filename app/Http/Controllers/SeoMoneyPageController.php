@@ -39,7 +39,11 @@ class SeoMoneyPageController extends Controller
             || $isFiltered;
         $specialPages = $this->specialNearMePages();
         $page = $specialPages[$category] ?? $this->genericNearMePage($category);
-        $products = $this->queryListings($page, $locationContext)
+        $strictLocation = $routeLocationContext !== []
+            || trim((string) data_get($locationContext, 'path', '')) !== ''
+            || $isFiltered;
+
+        $products = $this->queryListings($page, $locationContext, $strictLocation)
             ->take(12)
             ->values()
             ->map(function ($product) {
@@ -398,7 +402,7 @@ class SeoMoneyPageController extends Controller
         return $page;
     }
 
-    private function queryListings(array $page, array $locationContext = []): Collection
+    private function queryListings(array $page, array $locationContext = [], bool $strictLocation = false): Collection
     {
         $keywords = array_values(array_filter(array_map('trim', (array) ($page['query_terms'] ?? []))));
         $mode = (string) ($page['mode'] ?? 'therapy');
@@ -444,12 +448,18 @@ class SeoMoneyPageController extends Controller
             ->where(function ($query) use ($productQuery): void {
                 $productQuery($query);
             })
-            ->when($locationTerms !== [], function ($query) use ($locationTerms): void {
+            ->when($locationTerms !== [], function ($query) use ($locationTerms, $strictLocation): void {
+                if ($strictLocation) {
+                    $this->applyStrictLocationTermsToProducts($query, $locationTerms);
+                    return;
+                }
+
                 $this->applyLocationTermsToProducts($query, $locationTerms);
             })
             ->get()
             ->map(function (Product $product): Product {
                 $product->setAttribute('vendor_name', $product->vendor?->vendor_name ?? null);
+                $product->setAttribute('matched_location_label', $this->preferredLocationLabel($product, $locationContext));
                 return $product;
             });
 
@@ -459,7 +469,12 @@ class SeoMoneyPageController extends Controller
             ->where(function ($query) use ($offeringQuery): void {
                 $offeringQuery($query);
             })
-            ->when($locationTerms !== [], function ($query) use ($locationTerms): void {
+            ->when($locationTerms !== [], function ($query) use ($locationTerms, $strictLocation): void {
+                if ($strictLocation) {
+                    $this->applyStrictLocationTermsToOfferings($query, $locationTerms);
+                    return;
+                }
+
                 $this->applyLocationTermsToOfferings($query, $locationTerms);
             })
             ->get()
@@ -470,6 +485,7 @@ class SeoMoneyPageController extends Controller
                     (string) ($offering->category?->name ?? ''),
                     (string) ($offering->type?->name ?? ''),
                 ]))));
+                $offering->setAttribute('matched_location_label', $this->preferredLocationLabel($offering, $locationContext));
 
                 return $offering;
             });
@@ -1003,6 +1019,46 @@ class SeoMoneyPageController extends Controller
         });
     }
 
+    private function applyStrictLocationTermsToProducts($query, array $terms): void
+    {
+        $query->where(function ($q) use ($terms): void {
+            foreach ($terms as $index => $term) {
+                $needle = strtolower(trim($term));
+                if ($needle === '') {
+                    continue;
+                }
+
+                $branch = function ($branch) use ($needle): void {
+                    $branch->whereHas('options', function ($options) use ($needle): void {
+                        $options->where('meta_name', 'locations')
+                            ->whereHas('values', function ($values) use ($needle): void {
+                                $values->whereRaw("LOWER(TRIM(COALESCE(value,''))) = ?", [$needle]);
+                            });
+                    })->orWhereHas('vendor.locations', function ($locations) use ($needle): void {
+                        $locations->where(function ($locationQuery) use ($needle): void {
+                            $first = true;
+                            foreach (['city', 'county', 'country'] as $column) {
+                                $condition = "LOWER(TRIM(COALESCE({$column}, ''))) = ?";
+                                if ($first) {
+                                    $locationQuery->whereRaw($condition, [$needle]);
+                                    $first = false;
+                                } else {
+                                    $locationQuery->orWhereRaw($condition, [$needle]);
+                                }
+                            }
+                        });
+                    });
+                };
+
+                if ($index === 0) {
+                    $q->where($branch);
+                } else {
+                    $q->orWhere($branch);
+                }
+            }
+        });
+    }
+
     private function applyLocationTermsToOfferings($query, array $terms): void
     {
         $query->where(function ($q) use ($terms): void {
@@ -1032,5 +1088,78 @@ class SeoMoneyPageController extends Controller
                 }
             }
         });
+    }
+
+    private function applyStrictLocationTermsToOfferings($query, array $terms): void
+    {
+        $query->where(function ($q) use ($terms): void {
+            foreach ($terms as $index => $term) {
+                $needle = strtolower(trim($term));
+                if ($needle === '') {
+                    continue;
+                }
+
+                $branch = function ($branch) use ($needle): void {
+                    $branch->whereHas('vendor.locations', function ($locations) use ($needle): void {
+                        $locations->where(function ($locationQuery) use ($needle): void {
+                            $first = true;
+                            foreach (['city', 'county', 'country'] as $column) {
+                                $condition = "LOWER(TRIM(COALESCE({$column}, ''))) = ?";
+                                if ($first) {
+                                    $locationQuery->whereRaw($condition, [$needle]);
+                                    $first = false;
+                                } else {
+                                    $locationQuery->orWhereRaw($condition, [$needle]);
+                                }
+                            }
+                        });
+                    });
+                };
+
+                if ($index === 0) {
+                    $q->where($branch);
+                } else {
+                    $q->orWhere($branch);
+                }
+            }
+        });
+    }
+
+    private function preferredLocationLabel($listing, array $locationContext): ?string
+    {
+        if (!method_exists($listing, 'getLocations')) {
+            return null;
+        }
+
+        $locations = array_values(array_filter(array_map('trim', (array) $listing->getLocations())));
+        if ($locations === []) {
+            return null;
+        }
+
+        $terms = $this->locationContextTerms($locationContext);
+        if ($terms === []) {
+            return $locations[0] ?? null;
+        }
+
+        $normalizedTerms = array_map(fn (string $term): string => strtolower($this->normalizeLocationSearchTerm($term)), $terms);
+
+        foreach ($locations as $location) {
+            $normalizedLocation = strtolower($this->normalizeLocationSearchTerm($location));
+            if ($normalizedLocation === '') {
+                continue;
+            }
+
+            foreach ($normalizedTerms as $term) {
+                if ($term === '') {
+                    continue;
+                }
+
+                if ($normalizedLocation === $term || str_contains($normalizedLocation, $term) || str_contains($term, $normalizedLocation)) {
+                    return $location;
+                }
+            }
+        }
+
+        return $locations[0] ?? null;
     }
 }
