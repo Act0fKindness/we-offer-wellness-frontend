@@ -30,7 +30,8 @@ class SeoMoneyPageController extends Controller
 
     public function showNearMe(Request $request, string $category)
     {
-        $locationContext = $this->savedLocationContext($request);
+        $isFiltered = $request->hasAny(['place', 'postcode', 'city', 'region', 'county', 'country', 'lat', 'lng']);
+        $locationContext = $this->activeLocationContext($request);
         $specialPages = $this->specialNearMePages();
         $page = $specialPages[$category] ?? $this->genericNearMePage($category);
         $products = $this->queryListings($page, $locationContext)
@@ -43,7 +44,7 @@ class SeoMoneyPageController extends Controller
 
         $products = ProductRanking::sortCollection($products)->values();
 
-        if ($products->isEmpty() && !empty($locationContext)) {
+        if ($products->isEmpty() && !empty($locationContext) && !$isFiltered) {
             $products = $this->queryListings($page)
                 ->take(12)
                 ->values()
@@ -59,19 +60,19 @@ class SeoMoneyPageController extends Controller
             abort(404);
         }
 
-        return $this->renderPage($request, $category . '-near-me', $page, $products, $locationContext);
+        return $this->renderPage($request, $category . '-near-me', $page, $products, $locationContext, $isFiltered);
     }
 
-    private function renderPage(Request $request, string $slug, array $page, Collection $products, array $locationContext = [])
+    private function renderPage(Request $request, string $slug, array $page, Collection $products, array $locationContext = [], bool $isFiltered = false)
     {
-        $popularLocations = $this->popularLocations($page, $locationContext);
+        $popularLocations = $this->popularLocations($page, $locationContext, $slug);
         $catalog = app(LocationCatalogService::class)->load();
 
         return view('seo-money.show', [
             'seo' => [
                 'title' => $page['title'],
                 'description' => $page['description'],
-                'robots' => 'index,follow',
+                'robots' => $isFiltered ? 'noindex,follow' : 'index,follow',
                 'canonical' => url('/' . $slug),
             ],
             'page' => $page,
@@ -79,6 +80,7 @@ class SeoMoneyPageController extends Controller
             'popularLocations' => $popularLocations,
             'catalogSuggestions' => data_get($catalog, 'suggestions', []),
             'savedLocation' => $locationContext,
+            'searchAction' => url('/' . $slug),
             'request' => $request,
         ]);
     }
@@ -582,7 +584,7 @@ class SeoMoneyPageController extends Controller
         }
     }
 
-    private function popularLocations(array $page, array $locationContext = []): array
+    private function popularLocations(array $page, array $locationContext = [], string $slug = ''): array
     {
         $catalog = app(LocationCatalogService::class)->load();
         $paths = array_values(array_filter((array) ($page['popular_location_paths'] ?? [])));
@@ -602,12 +604,13 @@ class SeoMoneyPageController extends Controller
                 if ($savedLocation !== null) {
                     array_unshift($found, $savedLocation);
                     $found = collect($found)
+                        ->map(fn (array $location): array => $this->locationSearchLink($location, $slug))
                         ->unique(fn (array $location): string => (string) ($location['path'] ?? Str::slug((string) ($location['title'] ?? ''))))
                         ->values()
                         ->all();
                 }
 
-                return $found;
+                return collect($found)->map(fn (array $location): array => $this->locationSearchLink($location, $slug))->values()->all();
             }
         }
 
@@ -622,11 +625,40 @@ class SeoMoneyPageController extends Controller
             array_unshift($results, $savedLocation);
             $results = collect($results)
                 ->unique(fn (array $location): string => (string) ($location['path'] ?? Str::slug((string) ($location['title'] ?? ''))))
+                ->map(fn (array $location): array => $this->locationSearchLink($location, $slug))
+                ->values()
+                ->all();
+        } else {
+            $results = collect($results)
+                ->map(fn (array $location): array => $this->locationSearchLink($location, $slug))
                 ->values()
                 ->all();
         }
 
         return $results;
+    }
+
+    private function locationSearchLink(array $location, string $slug): array
+    {
+        $base = url('/' . ltrim($slug, '/'));
+        $city = trim((string) ($location['town'] ?? $location['city'] ?? $location['title'] ?? ''));
+        $region = trim((string) ($location['county'] ?? $location['district'] ?? $location['region'] ?? ''));
+        $country = trim((string) ($location['country'] ?? ''));
+        $isGenericCountry = in_array(strtolower($country), ['united kingdom', 'uk', 'gb', 'great britain', 'britain'], true);
+        $params = array_filter([
+            'place' => (string) ($location['title'] ?? $location['label'] ?? ''),
+            'city' => $city,
+            'region' => $region,
+            'country' => ($city !== '' || $region !== '') && $isGenericCountry ? '' : $country,
+            'lat' => $location['lat'] ?? null,
+            'lng' => $location['lng'] ?? null,
+        ], static fn ($value): bool => $value !== null && trim((string) $value) !== '');
+
+        $location['search_url'] = $params !== []
+            ? $base . '?' . http_build_query($params)
+            : $base;
+
+        return $location;
     }
 
     private function humanizeSlug(string $slug): string
@@ -676,13 +708,72 @@ class SeoMoneyPageController extends Controller
         ];
     }
 
+    private function activeLocationContext(Request $request): array
+    {
+        $city = trim((string) $request->query('city', ''));
+        $region = trim((string) $request->query('region', $request->query('county', '')));
+        $country = trim((string) $request->query('country', ''));
+        $place = trim((string) $request->query('place', $request->query('postcode', '')));
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+
+        if ($city === '' && $place !== '') {
+            $city = $place;
+        }
+
+        $locationContext = [
+            'label' => trim(implode(', ', array_filter([$city, $region, $country]))),
+            'city' => $city,
+            'region' => $region,
+            'country' => $country,
+            'lat' => is_numeric($lat) ? (float) $lat : null,
+            'lng' => is_numeric($lng) ? (float) $lng : null,
+        ];
+
+        $catalog = app(LocationCatalogService::class)->load();
+        $flat = collect((array) data_get($catalog, 'flat', []));
+        $matched = $this->locationContextMatch($flat, $locationContext);
+
+        if ($matched !== null) {
+            $locationContext['label'] = (string) ($matched['title'] ?? $locationContext['label']);
+            $locationContext['city'] = (string) ($matched['town'] ?? $matched['city'] ?? $locationContext['city']);
+            $locationContext['region'] = (string) ($matched['county'] ?? $matched['district'] ?? $matched['region'] ?? $locationContext['region']);
+            $locationContext['country'] = (string) ($matched['country'] ?? $locationContext['country']);
+            $locationContext['lat'] = is_numeric($matched['lat'] ?? null) ? (float) $matched['lat'] : $locationContext['lat'];
+            $locationContext['lng'] = is_numeric($matched['lng'] ?? null) ? (float) $matched['lng'] : $locationContext['lng'];
+            $locationContext['path'] = (string) ($matched['path'] ?? '');
+        } else {
+            $savedLocation = $this->savedLocationContext($request);
+            if (($locationContext['label'] ?? '') === '' && ($savedLocation['label'] ?? '') !== '') {
+                return $savedLocation;
+            }
+        }
+
+        $locationContext['terms'] = $this->locationContextTerms($locationContext);
+
+        return $locationContext;
+    }
+
     private function locationContextTerms(array $locationContext): array
     {
-        $terms = [
-            trim((string) ($locationContext['city'] ?? '')),
-            trim((string) ($locationContext['region'] ?? '')),
-            trim((string) ($locationContext['country'] ?? '')),
-        ];
+        $city = trim((string) ($locationContext['city'] ?? ''));
+        $region = trim((string) ($locationContext['region'] ?? ''));
+        $country = trim((string) ($locationContext['country'] ?? ''));
+        $isGenericCountry = in_array(strtolower($country), ['united kingdom', 'uk', 'gb', 'great britain', 'britain'], true);
+
+        $terms = [];
+
+        if ($city !== '') {
+            $terms[] = $city;
+        }
+
+        if ($region !== '' && !in_array(mb_strtolower($region), array_map('mb_strtolower', $terms), true)) {
+            $terms[] = $region;
+        }
+
+        if ($country !== '' && (!$isGenericCountry || $terms === [])) {
+            $terms[] = $country;
+        }
 
         return array_values(array_unique(array_filter($terms, static fn (string $term): bool => $term !== '')));
     }
@@ -695,19 +786,24 @@ class SeoMoneyPageController extends Controller
             return null;
         }
 
-        foreach ($flat as $location) {
-            $haystack = strtolower(implode(' ', array_filter([
-                (string) ($location['title'] ?? ''),
-                (string) ($location['label'] ?? ''),
-                (string) ($location['county'] ?? ''),
-                (string) ($location['district'] ?? ''),
-                (string) ($location['region'] ?? ''),
-                (string) ($location['country'] ?? ''),
-                (string) ($location['slug'] ?? ''),
-            ])));
+        foreach ($terms as $term) {
+            $needle = strtolower(trim((string) $term));
+            if ($needle === '') {
+                continue;
+            }
 
-            foreach ($terms as $term) {
-                if ($term !== '' && str_contains($haystack, strtolower($term))) {
+            foreach ($flat as $location) {
+                $haystack = strtolower(implode(' ', array_filter([
+                    (string) ($location['title'] ?? ''),
+                    (string) ($location['label'] ?? ''),
+                    (string) ($location['county'] ?? ''),
+                    (string) ($location['district'] ?? ''),
+                    (string) ($location['region'] ?? ''),
+                    (string) ($location['country'] ?? ''),
+                    (string) ($location['slug'] ?? ''),
+                ])));
+
+                if (str_contains($haystack, $needle)) {
                     return $location;
                 }
             }
