@@ -127,6 +127,7 @@
                     <li><a href="/holistic-therapy-near-me">Holistic therapy near me</a></li>
                     <li><a href="/wellness-classes-near-me">Wellness classes near me</a></li>
                     <li><a href="/holistic-therapies-uk">Holistic therapies UK</a></li>
+                    <li><a href="/offerings">Browse all categories</a></li>
                 </ul>
             </div>
         </div>

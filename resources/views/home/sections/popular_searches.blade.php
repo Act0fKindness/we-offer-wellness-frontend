@@ -1,33 +1,73 @@
+@php
+    $categoryCache = app(\App\Services\WhatCategoryCacheService::class)->load();
+    $dynamicCategories = collect(data_get($categoryCache, 'categories', []))
+        ->map(function (array $category): ?array {
+            $slug = trim((string) ($category['slug'] ?? ''));
+            $title = trim((string) ($category['title'] ?? ''));
+            $total = (int) data_get($category, 'counts.total', 0);
+
+            if ($slug === '' || $title === '' || $total <= 0) {
+                return null;
+            }
+
+            $human = \Illuminate\Support\Str::headline(str_replace('-', ' ', $slug));
+
+            return [
+                'title' => $human,
+                'href' => '/' . $slug . '-near-me',
+                'count' => $total,
+                'subtitle' => $total === 1 ? '1 live listing' : $total . ' live listings',
+            ];
+        })
+        ->filter()
+        ->take(12)
+        ->values();
+
+    $featuredPages = [
+        ['href' => '/reiki-near-me', 'title' => 'Reiki near me', 'subtitle' => 'Trusted Reiki practitioners and distance sessions.'],
+        ['href' => '/sound-healing-near-me', 'title' => 'Sound healing near me', 'subtitle' => 'Sound baths, workshops and live sessions.'],
+        ['href' => '/holistic-therapy-near-me', 'title' => 'Holistic therapy near me', 'subtitle' => 'Broad wellness search across trusted therapies.'],
+        ['href' => '/wellness-classes-near-me', 'title' => 'Wellness classes near me', 'subtitle' => 'Yoga, meditation, breathwork and group sessions.'],
+        ['href' => '/holistic-therapies-uk', 'title' => 'Holistic therapies UK', 'subtitle' => 'UK-wide hub for online and in-person listings.'],
+    ];
+@endphp
+
 <section class="wow-popular-searches">
     <div class="container-page">
         <div class="wow-popular-searches__inner">
             <div class="wow-popular-searches__copy">
                 <div class="wow-kicker">Popular searches</div>
                 <h2>Fast entry points to the most useful landing pages</h2>
-                <p>These are the direct paths people use when they want to browse by therapy, location or high-intent search.</p>
+                <p>These are the direct paths people use when they want to browse by therapy, location or high-intent search. The category links below are pulled from live inventory, so they stay aligned with what is actually available.</p>
             </div>
 
-            <div class="wow-popular-searches__grid">
-                <a class="wow-popular-searches__card" href="/reiki-near-me">
-                    <strong>Reiki near me</strong>
-                    <span>Trusted Reiki practitioners and distance sessions.</span>
-                </a>
-                <a class="wow-popular-searches__card" href="/sound-healing-near-me">
-                    <strong>Sound healing near me</strong>
-                    <span>Sound baths, workshops and live sessions.</span>
-                </a>
-                <a class="wow-popular-searches__card" href="/holistic-therapy-near-me">
-                    <strong>Holistic therapy near me</strong>
-                    <span>Broad wellness search across trusted therapies.</span>
-                </a>
-                <a class="wow-popular-searches__card" href="/wellness-classes-near-me">
-                    <strong>Wellness classes near me</strong>
-                    <span>Yoga, meditation, breathwork and group sessions.</span>
-                </a>
-                <a class="wow-popular-searches__card" href="/holistic-therapies-uk">
-                    <strong>Holistic therapies UK</strong>
-                    <span>UK-wide hub for online and in-person listings.</span>
-                </a>
+            <div class="wow-popular-searches__stack">
+                <div class="wow-popular-searches__grid wow-popular-searches__grid--featured">
+                    @foreach ($featuredPages as $page)
+                        <a class="wow-popular-searches__card" href="{{ $page['href'] }}">
+                            <strong>{{ $page['title'] }}</strong>
+                            <span>{{ $page['subtitle'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+
+                <div class="wow-popular-searches__subhead">
+                    <h3>All live category pages</h3>
+                    <a href="/offerings">Browse all categories</a>
+                </div>
+
+                <div class="wow-popular-searches__grid wow-popular-searches__grid--categories">
+                    @forelse ($dynamicCategories as $category)
+                        <a class="wow-popular-searches__card wow-popular-searches__card--category" href="{{ $category['href'] }}">
+                            <strong>{{ $category['title'] }} near me</strong>
+                            <span>{{ $category['subtitle'] }}</span>
+                        </a>
+                    @empty
+                        <div class="wow-popular-searches__empty">
+                            Category pages will appear here once live inventory is available.
+                        </div>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>
@@ -64,8 +104,13 @@
     }
     .wow-popular-searches__grid{
         display:grid;
-        grid-template-columns:repeat(2,minmax(0,1fr));
         gap:12px;
+    }
+    .wow-popular-searches__grid--featured{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+    .wow-popular-searches__grid--categories{
+        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     }
     .wow-popular-searches__card{
         display:block;
@@ -89,10 +134,48 @@
         font-size:13px;
         line-height:1.45;
     }
+    .wow-popular-searches__card--category strong{
+        font-size:14px;
+    }
+    .wow-popular-searches__stack{
+        display:grid;
+        gap:16px;
+    }
+    .wow-popular-searches__subhead{
+        display:flex;
+        justify-content:space-between;
+        gap:12px;
+        align-items:center;
+    }
+    .wow-popular-searches__subhead h3{
+        margin:0;
+        color:var(--wow-ink);
+        font-size:15px;
+        font-weight:700;
+        letter-spacing:-.01em;
+    }
+    .wow-popular-searches__subhead a{
+        color:var(--wow-green-dark);
+        font-size:13px;
+        font-weight:700;
+        text-decoration:none;
+    }
+    .wow-popular-searches__empty{
+        padding:16px;
+        border:1px dashed var(--wow-soft-line);
+        border-radius:16px;
+        color:var(--wow-muted);
+        background:#fff;
+        font-size:14px;
+    }
     @media (max-width: 992px){
         .wow-popular-searches__inner,
         .wow-popular-searches__grid{
             grid-template-columns:1fr;
+        }
+        .wow-popular-searches__subhead{
+            flex-direction:column;
+            align-items:flex-start;
         }
     }
 </style>
