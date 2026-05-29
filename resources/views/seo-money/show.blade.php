@@ -512,6 +512,11 @@
   const dropdown = document.getElementById('moneyLocationDropdown');
   const catalog = @json($catalogSuggestions->values());
   const baseUrl = @json($searchAction ?? url()->current());
+  const autoLocateOnLoad = String(baseUrl || '').includes('-near-me');
+  const promptCookieName = 'wow_location_prompt_v2';
+  const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+  const basePath = new URL(baseUrl, window.location.origin).pathname.replace(/\/+$/, '') || '/';
+  const shouldAutoLocate = autoLocateOnLoad && currentPath === basePath;
 
   let timer = null;
   let results = [];
@@ -538,6 +543,44 @@
     if (!dropdown) return;
     dropdown.hidden = true;
     dropdown.innerHTML = '';
+  }
+
+  function cookieGet(name) {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&') + '=([^;]*)'));
+    if (!match) return '';
+    try { return decodeURIComponent(match[1]); } catch { return match[1] || ''; }
+  }
+
+  function cookieSet(name, value, days) {
+    const maxAge = days ? days * 24 * 60 * 60 : 60 * 60 * 24 * 365 * 5;
+    document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
+  }
+
+  function storeResolvedLocation(payload) {
+    try {
+      cookieSet('wow_location', JSON.stringify(payload), 3650);
+      cookieSet(promptCookieName, '1', 3650);
+      cookieSet('wow_geo_done', '1', 3650);
+      if (payload?.city) cookieSet('wow_city', payload.city, 3650);
+      if (payload?.region) cookieSet('wow_region', payload.region, 3650);
+      if (payload?.country) cookieSet('wow_country', payload.country, 3650);
+      if (payload?.coords?.lat !== undefined) cookieSet('wow_lat', String(payload.coords.lat), 3650);
+      if (payload?.coords?.lng !== undefined) cookieSet('wow_lng', String(payload.coords.lng), 3650);
+    } catch {}
+  }
+
+  async function persistGeo(data) {
+    try {
+      await fetch('/api/geo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || window.__csrfToken || '',
+        },
+        body: JSON.stringify(data),
+      });
+    } catch {}
   }
 
   function showDropdown(items) {
@@ -649,6 +692,73 @@
     if (latInput?.value) target.searchParams.set('lat', latInput.value);
     if (lngInput?.value) target.searchParams.set('lng', lngInput.value);
     window.location.href = target.toString();
+  }
+
+  async function resolveBrowserLocationAndSubmit() {
+    if (!shouldAutoLocate) return;
+    if (!navigator.geolocation) return;
+    if (cookieGet('wow_geo_done') === '1') return;
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      let city = '';
+      let region = '';
+      let country = '';
+      let name = '';
+      let resolvedPath = '';
+
+      try {
+        if (token) {
+          const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json`);
+          url.searchParams.set('access_token', token);
+          url.searchParams.set('limit', '1');
+          const res = await fetch(url.toString());
+          if (res.ok) {
+            const data = await res.json();
+            const place = Array.isArray(data.features) && data.features.length ? data.features[0] : null;
+            if (place) {
+              selected = place;
+              setSelectionContext(place);
+              name = place.place_name || place.text || '';
+              resolvedPath = pathInput?.value ? String(pathInput.value) : '';
+              city = cityInput?.value || '';
+              region = regionInput?.value || '';
+              country = countryInput?.value || '';
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[seo-money] auto geolocation mapbox reverse geocode failed', error);
+      }
+
+      if (!resolvedPath) {
+        const fallbackTarget = new URL(baseUrl, window.location.origin);
+        fallbackTarget.searchParams.set('lat', String(lat));
+        fallbackTarget.searchParams.set('lng', String(lng));
+        if (city) fallbackTarget.searchParams.set('city', city);
+        if (region) fallbackTarget.searchParams.set('region', region);
+        if (country) fallbackTarget.searchParams.set('country', country);
+        window.location.href = fallbackTarget.toString();
+        return;
+      }
+
+      const payload = {
+        name: name || city || 'Current location',
+        city,
+        region,
+        country,
+        coords: { lat, lng },
+      };
+
+      storeResolvedLocation(payload);
+      await persistGeo({ lat, lng, city, region, country, mode: 'mixed' });
+      submitToCategoryPage();
+    }, () => {}, {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 60000,
+    });
   }
 
   async function searchPlaces() {
@@ -763,6 +873,8 @@
       })();
     });
   }
+
+  void resolveBrowserLocationAndSubmit();
 
   document.querySelectorAll('[data-scroll-target]').forEach((button) => {
     button.addEventListener('click', function () {
