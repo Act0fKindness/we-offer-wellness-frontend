@@ -19,7 +19,7 @@ class GeoController extends Controller
         $country = (string) $request->input('country', '');
         $mode = (string) $request->input('mode', 'mixed'); // 'online' | 'mixed'
 
-        $minutes = 60 * 24 * 365 * 5; // ~5 years
+        $minutes = 60 * 24 * 365 * 10; // ~10 years, effectively persistent for returning visitors
 
         $cookies = [
             Cookie::make('wow_lat', is_null($lat) ? '' : (string)$lat, $minutes, null, null, false, false, false, 'Lax'),
@@ -35,4 +35,3 @@ class GeoController extends Controller
         return response()->json(['ok' => true])->withCookies($cookies);
     }
 }
-

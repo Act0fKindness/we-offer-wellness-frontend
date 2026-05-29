@@ -4,7 +4,8 @@ import { ref, onMounted } from 'vue'
 const open = ref(false)
 const status = ref('idle') // 'idle' | 'locating' | 'saving'
 const error = ref('')
-const promptCookieName = 'wow_location_prompt'
+const promptCookieName = 'wow_location_prompt_v2'
+const rememberDays = 3650
 
 function cookieGet(name){
   const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
@@ -20,8 +21,8 @@ function csrfToken(){
 }
 
 function markPromptSeen(){
-  cookieSet(promptCookieName, '1', 30)
-  cookieSet('wow_geo_done', '1', 30)
+  cookieSet(promptCookieName, '1', rememberDays)
+  cookieSet('wow_geo_done', '1', rememberDays)
 }
 
 async function save(data){
@@ -84,11 +85,11 @@ onMounted(() => {
       <div class="wow-location-banner__simple">
         <p class="wow-location-banner__eyebrow">Your location</p>
         <h2 id="wowLocationTitle">Help us find locations near you</h2>
-        <p>Share your location and we’ll show therapies, classes and events close to you first. We’ll remember your choice for 30 days.</p>
+        <p>Share your location and we’ll show therapies, classes and events close to you first. We’ll remember your choice for future visits.</p>
         <div class="wow-location-banner__actions actions">
           <button type="button" class="wow-location-btn wow-location-btn--primary" :disabled="status!=='idle'" @click="allowLocation">
             <span v-if="status==='locating'">Locating…</span>
-            <span v-else>Allow location</span>
+            <span v-else>Allow and remember</span>
           </button>
           <button type="button" class="wow-location-btn" @click="skipLocation">Not now</button>
         </div>

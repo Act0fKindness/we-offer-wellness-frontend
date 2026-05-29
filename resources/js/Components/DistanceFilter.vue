@@ -22,7 +22,7 @@ function readUserLoc(){
   return null
 }
 function writeUserLoc(v){
-  try{ const exp=new Date(Date.now()+30*864e5).toUTCString(); document.cookie = `wow_lat=${encodeURIComponent(v.lat)}; expires=${exp}; path=/`; document.cookie = `wow_lng=${encodeURIComponent(v.lng)}; expires=${exp}; path=/` }catch{}
+  try{ const exp=new Date(Date.now()+3650*864e5).toUTCString(); document.cookie = `wow_lat=${encodeURIComponent(v.lat)}; expires=${exp}; path=/`; document.cookie = `wow_lng=${encodeURIComponent(v.lng)}; expires=${exp}; path=/` }catch{}
 }
 function useMyLocation(){
   try{
@@ -114,4 +114,3 @@ function setKm(v){ km.value = v; runFilter() }
 .use-loc{ margin-left:auto; border:1px solid var(--ink-300); background:#fff; color:#0b1323; border-radius:999px; padding:6px 12px; font-weight:600 }
 .hint{ margin-top:8px; color: var(--ink-600); font-size:.9rem }
 </style>
-

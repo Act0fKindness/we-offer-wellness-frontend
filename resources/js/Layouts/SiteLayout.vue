@@ -305,12 +305,38 @@ function nearMe(){
     navigator.geolocation.getCurrentPosition(pos => {
       const v = { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() }
       try { localStorage.setItem('wow_geo', JSON.stringify(v)) } catch {}
-      try {
-        const days = 30; const exp = new Date(Date.now()+days*864e5).toUTCString()
-        document.cookie = `wow_lat=${encodeURIComponent(v.lat)}; expires=${exp}; path=/`
-        document.cookie = `wow_lng=${encodeURIComponent(v.lng)}; expires=${exp}; path=/`
-      } catch {}
-      window.location.href = '/near-me'
+      ;(async () => {
+        let city = ''
+        let region = ''
+        let country = ''
+        try {
+          const key = window.WOW_MAPS_KEY || ''
+          if (key) {
+            const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${v.lng},${v.lat}.json`)
+            url.searchParams.set('access_token', key)
+            url.searchParams.set('limit', '1')
+            const res = await fetch(url.toString())
+            const json = await res.json()
+            const feat = json?.features?.[0]
+            if (feat) {
+              const comps = feat?.context || []
+              city = (comps.find(c => c.id?.startsWith('place'))?.text) || (comps.find(c => c.id?.startsWith('locality'))?.text) || ''
+              region = (comps.find(c => c.id?.startsWith('region'))?.text) || ''
+              country = (comps.find(c => c.id?.startsWith('country'))?.text) || ''
+            }
+          }
+        } catch {}
+
+        try {
+          await fetch('/api/geo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]')?.content || window.__csrfToken || '') },
+            body: JSON.stringify({ lat: v.lat, lng: v.lng, city, region, country, mode: 'mixed' }),
+          })
+        } catch {}
+
+        window.location.href = '/near-me'
+      })()
     }, () => {
       window.location.href = '/near-me'
     }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 })

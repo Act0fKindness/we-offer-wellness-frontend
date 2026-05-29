@@ -10,6 +10,11 @@ const props = defineProps({
 const show = ref(false)
 const locationText = ref('')
 const coords = ref(null)
+const locationContext = ref({
+  city: '',
+  region: '',
+  country: '',
+})
 
 function storageSet(key, val, days = 30) {
   const item = { v: val, t: Date.now(), exp: days > 0 ? Date.now() + days*24*60*60*1000 : null }
@@ -25,18 +30,57 @@ function storageGet(key) {
   } catch { return null }
 }
 
-function saveAndClose() {
-  if (locationText.value) {
-    storageSet('wow_location', { name: locationText.value, coords: coords.value }, 30)
+function cookieGet(key) {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(new RegExp('(?:^|; )' + key.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&') + '=([^;]*)'))
+  if (!match) return null
+  try {
+    return decodeURIComponent(match[1])
+  } catch {
+    return match[1]
   }
-  storageSet('wow_modal_dismissed', true, 30)
-  try { document.cookie = `wow_modal_dismissed=1; max-age=${30*24*60*60}; path=/` } catch {}
+}
+
+async function saveAndClose() {
+  if (locationText.value) {
+    const payload = { name: locationText.value, coords: coords.value }
+    storageSet('wow_location', payload, 3650)
+    try { document.cookie = `wow_location=${encodeURIComponent(JSON.stringify(payload))}; max-age=${3650*24*60*60}; path=/` } catch {}
+  }
+  if (coords.value) {
+    try {
+      await fetch('/api/geo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || window.__csrfToken || '',
+        },
+        body: JSON.stringify({
+          lat: coords.value.lat,
+          lng: coords.value.lng,
+          city: locationContext.value.city || '',
+          region: locationContext.value.region || '',
+          country: locationContext.value.country || '',
+          mode: 'mixed',
+        }),
+      })
+    } catch {}
+  }
+  storageSet('wow_modal_dismissed', true, 3650)
+  try { document.cookie = `wow_modal_dismissed=1; max-age=${3650*24*60*60}; path=/` } catch {}
   show.value = false
 }
 
 function onSelect(place) {
   locationText.value = place.name
   coords.value = { lat: place.lat, lng: place.lng }
+  const context = Array.isArray(place?.context) ? place.context : []
+  locationContext.value = {
+    city: (context.find(c => c?.id?.startsWith('place'))?.text) || (context.find(c => c?.id?.startsWith('locality'))?.text) || place?.name || '',
+    region: (context.find(c => c?.id?.startsWith('region'))?.text) || (context.find(c => c?.id?.startsWith('district'))?.text) || '',
+    country: (context.find(c => c?.id?.startsWith('country'))?.text) || '',
+  }
 }
 
 function useMyLocation() {
@@ -50,16 +94,23 @@ function useMyLocation() {
       url.searchParams.set('limit', '1')
       const res = await fetch(url)
       const data = await res.json()
-      const name = data?.features?.[0]?.place_name || 'Current location'
+      const feature = data?.features?.[0]
+      const name = feature?.place_name || 'Current location'
       locationText.value = name
       coords.value = { lat: latitude, lng: longitude }
+      const context = Array.isArray(feature?.context) ? feature.context : []
+      locationContext.value = {
+        city: (context.find(c => c?.id?.startsWith('place'))?.text) || (context.find(c => c?.id?.startsWith('locality'))?.text) || name,
+        region: (context.find(c => c?.id?.startsWith('region'))?.text) || (context.find(c => c?.id?.startsWith('district'))?.text) || '',
+        country: (context.find(c => c?.id?.startsWith('country'))?.text) || '',
+      }
     } catch {}
   })
 }
 
 onMounted(() => {
-  const dismissed = storageGet('wow_modal_dismissed') || (typeof document !== 'undefined' && document.cookie.includes('wow_modal_dismissed='))
-  const loc = storageGet('wow_location')
+  const dismissed = storageGet('wow_modal_dismissed') || cookieGet('wow_modal_dismissed')
+  const loc = storageGet('wow_location') || cookieGet('wow_location')
   if (!dismissed && !loc) {
     show.value = true
   }

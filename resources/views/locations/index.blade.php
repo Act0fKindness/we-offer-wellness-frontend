@@ -8,15 +8,61 @@
   $physicalResults = $results->filter(fn ($location) => !($location['online'] ?? false))->values();
   $searchPhysicalResults = $resolved ? $physicalResults->take(5)->values() : $physicalResults;
   $onlineResult = $results->first(fn ($location) => ($location['online'] ?? false) === true);
-  $mapItems = $searchPhysicalResults->take(8)->map(function ($location) {
+  $catalogCountries = collect($locationCatalog['countries'] ?? []);
+  $catalogFlat = collect($locationCatalog['flat'] ?? []);
+  $catalogSuggestions = collect($locationCatalog['suggestions'] ?? [])->map(function (array $location) {
     return [
-      'title' => $location['title'] ?? '',
+      'text' => $location['title'] ?? '',
+      'place_name' => trim(implode(', ', array_filter([
+        $location['title'] ?? '',
+        $location['county'] ?? $location['district'] ?? '',
+        $location['country'] ?? '',
+      ]))),
+      'path' => $location['path'] ?? null,
+      'online' => (bool) ($location['online'] ?? false),
       'slug' => $location['slug'] ?? '',
-      'lat' => $location['lat'] ?? null,
-      'lng' => $location['lng'] ?? null,
-      'distance' => $location['distance_label'] ?? null,
+      'title' => $location['title'] ?? '',
+      'country' => $location['country'] ?? '',
+      'county' => $location['county'] ?? '',
+      'district' => $location['district'] ?? '',
+      'region' => $location['region'] ?? '',
     ];
   })->values()->all();
+  $featuredOrder = ['online' => 0, 'london' => 1, 'manchester' => 2, 'brighton-and-hove' => 3, 'kent' => 4];
+  $featuredLocations = $catalogFlat
+    ->sortBy(function (array $location) use ($featuredOrder): int {
+      $slug = \Illuminate\Support\Str::slug((string) ($location['title'] ?? $location['slug'] ?? ''));
+      return $featuredOrder[$slug] ?? 99;
+    })
+    ->filter(function (array $location) use ($featuredOrder): bool {
+      $slug = \Illuminate\Support\Str::slug((string) ($location['title'] ?? $location['slug'] ?? ''));
+      return isset($featuredOrder[$slug]);
+    })
+    ->values();
+  $offeringMapItems = isset($products) && $products instanceof \Illuminate\Pagination\LengthAwarePaginator
+    ? collect($products->items())->map(function ($item) {
+        return [
+          'title' => (string) data_get($item, 'marker_title', data_get($item, 'title', '')),
+          'slug' => \Illuminate\Support\Str::slug((string) data_get($item, 'title', '')),
+          'lat' => data_get($item, 'lat'),
+          'lng' => data_get($item, 'lng'),
+          'distance' => data_get($item, 'distance_label'),
+        ];
+      })->filter(function (array $item) {
+        return is_numeric($item['lat'] ?? null) && is_numeric($item['lng'] ?? null);
+      })->values()->all()
+    : [];
+  $mapItems = !empty($offeringMapItems)
+    ? $offeringMapItems
+    : $searchPhysicalResults->take(8)->map(function ($location) {
+        return [
+          'title' => $location['title'] ?? '',
+          'slug' => $location['slug'] ?? '',
+          'lat' => $location['lat'] ?? null,
+          'lng' => $location['lng'] ?? null,
+          'distance' => $location['distance_label'] ?? null,
+        ];
+      })->values()->all();
 @endphp
 
 @push('head')
@@ -28,7 +74,10 @@
     .wow-locations-page{
       position:relative;
       overflow:hidden;
-      background:#fff;
+      background:
+        radial-gradient(circle at top left, rgba(79,147,129,.08), transparent 34%),
+        radial-gradient(circle at top right, rgba(21,94,75,.06), transparent 28%),
+        linear-gradient(180deg, #fbfcfd 0%, #ffffff 100%);
       color:#101828;
       padding:44px 0 72px;
     }
@@ -74,7 +123,7 @@
       margin:0 0 10px;
       color:#344054;
       font-size:13px;
-      font-weight:700;
+      font-weight:300;
       letter-spacing:.16em;
       text-transform:uppercase;
     }
@@ -100,11 +149,12 @@
       line-height:1.58;
     }
     .wow-search-panel{
-      background:rgba(255,255,255,.98);
-      border:1px solid #dfe4ea;
-      border-radius:4px;
-      box-shadow:0 12px 34px rgba(16,24,40,.035);
-      padding:18px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(16,24,40,.08);
+      border-radius:20px;
+      box-shadow:0 20px 48px rgba(16,24,40,.08);
+      padding:20px;
+      backdrop-filter:blur(10px);
     }
     .wow-search-panel__label{
       display:block;
@@ -125,7 +175,7 @@
       width:100%;
       height:46px;
       border:1px solid #d0d5dd;
-      border-radius:4px;
+      border-radius:14px;
       background:#fff;
       color:#111827;
       padding:0 14px;
@@ -139,12 +189,13 @@
     .wow-search-panel button{
       min-height:46px;
       padding:0 20px;
-      border-radius:4px;
+      border-radius:14px;
       border:1px solid #4f9381;
-      background:#4f9381;
+      background:linear-gradient(180deg, #5ea691, #4f9381);
       color:#fff;
       font-weight:700;
       cursor:pointer;
+      box-shadow:0 10px 22px rgba(79,147,129,.22);
     }
     .wow-search-panel button:hover{
       background:#417c6d;
@@ -167,8 +218,8 @@
       z-index:20;
       background:#fff;
       border:1px solid #dfe4ea;
-      border-radius:4px;
-      box-shadow:0 16px 36px rgba(16,24,40,.08);
+      border-radius:16px;
+      box-shadow:0 18px 40px rgba(16,24,40,.12);
       overflow:hidden;
     }
     .wow-search-panel__dropdown button{
@@ -201,7 +252,7 @@
     .wow-locations-layout{
       display:grid;
       grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);
-      gap:24px;
+      gap:28px;
       margin-top:26px;
     }
     .wow-locations-sidebar{
@@ -214,14 +265,15 @@
     .wow-location-card,
     .wow-online-card,
     .wow-empty-card,
+    .wow-offerings-card,
     .wow-directory-card{
       background:rgba(255,255,255,.98);
-      border:1px solid #dfe4ea;
-      border-radius:4px;
-      box-shadow:0 12px 34px rgba(16,24,40,.035);
+      border:1px solid rgba(16,24,40,.08);
+      border-radius:20px;
+      box-shadow:0 14px 36px rgba(16,24,40,.06);
     }
     .wow-search-summary{
-      padding:18px;
+      padding:22px;
     }
     .wow-search-summary p{
       margin:0;
@@ -259,14 +311,35 @@
       overflow:hidden;
       min-height:480px;
       position:relative;
+      background:linear-gradient(180deg, #f7faf8, #ecf4f0);
+    }
+    .wow-locations-map--embedded{
+      min-height:360px;
+      margin-top:16px;
     }
     .wow-locations-map__canvas{
       width:100%;
       height:480px;
       min-height:480px;
+      border-radius:20px;
+    }
+    .wow-locations-map--embedded .wow-locations-map__canvas{
+      height:360px;
+      min-height:360px;
+    }
+    @media (min-width: 1081px){
+      .wow-locations-map--embedded{
+        position: sticky;
+        top: 127px;
+        z-index: 5;
+      }
+      .wow-locations-map--embedded .wow-locations-map__canvas{
+        height: calc(100vh - 80px - 67px);
+        min-height: 620px;
+      }
     }
     .wow-locations-section{
-      margin-top:28px;
+      margin-top:32px;
     }
     .wow-locations-section h2{
       font-size:clamp(28px, 3.2vw, 44px);
@@ -290,7 +363,7 @@
       flex-direction:column;
       justify-content:space-between;
       min-height:240px;
-      padding:20px;
+      padding:22px;
     }
     .wow-location-card__top{
       display:flex;
@@ -343,7 +416,7 @@
       line-height:1.45;
     }
     .wow-online-card{
-      padding:20px;
+      padding:22px;
       border-left:4px solid #4f9381;
     }
     .wow-online-card h3{
@@ -362,7 +435,7 @@
       gap:16px;
     }
     .wow-directory-card{
-      padding:20px;
+      padding:22px;
       text-decoration:none;
       color:inherit;
     }
@@ -393,13 +466,359 @@
       font-size:15px;
       line-height:1.55;
     }
+    .wow-offerings-card{
+      padding:24px;
+    }
+    .wow-offerings-card h2{
+      margin:0 0 10px;
+      color:#101828;
+      font-family:'Playfair Display', Georgia, serif;
+      font-weight:500;
+      letter-spacing:-.05em;
+      font-size:clamp(28px, 3.2vw, 44px);
+      line-height:1;
+    }
+    .wow-offerings-card p{
+      margin:0;
+      color:#596275;
+      font-size:15px;
+      line-height:1.55;
+    }
+    .wow-offerings-card__meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+    .wow-offerings-card__count{
+      min-height:30px;
+      display:inline-flex;
+      align-items:center;
+      padding:0 10px;
+      border:1px solid #d9dee7;
+      border-radius:999px;
+      background:#fff;
+      color:#344054;
+      font-size:12px;
+      font-weight:700;
+    }
+    .wow-trending-grid,
+    .wow-country-stack,
+    .wow-county-stack{
+      display:grid;
+      gap:14px;
+    }
+    .wow-trending-grid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+    .wow-trend-card,
+    .wow-country-card,
+    .wow-county-card{
+      display:block;
+      text-decoration:none;
+      color:inherit;
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(16,24,40,.08);
+      border-radius:18px;
+      box-shadow:0 12px 28px rgba(16,24,40,.05);
+      overflow:hidden;
+    }
+    .wow-trend-card{
+      padding:18px;
+      transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    }
+    .wow-trend-card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(79,147,129,.24);
+      box-shadow:0 18px 38px rgba(16,24,40,.08);
+    }
+    .wow-trend-card strong{
+      display:block;
+      font-size:18px;
+      line-height:1.15;
+      margin-top:10px;
+    }
+    .wow-trend-card span{
+      color:#596275;
+      font-size:14px;
+      line-height:1.45;
+    }
+    .wow-trend-card__top,
+    .wow-country-card summary,
+    .wow-county-card summary{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .wow-country-card,
+    .wow-county-card{
+      padding:0;
+    }
+    .wow-country-card summary,
+    .wow-county-card summary{
+      cursor:pointer;
+      list-style:none;
+      padding:18px 20px;
+    }
+    .wow-country-card summary::-webkit-details-marker,
+    .wow-county-card summary::-webkit-details-marker{
+      display:none;
+    }
+    .wow-country-card > summary strong,
+    .wow-county-card > summary strong{
+      display:block;
+      font-size:18px;
+      margin-bottom:2px;
+    }
+    .wow-country-card > summary span,
+    .wow-county-card > summary span{
+      color:#596275;
+      font-size:14px;
+    }
+    .wow-town-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:12px;
+      padding:0 20px 20px;
+    }
+    .wow-town-link{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:14px 14px;
+      border-radius:16px;
+      border:1px solid rgba(16,24,40,.08);
+      background:#fff;
+      color:inherit;
+      text-decoration:none;
+      transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    }
+    .wow-town-link:hover{
+      transform:translateY(-1px);
+      border-color:rgba(79,147,129,.26);
+      box-shadow:0 12px 24px rgba(16,24,40,.06);
+    }
+    .wow-town-link strong{
+      display:block;
+      margin-bottom:2px;
+      font-size:15px;
+    }
+    .wow-town-link span{
+      display:block;
+      color:#667085;
+      font-size:13px;
+      line-height:1.4;
+    }
+    .wow-discovery-section{
+      position:relative;
+      overflow:hidden;
+      background:transparent;
+      padding:0;
+      margin-top:32px;
+      margin-bottom:0;
+    }
+    .wow-discovery-section--gift{
+      margin-bottom:64px;
+    }
+    .wow-gift-panel{
+      display:grid;
+      grid-template-columns:minmax(0,.8fr) minmax(380px,1.2fr);
+      gap:30px;
+      align-items:stretch;
+      padding:26px;
+      background:rgba(255,255,255,.98);
+      border:1px solid rgba(16,24,40,.08);
+      border-radius:18px;
+      box-shadow:0 14px 42px rgba(16,24,40,.055);
+    }
+    .wow-gift-copy{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      min-height:340px;
+    }
+    .wow-gift-copy h2,
+    .wow-gift-card-preview h3{
+      margin:0;
+      color:var(--wow-ink);
+      font-family:var(--wow-serif);
+      font-weight:500;
+      letter-spacing:-.055em;
+    }
+    .wow-gift-copy h2{
+      max-width:500px;
+      font-size:clamp(38px,4.8vw,60px);
+      line-height:.96;
+    }
+    .wow-gift-copy p{
+      max-width:470px;
+      margin:16px 0 0;
+      color:#596275;
+      font-size:16px;
+      line-height:1.58;
+    }
+    .wow-gift-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:24px;
+    }
+    .wow-gift-points{
+      display:grid;
+      gap:10px;
+      margin-top:24px;
+    }
+    .wow-gift-points span{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      color:#344054;
+      font-size:14px;
+      line-height:1.45;
+    }
+    .wow-gift-points span::before{
+      content:"✓";
+      width:22px;
+      height:22px;
+      flex:0 0 22px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      background:#e6f4ef;
+      color:#4f9381;
+      font-size:12px;
+      font-weight:800;
+    }
+    .wow-gift-visual{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:340px;
+      background:#f8fafc;
+      border:1px solid #e3e8ee;
+      border-radius:16px;
+      padding:24px;
+    }
+    .wow-gift-card-preview{
+      width:min(100%,560px);
+      background:#fff;
+      border:1px solid #e3e8ee;
+      border-radius:18px;
+      box-shadow:0 20px 56px rgba(16,24,40,.10);
+      overflow:hidden;
+    }
+    .wow-gift-card-preview__top{
+      display:flex;
+      justify-content:space-between;
+      gap:18px;
+      padding:22px;
+      border-bottom:1px solid #edf0f2;
+    }
+    .wow-gift-card-preview__brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#101828;
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:-.04em;
+    }
+    .wow-gift-mark{
+      width:26px;
+      height:26px;
+      border-radius:999px;
+      background:#4f9381;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:14px;
+      font-weight:800;
+    }
+    .wow-gift-card-preview__amount{
+      text-align:right;
+    }
+    .wow-gift-card-preview__amount small{
+      display:block;
+      color:#667085;
+      font-size:12px;
+      line-height:1.2;
+    }
+    .wow-gift-card-preview__amount strong{
+      display:block;
+      margin-top:4px;
+      color:#101828;
+      font-size:34px;
+      line-height:1;
+      letter-spacing:-.055em;
+    }
+    .wow-gift-card-preview__body{
+      padding:22px;
+    }
+    .wow-gift-card-preview h3{
+      font-size:36px;
+      line-height:.98;
+    }
+    .wow-gift-card-preview p{
+      margin:12px 0 0;
+      color:#667085;
+      font-size:14px;
+      line-height:1.5;
+    }
+    .wow-gift-amounts{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:18px;
+    }
+    .wow-gift-amounts span{
+      min-height:34px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #d0d5dd;
+      border-radius:999px;
+      background:#fff;
+      color:#344054;
+      padding:0 14px;
+      font-size:13px;
+      font-weight:700;
+    }
+    .wow-gift-amounts span.is-active{
+      border-color:#4f9381;
+      background:#4f9381;
+      color:#fff;
+    }
+    .wow-gift-card-preview__footer{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:18px 22px;
+      background:#f8fafc;
+      border-top:1px solid #edf0f2;
+      color:#667085;
+      font-size:13px;
+    }
+    .wow-gift-card-preview__footer strong{
+      color:#4f9381;
+    }
     @media (max-width: 1080px){
       .wow-locations-hero,
       .wow-locations-layout{
         grid-template-columns:1fr;
       }
+      .wow-trending-grid,
       .wow-directory-grid,
       .wow-location-list{
+        grid-template-columns:1fr;
+      }
+      .wow-town-grid{
+        grid-template-columns:1fr;
+      }
+      .wow-gift-panel{
         grid-template-columns:1fr;
       }
     }
@@ -417,6 +836,33 @@
       .wow-location-card__title,
       .wow-online-card h3{
         font-size:30px;
+      }
+      .wow-gift-panel,
+      .wow-gift-card-preview__top,
+      .wow-gift-card-preview__body,
+      .wow-gift-card-preview__footer{
+        padding:18px;
+      }
+      .wow-gift-copy h2{
+        font-size:clamp(32px, 11vw, 46px);
+      }
+      .wow-gift-card-preview h3{
+        font-size:30px;
+      }
+      .wow-gift-card-preview__top,
+      .wow-gift-card-preview__footer{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .wow-gift-card-preview__amount{
+        text-align:left;
+      }
+      .wow-country-card summary,
+      .wow-county-card summary{
+        padding:16px;
+      }
+      .wow-town-grid{
+        padding:0 16px 16px;
       }
     }
   </style>
@@ -456,6 +902,11 @@
           <div class="wow-search-panel__helper">
             Try “Maidstone”, “London”, “Cardiff” or a postcode. We’ll resolve the county, city, town and country for you.
           </div>
+          @if(empty($resolved) && !empty($savedLocation['label'] ?? ''))
+            <div class="wow-search-panel__helper" style="margin-top:8px;">
+              Using your saved location: <strong>{{ $savedLocation['label'] }}</strong>
+            </div>
+          @endif
           <input type="hidden" name="postcode" id="wowLocationPostcode" value="">
           <input type="hidden" name="town" id="wowLocationTown" value="">
           <input type="hidden" name="city" id="wowLocationCity" value="">
@@ -487,29 +938,18 @@
         </div>
       </section>
 
-      <section class="wow-locations-layout">
-        <div class="wow-locations-sidebar">
-          @if($onlinePreferred && $onlineResult)
-            <div class="wow-online-card">
-              <span class="wow-location-card__label">Online available</span>
-              <h3>{{ $onlineResult['title'] }}</h3>
-              <p>There aren’t strong physical matches nearby, so online support is highlighted first.</p>
-              <div class="wow-location-card__footer">
-                <small>{{ $onlineResult['distance_label'] ?? 'Available anywhere' }}</small>
-                <a class="btn-wow btn-wow--cta" href="{{ url($onlineResult['path'] ?? '/online') }}">View online</a>
-              </div>
-            </div>
-          @endif
-
-          <div class="wow-empty-card">
-            <p>Results are ordered by distance. Online stays available as a fallback when nearby physical options are limited.</p>
-          </div>
-        </div>
-
-        <div class="wow-locations-map">
-          <div id="wowLocationsMap" class="wow-locations-map__canvas" data-center-lat="{{ $resolved['lat'] ?? 51.5072 }}" data-center-lng="{{ $resolved['lng'] ?? -0.1276 }}"></div>
-        </div>
+      <section class="wow-locations-section">
+        <h2>Offerings in this area</h2>
+        <p class="wow-locations-section__copy">These are the actual therapies, classes, workshops and retreats matched to your selected location, with the map dotted to those experiences.</p>
       </section>
+
+      @if(isset($products) && $products->count())
+        @include('search.partials.desktop', [
+          'resultsHeading' => 'Offerings near ' . ($resolved['town'] ?? $resolved['place'] ?? $resolved['county'] ?? $resolved['country'] ?? 'your location'),
+          'products' => $products,
+          'resultCount' => $resultCount ?? $products->total(),
+        ])
+      @endif
 
       <section class="wow-locations-section">
         <h2>Nearest results</h2>
@@ -542,19 +982,80 @@
       </section>
     @else
       <section class="wow-locations-section">
-        <h2>Browse our main locations</h2>
-        <p class="wow-locations-section__copy">Pick a location to see the nearest in-person and online wellness options for that area.</p>
-        <div class="wow-directory-grid">
-          @foreach($results as $loc)
-            <a href="{{ url($loc['path'] ?? ('/locations/' . $loc['slug'])) }}" class="wow-directory-card">
-              <h3>{{ $loc['title'] }}</h3>
-              <p>{{ $loc['seo_description'] ?? ('Discover wellness support in ' . $loc['title'] . '.') }}</p>
-              <span>View location →</span>
+        <h2>Trending destinations</h2>
+        <p class="wow-locations-section__copy">Our most searched places. Online stays first, then the strongest local destinations.</p>
+        <div class="wow-trending-grid">
+          @foreach($featuredLocations as $loc)
+            <a href="{{ url($loc['path'] ?? ('/locations/' . $loc['slug'])) }}" class="wow-trend-card">
+              <div class="wow-trend-card__top">
+                <span class="wow-location-card__label">{{ $loc['online'] ? 'Online' : ($loc['county'] ?? $loc['district'] ?? 'Location') }}</span>
+                <span class="wow-pill">{{ number_format((int) (($loc['counts']['total'] ?? 0)), 0) }} listings</span>
+              </div>
+              <div style="display:flex; gap:10px; align-items:flex-start;">
+                <span class="wow-loc-icon {{ $loc['online'] ? 'wow-loc-icon--online' : '' }}">
+                  @if($loc['online'])
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="12" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path></svg>
+                  @else
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-6-4.35-6-9a6 6 0 1 1 12 0c0 4.65-6 9-6 9z"/><circle cx="12" cy="12" r="2"/></svg>
+                  @endif
+                </span>
+                <div>
+                  <strong>{{ $loc['title'] }}</strong>
+                  <span>{{ $loc['online'] ? 'Virtual wellness sessions from anywhere' : trim(implode(', ', array_filter([$loc['county'] ?? $loc['district'] ?? '', $loc['country'] ?? '']))) }}</span>
+                </div>
+              </div>
             </a>
           @endforeach
         </div>
       </section>
+
+      <section class="wow-locations-section">
+        <h2>Browse by country and county</h2>
+        <p class="wow-locations-section__copy">Grouped so the page feels structured instead of a long flat list. Tap a country to open its counties and towns.</p>
+        <div class="wow-country-stack">
+          @foreach($catalogCountries as $country)
+            @continue(($country['online'] ?? false) === true)
+            <details class="wow-country-card" @if(($country['slug'] ?? '') === 'united-kingdom') open @endif>
+              <summary>
+                <span>
+                  <strong>{{ $country['label'] }}</strong>
+                  <span>{{ number_format((int) ($country['counts']['total'] ?? 0)) }} listings</span>
+                </span>
+                <span class="wow-pill">Country</span>
+              </summary>
+              <div class="wow-county-stack">
+                @foreach($country['counties'] as $county)
+                  <details class="wow-county-card" @if($loop->first) open @endif>
+                    <summary>
+                      <span>
+                        <strong>{{ $county['label'] }}</strong>
+                        <span>{{ number_format((int) ($county['counts']['total'] ?? 0)) }} listings</span>
+                      </span>
+                      <span class="wow-pill">County / district</span>
+                    </summary>
+                    <div class="wow-town-grid">
+                      @foreach($county['towns'] as $town)
+                        <a href="{{ url($town['path'] ?? ('/locations/' . $town['slug'])) }}" class="wow-town-link">
+                          <span class="wow-loc-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-6-4.35-6-9a6 6 0 1 1 12 0c0 4.65-6 9-6 9z"/><circle cx="12" cy="12" r="2"/></svg>
+                          </span>
+                          <span>
+                            <strong>{{ $town['title'] }}</strong>
+                            <span>{{ trim(implode(', ', array_filter([$town['county'] ?? $town['district'] ?? '', $town['country'] ?? '']))) }}</span>
+                          </span>
+                        </a>
+                      @endforeach
+                    </div>
+                  </details>
+                @endforeach
+              </div>
+            </details>
+          @endforeach
+        </div>
+      </section>
     @endif
+
+    @include('home.sections.gift_cards_occasion')
   </div>
 </main>
 @endsection
@@ -575,6 +1076,7 @@
   const lngInput = document.getElementById('wowLocationLng');
   const mapEl = document.getElementById('wowLocationsMap');
   const canMap = !!(mapEl && token);
+  const localCatalog = @json($catalogSuggestions);
 
   let timer = null;
   let results = [];
@@ -601,6 +1103,13 @@
       .replace(/^-+|-+$/g, '');
   }
 
+  function normalizeText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
   function isGenericCounty(slug) {
     return ['england', 'scotland', 'wales', 'northern-ireland', 'united-kingdom', 'uk', 'u-k', 'gb', 'great-britain'].indexOf(slug) !== -1;
   }
@@ -619,6 +1128,10 @@
   }
 
   function canonicalLocationPath(place) {
+    if (place?.path) {
+      return place.path;
+    }
+
     const country = countryInput.value || contextLabel(place, 'country') || 'United Kingdom';
     const county = countyInput.value || contextLabel(place, 'district') || contextLabel(place, 'region') || '';
     const town = townInput.value || contextLabel(place, 'place') || place?.text || place?.place_name || '';
@@ -647,6 +1160,27 @@
     return segments.join('/');
   }
 
+  function localSuggestions(query) {
+    const needle = normalizeText(query);
+    if (!needle) {
+      return [];
+    }
+
+    return localCatalog.filter((item) => {
+      const haystack = normalizeText([
+        item.text,
+        item.place_name,
+        item.country,
+        item.county,
+        item.district,
+        item.region,
+        item.title,
+        item.slug,
+      ].filter(Boolean).join(' '));
+      return haystack.includes(needle);
+    });
+  }
+
   async function geocodeQuery(query) {
     if (!token || !query) return null;
     try {
@@ -670,12 +1204,27 @@
     const query = (input.value || '').trim();
     if (!query) return;
 
+    if (selected?.path) {
+      window.location.href = selected.path;
+      return;
+    }
+
+    const localMatch = localSuggestions(query).find((item) => normalizeText(item.title || item.text) === normalizeText(query));
+    if (localMatch && localMatch.path) {
+      window.location.href = localMatch.path;
+      return;
+    }
+
     let place = selected;
     if (!place) {
       place = await geocodeQuery(query);
     }
 
     if (place) {
+      if (place.path) {
+        window.location.href = place.path;
+        return;
+      }
       window.location.href = canonicalLocationPath(place);
       return;
     }
@@ -694,7 +1243,7 @@
 
     dropdown.hidden = false;
     dropdown.innerHTML = items.map((item, index) => {
-      const main = item.text || item.place_name || '';
+      const main = item.text || item.title || item.place_name || '';
       const secondary = [
         contextLabel(item, 'place'),
         contextLabel(item, 'region'),
@@ -725,16 +1274,25 @@
   }
 
   async function searchPlaces() {
-    if (!token) return;
     const query = (input.value || '').trim();
-    if (query.length < 2) {
-      results = [];
-      hideDropdown();
-      return;
-    }
 
     clearTimeout(timer);
     timer = setTimeout(async () => {
+      if (query.length < 2) {
+        results = [];
+        hideDropdown();
+        return;
+      }
+
+      const localMatches = localSuggestions(query).slice(0, 6);
+      if (localMatches.length) {
+        results = localMatches;
+        showDropdown(results);
+        return;
+      }
+
+      if (!token) return;
+
       try {
         const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`);
         url.searchParams.set('access_token', token);

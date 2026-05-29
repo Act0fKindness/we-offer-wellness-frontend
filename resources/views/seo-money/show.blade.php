@@ -209,9 +209,63 @@
       border-color:var(--green);
       box-shadow:0 0 0 3px rgba(79,147,129,.14);
     }
+    .seo-money-saved-location{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:#f3fbf8;
+      color:var(--ink);
+      border:1px solid rgba(79,147,129,.18);
+      font-size:13px;
+    }
     .seo-money-search .btn{
       min-height:44px;
       border-radius:14px;
+    }
+    .seo-money-search{
+      position:relative;
+    }
+    .seo-money-search__dropdown{
+      position:absolute;
+      left:0;
+      right:0;
+      top:100%;
+      z-index:30;
+      margin-top:8px;
+      border:1px solid var(--line-soft);
+      border-radius:16px;
+      background:#fff;
+      box-shadow:0 18px 42px rgba(16,24,40,.12);
+      overflow:hidden;
+    }
+    .seo-money-search__dropdown button{
+      width:100%;
+      display:block;
+      text-align:left;
+      padding:12px 14px;
+      border:none;
+      border-bottom:1px solid var(--line-soft);
+      background:#fff;
+      cursor:pointer;
+    }
+    .seo-money-search__dropdown button:last-child{
+      border-bottom:none;
+    }
+    .seo-money-search__dropdown button:hover,
+    .seo-money-search__dropdown button:focus-visible{
+      background:#f8fafc;
+      outline:none;
+    }
+    .seo-money-search__dropdown strong{
+      display:block;
+      color:var(--ink);
+      font-size:14px;
+    }
+    .seo-money-search__dropdown span{
+      display:block;
+      margin-top:3px;
+      color:var(--muted);
+      font-size:12px;
     }
     .seo-money-shell{
       margin-top:22px;
@@ -225,8 +279,8 @@
       line-height:.96;
     }
     .seo-money-section p{
-      margin:12px 0 0;
-      font-size:15px;
+      margin:0px;
+      font-size:12.75px;
     }
     .seo-money-grid-cards{
       display:grid;
@@ -323,6 +377,8 @@
 @php
   $popularLocations = collect($popularLocations ?? []);
   $products = collect($products ?? []);
+  $savedLocation = collect($savedLocation ?? []);
+  $catalogSuggestions = collect($catalogSuggestions ?? []);
 @endphp
 
 <section class="seo-money-page">
@@ -340,8 +396,8 @@
         </div>
 
         <div class="seo-money-actions">
-          <a href="#money-results" class="btn btn-primary">Browse live listings</a>
-          <a href="#money-faq" class="btn btn-light">Read FAQs</a>
+          <button type="button" class="btn btn-primary" data-scroll-target="results">Browse live listings</button>
+          <button type="button" class="btn btn-light" data-scroll-target="faq">Read FAQs</button>
         </div>
       </div>
 
@@ -349,17 +405,23 @@
         <div>
           <h2>Start with your location</h2>
           <p>{{ $page['search_helper'] ?? 'Enter your town or postcode to narrow the results.' }}</p>
+          @if(!empty($savedLocation['label']))
+            <div class="seo-money-saved-location">
+              Using your saved location: <strong>{{ $savedLocation['label'] }}</strong>
+            </div>
+          @endif
         </div>
 
-        <form class="seo-money-search" method="get" action="{{ url('/locations') }}">
+        <form class="seo-money-search" method="get" action="{{ url('/locations') }}" id="moneyLocationSearchForm" autocomplete="off">
           <label for="money-place">Location</label>
           <div class="row">
-            <input id="money-place" name="place" type="text" placeholder="{{ $page['search_placeholder'] ?? 'e.g. Maidstone' }}" value="{{ request()->query('place', request()->query('postcode', '')) }}">
+            <input id="money-place" name="place" type="text" placeholder="{{ $page['search_placeholder'] ?? 'e.g. Maidstone' }}" value="{{ request()->query('place', request()->query('postcode', $savedLocation['label'] ?? '')) }}">
             <button class="btn btn-primary" type="submit">Search</button>
           </div>
           <p class="text-muted mb-0" style="font-size:13px; line-height:1.45;">
-            We will use this to help you find nearby results and keep you on the canonical location path.
+            We will use this to help you find nearby results and keep you on the canonical location path. We remember your location so you can come back to it later.
           </p>
+          <div id="moneyLocationDropdown" class="seo-money-search__dropdown" hidden></div>
         </form>
 
         <div>
@@ -382,7 +444,7 @@
       </div>
     </section>
 
-    <section class="seo-money-section" id="money-results">
+    <section class="seo-money-section" data-money-section="results">
       <h2>{{ $page['result_label'] ?? 'Live listings' }}</h2>
       <p>{{ $page['result_intro'] ?? 'Browse the strongest matches available now.' }}</p>
 
@@ -414,7 +476,7 @@
       </div>
     </section>
 
-    <section class="seo-money-section" id="money-faq">
+    <section class="seo-money-section" data-money-section="faq">
       <h2>Frequently asked questions</h2>
       <div class="seo-money-faq">
         @foreach(($page['faqs'] ?? []) as $faq)
@@ -428,3 +490,217 @@
   </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  const token = @json(config('services.mapbox.token'));
+  const form = document.getElementById('moneyLocationSearchForm');
+  const input = document.getElementById('money-place');
+  const dropdown = document.getElementById('moneyLocationDropdown');
+  const catalog = @json($catalogSuggestions->values());
+
+  let timer = null;
+  let results = [];
+  let selected = null;
+
+  function normalizeText(value) {
+    return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  function contextLabel(place, prefix) {
+    const context = Array.isArray(place?.context) ? place.context : [];
+    const match = context.find((item) => String(item?.id || '').startsWith(prefix + '.'));
+    return match && match.text ? String(match.text) : '';
+  }
+
+  function hideDropdown() {
+    if (!dropdown) return;
+    dropdown.hidden = true;
+    dropdown.innerHTML = '';
+  }
+
+  function showDropdown(items) {
+    if (!dropdown) return;
+    if (!items.length) {
+      hideDropdown();
+      return;
+    }
+
+    dropdown.hidden = false;
+    dropdown.innerHTML = items.map((item, index) => {
+      const main = item.text || item.title || item.place_name || '';
+      const secondary = [
+        contextLabel(item, 'place'),
+        contextLabel(item, 'region'),
+        contextLabel(item, 'country')
+      ].filter(Boolean).join(', ') || item.place_name || '';
+      return `
+        <button type="button" data-index="${index}">
+          <strong>${main}</strong>
+          <span>${secondary}</span>
+        </button>
+      `;
+    }).join('');
+  }
+
+  function localSuggestions(query) {
+    const needle = normalizeText(query);
+    if (!needle) return [];
+    return catalog.filter((item) => {
+      const haystack = normalizeText([
+        item.text,
+        item.place_name,
+        item.country,
+        item.county,
+        item.district,
+        item.region,
+        item.title,
+        item.slug,
+      ].filter(Boolean).join(' '));
+      return haystack.includes(needle);
+    });
+  }
+
+  async function geocodeQuery(query) {
+    if (!token || !query) return null;
+    try {
+      const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`);
+      url.searchParams.set('access_token', token);
+      url.searchParams.set('autocomplete', 'true');
+      url.searchParams.set('limit', '1');
+      url.searchParams.set('types', 'place,postcode,locality,region,district,country');
+      url.searchParams.set('country', 'gb');
+      const res = await fetch(url.toString());
+      if (!res.ok) return null;
+      const data = await res.json();
+      return Array.isArray(data.features) && data.features.length ? data.features[0] : null;
+    } catch (error) {
+      console.warn('[seo-money] mapbox geocode failed', error);
+      return null;
+    }
+  }
+
+  async function submitToCanonicalLocation() {
+    const query = (input?.value || '').trim();
+    if (!query) return;
+
+    const localMatch = localSuggestions(query).find((item) => normalizeText(item.title || item.text) === normalizeText(query));
+    if (localMatch && localMatch.path) {
+      window.location.href = localMatch.path;
+      return;
+    }
+
+    const place = selected || await geocodeQuery(query);
+    if (place) {
+      const canonical = place?.path || null;
+      if (canonical) {
+        window.location.href = canonical;
+        return;
+      }
+    }
+
+    const fallback = new URL(form?.action || window.location.origin + '/locations');
+    fallback.searchParams.set('place', query);
+    window.location.href = fallback.toString();
+  }
+
+  async function searchPlaces() {
+    const query = (input?.value || '').trim();
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (query.length < 2) {
+        results = [];
+        hideDropdown();
+        return;
+      }
+
+      const localMatches = localSuggestions(query).slice(0, 6);
+      if (localMatches.length) {
+        results = localMatches;
+        showDropdown(results);
+        return;
+      }
+
+      if (!token) return;
+
+      try {
+        const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`);
+        url.searchParams.set('access_token', token);
+        url.searchParams.set('autocomplete', 'true');
+        url.searchParams.set('limit', '6');
+        url.searchParams.set('types', 'place,postcode,locality,region,district,country');
+        url.searchParams.set('country', 'gb');
+
+        const res = await fetch(url.toString());
+        if (!res.ok) throw new Error('mapbox geocode failed');
+        const data = await res.json();
+        results = Array.isArray(data.features) ? data.features : [];
+        showDropdown(results);
+      } catch (error) {
+        console.warn('[seo-money] mapbox search failed', error);
+        results = [];
+        hideDropdown();
+      }
+    }, 220);
+  }
+
+  if (input) {
+    input.addEventListener('input', function () {
+      selected = null;
+      searchPlaces();
+    });
+    input.addEventListener('focus', function () {
+      if (results.length) showDropdown(results);
+    });
+  }
+
+  if (dropdown) {
+    dropdown.addEventListener('mousedown', function (event) {
+      const button = event.target.closest('button[data-index]');
+      if (!button) return;
+      const index = Number(button.getAttribute('data-index'));
+      if (!Number.isFinite(index) || !results[index]) return;
+      event.preventDefault();
+      selected = results[index];
+      if (selected?.path) {
+        window.location.href = selected.path;
+        return;
+      }
+      if (input && (selected.text || selected.place_name)) {
+        input.value = selected.text || selected.place_name || '';
+      }
+      submitToCanonicalLocation();
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      submitToCanonicalLocation();
+    });
+  }
+
+  document.querySelectorAll('[data-scroll-target]').forEach((button) => {
+    button.addEventListener('click', function () {
+      const targetId = button.getAttribute('data-scroll-target');
+      const target = targetId ? document.querySelector(`[data-money-section="${targetId}"]`) : null;
+      if (target && target.scrollIntoView) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!dropdown || !form) return;
+    if (!form.contains(event.target)) {
+      hideDropdown();
+      return;
+    }
+    if (!dropdown.contains(event.target) && event.target !== input) {
+      hideDropdown();
+    }
+  });
+})();
+</script>
+@endpush

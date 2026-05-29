@@ -30,9 +30,10 @@ class SeoMoneyPageController extends Controller
 
     public function showNearMe(Request $request, string $category)
     {
+        $locationContext = $this->savedLocationContext($request);
         $specialPages = $this->specialNearMePages();
         $page = $specialPages[$category] ?? $this->genericNearMePage($category);
-        $products = $this->queryListings($page)
+        $products = $this->queryListings($page, $locationContext)
             ->take(12)
             ->values()
             ->map(function ($product) {
@@ -42,16 +43,29 @@ class SeoMoneyPageController extends Controller
 
         $products = ProductRanking::sortCollection($products)->values();
 
+        if ($products->isEmpty() && !empty($locationContext)) {
+            $products = $this->queryListings($page)
+                ->take(12)
+                ->values()
+                ->map(function ($product) {
+                    $this->decorateListing($product);
+                    return $product;
+                });
+
+            $products = ProductRanking::sortCollection($products)->values();
+        }
+
         if ($products->isEmpty()) {
             abort(404);
         }
 
-        return $this->renderPage($request, $category . '-near-me', $page, $products);
+        return $this->renderPage($request, $category . '-near-me', $page, $products, $locationContext);
     }
 
-    private function renderPage(Request $request, string $slug, array $page, Collection $products)
+    private function renderPage(Request $request, string $slug, array $page, Collection $products, array $locationContext = [])
     {
-        $popularLocations = $this->popularLocations($page);
+        $popularLocations = $this->popularLocations($page, $locationContext);
+        $catalog = app(LocationCatalogService::class)->load();
 
         return view('seo-money.show', [
             'seo' => [
@@ -63,6 +77,8 @@ class SeoMoneyPageController extends Controller
             'page' => $page,
             'products' => $products,
             'popularLocations' => $popularLocations,
+            'catalogSuggestions' => data_get($catalog, 'suggestions', []),
+            'savedLocation' => $locationContext,
             'request' => $request,
         ]);
     }
@@ -362,12 +378,13 @@ class SeoMoneyPageController extends Controller
         return $page;
     }
 
-    private function queryListings(array $page): Collection
+    private function queryListings(array $page, array $locationContext = []): Collection
     {
         $keywords = array_values(array_filter(array_map('trim', (array) ($page['query_terms'] ?? []))));
         $mode = (string) ($page['mode'] ?? 'therapy');
         $categorySlug = trim((string) ($page['category_slug'] ?? ''));
         $fallbackMode = filter_var($page['fallback_mode'] ?? false, FILTER_VALIDATE_BOOL);
+        $locationTerms = $this->locationContextTerms($locationContext);
         $productBuilder = Product::query()
             ->with(['media', 'category', 'options.values', 'vendor.locations', 'vendor.tiers', 'vendor.user.settings'])
             ->withCount('reviews')
@@ -407,6 +424,9 @@ class SeoMoneyPageController extends Controller
             ->where(function ($query) use ($productQuery): void {
                 $productQuery($query);
             })
+            ->when($locationTerms !== [], function ($query) use ($locationTerms): void {
+                $this->applyLocationTermsToProducts($query, $locationTerms);
+            })
             ->get()
             ->map(function (Product $product): Product {
                 $product->setAttribute('vendor_name', $product->vendor?->vendor_name ?? null);
@@ -418,6 +438,9 @@ class SeoMoneyPageController extends Controller
             ->whereIn('status', ['live', 'approved'])
             ->where(function ($query) use ($offeringQuery): void {
                 $offeringQuery($query);
+            })
+            ->when($locationTerms !== [], function ($query) use ($locationTerms): void {
+                $this->applyLocationTermsToOfferings($query, $locationTerms);
             })
             ->get()
             ->map(function (OfferingV3 $offering): OfferingV3 {
@@ -559,11 +582,12 @@ class SeoMoneyPageController extends Controller
         }
     }
 
-    private function popularLocations(array $page): array
+    private function popularLocations(array $page, array $locationContext = []): array
     {
         $catalog = app(LocationCatalogService::class)->load();
         $paths = array_values(array_filter((array) ($page['popular_location_paths'] ?? [])));
         $flat = collect((array) data_get($catalog, 'flat', []));
+        $savedLocation = $this->locationContextMatch($flat, $locationContext);
 
         if ($paths !== []) {
             $found = [];
@@ -575,16 +599,34 @@ class SeoMoneyPageController extends Controller
             }
 
             if ($found !== []) {
+                if ($savedLocation !== null) {
+                    array_unshift($found, $savedLocation);
+                    $found = collect($found)
+                        ->unique(fn (array $location): string => (string) ($location['path'] ?? Str::slug((string) ($location['title'] ?? ''))))
+                        ->values()
+                        ->all();
+                }
+
                 return $found;
             }
         }
 
-        return $flat
+        $results = $flat
             ->filter(fn (array $location): bool => !empty($location['path']) && empty($location['online']) && (int) data_get($location, 'counts.total', 0) > 0)
             ->sortByDesc(fn (array $location): int => (int) data_get($location, 'counts.total', 0))
             ->take(6)
             ->values()
             ->all();
+
+        if ($savedLocation !== null) {
+            array_unshift($results, $savedLocation);
+            $results = collect($results)
+                ->unique(fn (array $location): string => (string) ($location['path'] ?? Str::slug((string) ($location['title'] ?? ''))))
+                ->values()
+                ->all();
+        }
+
+        return $results;
     }
 
     private function humanizeSlug(string $slug): string
@@ -606,5 +648,138 @@ class SeoMoneyPageController extends Controller
         }
 
         return 'broad';
+    }
+
+    private function savedLocationContext(Request $request): array
+    {
+        $city = trim((string) $request->cookie('wow_city', ''));
+        $region = trim((string) $request->cookie('wow_region', ''));
+        $country = trim((string) $request->cookie('wow_country', ''));
+        $lat = $request->cookie('wow_lat');
+        $lng = $request->cookie('wow_lng');
+
+        $label = trim(implode(', ', array_filter([$city, $region, $country])));
+        $terms = $this->locationContextTerms([
+            'city' => $city,
+            'region' => $region,
+            'country' => $country,
+        ]);
+
+        return [
+            'label' => $label,
+            'city' => $city,
+            'region' => $region,
+            'country' => $country,
+            'lat' => is_numeric($lat) ? (float) $lat : null,
+            'lng' => is_numeric($lng) ? (float) $lng : null,
+            'terms' => $terms,
+        ];
+    }
+
+    private function locationContextTerms(array $locationContext): array
+    {
+        $terms = [
+            trim((string) ($locationContext['city'] ?? '')),
+            trim((string) ($locationContext['region'] ?? '')),
+            trim((string) ($locationContext['country'] ?? '')),
+        ];
+
+        return array_values(array_unique(array_filter($terms, static fn (string $term): bool => $term !== '')));
+    }
+
+    private function locationContextMatch(Collection $flat, array $locationContext): ?array
+    {
+        $terms = $this->locationContextTerms($locationContext);
+
+        if ($terms === []) {
+            return null;
+        }
+
+        foreach ($flat as $location) {
+            $haystack = strtolower(implode(' ', array_filter([
+                (string) ($location['title'] ?? ''),
+                (string) ($location['label'] ?? ''),
+                (string) ($location['county'] ?? ''),
+                (string) ($location['district'] ?? ''),
+                (string) ($location['region'] ?? ''),
+                (string) ($location['country'] ?? ''),
+                (string) ($location['slug'] ?? ''),
+            ])));
+
+            foreach ($terms as $term) {
+                if ($term !== '' && str_contains($haystack, strtolower($term))) {
+                    return $location;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function applyLocationTermsToProducts($query, array $terms): void
+    {
+        $query->where(function ($q) use ($terms): void {
+            foreach ($terms as $index => $term) {
+                $needle = '%' . strtolower(trim($term)) . '%';
+                $branch = function ($branch) use ($needle): void {
+                    $branch->whereHas('options', function ($options) use ($needle): void {
+                        $options->where('meta_name', 'locations')
+                            ->whereHas('values', function ($values) use ($needle): void {
+                                $values->whereRaw("LOWER(COALESCE(value,'')) LIKE ?", [$needle]);
+                            });
+                    })->orWhereHas('vendor.locations', function ($locations) use ($needle): void {
+                        $locations->where(function ($locationQuery) use ($needle): void {
+                            $first = true;
+                            foreach (['label', 'line1', 'line2', 'city', 'county', 'postcode', 'formatted_address', 'country'] as $column) {
+                                $condition = "LOWER(COALESCE({$column}, '')) LIKE ?";
+                                if ($first) {
+                                    $locationQuery->whereRaw($condition, [$needle]);
+                                    $first = false;
+                                } else {
+                                    $locationQuery->orWhereRaw($condition, [$needle]);
+                                }
+                            }
+                        });
+                    });
+                };
+
+                if ($index === 0) {
+                    $q->where($branch);
+                } else {
+                    $q->orWhere($branch);
+                }
+            }
+        });
+    }
+
+    private function applyLocationTermsToOfferings($query, array $terms): void
+    {
+        $query->where(function ($q) use ($terms): void {
+            foreach ($terms as $index => $term) {
+                $needle = '%' . strtolower(trim($term)) . '%';
+                $branch = function ($branch) use ($needle): void {
+                    $branch->whereHas('vendor.locations', function ($locations) use ($needle): void {
+                        $locations->where(function ($locationQuery) use ($needle): void {
+                            $first = true;
+                            foreach (['label', 'line1', 'line2', 'city', 'county', 'postcode', 'formatted_address', 'country'] as $column) {
+                                $condition = "LOWER(COALESCE({$column}, '')) LIKE ?";
+                                if ($first) {
+                                    $locationQuery->whereRaw($condition, [$needle]);
+                                    $first = false;
+                                } else {
+                                    $locationQuery->orWhereRaw($condition, [$needle]);
+                                }
+                            }
+                        });
+                    });
+                };
+
+                if ($index === 0) {
+                    $q->where($branch);
+                } else {
+                    $q->orWhere($branch);
+                }
+            }
+        });
     }
 }

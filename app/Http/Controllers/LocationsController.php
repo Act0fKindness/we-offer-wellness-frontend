@@ -32,6 +32,8 @@ class LocationsController extends Controller
     {
         $catalog = app(LocationCatalogService::class)->load();
         $query = trim((string) $request->query('place', $request->query('postcode', $request->query('q', ''))));
+        $savedLocation = $this->savedLocationFromRequest($request);
+        $displayQuery = $query !== '' ? $query : ($savedLocation['label'] ?? '');
         $resolved = $query !== '' ? $this->resolveSearchOrigin($query) : null;
 
         if (
@@ -66,7 +68,8 @@ class LocationsController extends Controller
             ],
             'locations' => $locations,
             'locationSearch' => $resolved,
-            'locationQuery' => $query,
+            'locationQuery' => $displayQuery,
+            'savedLocation' => $savedLocation,
             'onlinePreferred' => $onlinePreferred,
             'locationCatalog' => $catalog,
         ]);
@@ -282,6 +285,7 @@ class LocationsController extends Controller
     {
         // UX page (user-specific): enter postcode, then you can later resolve it to a nearest location.
         $postcode = trim((string) $request->query('place', $request->query('postcode', '')));
+        $savedLocation = $this->savedLocationFromRequest($request);
 
         if ($postcode !== '') {
             $request->session()->put('near_me_postcode', $postcode);
@@ -297,6 +301,7 @@ class LocationsController extends Controller
                 'robots' => 'noindex,follow',
                 'canonical' => url('/near-me'),
             ],
+            'savedLocation' => $savedLocation,
         ]);
     }
 
@@ -1187,5 +1192,29 @@ class LocationsController extends Controller
         $value = trim((string) ($item['text'] ?? ''));
 
         return $value !== '' ? $value : null;
+    }
+
+    private function savedLocationFromRequest(Request $request): array
+    {
+        $city = trim((string) $request->cookie('wow_city', ''));
+        $region = trim((string) $request->cookie('wow_region', ''));
+        $country = trim((string) $request->cookie('wow_country', ''));
+        $locationCookie = (string) $request->cookie('wow_location', '');
+
+        if (($city === '' || $region === '' || $country === '') && $locationCookie !== '') {
+            $decoded = json_decode($locationCookie, true);
+            if (is_array($decoded)) {
+                $city = $city !== '' ? $city : trim((string) data_get($decoded, 'name', ''));
+            }
+        }
+
+        $parts = array_values(array_filter([$city, $region, $country]));
+
+        return [
+            'city' => $city,
+            'region' => $region,
+            'country' => $country,
+            'label' => trim(implode(', ', $parts)),
+        ];
     }
 }
