@@ -223,6 +223,7 @@
       let city = '';
       let region = '';
       let country = '';
+      let name = 'Current location';
 
       try {
         const key = window.WOW_MAPS_KEY || '';
@@ -238,11 +239,18 @@
             city = (comps.find(c => c.id?.startsWith('place'))?.text) || (comps.find(c => c.id?.startsWith('locality'))?.text) || '';
             region = (comps.find(c => c.id?.startsWith('region'))?.text) || '';
             country = (comps.find(c => c.id?.startsWith('country'))?.text) || '';
-            saveLocationCookie({ name: feat.place_name || city || 'Current location', coords: { lat, lng } });
+            name = feat.place_name || city || 'Current location';
           }
         }
       } catch {}
 
+      saveLocationCookie({
+        name,
+        city,
+        region,
+        country,
+        coords: { lat, lng },
+      });
       await persistGeo({ lat, lng, city, region, country, mode: 'mixed' });
       markPromptSeen();
       hideBanner();
