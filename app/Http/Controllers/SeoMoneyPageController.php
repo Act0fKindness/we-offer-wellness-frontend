@@ -457,7 +457,7 @@ class SeoMoneyPageController extends Controller
                 $this->applyLocationTermsToProducts($query, $locationTerms);
             })
             ->get()
-            ->map(function (Product $product): Product {
+            ->map(function (Product $product) use ($locationContext): Product {
                 $product->setAttribute('vendor_name', $product->vendor?->vendor_name ?? null);
                 $product->setAttribute('matched_location_label', $this->preferredLocationLabel($product, $locationContext));
                 return $product;
@@ -478,7 +478,7 @@ class SeoMoneyPageController extends Controller
                 $this->applyLocationTermsToOfferings($query, $locationTerms);
             })
             ->get()
-            ->map(function (OfferingV3 $offering): OfferingV3 {
+            ->map(function (OfferingV3 $offering) use ($locationContext): OfferingV3 {
                 $offering->setAttribute('vendor_name', $offering->vendor?->vendor_name ?? null);
                 $offering->setAttribute('product_type', (string) ($offering->type?->name ?? $offering->category?->name ?? 'experience'));
                 $offering->setAttribute('tags_list', trim(implode(',', array_filter([
@@ -510,11 +510,11 @@ class SeoMoneyPageController extends Controller
                     $query->whereIn('status', ['live', 'approved']);
                 })
                 ->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'")
-                ->get()
-                ->map(function (Product $product): Product {
-                    $product->setAttribute('vendor_name', $product->vendor?->vendor_name ?? null);
-                    return $product;
-                });
+            ->get()
+            ->map(function (Product $product): Product {
+                $product->setAttribute('vendor_name', $product->vendor?->vendor_name ?? null);
+                return $product;
+            });
 
         $fallbackOfferings = OfferingV3::query()
             ->with(['media', 'category', 'type', 'coverMedia', 'vendor.locations', 'vendor.tiers', 'vendor.user.settings'])
