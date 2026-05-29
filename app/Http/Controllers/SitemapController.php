@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\OfferingV3;
 use App\Models\Product;
-use App\Models\ProductCategory;
+use App\Services\LocationCatalogService;
+use App\Services\WhatCategoryCacheService;
 use Illuminate\Support\Str;
 
 class SitemapController extends Controller
@@ -18,11 +19,13 @@ class SitemapController extends Controller
         foreach ([
             '/',
             '/therapies',
+            '/holistic-therapies-uk',
             '/events',
             '/workshops',
             '/classes',
             '/retreats',
             '/gifts',
+            '/giftcards',
             '/gift-cards',
             '/corporate',
             '/corporate-wellness',
@@ -33,19 +36,48 @@ class SitemapController extends Controller
             '/needs',
             '/plan',
             '/search',
+            '/reiki-near-me',
+            '/sound-healing-near-me',
+            '/holistic-therapy-near-me',
+            '/wellness-classes-near-me',
         ] as $p) {
             $urls[] = [ 'loc' => $base.$p, 'lastmod' => $now ];
         }
 
         try {
-            foreach (app(LocationsController::class)->locationPages() as $location) {
-                $path = (string) ($location['path'] ?? '');
-                if ($path === '') {
+            $catalog = app(LocationCatalogService::class)->load();
+            foreach ((array) data_get($catalog, 'countries', []) as $country) {
+                if ((int) data_get($country, 'counts.total', 0) > 0 && !empty($country['path'])) {
+                    $urls[] = ['loc' => $base . (string) $country['path'], 'lastmod' => $now];
+                }
+
+                foreach ((array) data_get($country, 'counties', []) as $county) {
+                    if ((int) data_get($county, 'counts.total', 0) > 0 && !empty($county['path'])) {
+                        $urls[] = ['loc' => $base . (string) $county['path'], 'lastmod' => $now];
+                    }
+
+                    foreach ((array) data_get($county, 'towns', []) as $town) {
+                        if ((int) data_get($town, 'counts.total', 0) > 0 && !empty($town['path'])) {
+                            $urls[] = ['loc' => $base . (string) $town['path'], 'lastmod' => $now];
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        try {
+            $nearMeCategories = app(WhatCategoryCacheService::class)->build();
+
+            foreach ((array) data_get($nearMeCategories, 'categories', []) as $category) {
+                $slug = Str::slug((string) ($category['slug'] ?? ''));
+                $total = (int) data_get($category, 'counts.total', 0);
+
+                if ($slug === '' || $total <= 0) {
                     continue;
                 }
 
                 $urls[] = [
-                    'loc' => $base.$path,
+                    'loc' => $base . '/' . $slug . '-near-me',
                     'lastmod' => $now,
                 ];
             }
@@ -138,13 +170,37 @@ class SitemapController extends Controller
             '/cookies',
             '/refunds-and-cancellations',
             '/safety-and-contraindications',
+            '/giftcards',
             '/gift-cards',
             '/corporate',
             '/corporate-wellness',
             '/search',
+            '/holistic-therapies-uk',
+            '/reiki-near-me',
+            '/sound-healing-near-me',
+            '/holistic-therapy-near-me',
+            '/wellness-classes-near-me',
         ] as $p) {
             $urls[] = ['loc' => $base.$p, 'lastmod' => $now];
         }
+
+        try {
+            $nearMeCategories = app(WhatCategoryCacheService::class)->build();
+
+            foreach ((array) data_get($nearMeCategories, 'categories', []) as $category) {
+                $slug = Str::slug((string) ($category['slug'] ?? ''));
+                $total = (int) data_get($category, 'counts.total', 0);
+
+                if ($slug === '' || $total <= 0) {
+                    continue;
+                }
+
+                $urls[] = [
+                    'loc' => $base . '/' . $slug . '-near-me',
+                    'lastmod' => $now,
+                ];
+            }
+        } catch (\Throwable $e) {}
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'.
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';

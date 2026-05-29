@@ -29,6 +29,7 @@ use App\Http\Controllers\SeoLandingController;
 use App\Http\Controllers\OnlineController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\OnlineNearMeController;
+use App\Http\Controllers\SeoMoneyPageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Api\ProductCardsController;
@@ -36,6 +37,8 @@ use App\Http\Controllers\MindfulTimesController;
 use App\Http\Controllers\ProvidersController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CorporateController;
+use App\Http\Controllers\GiftCardsController;
+use App\Http\Controllers\OfferingsHubController;
 use App\Http\Controllers\StaticPagesController;
 use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\HelpPagesController;
@@ -80,6 +83,12 @@ Route::get('/events-workshops/{slug}', function (string $slug) {
 
 /** Online */
 Route::get('/online', [OnlineController::class, 'index'])->name('online.index');
+Route::get('/holistic-therapies-uk', [SeoMoneyPageController::class, 'show'])
+    ->defaults('slug', 'holistic-therapies-uk')
+    ->name('seo-money.holistic-therapies-uk');
+Route::get('/{category}-near-me', [SeoMoneyPageController::class, 'showNearMe'])
+    ->where('category', '[A-Za-z][A-Za-z0-9\-]*')
+    ->name('seo-money.near-me');
 
 /** Locations + Near Me */
 Route::get('/locations', [LocationsController::class, 'index'])->name('locations.index');
@@ -94,6 +103,48 @@ Route::get('/locations/{slug}', [LocationsController::class, 'show'])
     ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('locations.show');
 Route::get('/near-me', [LocationsController::class, 'nearMe'])->name('nearMe');
+Route::get('/{therapy}/{location}', function (Request $request, string $therapy, string $location) {
+    $therapySlug = Str::slug($therapy);
+    $locationSlug = Str::slug($location);
+
+    $allowedTherapies = [
+        'reiki',
+        'sound-healing',
+        'reflexology',
+        'breathwork',
+        'acupuncture',
+        'massage',
+        'hypnotherapy',
+        'somatic-experiencing',
+        'meditation',
+        'corporate-wellness',
+    ];
+
+    if (!in_array($therapySlug, $allowedTherapies, true)) {
+        abort(404);
+    }
+
+    if ($locationSlug === '' || in_array($locationSlug, ['online', 'therapies', 'events', 'workshops', 'classes', 'retreats', 'gifts'], true)) {
+        abort(404);
+    }
+
+    $catalog = app(\App\Services\LocationCatalogService::class)->load();
+    $match = collect((array) data_get($catalog, 'flat', []))->first(function (array $node) use ($locationSlug): bool {
+        $nodeSlug = Str::slug((string) ($node['slug'] ?? ''));
+        $nodeTitle = Str::slug((string) ($node['title'] ?? ''));
+
+        return $locationSlug === $nodeSlug || $locationSlug === $nodeTitle;
+    });
+
+    if ($match !== null && !empty($match['path'])) {
+        return redirect()->to(url((string) $match['path']), 301);
+    }
+
+    abort(404);
+})->where([
+    'therapy' => '[A-Za-z][A-Za-z0-9\-]*',
+    'location' => '[A-Za-z][A-Za-z0-9\-]*',
+]);
 
 // Misc redirects for broken/legacy links
 Route::redirect('/help/which-therapy', '/plan', 301);
@@ -169,6 +220,8 @@ Route::get('/events', [EventsController::class, 'index'])->name('events.index');
 Route::get('/events/{slug}', [EventsController::class, 'show'])
     ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('events.show');
+Route::get('/offerings', [OfferingsHubController::class, 'index'])->name('offerings.index');
+Route::get('/giftcards', [GiftCardsController::class, 'index'])->name('giftcards.index');
 Route::get('/workshops', [SeoLandingController::class, 'show'])
     ->defaults('type', 'workshops')
     ->name('workshops.index');
@@ -366,6 +419,25 @@ Route::get('/partners', [StaticPagesController::class, 'partners']);
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
 Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
+Route::get('/search-console/oauth/callback', function (Request $request) {
+    $code = trim((string) $request->query('code', ''));
+    $error = trim((string) $request->query('error', ''));
+    $state = trim((string) $request->query('state', ''));
+
+    if ($error !== '') {
+        return response()->make(
+            "<!doctype html><html><head><meta charset=\"utf-8\"><title>Search Console OAuth</title></head><body style=\"font-family:system-ui;padding:24px\"><h1>OAuth failed</h1><p><strong>Error:</strong> " . e($error) . '</p></body></html>',
+            200,
+            ['Content-Type' => 'text/html; charset=UTF-8', 'Cache-Control' => 'no-store']
+        );
+    }
+
+    return response()->make(
+        "<!doctype html><html><head><meta charset=\"utf-8\"><title>Search Console OAuth</title></head><body style=\"font-family:system-ui;padding:24px\"><h1>Authorization received</h1><p>Copy the code below and run the exchange command.</p><pre style=\"white-space:pre-wrap;word-break:break-word;background:#f5f5f5;padding:16px;border-radius:8px\">" . e($code) . "</pre><p><strong>State:</strong> " . e($state) . "</p></body></html>",
+        200,
+        ['Content-Type' => 'text/html; charset=UTF-8', 'Cache-Control' => 'no-store']
+    );
+});
 
 // General content pages (always available)
 Route::get('/privacy', [StaticPagesController::class, 'privacy']);

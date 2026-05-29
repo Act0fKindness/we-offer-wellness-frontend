@@ -37,10 +37,10 @@ class LandingRedirectsController extends Controller
     public function experiencesSlug(string $slug)
     {
         $s = strtolower($slug);
-        if (str_contains($s, 'sound-bath')) return redirect('/sound-healing/events/', 301);
-        if ($s === 'reiki') return redirect('/reiki/therapies/', 301);
-        if (str_contains($s, 'breathwork')) return redirect('/breathwork/workshops/', 301);
-        if (str_contains($s, 'retreat')) return redirect('/retreats/', 301);
-        return redirect('/'.Str::slug($s).'/therapies/', 301);
+        if (str_contains($s, 'sound-bath')) return redirect('/sound-healing/events', 301);
+        if ($s === 'reiki') return redirect('/reiki/therapies', 301);
+        if (str_contains($s, 'breathwork')) return redirect('/breathwork/workshops', 301);
+        if (str_contains($s, 'retreat')) return redirect('/retreats', 301);
+        return redirect('/'.Str::slug($s).'/therapies', 301);
     }
 }

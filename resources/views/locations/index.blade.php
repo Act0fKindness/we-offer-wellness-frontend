@@ -593,6 +593,98 @@
     input?.setAttribute('aria-expanded', 'false');
   }
 
+  function slugify(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function isGenericCounty(slug) {
+    return ['england', 'scotland', 'wales', 'northern-ireland', 'united-kingdom', 'uk', 'u-k', 'gb', 'great-britain'].indexOf(slug) !== -1;
+  }
+
+  function normalizeCountrySlug(country) {
+    const slug = slugify(country);
+    if (!slug || isGenericCounty(slug)) {
+      return 'united-kingdom';
+    }
+    return slug;
+  }
+
+  function normalizeCountySlug(county) {
+    const slug = slugify(county);
+    return slug && !isGenericCounty(slug) ? slug : '';
+  }
+
+  function canonicalLocationPath(place) {
+    const country = countryInput.value || contextLabel(place, 'country') || 'United Kingdom';
+    const county = countyInput.value || contextLabel(place, 'district') || contextLabel(place, 'region') || '';
+    const town = townInput.value || contextLabel(place, 'place') || place?.text || place?.place_name || '';
+
+    const countrySlug = normalizeCountrySlug(country);
+    let countySlug = normalizeCountySlug(county);
+    let townSlug = slugify(town);
+
+    if (townSlug === countrySlug) {
+      townSlug = '';
+    }
+
+    if (countySlug && townSlug && countySlug === townSlug) {
+      countySlug = '';
+    }
+
+    if (townSlug === 'london') {
+      countySlug = '';
+    }
+
+    const segments = ['/locations', countrySlug];
+    if (countySlug) segments.push(countySlug);
+    if (townSlug && townSlug !== countrySlug && townSlug !== countySlug) {
+      segments.push(townSlug);
+    }
+    return segments.join('/');
+  }
+
+  async function geocodeQuery(query) {
+    if (!token || !query) return null;
+    try {
+      const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`);
+      url.searchParams.set('access_token', token);
+      url.searchParams.set('autocomplete', 'true');
+      url.searchParams.set('limit', '1');
+      url.searchParams.set('types', 'place,postcode,locality,region,district,country');
+      url.searchParams.set('country', 'gb');
+      const res = await fetch(url.toString());
+      if (!res.ok) return null;
+      const data = await res.json();
+      return Array.isArray(data.features) && data.features.length ? data.features[0] : null;
+    } catch (error) {
+      console.warn('[locations] mapbox geocode failed', error);
+      return null;
+    }
+  }
+
+  async function submitToCanonicalLocation() {
+    const query = (input.value || '').trim();
+    if (!query) return;
+
+    let place = selected;
+    if (!place) {
+      place = await geocodeQuery(query);
+    }
+
+    if (place) {
+      window.location.href = canonicalLocationPath(place);
+      return;
+    }
+
+    const fallback = new URL(form.action || window.location.origin + '/locations');
+    fallback.searchParams.set('place', query);
+    window.location.href = fallback.toString();
+  }
+
   function showDropdown(items) {
     if (!dropdown) return;
     if (!items.length) {
@@ -690,21 +782,14 @@
       if (!Number.isFinite(index) || !results[index]) return;
       event.preventDefault();
       setSelection(results[index]);
-      form.submit();
+      submitToCanonicalLocation();
     });
   }
 
   if (form) {
     form.addEventListener('submit', function (event) {
-      const query = (input.value || '').trim();
-      if (!query) {
-        event.preventDefault();
-        return;
-      }
-
-      if (selected && selected.text && !postcodeInput.value) {
-        postcodeInput.value = selected.text;
-      }
+      event.preventDefault();
+      submitToCanonicalLocation();
     });
   }
 

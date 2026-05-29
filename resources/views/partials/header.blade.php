@@ -216,6 +216,30 @@
         'this_month' => false,
     ], $eventsMenuState['links'] ?? []);
     $eventsMenuVisible = $eventsMenuState['visible'] ?? true;
+
+    $therapyCategoryLinks = [
+        ['href' => '/therapies/reiki', 'label' => 'Reiki'],
+        ['href' => '/therapies/sound-healing', 'label' => 'Sound healing'],
+        ['href' => '/therapies/breathwork', 'label' => 'Breathwork'],
+        ['href' => '/therapies/massage', 'label' => 'Massage'],
+        ['href' => '/therapies/reflexology', 'label' => 'Reflexology'],
+        ['href' => '/therapies/meditation', 'label' => 'Meditation'],
+    ];
+
+    $therapyFormatLinks = [
+        ['href' => '/therapies', 'label' => 'All therapies'],
+        ['href' => '/classes', 'label' => 'Classes'],
+        ['href' => '/events', 'label' => 'Events'],
+        ['href' => '/workshops', 'label' => 'Workshops'],
+        ['href' => '/retreats', 'label' => 'Retreats'],
+        ['href' => '/gifts', 'label' => 'Gift cards'],
+    ];
+
+    $localLinks = [
+        ['href' => '/locations', 'label' => 'Locations'],
+        ['href' => '/online', 'label' => 'Online sessions'],
+        ['href' => '/online-near-me', 'label' => 'Find near you'],
+    ];
 @endphp
 <!-- Overlay shown behind header mega menu -->
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
@@ -238,7 +262,7 @@
             <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
                 <!-- Inline SVG logo -->
                 <span class="block" style="height:28px; display:inline-flex; align-items:center">
-                    <!-- BEGIN: WOW Logo -->
+                <!-- BEGIN: WOW Logo -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240.46 141.78" height="28" aria-hidden="true">
                       <defs><style>.cls-1-header {fill:#599d91}.cls-2-header {fill:#000}</style></defs>
                       <g><g>
@@ -270,15 +294,11 @@
             </a>
                 <nav class="hidden md:flex items-center gap-1">
                     <div class="nav-item"><a class="link-wow--nav" data-mega-menu="need" tabindex="0" href="/needs">By Need</a></div>
-                    <div class="nav-item"><a class="link-wow--nav" data-mega-menu="therapies" ex="0" href="/therapies">Therapies</a>
+                    <div class="nav-item"><a class="link-wow--nav" data-mega-menu="therapies" tabindex="0" href="/therapies">Therapies</a>
                     </div>
-                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/classes">Classes</a></div>
-                    @if($eventsMenuVisible)
-                        <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events">Events
-                            &amp; Workshops</a></div>
-                    @endif
-                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/online-near-me">Online &amp; Near
-                        Me</a></div>
+                    <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events">Classes &amp; Events</a></div>
+                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/locations">Locations</a></div>
+                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/online">Online</a></div>
                     <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="https://times.weofferwellness.co.uk">Mindful
                         Times</a></div>
                 </nav>
@@ -430,8 +450,8 @@
                         <div class="mega-quick-links mt-3">
                             <p class="mega-label">Quick links</p>
                             <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/online">Book online therapy</a></li>
-                                <li><a class="menu-link" href="/online-near-me">Book near you</a></li>
+                                <li><a class="menu-link" href="/online">Book online</a></li>
+                                <li><a class="menu-link" href="/locations">Find locations</a></li>
                                 <li><a class="menu-link" href="/gifts">View gift options</a></li>
                             </ul>
                         </div>
@@ -440,17 +460,19 @@
                 <!-- Therapies -->
                 <div data-menu="therapies" class="grid md:grid-cols-3 gap-6">
                     <div class="menu-col">
-                        <div class="mega-kicker mb-2">Popular therapies</div>
-                        <ul class="list-unstyled m-0 p-0" data-therapy-popular-list></ul>
+                        <div class="mega-kicker mb-2">Modality</div>
+                        <ul class="list-unstyled m-0 p-0">
+                            @foreach($therapyCategoryLinks as $link)
+                                <li><a class="menu-link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
+                            @endforeach
+                        </ul>
                     </div>
                     <div class="menu-col">
-                        <div class="mega-kicker mb-2">Browse</div>
+                        <div class="mega-kicker mb-2">Browse by format</div>
                         <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/therapies">All therapies</a></li>
-                            <li><a class="menu-link" href="/online">Online therapies</a></li>
-                            <li><a class="menu-link" href="/online-near-me">In-person therapies</a></li>
-                            <li><a class="menu-link" href="/events">Group sessions</a></li>
-                            <li><a class="menu-link" href="/search?format=online">1:1 sessions</a></li>
+                            @foreach($therapyFormatLinks as $link)
+                                <li><a class="menu-link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
+                            @endforeach
                         </ul>
                     </div>
                     <div class="menu-col menu-col--foryou">
@@ -458,8 +480,11 @@
                         <div data-therapy-default-block>
                             <p class="mega-label">Popular this week</p>
                             <ul class="list-unstyled m-0 p-0" data-therapy-default-popular></ul>
-                            <p class="mega-label">Need help?</p>
+                            <p class="mega-label">Browse local or online</p>
                             <ul class="list-unstyled m-0 p-0">
+                                @foreach($localLinks as $link)
+                                    <li><a class="menu-link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
+                                @endforeach
                                 <li><a class="menu-link" href="/help">Help centre</a></li>
                             </ul>
                         </div>
@@ -475,18 +500,18 @@
                     <!-- Events & Workshops -->
                     <div data-menu="events" class="grid md:grid-cols-3 gap-6">
                         <div class="menu-col">
-                            <div class="mega-kicker mb-2">Highlights</div>
+                            <div class="mega-kicker mb-2">Browse by format</div>
                             <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/events">Upcoming events &amp; workshops</a></li>
-                                @if($eventsMenuLinks['workshops'] ?? false)
-                                    <li><a class="menu-link" href="/workshops">Workshops</a></li>
-                                @endif
                                 @if($eventsMenuLinks['events'] ?? false)
                                     <li><a class="menu-link" href="/events">Events</a></li>
                                 @endif
                                 @if($eventsMenuLinks['classes'] ?? false)
                                     <li><a class="menu-link" href="/classes">Classes</a></li>
                                 @endif
+                                @if($eventsMenuLinks['workshops'] ?? false)
+                                    <li><a class="menu-link" href="/workshops">Workshops</a></li>
+                                @endif
+                                <li><a class="menu-link" href="/retreats">Retreats</a></li>
                             </ul>
                         </div>
                         @php
@@ -498,21 +523,10 @@
                         <div class="menu-col">
                             <div class="mega-kicker mb-2">Explore</div>
                             <ul class="list-unstyled m-0 p-0">
-                                @if($eventsMenuLinks['online'] ?? false)
-                                    <li><a class="menu-link" href="/events?format=online">Online</a></li>
-                                @endif
-                                @if($eventsMenuLinks['near_me'] ?? false)
-                                    <li><a class="menu-link" href="/events?format=in_person">Near me</a></li>
-                                @endif
-                                @if($eventsMenuLinks['this_week'] ?? false)
-                                    <li><a class="menu-link" href="/events?date=this_week">This week</a></li>
-                                @endif
-                                @if($eventsMenuLinks['this_month'] ?? false)
-                                    <li><a class="menu-link" href="/events?date=this_month">This month</a></li>
-                                @endif
-                                @if(!$hasExploreLinks)
-                                    <li><span class="menu-link menu-link--disabled" aria-disabled="true">New filters coming soon</span></li>
-                                @endif
+                                @foreach($localLinks as $link)
+                                    <li><a class="menu-link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
+                                @endforeach
+                                <li><a class="menu-link" href="/gifts">Gift cards</a></li>
                             </ul>
                         </div>
                         <div class="menu-col">
@@ -729,14 +743,30 @@
                 <ul class="mobile-menu__list">
                     <li><a class="mobile-menu__link" href="/needs">By Need</a></li>
                     <li><a class="mobile-menu__link" href="/therapies">Therapies</a></li>
-                    <li><a class="mobile-menu__link" href="/classes">Classes</a></li>
+                    <li><a class="mobile-menu__link" href="/events">Classes &amp; Events</a></li>
+                    @foreach($localLinks as $link)
+                        <li><a class="mobile-menu__link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
+                    @endforeach
+                    <li><a class="mobile-menu__link" href="/gifts">Gifts</a></li>
                     @if($eventsMenuVisible)
-                        <li><a class="mobile-menu__link" href="/events">Events &amp; Workshops</a></li>
+                        <li><a class="mobile-menu__link" href="/workshops">Workshops</a></li>
+                        <li><a class="mobile-menu__link" href="/retreats">Retreats</a></li>
                     @endif
-                    <li><a class="mobile-menu__link" href="/online-near-me">Online &amp; Near Me</a></li>
                     <li><a class="mobile-menu__link" href="https://times.weofferwellness.co.uk">Mindful Times</a></li>
                     <li><a class="mobile-menu__link" href="/cart">Cart</a></li>
                 </ul>
+                <div class="mobile-menu__section">
+                    <div class="mobile-menu__section-title">Modality</div>
+                    <ul class="mobile-menu__list">
+                        <li><a class="mobile-menu__link" href="/therapies/reiki">Reiki</a></li>
+                        <li><a class="mobile-menu__link" href="/therapies/sound-healing">Sound healing</a></li>
+                        <li><a class="mobile-menu__link" href="/therapies/breathwork">Breathwork</a></li>
+                        <li><a class="mobile-menu__link" href="/therapies/massage">Massage</a></li>
+                        <li><a class="mobile-menu__link" href="/therapies/reflexology">Reflexology</a></li>
+                        <li><a class="mobile-menu__link" href="/therapies/meditation">Meditation</a></li>
+                        <li><a class="mobile-menu__link" href="/classes?category=yoga">Yoga classes</a></li>
+                    </ul>
+                </div>
                 <div class="mobile-menu__section">
                     <div class="mobile-menu__section-title">Help &amp; Info</div>
                     <ul class="mobile-menu__list">

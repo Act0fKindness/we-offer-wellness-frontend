@@ -459,7 +459,7 @@
         <span>Browse therapies →</span>
       </a>
 
-      <a href="{{ url('/feel') }}" class="wow-quick-card">
+      <a href="{{ url('/needs') }}" class="wow-quick-card">
         <div>
           <h3>By Need</h3>
           <p>Find support for stress, sleep, pain, energy and emotional wellbeing.</p>
@@ -520,6 +520,104 @@
       if (!dropdown) return;
       dropdown.hidden = true;
       dropdown.innerHTML = '';
+    }
+
+    function slugify(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function isGenericCounty(slug) {
+      return ['england', 'scotland', 'wales', 'northern-ireland', 'united-kingdom', 'uk', 'u-k', 'gb', 'great-britain'].indexOf(slug) !== -1;
+    }
+
+    function normalizeCountrySlug(country) {
+      var slug = slugify(country);
+      if (!slug || isGenericCounty(slug)) {
+        return 'united-kingdom';
+      }
+      return slug;
+    }
+
+    function normalizeCountySlug(county) {
+      var slug = slugify(county);
+      return slug && !isGenericCounty(slug) ? slug : '';
+    }
+
+    function contextValue(place, prefix) {
+      var context = Array.isArray(place && place.context) ? place.context : [];
+      var match = context.find(function (item) {
+        return String(item && item.id || '').indexOf(prefix + '.') === 0;
+      });
+      return match && match.text ? String(match.text) : '';
+    }
+
+    function canonicalLocationPath(place) {
+      var country = contextValue(place, 'country') || 'United Kingdom';
+      var county = contextValue(place, 'district') || contextValue(place, 'region') || '';
+      var town = contextValue(place, 'place') || String(place && place.text ? place.text : '').trim() || String(place && place.place_name ? place.place_name : '').split(',')[0] || '';
+
+      var countrySlug = normalizeCountrySlug(country);
+      var countySlug = normalizeCountySlug(county);
+      var townSlug = slugify(town);
+
+      if (townSlug === countrySlug) {
+        townSlug = '';
+      }
+
+      if (countySlug && townSlug && countySlug === townSlug) {
+        countySlug = '';
+      }
+
+      if (townSlug === 'london') {
+        countySlug = '';
+      }
+
+      var segments = ['/locations', countrySlug];
+      if (countySlug) segments.push(countySlug);
+      if (townSlug && townSlug !== countrySlug && townSlug !== countySlug) {
+        segments.push(townSlug);
+      }
+      return segments.join('/');
+    }
+
+    async function geocodeQuery(query) {
+      if (!token || !query) return null;
+      try {
+        var url = new URL('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(query) + '.json');
+        url.searchParams.set('access_token', token);
+        url.searchParams.set('autocomplete', 'true');
+        url.searchParams.set('limit', '1');
+        url.searchParams.set('types', 'place,postcode,locality,region,district,country');
+        url.searchParams.set('country', 'gb');
+        var res = await fetch(url.toString());
+        if (!res.ok) return null;
+        var data = await res.json();
+        return Array.isArray(data.features) && data.features.length ? data.features[0] : null;
+      } catch (error) {
+        console.warn('[online-near-me] mapbox geocode error', error);
+        return null;
+      }
+    }
+
+    async function submitToCanonicalLocation() {
+      var query = (input.value || '').trim();
+      if (!query) return;
+      var place = selected;
+      if (!place) {
+        place = await geocodeQuery(query);
+      }
+      if (place) {
+        window.location.href = canonicalLocationPath(place);
+        return;
+      }
+
+      var fallback = new URL(form.action || window.location.origin + '/locations');
+      fallback.searchParams.set('place', query);
+      window.location.href = fallback.toString();
     }
 
     function showDropdown(items) {
@@ -586,7 +684,7 @@
         selected = results[index];
         input.value = selected.text || selected.place_name || input.value;
         hideDropdown();
-        form.submit();
+        submitToCanonicalLocation();
       });
     }
 
@@ -602,17 +700,8 @@
     });
 
     form.addEventListener('submit', function (event) {
-      var query = input ? input.value.trim() : '';
-      if (!query) return;
-
       event.preventDefault();
-      var url = new URL(form.action || window.location.origin + '/locations');
-      url.searchParams.set('place', query);
-      url.searchParams.set('postcode', query);
-      if (selected && selected.text && !query) {
-        url.searchParams.set('place', selected.text);
-      }
-      window.location.href = url.toString();
+      submitToCanonicalLocation();
     });
   });
 </script>

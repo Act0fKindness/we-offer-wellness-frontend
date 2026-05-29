@@ -7,6 +7,7 @@ use App\Models\OfferingV3;
 use App\Models\ProductCategory;
 use App\Models\Review;
 use App\Models\VendorDetail;
+use App\Services\BookingContextBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -126,14 +127,14 @@ class LandingController extends Controller
         }
 
         $slug = $this->slugify($cat->name);
-        $products = $this->queryProducts(null, $cat->id, $request)->limit(12)->get()->map(fn ($p) => $this->transformProduct($p));
+        $products = $this->queryProducts(null, $cat->id, $request)->limit(12)->get();
 
         return view('landing.show', [
             'seo' => [
                 'title' => $cat->name . ' | We Offer Wellness',
                 'description' => $cat->name . ' therapies, classes, events, workshops and retreats on We Offer Wellness.',
-                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/' . $slug . '/'),
+                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
+                'canonical' => url('/' . $slug),
             ],
             'landing' => [
                 'kicker' => 'Category',
@@ -145,7 +146,7 @@ class LandingController extends Controller
                     'Browse by format or location',
                 ],
                 'primary_cta' => ['label' => 'Browse ' . $cat->name, 'href' => '#' . 'landing-products'],
-                'secondary_cta' => ['label' => 'View therapies', 'href' => '/' . $slug . '/therapies/'],
+                'secondary_cta' => ['label' => 'View therapies', 'href' => '/' . $slug . '/therapies'],
             ],
             'type' => 'therapies',
             'categories' => ProductCategory::query()
@@ -183,7 +184,7 @@ class LandingController extends Controller
         }
 
         $slug = $this->slugify($cat->name);
-        $products = $this->queryProducts($type, $cat->id, $request)->limit(12)->get()->map(fn ($p) => $this->transformProduct($p));
+        $products = $this->queryProducts($type, $cat->id, $request)->limit(12)->get();
 
         $title = $cat->name . ' ' . ucfirst($type);
 
@@ -191,8 +192,8 @@ class LandingController extends Controller
             'seo' => [
                 'title' => $title . ' | We Offer Wellness',
                 'description' => $cat->name . ' ' . ucfirst($type) . ' options on We Offer Wellness.',
-                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/' . $slug . '/' . $type . '/'),
+                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
+                'canonical' => url('/' . $slug . '/' . $type),
             ],
             'landing' => [
                 'kicker' => ucfirst($type),
@@ -204,7 +205,7 @@ class LandingController extends Controller
                     'Popular results surfaced first',
                 ],
                 'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
-                'secondary_cta' => ['label' => 'View category', 'href' => '/' . $slug . '/'],
+                'secondary_cta' => ['label' => 'View category', 'href' => '/' . $slug],
             ],
             'type' => $type,
             'categories' => ProductCategory::query()
@@ -244,15 +245,15 @@ class LandingController extends Controller
 
         $slug = $this->slugify($cat->name);
         $locationName = trim(str_replace(['-', '+'], ' ', $location));
-        $products = $this->queryProducts($type, $cat->id, $request, $locationName)->limit(12)->get()->map(fn ($p) => $this->transformProduct($p));
+        $products = $this->queryProducts($type, $cat->id, $request, $locationName)->limit(12)->get();
         $title = $cat->name . ' ' . ucfirst($type) . ' in ' . ucwords($locationName);
 
         return view('landing.show', [
             'seo' => [
                 'title' => $title . ' | We Offer Wellness',
                 'description' => $cat->name . ' ' . ucfirst($type) . ' in ' . ucwords($locationName) . '.',
-                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/' . $slug . '/' . $type . '/' . Str::slug($locationName) . '/'),
+                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
+                'canonical' => url('/' . $slug . '/' . $type . '/' . Str::slug($locationName)),
             ],
             'landing' => [
                 'kicker' => ucfirst($type),
@@ -781,6 +782,12 @@ class LandingController extends Controller
             ->withAvg('reviews', 'rating')
             ->with(['media', 'options.values', 'category']);
 
+        $q->where(function ($visible) {
+            $visible->whereHas('status', function ($qs) {
+                $qs->whereIn('status', ['live', 'approved']);
+            })->orWhereNull('product_status_id');
+        });
+
         if ($categoryId) {
             $q->where('category_id', $categoryId);
         }
@@ -863,6 +870,7 @@ class LandingController extends Controller
         return [
             'id' => $p->id,
             'title' => $p->title,
+            'source_version' => 'legacy',
             'type' => $p->product_type ?: 'experience',
             'category' => $p->category ? ['id'=>$p->category->id,'name'=>$p->category->name] : null,
             'mode' => $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null),
@@ -875,6 +883,7 @@ class LandingController extends Controller
             'review_count' => (int)($p->reviews_count ?? 0),
             'image' => method_exists($p, 'getFirstImageUrl') ? $p->getFirstImageUrl() : null,
             'tags' => $p->tags_list ? array_map('trim', explode(',', $p->tags_list)) : [],
+            'booking_flow' => $this->legacyProductBookingFlow($p),
             'url' => $this->canonicalOfferingUrl($p->id, $slug),
         ];
     }
@@ -888,6 +897,17 @@ class LandingController extends Controller
         if (str_contains($t, 'class')) return 'classes';
         if (str_contains($t, 'retreat')) return 'retreats';
         if (str_contains($t, 'gift') || str_contains($tags, 'gift')) return 'gifts';
+        return 'therapies';
+    }
+
+    private function offeringTypeSegment(string $value): string
+    {
+        $type = strtolower(trim($value));
+        if (str_contains($type, 'workshop')) return 'workshops';
+        if (str_contains($type, 'event')) return 'events';
+        if (str_contains($type, 'class')) return 'classes';
+        if (str_contains($type, 'retreat')) return 'retreats';
+        if (str_contains($type, 'gift')) return 'gifts';
         return 'therapies';
     }
 
@@ -940,6 +960,8 @@ class LandingController extends Controller
 
         // Eager-load options + values + variants for the buy box
         $product->loadMissing(['options.values', 'variants']);
+        $priceOptionId = $this->resolveRequestedPriceOptionId($request);
+        $variantLabel = $this->resolveRequestedVariantLabel($product, $request);
 
         // Build options array and a lookup of value id -> label for variant option_ids mapping
         $valueLookup = [];
@@ -1117,6 +1139,8 @@ class LandingController extends Controller
         $data = [
             'id' => $product->id,
             'title' => $product->title,
+            'source_version' => 'legacy',
+            'booking_flow' => $this->legacyProductBookingFlow($product, $priceOptionId, $variantLabel),
             'type' => $product->product_type ?: 'experience',
             'category' => $product->category ? ['id'=>$product->category->id,'name'=>$product->category->name] : null,
             'rating' => $ratingFallback,
@@ -1167,6 +1191,7 @@ class LandingController extends Controller
             })->values(),
             'client_reviews' => $clientReviews,
             'url' => $this->canonicalOfferingUrl($product->id, $slug),
+            'booking_variant_label' => $variantLabel,
         ];
 
         return view('offering.show', [
@@ -1379,6 +1404,7 @@ class LandingController extends Controller
             'id' => $offering->id,
             'title' => $offering->title,
             'source_version' => 'v3',
+            'booking_flow' => $this->offeringBookingFlow($offering),
             'type' => $offering->type?->name ?: 'experience',
             'category' => $offering->category ? ['id' => $offering->category->id, 'name' => $offering->category->name] : null,
             'rating' => null,
@@ -1458,6 +1484,117 @@ class LandingController extends Controller
     private function canonicalOfferingUrl(int|string $id, string $slug): string
     {
         return url('/offerings/' . $id . '-' . $this->slugify($slug));
+    }
+
+    private function legacyProductBookingFlow(Product $product, ?int $priceOptionId = null, ?string $variantLabel = null): string
+    {
+        try {
+            $context = app(BookingContextBuilder::class)->buildForProduct($product, $priceOptionId, $variantLabel);
+            $slotsByDay = $context['slotsByDay'] ?? [];
+            foreach ($slotsByDay as $day) {
+                if (is_array($day['slots'] ?? null) && count($day['slots']) > 0) {
+                    return 'live';
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fall back to flexible when the availability builder cannot resolve the product.
+        }
+
+        return 'flexible';
+    }
+
+    private function resolveRequestedPriceOptionId(\Illuminate\Http\Request $request): ?int
+    {
+        $value = $request->input('variant');
+        if ($value === null || $value === '') {
+            $value = $request->query('variant');
+        }
+
+        if ($value === null || $value === '') {
+            $value = $request->input('price_option_id');
+        }
+        if ($value === null || $value === '') {
+            $value = $request->query('price_option_id');
+        }
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (preg_match('/po_(\d+)/i', (string) $value, $match)) {
+            return (int) $match[1];
+        }
+
+        return filter_var($value, FILTER_VALIDATE_INT) === false ? null : (int) $value;
+    }
+
+    private function resolveRequestedVariantLabel(Product $product, \Illuminate\Http\Request $request): ?string
+    {
+        $priceOptionId = $this->resolveRequestedPriceOptionId($request);
+        if (! $priceOptionId) {
+            return null;
+        }
+
+        $variant = null;
+        if ($product->relationLoaded('variants')) {
+            $variant = $product->variants->first(fn ($item) => (int) $item->id === (int) $priceOptionId);
+        }
+
+        if (! $variant) {
+            $variant = DB::table('product_variants')
+                ->where('product_id', $product->id)
+                ->where('id', $priceOptionId)
+                ->first();
+        }
+
+        if (! $variant) {
+            return null;
+        }
+
+        $parts = [];
+        $append = static function (&$parts, mixed $value): void {
+            $text = trim((string) $value);
+            if ($text !== '') {
+                $parts[] = $text;
+            }
+        };
+
+        $options = $variant->options ?? null;
+        if (is_array($options)) {
+            foreach ($options as $optionValue) {
+                $append($parts, $optionValue);
+            }
+        } elseif (is_string($options) && $options !== '') {
+            $decoded = json_decode($options, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $optionValue) {
+                    $append($parts, $optionValue);
+                }
+            }
+        }
+
+        if (empty($parts) && ! empty($variant->title)) {
+            $append($parts, $variant->title);
+        }
+
+        $metadata = is_array($variant->metadata ?? null) ? $variant->metadata : [];
+        foreach (['session', 'sessions', 'duration', 'duration_minutes', 'duration_mins'] as $key) {
+            if (! empty($metadata[$key])) {
+                $append($parts, $metadata[$key]);
+            }
+        }
+
+        $parts = array_values(array_filter($parts));
+        return $parts ? implode(' • ', $parts) : null;
+    }
+
+    private function offeringBookingFlow(OfferingV3 $offering): string
+    {
+        try {
+            return DB::table('offering_schedule')->where('offering_id', $offering->id)->exists() ? 'live' : 'flexible';
+        } catch (\Throwable $e) {
+            return 'flexible';
+        }
     }
 
     private function practitionerPayload(?VendorDetail $vendor, ?\App\Models\User $user = null): ?array

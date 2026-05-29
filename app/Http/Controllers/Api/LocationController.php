@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\VendorLocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class LocationController extends Controller
 {
@@ -12,9 +13,10 @@ class LocationController extends Controller
     {
         $limit = max(1, min((int)$request->integer('limit', 12), 100));
         $search = trim((string)$request->query('search', $request->query('q', '')));
+        $countyColumn = $this->countyColumn();
 
         $q = VendorLocation::query()
-            ->selectRaw('city, county_region as region, country, COUNT(*) as c')
+            ->selectRaw("city, {$countyColumn} as region, country, COUNT(*) as c")
             ->whereNotNull('city')
             ->where('city', '!=', '');
 
@@ -22,12 +24,12 @@ class LocationController extends Controller
             $like = '%'.$search.'%';
             $q->where(function ($qb) use ($like) {
                 $qb->where('city', 'like', $like)
-                   ->orWhere('county_region', 'like', $like)
+                   ->orWhere($this->countyColumn(), 'like', $like)
                    ->orWhere('country', 'like', $like);
             });
         }
 
-        $rows = $q->groupBy('city', 'county_region', 'country')
+        $rows = $q->groupBy('city', $countyColumn, 'country')
             ->orderByDesc('c')
             ->limit($limit)
             ->get();
@@ -73,5 +75,24 @@ class LocationController extends Controller
         }
 
         return response()->json(['status' => 'success', 'items' => $items]);
+    }
+
+    private function countyColumn(): string
+    {
+        static $column = null;
+
+        if ($column !== null) {
+            return $column;
+        }
+
+        if (Schema::hasColumn('vendor_locations', 'county_region')) {
+            return $column = 'county_region';
+        }
+
+        if (Schema::hasColumn('vendor_locations', 'county')) {
+            return $column = 'county';
+        }
+
+        return $column = 'county';
     }
 }

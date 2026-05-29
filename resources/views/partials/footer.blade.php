@@ -80,7 +80,7 @@
                 <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
             </a>
         </div>
-        <div class="links-col links-col--three">
+        <div class="links-col links-col--four">
             <div class="col">
                 <div class="title">Explore</div>
                 <ul>
@@ -119,6 +119,16 @@
                     <li><a href="/contact?topic=feedback">Contact support</a></li>
                 </ul>
             </div>
+            <div class="col">
+                <div class="title">Popular searches</div>
+                <ul>
+                    <li><a href="/reiki-near-me">Reiki near me</a></li>
+                    <li><a href="/sound-healing-near-me">Sound healing near me</a></li>
+                    <li><a href="/holistic-therapy-near-me">Holistic therapy near me</a></li>
+                    <li><a href="/wellness-classes-near-me">Wellness classes near me</a></li>
+                    <li><a href="/holistic-therapies-uk">Holistic therapies UK</a></li>
+                </ul>
+            </div>
         </div>
         <div class="footer-bottom mb-3"><p>© 2026 We Offer Wellness</p>
             <div class="legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookies</a>
@@ -129,7 +139,7 @@
     <style>
         .wow-footer .links-col { grid-template-columns: repeat(1, minmax(0, 1fr)); }
         @media (min-width: 768px) {
-            .wow-footer .links-col.links-col--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .wow-footer .links-col.links-col--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         }
         .wow-footer .links-col .col--full { grid-column: 1 / -1; }
         .wow-footer .safety-card { display:flex; flex-direction:column; gap:10px; padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.15); text-align:left; margin-bottom:30px; align-items:flex-start; }
