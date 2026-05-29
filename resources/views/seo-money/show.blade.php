@@ -625,6 +625,57 @@
     });
   }
 
+  function resolveCatalogLocation({ city = '', region = '', country = '', name = '' } = {}) {
+    const cityNeedle = normalizeText(city);
+    const regionNeedle = normalizeText(region);
+    const countryNeedle = normalizeText(country);
+    const nameNeedle = normalizeText(name);
+
+    let best = null;
+    let bestScore = 0;
+
+    catalog.forEach((item) => {
+      const path = String(item?.path || '');
+      if (!path || item?.online) return;
+
+      const itemCity = normalizeText(item?.city || item?.town || item?.title || item?.label || '');
+      const itemRegion = normalizeText(item?.county || item?.district || item?.region || '');
+      const itemCountry = normalizeText(item?.country || '');
+      const itemTitle = normalizeText([item?.title, item?.label, item?.slug].filter(Boolean).join(' '));
+
+      let score = 0;
+
+      if (cityNeedle && itemCity) {
+        if (itemCity === cityNeedle) score += 12;
+        else if (itemCity.includes(cityNeedle) || cityNeedle.includes(itemCity)) score += 8;
+      }
+
+      if (regionNeedle && itemRegion) {
+        if (itemRegion === regionNeedle) score += 6;
+        else if (itemRegion.includes(regionNeedle) || regionNeedle.includes(itemRegion)) score += 4;
+      }
+
+      if (countryNeedle && itemCountry) {
+        if (itemCountry === countryNeedle) score += 3;
+        else if (itemCountry.includes(countryNeedle) || countryNeedle.includes(itemCountry)) score += 1;
+      }
+
+      if (nameNeedle && itemTitle) {
+        if (itemTitle === nameNeedle) score += 5;
+        else if (itemTitle.includes(nameNeedle) || nameNeedle.includes(itemTitle)) score += 2;
+      }
+
+      if (cityNeedle && normalizeText(path).includes(cityNeedle)) score += 2;
+      if (regionNeedle && normalizeText(path).includes(regionNeedle)) score += 1;
+      if (score > bestScore) {
+        bestScore = score;
+        best = item;
+      }
+    });
+
+    return best;
+  }
+
   function setSelectionContext(item) {
     const context = Array.isArray(item?.context) ? item.context : [];
     const place = item?.text || item?.title || item?.place_name || input?.value || '';
@@ -633,34 +684,12 @@
     const country = item?.country || context.find((c) => String(c?.id || '').startsWith('country.'))?.text || '';
     const lat = item?.center?.[1] ?? item?.geometry?.coordinates?.[1] ?? item?.lat ?? '';
     const lng = item?.center?.[0] ?? item?.geometry?.coordinates?.[0] ?? item?.lng ?? '';
-    const catalogMatch = Array.isArray(catalog) ? catalog.find((entry) => {
-      const haystack = normalizeText([
-        entry?.title,
-        entry?.label,
-        entry?.country,
-        entry?.county,
-        entry?.district,
-        entry?.region,
-        entry?.city,
-        entry?.town,
-        entry?.slug,
-        item?.place_name,
-        item?.text,
-        city,
-        region,
-        country,
-      ].filter(Boolean).join(' '));
-
-      const needle = normalizeText([
-        item?.place_name,
-        item?.text,
-        city,
-        region,
-        country,
-      ].filter(Boolean).join(' '));
-
-      return needle && haystack.includes(needle);
-    }) : null;
+    const catalogMatch = resolveCatalogLocation({
+      city,
+      region,
+      country,
+      name: item?.place_name || item?.text || place,
+    });
 
     if (input) input.value = place;
     if (cityInput) cityInput.value = city || '';
