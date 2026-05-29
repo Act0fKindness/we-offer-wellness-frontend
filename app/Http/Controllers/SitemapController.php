@@ -154,6 +154,30 @@ class SitemapController extends Controller
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 
+    public function indexFile()
+    {
+        $base = url('');
+        $now = now()->toAtomString();
+        $sitemaps = [
+            $base . '/sitemap.xml',
+            $base . '/sitemap-pages.xml',
+        ];
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+        foreach ($sitemaps as $sitemap) {
+            $xml .= '<sitemap>'
+                . '<loc>' . htmlspecialchars($sitemap, ENT_XML1) . '</loc>'
+                . '<lastmod>' . htmlspecialchars($now, ENT_XML1) . '</lastmod>'
+                . '</sitemap>';
+        }
+
+        $xml .= '</sitemapindex>';
+
+        return response($xml, 200)->header('Content-Type', 'application/xml');
+    }
+
     public function pages()
     {
         $base = url('');

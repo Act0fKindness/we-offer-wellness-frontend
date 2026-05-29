@@ -83,4 +83,21 @@ return [
         'region' => env('GOOGLE_REGION', 'uk'),
     ],
 
+    'search_console' => [
+        'property_url' => env('GOOGLE_SEARCH_CONSOLE_PROPERTY_URL'),
+        'sitemap_url' => env('GOOGLE_SEARCH_CONSOLE_SITEMAP_URL', rtrim(env('APP_URL', ''), '/') . '/sitemap-index.xml'),
+        'sitemap_urls' => env(
+            'GOOGLE_SEARCH_CONSOLE_SITEMAP_URLS',
+            implode(',', array_filter([
+                rtrim(env('APP_URL', ''), '/') . '/sitemap-index.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemap.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemap-pages.xml',
+            ]))
+        ),
+        'client_id' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET'),
+        'client_credentials_file' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_CREDENTIALS_FILE'),
+        'refresh_token' => env('GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN'),
+    ],
+
 ];

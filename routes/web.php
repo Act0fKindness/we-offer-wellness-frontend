@@ -418,6 +418,7 @@ Route::get('/partners', [StaticPagesController::class, 'partners']);
 // XML sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
+Route::get('/sitemap-index.xml', [SitemapController::class, 'indexFile']);
 Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
 Route::get('/search-console/oauth/callback', function (Request $request) {
     $code = trim((string) $request->query('code', ''));
