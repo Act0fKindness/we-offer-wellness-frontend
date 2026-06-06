@@ -5,6 +5,14 @@
 @section('meta_robots', $seo['robots'] ?? 'index,follow')
 
 @section('content')
+@include('partials.breadcrumbs', [
+    'crumbs' => [
+        ['label' => 'Home', 'url' => url('/')],
+        ['label' => 'Mindful Times'],
+    ],
+    'schemaUrl' => url('/mindful-times'),
+])
+
 <section class="section">
   <div class="container-page">
     <h1 class="display-5 mb-3">Mindful Times</h1>
@@ -15,4 +23,3 @@
   @include('home.sections.mindful_times_ribbon')
   @include('home.sections.partners')
 @endsection
-

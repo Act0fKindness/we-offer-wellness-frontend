@@ -52,11 +52,7 @@ function detectMarket(){
   return 'uk'
 }
 const market = computed(() => detectMarket())
-const homeTitle = computed(() =>
-  market.value === 'us'
-    ? `Wellness Therapies That Work | ${appName}`
-    : `Holistic Therapy That Works | ${appName}`
-)
+const homeTitle = computed(() => `Holistic Therapies That Work for You | ${appName}`)
 const metaDescription = 'Holistic therapy, done right: new classes daily, frequent workshops & events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®.'
 
 const heroSecondaryCopy = ref('Therapies, classes, and workshops curated by practitioners you can trust so you can feel better, faster.')
@@ -77,32 +73,32 @@ const showMindfulTimesRibbon = true
 const shopCategories = [
   {
     title: 'Breathwork',
-    href: '/search?type=therapy&what=breathwork',
+    href: '/breathwork',
     img: 'https://images.unsplash.com/photo-1520880867055-1e30d1cb001c?q=80&w=1200&auto=format&fit=crop',
   },
   {
     title: 'Sound Healing',
-    href: '/search?type=therapy&what=sound%20bath',
+    href: '/sound-healing',
     img: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1200&auto=format&fit=crop',
   },
   {
     title: 'Massage Therapy',
-    href: '/therapies/massage-therapy',
+    href: '/massage',
     img: 'https://images.unsplash.com/photo-1612152918775-49ed1e1c1d1f?q=80&w=1200&auto=format&fit=crop',
   },
   {
     title: 'Yoga & Movement',
-    href: '/classes?category=yoga',
+    href: '/yoga',
     img: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1200&auto=format&fit=crop',
   },
   {
     title: 'Reiki & Energy',
-    href: '/therapies/reiki',
+    href: '/reiki',
     img: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1200&auto=format&fit=crop',
   },
   {
     title: 'Coaching & Mindset',
-    href: '/search?type=therapy&what=coaching',
+    href: '/coaching',
     img: 'https://images.unsplash.com/photo-1497352305433-9b09be07364b?q=80&w=1200&auto=format&fit=crop',
   },
 ]
@@ -111,21 +107,6 @@ const heroStats = [
   { label: 'sessions booked', value: '12k+' },
   { label: 'secure checkout', value: '100%' },
 ]
-
-const locationLandingSlugs = {
-  online: 'online',
-  london: 'london',
-  manchester: 'manchester',
-  birmingham: 'birmingham',
-  leeds: 'leeds',
-  bristol: 'bristol',
-  brighton: 'brighton',
-  liverpool: 'liverpool',
-  glasgow: 'glasgow',
-  edinburgh: 'edinburgh',
-  cardiff: 'cardiff',
-  kent: 'kent',
-}
 
 const quickLocationLinks = [
   { label: 'London', href: '/locations/london' },
@@ -142,21 +123,6 @@ function csrfToken() {
   } catch {
     return ''
   }
-}
-
-function normaliseLocationKey(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/,\s*(united kingdom|uk|england|scotland|wales|northern ireland)$/i, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-}
-
-function inferLocationSlug(placeName) {
-  const normalised = normaliseLocationKey(placeName)
-  if (!normalised) return ''
-  const key = normalised.split(' ')[0]
-  return locationLandingSlugs[key] || locationLandingSlugs[normalised] || ''
 }
 
 function mapboxContextValue(place, prefix) {
@@ -208,15 +174,9 @@ async function submitHomeLocation() {
   homeLocationError.value = ''
   try {
     const place = homeLocationSelection.value || { name: placeName }
-    const slug = inferLocationSlug(place.name || placeName)
-
     await persistLocationChoice(place)
 
-    const target = slug
-      ? `/locations/${slug}`
-      : `/search?where=${encodeURIComponent(placeName)}&mode=in-person`
-
-    window.location.href = target
+    window.location.href = `/search?where=${encodeURIComponent(placeName)}&mode=in-person`
   } finally {
     homeLocationBusy.value = false
   }
@@ -267,10 +227,7 @@ async function useMyHomeLocation() {
     homeLocationSelection.value = place
     await persistLocationChoice({ ...place, region, country })
 
-    const slug = inferLocationSlug(name)
-    window.location.href = slug
-      ? `/locations/${slug}`
-      : `/near-me?city=${encodeURIComponent(name)}`
+    window.location.href = `/search?where=${encodeURIComponent(name)}&mode=in-person`
   } catch (error) {
     console.warn('[home] geolocation failed', error)
     homeLocationError.value = 'We could not read your location. Try typing your city or postcode.'
@@ -319,6 +276,7 @@ function fmtCount(n){
   if (num <= 0) return '0'
   return new Intl.NumberFormat(undefined).format(num) + '+'
 }
+const reviewCountText = computed(() => new Intl.NumberFormat(undefined).format(Math.max(0, Number(reviewStats.value.verified_count || reviewStats.value.review_count || 0))))
 
 // Feelings-first tiles: title = desired state; chip = pain point label
 const problems = [
@@ -395,11 +353,17 @@ const weekEnd = endOfWeek()
 const soonEnd = (() => { const d = new Date(weekEnd); d.setDate(d.getDate()+30); return d })()
 
 function toDate(iso){ try { return iso ? new Date(iso) : null } catch { return null } }
-function deriveStart(item){ return toDate(item?.date) || toDate(item?.start_date) || null }
+function parseEventDateTime(dateValue, timeValue) {
+  if (!dateValue) return null
+  if (!timeValue) return toDate(dateValue)
+  const raw = /[T\s]/.test(dateValue) ? dateValue : `${dateValue}T${timeValue}:00`
+  return toDate(raw)
+}
+function deriveStart(item){ return parseEventDateTime(item?.date || item?.start_date || null, item?.start_time) || toDate(item?.date) || toDate(item?.start_date) || null }
 function isLiveNow(start){ if (!start) return false; const now = new Date(); const end = new Date(start.getTime() + 75*60*1000); return now >= start && now <= end }
 function overlapsWeek(item){
-  const s = toDate(item.start_date || item.date)
-  const e = toDate(item.end_date || item.date)
+  const s = parseEventDateTime(item.start_date || item.date || null, item.start_time) || toDate(item.start_date || item.date)
+  const e = parseEventDateTime(item.end_date || item.start_date || item.date || null, item.end_time) || toDate(item.end_date || item.date)
   if (!s && !e) return false
   const a = s || e, b = e || s
   const from = a || new Date(0)
@@ -407,7 +371,7 @@ function overlapsWeek(item){
   return from <= weekEnd && to >= weekStart
 }
 function whenLabel(item){
-  const dt = toDate(item.date || item.start_date || null)
+  const dt = parseEventDateTime(item.date || item.start_date || null, item.start_time) || toDate(item.date || item.start_date || null)
   if (!dt) return ''
   const today = new Date(); today.setHours(0,0,0,0)
   const d = new Date(dt); d.setSeconds(0)
@@ -426,7 +390,7 @@ const weekItems = computed(() => {
     return true
   })
   // sort by soonest date within the week
-  filtered.sort((a,b) => new Date(a.date || a.start_date || 0) - new Date(b.date || b.start_date || 0))
+  filtered.sort((a,b) => (deriveStart(a) || new Date(0)) - (deriveStart(b) || new Date(0)))
   return filtered.slice(0, 5)
 })
 const soonItems = computed(() => {
@@ -437,11 +401,11 @@ const soonItems = computed(() => {
     ...retreatsAll.value,
   ]
   const list = merged.filter(it => {
-    const d = toDate(it.date || it.start_date || null)
+    const d = deriveStart(it)
     if (!d) return false
     return d > weekEnd && d <= soonEnd
   })
-  list.sort((a,b) => new Date(a.date || a.start_date || 0) - new Date(b.date || b.start_date || 0))
+  list.sort((a,b) => (deriveStart(a) || new Date(0)) - (deriveStart(b) || new Date(0)))
   return list.slice(0, 5).map(it => ({ ...it, when: whenLabel(it) }))
 })
 const emptyStates = computed(() => ({
@@ -824,7 +788,7 @@ onBeforeUnmount(() => {
     <section v-if="homeLoadError" class="py-2">
       <div class="container">
         <div class="card p-4 text-ink-700" style="background:#f8fafc;">
-          Some sections are still loading. Refresh the page or explore another category while we fetch the latest offerings.
+          Some sections are still loading. Refresh the page or explore another modality while we fetch the latest offerings.
         </div>
       </div>
     </section>
@@ -898,6 +862,160 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
+    <!-- Featured categories grid (optional) can go here if desired -->
+
+    <!-- Trust & credibility -->
+    <section class="section">
+      <div class="container-page">
+        <section class="wow-safe-card" aria-label="Safety and review proof">
+          <div class="wow-safe-intro">
+            <p class="wow-kicker">Feel safe to try</p>
+            <h2>You’re in safe hands</h2>
+            <p>Clear information, reviewed offerings and real feedback from people who have booked through We Offer Wellness®. So choosing support feels simple - not like decoding a wellness menu written by a crystal ball.</p>
+
+            <div class="wow-safe-checks" aria-label="Trust signals">
+              <span class="wow-tag wow-tag--green">Verified reviews</span>
+              <span class="wow-tag wow-tag--blue">Clear pricing</span>
+              <span class="wow-tag">Practitioner-led</span>
+            </div>
+          </div>
+
+          <div class="wow-safe-proof">
+            <article class="wow-score-card">
+              <div class="wow-score-heading">
+                <span class="wow-score-icon" aria-hidden="true">★</span>
+                <strong>5.0/5</strong>
+              </div>
+              <span>Average rating from verified reviews</span>
+            </article>
+
+            <article class="wow-score-card">
+              <div class="wow-score-heading">
+                <span class="wow-score-icon wow-score-icon--count" aria-hidden="true">#</span>
+                <strong>{{ reviewCountText }}</strong>
+              </div>
+              <span>Verified practitioner reviews gathered</span>
+            </article>
+
+            <article class="wow-score-card">
+              <div class="wow-score-heading">
+                <span class="wow-score-icon wow-score-icon--dot" aria-hidden="true">●</span>
+                <strong>97%</strong>
+              </div>
+              <span>Would book again after their session</span>
+            </article>
+
+            <div class="wow-proof-list" aria-label="Booking reassurance">
+              <div class="wow-proof-row">
+                <span class="wow-proof-tick" aria-hidden="true">✓</span>
+                <div>
+                  <strong>Know what you are booking</strong>
+                  <span>Each offering should clearly explain the session format, price, location and what to expect.</span>
+                </div>
+              </div>
+
+              <div class="wow-proof-row">
+                <span class="wow-proof-tick" aria-hidden="true">✓</span>
+                <div>
+                  <strong>Check suitability before you book</strong>
+                  <span>Review practitioner details, safety notes and contraindications before choosing a therapy.</span>
+                </div>
+              </div>
+
+              <div class="wow-proof-row">
+                <span class="wow-proof-tick" aria-hidden="true">✓</span>
+                <div>
+                  <strong>Real people, real experiences</strong>
+                  <span>Reviews help people understand how sessions feel in practice, not just how nice the listing sounds.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="wow-approach-section" aria-label="Our approach">
+          <div class="wow-approach-copy">
+            <p class="wow-kicker">Our approach</p>
+            <h2>Holistic therapies, grounded in care</h2>
+            <p>We champion modalities that meet you where you are, taught and held by practitioners who prioritise nervous-system safety.</p>
+
+            <div class="wow-approach-actions">
+              <a href="/therapies" class="wow-btn wow-btn-primary">Browse therapies</a>
+              <a href="/safety-and-contraindications" class="wow-btn wow-btn-outline">Safety guidance</a>
+            </div>
+          </div>
+
+          <div class="wow-principles">
+            <article class="wow-principle-card">
+              <span class="wow-principle-number">01</span>
+              <div>
+                <h3>Therapies first</h3>
+                <p>Evidence-informed modalities and trauma-aware practitioners are prioritised before everything else we do.</p>
+              </div>
+            </article>
+
+            <article class="wow-principle-card">
+              <span class="wow-principle-number">02</span>
+              <div>
+                <h3>Human guidance</h3>
+                <p>Every offering is reviewed by our practitioner team so you know who is holding space for you.</p>
+              </div>
+            </article>
+
+            <article class="wow-principle-card">
+              <span class="wow-principle-number">03</span>
+              <div>
+                <h3>Whole-self care</h3>
+                <p>We look at sleep, stress, digestion, hormones and energy together - never in isolation.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="wow-chat-panel" aria-label="Practitioner chats">
+          <div class="wow-chat-copy">
+            <p class="wow-kicker">New series</p>
+            <h2>Practitioner Chats</h2>
+            <p>Monthly conversations with WOW practitioners on how they hold space, approach safety, and design therapies that work.</p>
+
+            <div class="wow-chat-actions">
+              <a :href="practitionerChatsUrl" class="wow-btn wow-btn-primary">Explore chats</a>
+              <a :href="mindfulTimesUrl" class="wow-btn wow-btn-outline">See notes</a>
+            </div>
+          </div>
+
+          <div class="wow-chat-preview" aria-label="Practitioner chat links">
+            <a class="wow-mini-card" :href="mindfulTimesUrl + '/category/interviews'" target="_blank" rel="noopener">
+              <div class="wow-mini-avatar wow-mini-avatar--article" aria-hidden="true"></div>
+              <div>
+                <h3>Mindful Times interviews</h3>
+                <p>Practitioner conversations, stories and thoughtful editorial pieces.</p>
+              </div>
+              <span class="wow-mini-time">Articles</span>
+            </a>
+
+            <a class="wow-mini-card" :href="`${mindfulTimesUrl}/seeking-wellness`" target="_blank" rel="noopener">
+              <div class="wow-mini-avatar wow-mini-avatar--video" aria-hidden="true"></div>
+              <div>
+                <h3>Watch practitioner videos</h3>
+                <p>Video conversations, wellness features and behind-the-scenes content.</p>
+              </div>
+              <span class="wow-mini-time">YouTube</span>
+            </a>
+
+            <a class="wow-mini-card" :href="mindfulTimesUrl + '/7-day-reset-starter-kit'" target="_blank" rel="noopener">
+              <div class="wow-mini-avatar wow-mini-avatar--guide" aria-hidden="true"></div>
+              <div>
+                <h3>Before you book</h3>
+                <p>Useful notes on suitability, safety and choosing the right support.</p>
+              </div>
+              <span class="wow-mini-time">Guide</span>
+            </a>
+          </div>
+        </section>
+      </div>
+    </section>
+
     <!-- Comfort of your own home (Tabbed) -->
     <section class="section" aria-labelledby="comfort-title">
       <div class="container-page">
@@ -942,7 +1060,7 @@ onBeforeUnmount(() => {
             <ProductCard v-for="p in comfortFiltered" :key="p.id" :product="p" class="snap-start" />
           </div>
           <div class="mt-4 text-right">
-            <a :href="`/search?price_max=${comfortPriceMax}&format=online${comfortPeople==='couple'?'&q=couples':''}`" class="btn-wow btn-wow--outline btn-sm btn-arrow">
+            <a :href="`/search?price_max=${comfortPriceMax}&format=online&group_type=${comfortPeople}`" class="btn-wow btn-wow--outline btn-sm btn-arrow">
               <span class="btn-label">See all under £{{ comfortPriceMax }} ({{ comfortPeople }})</span>
               <span class="btn-icon-wrap" aria-hidden="true">
                 <svg class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -958,83 +1076,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </section>
-
-    <!-- Featured categories grid (optional) can go here if desired -->
-
-    <!-- Trust & credibility -->
-    <section class="section">
-      <div class="container-page">
-        <div class="card p-6 md:p-8">
-          <div class="grid md:grid-cols-3 gap-6 items-center">
-            <div class="space-y-2">
-              <div class="kicker">Feel safe to try</div>
-              <h3>You’re in safe hands</h3>
-              <p class="text-ink-600">Real outcomes, real people. Verified reviews and clear pricing — so you can relax into booking and focus on how you want to feel.</p>
-            </div>
-            <div class="stat-row">
-              <div class="stat-pill">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon star" aria-hidden="true" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                <div>
-                  <div class="title">{{ fmtAvg(reviewStats.avg_rating) }}</div>
-                  <div class="sub">{{ fmtCount(reviewStats.verified_count || reviewStats.review_count) }} verified reviews</div>
-                </div>
-              </div>
-              <div class="stat-pill">
-                <span class="dot" aria-hidden="true"></span>
-                <div>
-                  <div class="title">97% would book again</div>
-                  <div class="sub">People felt better after their session</div>
-                </div>
-              </div>
-            </div>
-            <div class="text-right">
-              <a :href="reviewsHref" class="btn-wow btn-wow--outline btn-sm">See reviews</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="values-title">
-      <div class="container-page">
-        <div class="grid md:grid-cols-2 gap-8">
-          <div>
-            <div class="kicker">Our approach</div>
-            <h2 id="values-title">Holistic therapies, grounded in care</h2>
-            <p class="text-ink-600 mt-3">We champion modalities that meet you where you are, taught and held by practitioners who prioritise nervous-system safety.</p>
-          </div>
-          <dl class="space-y-5">
-            <div v-for="point in values" :key="point.title">
-              <dt class="font-semibold text-ink-900">{{ point.title }}</dt>
-              <dd class="text-ink-600 mt-1">{{ point.copy }}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="testimonials.length" class="section" aria-labelledby="testimonials-title">
-      <div class="container-page">
-        <div class="mb-6">
-          <div class="kicker">Testimonials</div>
-          <h2 id="testimonials-title">Clients who feel the difference</h2>
-        </div>
-        <div class="grid md:grid-cols-3 gap-4">
-          <article v-for="review in testimonials" :key="review.id || review.customer" class="card p-5 h-100 flex flex-col">
-            <div v-if="review.rating" class="testimonial-stars" :aria-label="`Rated ${review.rating} out of 5`">
-              {{ '★'.repeat(Math.min(5, Math.max(1, review.rating))) }}
-            </div>
-            <p class="text-lg text-ink-900 flex-1">“{{ review.quote }}”</p>
-            <p class="mt-4 text-sm text-ink-500">
-              {{ review.customer || 'Verified client' }}
-              <span v-if="review.product"> · {{ review.product }}</span>
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    
 
     <!-- Quick booking: What’s on -->
     <section v-if="showWhatsOnSection" id="whats-on" class="section">
@@ -1145,17 +1186,54 @@ onBeforeUnmount(() => {
 
     <section id="practitioner-chats" class="section" aria-labelledby="practitioner-chats-title">
       <div class="container-page">
-        <div class="card p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
-          <div class="flex-1">
-            <div class="kicker">New series</div>
-            <h2 id="practitioner-chats-title">Practitioner Chats</h2>
-            <p class="text-ink-600 mt-2">Monthly conversations with WOW practitioners on how they hold space, approach safety, and design therapies that work.</p>
-          </div>
-          <div class="flex gap-3">
-            <a :href="practitionerChatsUrl" class="btn-wow btn-wow--cta btn-arrow">
-              <span class="btn-label">Explore chats</span>
-            </a>
-            <a :href="mindfulTimesUrl" class="btn-wow btn-wow--ghost">See notes</a>
+        <div class="overflow-hidden rounded-[18px] border border-ink-800/15 bg-ink-900 text-white shadow-[0_24px_70px_rgba(16,24,40,.18)]">
+          <div class="grid gap-0 lg:grid-cols-[minmax(0,.86fr)_minmax(380px,1.14fr)]">
+            <div class="p-6 md:p-8 lg:p-10">
+              <div class="kicker text-white/70">New series</div>
+              <h2 id="practitioner-chats-title" class="max-w-2xl text-white">Practitioner Chats</h2>
+              <p class="mt-4 max-w-2xl text-white/75">
+                Monthly conversations with WOW practitioners on how they hold space, approach safety, and design therapies that work.
+              </p>
+
+              <div class="mt-6 flex flex-wrap gap-3">
+                <a :href="practitionerChatsUrl" class="btn-wow btn-wow--cta btn-arrow">
+                  <span class="btn-label">Explore chats</span>
+                  <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
+                </a>
+                <a :href="mindfulTimesUrl" class="btn-wow btn-wow--ghost">See notes</a>
+              </div>
+            </div>
+
+            <div class="border-t border-white/10 bg-white/[0.04] p-6 md:p-8 lg:border-l lg:border-t-0">
+              <div class="grid gap-3">
+                <a :href="mindfulTimesUrl + '/category/interviews'" target="_blank" rel="noopener" class="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-white/10 bg-white/10 p-4 transition hover:bg-white/15">
+                  <div class="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white font-bold">T</div>
+                  <div>
+                    <h3 class="text-sm font-semibold text-white">Mindful Times interviews</h3>
+                    <p class="mt-1 text-sm text-white/65">Practitioner conversations, stories and thoughtful editorial pieces.</p>
+                  </div>
+                  <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">Articles</span>
+                </a>
+
+                <a :href="`${mindfulTimesUrl}/seeking-wellness`" target="_blank" rel="noopener" class="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-white/10 bg-white/10 p-4 transition hover:bg-white/15">
+                  <div class="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white font-bold">▶</div>
+                  <div>
+                    <h3 class="text-sm font-semibold text-white">Watch practitioner videos</h3>
+                    <p class="mt-1 text-sm text-white/65">Video conversations, wellness features and behind-the-scenes content.</p>
+                  </div>
+                  <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">YouTube</span>
+                </a>
+
+                <a :href="mindfulTimesUrl + '/7-day-reset-starter-kit'" target="_blank" rel="noopener" class="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-white/10 bg-white/10 p-4 transition hover:bg-white/15">
+                  <div class="flex h-12 w-12 items-center justify-center rounded-full border border-brand-500/20 bg-brand-500/15 text-brand-300 font-bold">✓</div>
+                  <div>
+                    <h3 class="text-sm font-semibold text-white">Before you book</h3>
+                    <p class="mt-1 text-sm text-white/65">Useful notes on suitability, safety and choosing the right support.</p>
+                  </div>
+                  <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">Guide</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1223,12 +1301,12 @@ onBeforeUnmount(() => {
     </section>
     
 
-    <!-- Shop by Category -->
+    <!-- Shop by Modality -->
     <section class="section">
       <div class="container-page">
         <div class="mb-8">
           <div class="kicker">Discover</div>
-          <h2>Shop by category</h2>
+          <h2>Shop by modality</h2>
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <a
@@ -1486,6 +1564,605 @@ onBeforeUnmount(() => {
 
 @media (max-width: 991.98px) { .whero-stack { min-height: 560px; margin-top: 24px } .whero-panel { position: relative; top: auto; right: auto; width: 100% } .whero-book { position: absolute; right: 6%; top: -22px } }
 @media (max-width: 575.98px) { .whero-book { right: 2%; top: -16px; width: 88% } }
+@media (max-width: 575.98px) {
+  .whero .row.align-items-center.g-5{
+    row-gap: 20px;
+  }
+
+  .whero .row.align-items-center.g-5 > .col-12{
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .whero .row.align-items-center.g-5 > .col-lg-7{
+    order: 1;
+  }
+
+  .whero .row.align-items-center.g-5 > .col-lg-5{
+    order: 2;
+    width: 100%;
+  }
+
+  .whero-title,
+  .whero-sub,
+  .whero-cta{
+    max-width: none;
+    width: 100%;
+  }
+
+  .whero-cta{
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px;
+    border-radius: 20px;
+  }
+
+  .whero-cta-input{
+    flex: 1 1 100%;
+    width: 100%;
+    height: 46px;
+    padding: 0 8px;
+  }
+
+  .whero-cta .btn{
+    width: 100%;
+  }
+}
+
+/* New trust/approach/chat section styles */
+.wow-section-wrap {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  padding: 68px 0 82px;
+}
+
+.wow-page-grid {
+  position: absolute;
+  inset: 0;
+  width: min(100% - 40px, 1280px);
+  margin: 0 auto;
+  pointer-events: none;
+  border-left: 1px solid rgba(17, 24, 39, 0.08);
+  border-right: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.wow-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  border-left: 1px dashed rgba(17, 24, 39, 0.14);
+}
+
+.wow-grid-line--one { left: 25%; }
+.wow-grid-line--two { left: 50%; }
+.wow-grid-line--three { left: 75%; }
+
+.wow-container {
+  position: relative;
+  z-index: 1;
+  width: min(100% - 40px, 1280px);
+  margin: 0 auto;
+}
+
+.section,
+.wow-discovery-section,
+#mindful-times.wow-mindful-times-section {
+  margin-bottom: 64px;
+}
+
+.container-page > section {
+  margin-bottom: 64px;
+}
+
+.container-page > section:last-child {
+  margin-bottom: 0;
+}
+
+.wow-kicker {
+  margin: 0 0 10px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.wow-safe-card h2,
+.wow-approach-copy h2,
+.wow-chat-panel h2,
+.wow-principle-card h3,
+.wow-mini-card h3 {
+  margin: 0;
+  color: var(--wow-ink);
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -0.055em;
+}
+
+.wow-btn {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0 22px;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.wow-btn-primary {
+  border: 1px solid var(--wow-green);
+  background: var(--wow-green);
+  color: #fff;
+}
+
+.wow-btn-primary:hover {
+  background: var(--wow-green-dark);
+  border-color: var(--wow-green-dark);
+  color: #fff;
+}
+
+.wow-btn-outline {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #111827;
+}
+
+.wow-btn-outline:hover {
+  border-color: var(--wow-green);
+  color: var(--wow-green);
+}
+
+.wow-tag {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid #f0c879;
+  border-radius: 4px;
+  background: var(--wow-gold-soft);
+  color: var(--wow-gold-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.wow-tag--green {
+  border-color: rgba(79, 147, 129, 0.28);
+  background: var(--wow-green-soft);
+  color: #2f6f60;
+}
+
+.wow-tag--blue {
+  border-color: #c7d8fb;
+  background: var(--wow-blue-soft);
+  color: var(--wow-blue-text);
+}
+
+.wow-safe-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(380px, 1.14fr);
+  gap: 28px;
+  align-items: stretch;
+  margin-bottom: 76px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--wow-line);
+  border-radius: 18px;
+  box-shadow: 0 18px 54px rgba(16, 24, 40, 0.07);
+}
+
+.wow-safe-intro {
+  padding: 30px 28px;
+}
+
+.wow-safe-card h2 {
+  max-width: 520px;
+  font-size: clamp(34px, 4vw, 54px);
+  line-height: 0.98;
+}
+
+.wow-safe-card p {
+  max-width: 560px;
+  margin: 16px 0 0;
+  color: #596275;
+  font-size: 16px;
+  line-height: 1.58;
+}
+
+.wow-safe-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.wow-safe-proof {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+  border-left: 1px solid var(--wow-soft-line);
+}
+
+.wow-score-card,
+.wow-proof-list {
+  background: #fff;
+  border: 1px solid var(--wow-soft-line);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.04);
+}
+
+.wow-score-card {
+  min-height: 142px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px;
+}
+
+.wow-score-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wow-score-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--wow-green-soft);
+  color: var(--wow-green);
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.wow-score-icon--dot {
+  font-size: 16px;
+}
+
+.wow-score-icon--count {
+  background: var(--wow-blue-soft);
+  color: var(--wow-blue-text);
+}
+
+.wow-score-card strong {
+  display: block;
+  color: var(--wow-ink);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.wow-score-card > span {
+  display: block;
+  margin-top: 8px;
+  color: var(--wow-muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.wow-proof-list {
+  grid-column: 1 / -1;
+  padding: 4px 18px;
+}
+
+.wow-proof-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--wow-soft-line);
+}
+
+.wow-proof-row:last-child {
+  border-bottom: 0;
+}
+
+.wow-proof-tick {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--wow-green-soft);
+  color: var(--wow-green);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.wow-proof-row strong {
+  display: block;
+  color: var(--wow-ink);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.wow-proof-row span:not(.wow-proof-tick) {
+  display: block;
+  margin-top: 4px;
+  color: var(--wow-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.wow-approach-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(420px, 1.14fr);
+  gap: 34px;
+  align-items: start;
+  margin-bottom: 28px;
+}
+
+.wow-approach-copy {
+  position: sticky;
+  top: 26px;
+  padding-top: 6px;
+}
+
+.wow-approach-copy h2 {
+  max-width: 620px;
+  font-size: clamp(46px, 5.8vw, 78px);
+  line-height: 0.94;
+}
+
+.wow-approach-copy p {
+  max-width: 620px;
+  margin: 18px 0 0;
+  color: #596275;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.wow-approach-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.wow-principles {
+  display: grid;
+  gap: 14px;
+}
+
+.wow-principle-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--wow-line);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 12px 34px rgba(16, 24, 40, 0.035);
+}
+
+.wow-principle-number {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(79, 147, 129, 0.24);
+  color: var(--wow-green);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.wow-principle-card h3 {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.wow-principle-card p {
+  margin: 9px 0 0;
+  color: #596275;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.wow-chat-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(380px, 1.1fr);
+  gap: 28px;
+  align-items: center;
+  margin-top: 74px;
+  background: var(--wow-dark);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: none;
+}
+
+.wow-chat-panel .wow-kicker {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.wow-chat-panel h2 {
+  max-width: 560px;
+  color: #fff;
+  font-size: clamp(42px, 5vw, 68px);
+  line-height: 0.96;
+}
+
+.wow-chat-panel p {
+  max-width: 620px;
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.wow-chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.wow-chat-panel .wow-btn-outline {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.wow-chat-panel .wow-btn-outline:hover {
+  border-color: #fff;
+  color: #fff;
+}
+
+.wow-chat-preview {
+  display: grid;
+  gap: 12px;
+}
+
+.wow-mini-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 14px;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.wow-mini-card:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.wow-mini-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  position: relative;
+}
+
+.wow-mini-avatar::after {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.wow-mini-avatar--article::after { content: "T"; }
+.wow-mini-avatar--video::after { content: "▶"; font-size: 15px; }
+.wow-mini-avatar--guide::after { content: "✓"; color: var(--wow-green); }
+
+.wow-mini-card h3 {
+  color: #fff;
+  font-family: var(--wow-sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.wow-mini-card p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.wow-mini-time {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+  .wow-safe-card,
+  .wow-approach-section,
+  .wow-chat-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .wow-safe-proof {
+    border-left: 0;
+    border-top: 1px solid var(--wow-soft-line);
+  }
+
+  .wow-approach-copy {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .wow-section-wrap {
+    padding: 42px 0 58px;
+  }
+
+  .wow-safe-proof {
+    grid-template-columns: 1fr;
+  }
+
+  .wow-proof-list {
+    grid-column: auto;
+  }
+
+  .wow-chat-panel,
+  .wow-safe-intro {
+    padding: 22px;
+  }
+
+  .wow-principle-card,
+  .wow-mini-card {
+    grid-template-columns: 1fr;
+  }
+
+  .wow-mini-time {
+    width: fit-content;
+  }
+}
+
+@media (max-width: 560px) {
+  .wow-container,
+  .wow-page-grid {
+    width: min(100% - 28px, 1280px);
+  }
+
+  .wow-safe-card h2,
+  .wow-chat-panel h2 {
+    font-size: 42px;
+  }
+
+  .wow-approach-copy h2 {
+    font-size: 48px;
+  }
+
+  .wow-btn {
+    width: 100%;
+  }
+}
 
 /* Segmented tabs (copied from listings) */
 .seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }

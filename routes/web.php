@@ -4,13 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\ArticleController;
-use App\Http\Controllers\Api\CatalogController;
-use App\Http\Controllers\Api\ProductTypeController;
-use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\LandingController;
-use App\Http\Controllers\Api\ReservationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Product;
@@ -32,7 +26,6 @@ use App\Http\Controllers\OnlineNearMeController;
 use App\Http\Controllers\SeoMoneyPageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SearchController;
-use App\Http\Controllers\Api\ProductCardsController;
 use App\Http\Controllers\MindfulTimesController;
 use App\Http\Controllers\ProvidersController;
 use App\Http\Controllers\ContactController;
@@ -108,6 +101,20 @@ Route::get('/locations/{slug}', [LocationsController::class, 'show'])
     ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('locations.show');
 Route::get('/near-me', [LocationsController::class, 'nearMe'])->name('nearMe');
+Route::get('/products/{handle}', [LandingRedirectsController::class, 'shopifyProduct'])
+    ->where('handle', '[^/]+');
+Route::get('/{prefix}/custom/{pixel}/sandbox/modern/products/{handle}', [LandingRedirectsController::class, 'shopifyProductSandbox'])
+    ->where([
+        'prefix' => '[^/]+',
+        'pixel' => '[^/]+',
+        'handle' => '[^/]+',
+    ]);
+Route::redirect('/collections', '/offerings', 301);
+Route::get('/collections/{slug?}', [LandingRedirectsController::class, 'shopifyCollection'])
+    ->where('slug', '[^/]*');
+Route::get('/pages/{path}', [LandingRedirectsController::class, 'shopifyPage'])
+    ->where('path', '.*');
+Route::get('/account/login', [LandingRedirectsController::class, 'shopifyAccountLogin']);
 Route::get('/{therapy}/{location}', function (Request $request, string $therapy, string $location) {
     $therapySlug = Str::slug($therapy);
     $locationSlug = Str::slug($location);
@@ -147,7 +154,7 @@ Route::get('/{therapy}/{location}', function (Request $request, string $therapy,
 
     abort(404);
 })->where([
-    'therapy' => '[A-Za-z][A-Za-z0-9\-]*',
+    'therapy' => '(?:reiki|sound-healing|reflexology|breathwork|acupuncture|massage|hypnotherapy|somatic-experiencing|meditation|corporate-wellness)',
     'location' => '[A-Za-z][A-Za-z0-9\-]*',
 ]);
 
@@ -200,19 +207,6 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// Lightweight JSON endpoints for frontend
-Route::get('/api/products', [ProductController::class, 'index']);
-// HTML fragments: render product cards via Blade for dynamic sections (e.g., comfort rail)
-Route::get('/api/product-cards', [ProductCardsController::class, 'index']);
-Route::get('/api/articles', [ArticleController::class, 'index']);
-Route::get('/api/catalog', [CatalogController::class, 'index']);
-Route::get('/api/product-types', [ProductTypeController::class, 'index']);
-Route::get('/api/locations', [LocationController::class, 'index']);
-Route::get('/api/review-stats', [\App\Http\Controllers\Api\ReviewStatsController::class, 'index']);
-// Lightweight reservation hold/release endpoints (require auth)
-Route::post('/api/reservations/hold', [ReservationController::class, 'hold'])->name('api.reservations.hold');
-Route::post('/api/reservations/release', [ReservationController::class, 'release'])->name('api.reservations.release');
-
 // Geolocation persistence (cookies)
 Route::post('/api/geo', [\App\Http\Controllers\GeoController::class, 'update']);
 
@@ -257,8 +251,58 @@ Route::get('/{category}/{type}/{location}', [LandingController::class, 'category
         'location' => '[A-Za-z][A-Za-z0-9\-]*',
     ])
     ->name('landing.category-type-location');
+// Keep one-segment public pages from being swallowed by the generic category hub.
+$reservedCategorySlugs = [
+    'about',
+    'cart',
+    'checkout',
+    'contact',
+    'corporate',
+    'corporate-wellbeing',
+    'corporate-wellness',
+    'cookies',
+    'dashboard',
+    'event',
+    'events',
+    'experience',
+    'experiences',
+    'gift',
+    'gift-cards',
+    'gift-vouchers',
+    'giftcards',
+    'help',
+    'mindful-times',
+    'near-me',
+    'online',
+    'partners',
+    'plan',
+    'privacy',
+    'providers',
+    'refunds-and-cancellations',
+    'reviews',
+    'safety-and-contraindications',
+    'search',
+    'sitemap',
+    'terms',
+    'therapy',
+    'therapies',
+    'v3',
+    'workshop',
+    'workshops',
+    'class',
+    'classes',
+    'retreat',
+    'retreats',
+    'needs',
+    'locations',
+    'online-near-me',
+];
+$reservedCategoryPattern = implode('|', array_map(
+    static fn (string $slug): string => preg_quote($slug, '/'),
+    $reservedCategorySlugs
+));
 Route::get('/{category}', [LandingController::class, 'categoryHub'])
-    ->where('category', '[A-Za-z][A-Za-z0-9\-]*')
+    ->where('category', '(?!(?:' . $reservedCategoryPattern . ')$)[A-Za-z][A-Za-z0-9\-]*')
     ->name('landing.category');
 
 // Legacy hubs -> canonical pages
@@ -318,14 +362,6 @@ Route::redirect('/gift-vouchers', '/gift-cards', 301);
 
 Route::get('/reviews', [ReviewsController::class, 'index'])->name('reviews.index');
 if (config('wow.enable_static_pages')) {
-Route::get('/about', function(){
-    return Inertia::render('General/Page', [
-        'title' => 'About We Offer Wellness',
-        'metaDescription' => 'Our mission: wellness that actually helps, done safely and simply.',
-        'bodyHtml' => '<p>Your story goes here. Why you started, who you help, and what makes you different.</p>',
-        'canonical' => url('/about'),
-    ]);
-});
 Route::get('/contact', function(){
     return Inertia::render('General/Page', [
         'title' => 'Contact',
@@ -424,6 +460,8 @@ Route::get('/partners', [StaticPagesController::class, 'partners']);
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
 Route::get('/sitemap-index.xml', [SitemapController::class, 'indexFile']);
+Route::get('/sitemaps/{segment}.xml', [SitemapController::class, 'segment'])
+    ->where('segment', '[A-Za-z0-9\-]+');
 Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
 Route::get('/search-console/oauth/callback', function (Request $request) {
     $code = trim((string) $request->query('code', ''));
@@ -455,16 +493,26 @@ Route::get('/safety-and-contraindications', [SafetyContraindicationsController::
     ->name('safety-and-contraindications');
 
 Route::get('/help', [HelpCentreController::class, 'index'])->name('help');
+Route::get('/help/faq', [HelpPagesController::class, 'faq'])->name('help.faq');
+Route::get('/help/gift-cards', [HelpPagesController::class, 'giftCards'])->name('help.gift-cards');
 
 Route::get('/about', [AboutController::class, 'index'])
     ->name('about');
+Route::get('/about/team/{slug}', [AboutController::class, 'team'])
+    ->where('slug', '[A-Za-z0-9\-]+');
 
 // Mindful Times (simple hub)
 Route::get('/mindful-times', [MindfulTimesController::class, 'index']);
 
 // Providers directory
 Route::get('/providers', [ProvidersController::class, 'index']);
-Route::get('/provider/{slug}', [ProvidersController::class, 'show']);
+Route::get('/practioner/{slug}', [ProvidersController::class, 'show']);
+Route::post('/practioner/{slug}/reviews', [ProvidersController::class, 'storeReview'])
+    ->middleware('auth')
+    ->name('practioner.reviews.store');
+Route::get('/provider/{slug}', function (string $slug) {
+    return redirect('/practioner/' . $slug, 301);
+});
 
 // Contact
 Route::get('/contact', [ContactController::class, 'index']);

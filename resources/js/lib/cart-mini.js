@@ -1,3 +1,5 @@
+import { trackCommerce } from './wow-analytics'
+
 // Lightweight cart interactions: add-to-cart, badge count, and dropdown open
 (() => {
   function qs(sel, root){ return (root||document).querySelector(sel); }
@@ -106,7 +108,8 @@
     }).then(r => r.json()).catch(()=>{ throw new Error('server failed'); });
   }
 
-  function addToCart(payload){
+  function addToCart(payload, opts){
+    const options = opts || {}
     const qty = Number(payload.qty || 1) || 1;
     // Always update local storage for resilience
     upsertItem({ ...payload, qty });
@@ -118,14 +121,23 @@
       updateBadgeUI(countItems());
       return false;
     }).finally(()=>{
-      if (isDesktop()) { renderDropdownFromLS(); showDropdown(); }
-      else { /* mobile keeps cart icon redirect */ }
+      if (options.openCart && isDesktop()) { renderDropdownFromLS(); showDropdown(); }
       try {
         const detail = { items: getItems(), count: countItems(), source: 'mini:add' };
         window.dispatchEvent(new CustomEvent('wow:cart:change', { detail }));
       } catch(_){ }
     });
     return request;
+  }
+
+  function navigateToUrl(btn){
+    const url = btn.getAttribute('data-url') || '';
+    if (!url) return;
+    try {
+      window.location.assign(url);
+    } catch(_){
+      window.location.href = url;
+    }
   }
 
   // Keep dropdown and badge in sync when other pages change the cart
@@ -146,13 +158,40 @@
     const url = btn.getAttribute('data-url')||'';
     const qty = Number(btn.getAttribute('data-qty')||'1') || 1;
     const variantLabel = btn.getAttribute('data-variant-label')||'';
+    const openCart = btn.classList.contains('js-open-cart') || btn.classList.contains('open-cart-dropdown');
     const cartKey = variantId ? `v:${variantId}` : `p:${productId || id || ''}`;
     const resolvedId = cartKey || id;
     if(!resolvedId) return null;
-    return addToCart({ id: resolvedId, cartKey: resolvedId, productId: productId || id, variantId: variantId || null, variantLabel, title, price, image, url, qty });
+    try {
+      trackCommerce('wow_v3_add_to_cart', {
+        items: [{
+          id: resolvedId,
+          title,
+          price,
+          qty,
+          product_id: productId || id || null,
+          variant_id: variantId || null,
+          variant_label: variantLabel || '',
+          source_version: btn.getAttribute('data-source-version') || null,
+        }],
+        currency: 'GBP',
+        value: Number(price || 0) * qty,
+        item_count: qty,
+        source: 'mini',
+      })
+    } catch(_){}
+    return addToCart({ id: resolvedId, cartKey: resolvedId, productId: productId || id, variantId: variantId || null, variantLabel, title, price, image, url, qty }, { openCart });
   }
   // Delegate add-to-cart clicks (capture to beat anchor navigation)
   document.addEventListener('click', function(e){
+    const detailsBtn = e.target.closest('.js-view-details');
+    if (detailsBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      navigateToUrl(detailsBtn);
+      return;
+    }
+
     const btn = e.target.closest('.js-add-to-cart');
     if(!btn) return;
     handleAddFromBtn(btn, e);
@@ -164,6 +203,14 @@
   document.addEventListener('click', function(e){
     const btn = e.target.closest('.js-buy-now');
     if(!btn) return;
+
+    if (btn.getAttribute('data-no-cart') === '1') {
+      e.preventDefault();
+      e.stopPropagation();
+      navigateToUrl(btn);
+      return;
+    }
+
     const res = handleAddFromBtn(btn, e);
     const finish = () => { goToCart(); };
     if(res && typeof res.finally === 'function'){

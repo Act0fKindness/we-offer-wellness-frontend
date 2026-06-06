@@ -5,12 +5,252 @@
   <title>{{ $seo['title'] ?? 'Events & Workshops | We Offer Wellness™' }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
 @endpush
 
 @section('content')
+@include('partials.breadcrumbs', [
+  'crumbs' => [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Events'],
+  ],
+  'schemaUrl' => url('/events'),
+])
+
 @php
-  $items = $results['items'] ?? [];
+  $upcomingEvents = $upcomingEvents ?? [];
+  $pastEvents = $pastEvents ?? [];
+  $sortValue = (string) ($filters['sort'] ?? '');
+  $typeValue = (string) ($filters['type'] ?? '');
+  $formatValue = (string) ($filters['format'] ?? '');
+  $locationValue = trim((string) ($filters['location'] ?? ''));
+  $sortLabel = match ($sortValue) {
+    'date_asc' => 'Soonest',
+    'date_desc' => 'Latest',
+    default => 'Recommended',
+  };
+  $typeLabel = match ($typeValue) {
+    'event' => 'Events',
+    'workshop' => 'Workshops',
+    default => 'All',
+  };
+  $formatLabel = match ($formatValue) {
+    'online' => 'Online',
+    'in_person' => 'Near me',
+    default => 'All',
+  };
+  $eventCount = count($upcomingEvents) + count($pastEvents);
+  $eventSections = [
+    [
+      'title' => 'Upcoming events',
+      'subtitle' => 'Fresh sessions and community gatherings coming up next.',
+      'items' => $upcomingEvents,
+      'empty' => 'No upcoming events found for these filters.',
+    ],
+    [
+      'title' => 'Past events',
+      'subtitle' => 'Archived sessions and previous gatherings.',
+      'items' => $pastEvents,
+      'empty' => 'No past events found for these filters.',
+    ],
+  ];
+  $eventFilterSegments = [
+    [
+      'key' => 'sort',
+      'label' => 'Sort',
+      'value' => $sortLabel,
+      'placeholder' => 'Recommended',
+      'panelTitle' => 'Sort events',
+      'panelSubtitle' => 'Choose how events are ordered.',
+      'panelWidth' => 430,
+      'options' => [
+        [
+          'label' => 'Recommended',
+          'value' => '',
+          'subtitle' => 'Best match for this page',
+          'count' => 'Default',
+          'selected' => $sortValue === '',
+        ],
+        [
+          'label' => 'Soonest',
+          'value' => 'date_asc',
+          'subtitle' => 'Events coming up first',
+          'selected' => $sortValue === 'date_asc',
+        ],
+        [
+          'label' => 'Latest',
+          'value' => 'date_desc',
+          'subtitle' => 'Newest event listings first',
+          'selected' => $sortValue === 'date_desc',
+        ],
+      ],
+    ],
+    [
+      'key' => 'type',
+      'label' => 'Type',
+      'value' => $typeLabel,
+      'placeholder' => 'All',
+      'panelTitle' => 'Filter by type',
+      'panelSubtitle' => 'Show only events or workshops.',
+      'panelWidth' => 430,
+      'options' => [
+        [
+          'label' => 'All',
+          'value' => '',
+          'subtitle' => 'Show every event type',
+          'selected' => $typeValue === '',
+        ],
+        [
+          'label' => 'Events',
+          'value' => 'event',
+          'subtitle' => 'General event listings',
+          'selected' => $typeValue === 'event',
+        ],
+        [
+          'label' => 'Workshops',
+          'value' => 'workshop',
+          'subtitle' => 'Practical sessions and workshops',
+          'selected' => $typeValue === 'workshop',
+        ],
+      ],
+    ],
+    [
+      'key' => 'format',
+      'label' => 'Format',
+      'value' => $formatLabel,
+      'placeholder' => 'All',
+      'panelTitle' => 'Choose format',
+      'panelSubtitle' => 'Online or in-person events.',
+      'panelWidth' => 430,
+      'options' => [
+        [
+          'label' => 'All',
+          'value' => '',
+          'subtitle' => 'Any event format',
+          'selected' => $formatValue === '',
+        ],
+        [
+          'label' => 'Online',
+          'value' => 'online',
+          'subtitle' => 'Join from anywhere',
+          'selected' => $formatValue === 'online',
+        ],
+        [
+          'label' => 'Near me',
+          'value' => 'in_person',
+          'subtitle' => 'Physical events near you',
+          'selected' => $formatValue === 'in_person',
+        ],
+      ],
+    ],
+    [
+      'key' => 'location',
+      'label' => 'Location',
+      'value' => $locationValue !== '' ? $locationValue : 'Anywhere',
+      'placeholder' => 'Anywhere',
+      'panelTitle' => 'Filter by location',
+      'panelSubtitle' => 'Search by city, county, or area.',
+      'panelWidth' => 480,
+      'kind' => 'input',
+      'param' => 'location',
+      'inputLabel' => 'Location',
+      'inputValue' => $locationValue,
+      'inputPlaceholder' => 'e.g. London, Kent',
+      'buttonLabel' => 'Update location',
+    ],
+  ];
+  $eventFilterChips = array_values(array_filter([
+    $sortValue !== '' ? ['param' => 'sort', 'label' => 'Sort', 'value' => $sortLabel] : null,
+    $typeValue !== '' ? ['param' => 'type', 'label' => 'Type', 'value' => $typeLabel] : null,
+    $formatValue !== '' ? ['param' => 'format', 'label' => 'Format', 'value' => $formatLabel] : null,
+    $locationValue !== '' ? ['param' => 'location', 'label' => 'Location', 'value' => $locationValue] : null,
+  ]));
+
+  $eventCardProduct = static function (array $item) {
+    return new class($item) {
+      public array $item;
+
+      public function __construct(array $item)
+      {
+        $this->item = $item;
+      }
+
+      public function __get(string $key): mixed
+      {
+        if ($key === 'id') {
+          return $this->item['id'] ?? $this->item['source_id'] ?? null;
+        }
+
+        if ($key === 'category') {
+          $category = $this->item['category'] ?? '';
+          if (is_array($category)) {
+            return (object) $category;
+          }
+
+          if (is_string($category) && $category !== '') {
+            return (object) ['name' => $category];
+          }
+
+          return null;
+        }
+
+        if ($key === 'vendor') {
+          $vendorName = trim((string) ($this->item['vendor_name'] ?? ''));
+          $vendorRating = $this->item['vendor_rating'] ?? null;
+          $vendorReviewCount = (int) ($this->item['vendor_review_count'] ?? $this->item['review_count'] ?? 0);
+
+          return (object) [
+            'vendor_name' => $vendorName,
+            'review_summary' => [
+              'count' => $vendorReviewCount,
+              'rating' => is_numeric($vendorRating) ? round((float) $vendorRating, 1) : null,
+            ],
+            'user' => (object) [
+              'plan_key' => (string) ($this->item['plan_key'] ?? ''),
+            ],
+          ];
+        }
+
+        return $this->item[$key] ?? null;
+      }
+
+      public function __isset(string $key): bool
+      {
+        return array_key_exists($key, $this->item);
+      }
+
+      public function getFirstImageUrl(): string
+      {
+        foreach (['display_image', 'image', 'featured_image'] as $key) {
+          $value = trim((string) ($this->item[$key] ?? ''));
+          if ($value !== '') {
+            return $value;
+          }
+        }
+
+        return '';
+      }
+
+      public function hasDisplayableImage(): bool
+      {
+        $image = $this->getFirstImageUrl();
+        return $image !== '' && ! str_contains($image, 'no-product-image.jpg');
+      }
+
+      public function getLocations(): array
+      {
+        $locations = $this->item['locations'] ?? [];
+        if ($locations instanceof \Illuminate\Support\Collection) {
+          $locations = $locations->all();
+        }
+
+        if (! is_array($locations)) {
+          return [];
+        }
+
+        return array_values(array_filter(array_map(static fn ($value) => trim((string) $value), $locations)));
+      }
+    };
+  };
 @endphp
 
 <section class="section">
@@ -19,83 +259,47 @@
       <div class="kicker">Browse</div>
       <h1>Events</h1>
       <p class="text-ink-600 mt-2" style="max-width:70ch;">
-        Upcoming sessions and community gatherings — online and near you.
+        Upcoming and past sessions, workshops, and community gatherings — online and near you.
       </p>
     </div>
 
-    {{-- Filters --}}
-    <form method="get" action="{{ url('/events') }}" class="card p-3 mb-4" style="border-radius:18px;">
-      <div class="grid md:grid-cols-5 gap-3 items-end">
-        <div>
-          <label class="form-label">Type</label>
-          <select class="form-control" name="type">
-            <option value="" @selected(($filters['type'] ?? '') === '')>All</option>
-            <option value="event" @selected(($filters['type'] ?? '') === 'event')>Events</option>
-            <option value="workshop" @selected(($filters['type'] ?? '') === 'workshop')>Workshops</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="form-label">Format</label>
-          <select class="form-control" name="format">
-            <option value="" @selected(($filters['format'] ?? '') === '')>All</option>
-            <option value="online" @selected(($filters['format'] ?? '') === 'online')>Online</option>
-            <option value="in_person" @selected(($filters['format'] ?? '') === 'in_person')>Near me</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="form-label">Location</label>
-          <input class="form-control" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="e.g. London, Kent">
-        </div>
-
-        <div>
-          <label class="form-label">Sort</label>
-          <select class="form-control" name="sort">
-            <option value="" @selected(($filters['sort'] ?? '') === '')>Recommended</option>
-            <option value="date_asc" @selected(($filters['sort'] ?? '') === 'date_asc')>Soonest</option>
-            <option value="date_desc" @selected(($filters['sort'] ?? '') === 'date_desc')>Latest</option>
-          </select>
-        </div>
-
-        <div class="flex gap-2 justify-end">
-          <button class="btn btn-primary" type="submit">Apply</button>
-          <a class="btn btn-light" href="{{ url('/events') }}">Reset</a>
-        </div>
-      </div>
-    </form>
+    @include('partials.wow-filter-bar', [
+      'action' => url('/events'),
+      'clearUrl' => url('/events'),
+      'ariaLabel' => 'Filter events',
+      'mobileLabel' => 'Filters',
+      'resultCount' => $eventCount,
+      'resultLabel' => 'events',
+      'filters' => $filters,
+      'segments' => $eventFilterSegments,
+      'chips' => $eventFilterChips,
+    ])
 
     {{-- Results --}}
-    @if(count($items))
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        @foreach($items as $it)
-          @php
-            $title = $it['title'] ?? 'Untitled';
-            $img = $it['image'] ?? ($it['featured_image'] ?? null);
-            $summary = $it['summary'] ?? ($it['description_short'] ?? null);
+    @if(count($upcomingEvents) || count($pastEvents))
+      @foreach($eventSections as $section)
+        <section class="mb-5">
+          <div class="d-flex align-items-end justify-content-between gap-3 mb-3">
+            <div>
+              <h2 class="h3 mb-1">{{ $section['title'] }}</h2>
+              <p class="text-ink-600 mb-0">{{ $section['subtitle'] }}</p>
+            </div>
+            <span class="badge rounded-pill text-bg-light">{{ count($section['items']) }}</span>
+          </div>
 
-            $slug = $it['slug'] ?? ($it['handle'] ?? null);
-            $url = $it['url'] ?? ($slug ? url('/events/'.$slug) : '#');
-            if($url && !str_starts_with($url, 'http')) $url = url($url);
-          @endphp
-
-          <a href="{{ $url }}" class="wow-card md is-fluid" style="text-decoration:none;">
-            <div class="wow-media">
-              @if($img)<img src="{{ $img }}" alt="{{ $title }}">@endif
+          @if(count($section['items']))
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              @foreach($section['items'] as $it)
+                @include('partials.product_card_v4', ['product' => $eventCardProduct($it), 'preferredLocation' => null])
+              @endforeach
             </div>
-            <div class="wow-body">
-              <div class="wow-type text-muted">Event</div>
-              <div class="wow-title">{{ $title }}</div>
-              @if($summary)
-                <div class="text-ink-600 mt-2">{{ \Illuminate\Support\Str::limit(strip_tags($summary), 120) }}</div>
-              @endif
+          @else
+            <div class="card p-4" style="border-radius:18px;">
+              <div class="text-muted">{{ $section['empty'] }}</div>
             </div>
-            <div class="wow-bottom">
-              <div class="actions"><span class="wow-btn-like">View details</span></div>
-            </div>
-          </a>
-        @endforeach
-      </div>
+          @endif
+        </section>
+      @endforeach
 
       {{-- Pagination --}}
       @php

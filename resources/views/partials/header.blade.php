@@ -304,13 +304,24 @@
                 </nav>
             </div>
             <div class="hidden md:flex items-center gap-2 position-relative">
-                <a class="icon-btn" aria-label="Search" href="/search">
-                    <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                         fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
-                          d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"></path>
-                </svg>
-                </a>
+                <button
+                    type="button"
+                    class="icon-btn position-relative mobile-search-trigger"
+                    aria-label="Search"
+                    aria-expanded="false"
+                    data-mobile-search-trigger>
+                    <span class="mobile-search-trigger__icon mobile-search-trigger__icon--search" aria-hidden="true">
+                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                              d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"></path>
+                        </svg>
+                    </span>
+                    <span class="mobile-search-trigger__icon mobile-search-trigger__icon--close" aria-hidden="true" hidden>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                </button>
                 <div class="account-wrap">
                     @auth
                         @php
@@ -563,8 +574,8 @@
 .cartdd-empty{ padding:18px; color: var(--ink-600); text-align:center }
 .cartdd-item{ display:flex; gap:10px; align-items:center; padding:12px 14px; padding-right:60px; border-bottom:1px solid #f1f5f9; position:relative; }
 .cartdd-item:last-child{ border-bottom:0 }
-.cartdd-img{ width:54px; height:54px; border-radius:10px; overflow:hidden; border:1px solid #eceff3; background:#fafafa }
-.cartdd-img img{ width:100%; height:100%; object-fit:cover; display:block }
+.cartdd-img{ width:54px; height:54px; min-width:54px; flex:0 0 54px; border-radius:10px; overflow:hidden; border:1px solid #eceff3; background:#fafafa }
+.cartdd-img img{ width:100%; height:100%; object-fit:cover; display:block; flex:0 0 54px }
 .cartdd-info{ flex:1 1 auto; min-width:0 }
 .cartdd-title{ display:block; max-width:100%; font-weight:600; color:#0b1323; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-decoration:none }
 .cartdd-meta{ font-size:.9rem; color:#64748b }
@@ -621,6 +632,14 @@
 .account-dropdown .btn--primary{ border-color: rgba(0,0,0,.10); color:#fff; background:#549483 !important }
 .accountdd-logout{ margin-top:15px; }
 .accountdd-logout__btn{ width:100%; }
+@media (min-width: 992px){
+    .account-dropdown{
+        height:auto;
+        min-height:238px;
+        max-height:calc(100vh - 120px);
+        overflow-y:auto;
+    }
+}
 #visit-link{ font-weight:700; color:#2c6bed; text-decoration:none }
 #visit-link:hover{ text-decoration:underline }
 .account-links-stack{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
@@ -915,13 +934,25 @@
         <script>
             (function(){
                 if (typeof window === 'undefined' || typeof document === 'undefined') return;
-                const trigger = document.querySelector('[data-mobile-search-trigger]');
+                const triggers = document.querySelectorAll('[data-mobile-search-trigger]');
                 const modal = document.getElementById('mobile-search-drawer');
-                const searchIcon = trigger?.querySelector('.mobile-search-trigger__icon--search');
-                const closeIcon = trigger?.querySelector('.mobile-search-trigger__icon--close');
                 const mobileMenu = document.getElementById('mobile-menu');
                 const burger = document.querySelector('button[aria-label="Toggle menu"]');
-                if (!trigger || !modal) return;
+                if (!triggers.length || !modal) return;
+
+                const syncTriggerState = (isOpen) => {
+                    triggers.forEach((button) => {
+                        const searchIcon = button.querySelector('.mobile-search-trigger__icon--search');
+                        const closeIcon = button.querySelector('.mobile-search-trigger__icon--close');
+
+                        button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                        button.classList.toggle('is-open', isOpen);
+                        button.setAttribute('aria-label', isOpen ? 'Close search' : 'Search');
+
+                        if (searchIcon) searchIcon.hidden = isOpen;
+                        if (closeIcon) closeIcon.hidden = ! isOpen;
+                    });
+                };
 
                 const closeMobileMenu = () => {
                     if (!mobileMenu) return;
@@ -942,11 +973,7 @@
                     closeMobileMenu();
                     modal.classList.add('is-visible');
                     modal.setAttribute('aria-hidden', 'false');
-                    trigger.setAttribute('aria-expanded', 'true');
-                    trigger.classList.add('is-open');
-                    trigger.setAttribute('aria-label', 'Close search');
-                    if (searchIcon) searchIcon.hidden = true;
-                    if (closeIcon) closeIcon.hidden = false;
+                    syncTriggerState(true);
                     try {
                         window.setupUltraSearchBar?.('header-search');
                     } catch (_) {}
@@ -955,11 +982,7 @@
                 const closeSearch = () => {
                     modal.classList.remove('is-visible');
                     modal.setAttribute('aria-hidden', 'true');
-                    trigger.setAttribute('aria-expanded', 'false');
-                    trigger.classList.remove('is-open');
-                    trigger.setAttribute('aria-label', 'Search');
-                    if (searchIcon) searchIcon.hidden = false;
-                    if (closeIcon) closeIcon.hidden = true;
+                    syncTriggerState(false);
                 };
                 window.__WOWCloseMobileSearch = closeSearch;
 
@@ -969,10 +992,12 @@
                     }, true);
                 }
 
-                trigger.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    openSearch();
+                triggers.forEach((trigger) => {
+                    trigger.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        openSearch();
+                    });
                 });
                 modal.addEventListener('click', (event) => {
                     if (event.target === modal) closeSearch();

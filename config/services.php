@@ -10,6 +10,12 @@ $stripeTestWebhookSecret = env('TESTING_STRIPE_WEBHOOK_SECRET');
 $resolvedStripeWebhookSecret = $stripeTesting
     ? ($stripeTestWebhookSecret ?: $stripeLiveWebhookSecret)
     : $stripeLiveWebhookSecret;
+$mailRelayUrl = env('MAIL_RELAY_URL');
+
+if (! $mailRelayUrl) {
+    $backendBase = rtrim((string) env('BACKEND_URL', env('BACKEND_ASSET_URL', '')), '/');
+    $mailRelayUrl = $backendBase !== '' ? $backendBase.'/api/internal/mail/send' : '';
+}
 
 return [
 
@@ -73,6 +79,11 @@ return [
         'key' => env('BREVO_API_KEY'),
     ],
 
+    'mail_relay' => [
+        'url' => $mailRelayUrl,
+        'token' => env('WOW_MAIL_RELAY_TOKEN'),
+    ],
+
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
@@ -85,13 +96,21 @@ return [
 
     'search_console' => [
         'property_url' => env('GOOGLE_SEARCH_CONSOLE_PROPERTY_URL'),
-        'sitemap_url' => env('GOOGLE_SEARCH_CONSOLE_SITEMAP_URL', rtrim(env('APP_URL', ''), '/') . '/sitemap-index.xml'),
+        'sitemap_url' => env('GOOGLE_SEARCH_CONSOLE_SITEMAP_URL', rtrim(env('APP_URL', ''), '/') . '/sitemap.xml'),
         'sitemap_urls' => env(
             'GOOGLE_SEARCH_CONSOLE_SITEMAP_URLS',
             implode(',', array_filter([
-                rtrim(env('APP_URL', ''), '/') . '/sitemap-index.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemap.xml',
-                rtrim(env('APP_URL', ''), '/') . '/sitemap-pages.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/static.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/modalities.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/types.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/locations.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/near-me.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/modality-location.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/type-location.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/offerings.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/events.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/practitioners.xml',
             ]))
         ),
         'client_id' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_ID'),

@@ -19,6 +19,7 @@ class ContentFormatter
 
         // Normalize line endings and stray spaces
         $s = str_replace(["\r\n", "\r"], "\n", $s);
+        $s = self::stripInvisibleArtifacts($s);
         $s = preg_replace('/[\t ]+\n/', "\n", $s);
 
         // Emoji → Font Awesome (simple, conservative mapping)
@@ -40,8 +41,11 @@ class ContentFormatter
             // Reduce excessive <br>
             $s = preg_replace('/(<br\s*\/?>\s*){2,}/i', '<br/>', $s);
             // Convert &nbsp; runs to single spaces
-            $s = preg_replace('/(&nbsp;\s*)+/i', ' ', $s);
-            return self::stripEmojiImages($s);
+            $s = preg_replace('/(&nbsp;|&#160;|\x{00A0})+/iu', ' ', $s);
+            // Remove empty block markup left behind by WYSIWYG editors.
+            $s = self::stripEmptyBlocks($s);
+            $s = self::stripEmojiImages($s);
+            return self::stripEmptyBlocks($s);
         }
 
         // Plain text → paragraphs; escape HTML first, keep our FA icons intact
@@ -68,7 +72,49 @@ class ContentFormatter
             if ($p !== '') $out .= '<p>'.$p.'</p>';
         }
         $final = $out ?: $s;
-        return self::stripEmojiImages($final);
+        $final = self::stripEmojiImages($final);
+        return self::stripEmptyBlocks($final);
+    }
+
+    private static function stripEmptyBlocks(string $html): string
+    {
+        $current = $html;
+        $previous = null;
+
+        do {
+            $previous = $current;
+
+            $current = preg_replace(
+                '/<(?:span|strong|b|em|i|u|mark|small|sup|sub)\b[^>]*>(?:\s|&nbsp;|&#160;|\x{00A0}|<br\s*\/?>)*<\/(?:span|strong|b|em|i|u|mark|small|sup|sub)>/iu',
+                '',
+                $current
+            ) ?? $current;
+
+            $current = preg_replace(
+                '/<(?:p|div|li|ul|ol|h1|h2|h3|h4|h5|h6|blockquote|aside|article|section|header|footer)\b[^>]*>(?:\s|&nbsp;|&#160;|\x{00A0}|<br\s*\/?>)*<\/(?:p|div|li|ul|ol|h1|h2|h3|h4|h5|h6|blockquote|aside|article|section|header|footer)>/iu',
+                '',
+                $current
+            ) ?? $current;
+
+            $current = preg_replace(
+                '/(<br\s*\/?>\s*){3,}/i',
+                '<br/>',
+                $current
+            ) ?? $current;
+        } while ($current !== $previous);
+
+        return trim($current);
+    }
+
+    private static function stripInvisibleArtifacts(string $value): string
+    {
+        $value = str_ireplace(
+            ['&#xFEFF;', '&#xfeff;', '&#65279;', '&ZeroWidthSpace;', '&#8203;', '&#8204;', '&#8205;', '&#8288;'],
+            '',
+            $value
+        );
+
+        return preg_replace('/[\x{FEFF}\x{200B}\x{200C}\x{200D}\x{2060}]/u', '', $value) ?? $value;
     }
 
     private static function stripEmojiImages(string $html): string

@@ -1,5 +1,15 @@
 @php
     $hasVendorReviews = (($product['review_count'] ?? 0) > 0) && ($product['rating'] ?? null) !== null;
+    $practitioner = $product['practitioner'] ?? null;
+    $planKey = strtolower(trim((string) ($practitioner['plan_key'] ?? $practitioner['plan_label'] ?? '')));
+    $isPaidPlan = ! (($practitioner['is_paid_plan'] ?? false) === false || in_array($planKey, ['', 'starter'], true));
+    $practitionerFirstName = trim((string) ($practitioner['first_name'] ?? ''));
+    if ($practitionerFirstName === '' && ! empty($practitioner['name'])) {
+        $practitionerFirstName = trim(explode(' ', (string) $practitioner['name'])[0] ?? '');
+    }
+    $bookingModalTitle = $isPaidPlan ? ($product['title'] ?? 'Experience') : 'Discovery Call — We Offer Wellness®';
+    $bookingModalSubtitle = $isPaidPlan ? ('with ' . ($practitionerFirstName !== '' ? $practitionerFirstName : 'the practitioner')) : null;
+    $bookingModalPhoto = $isPaidPlan ? ($practitioner['photo'] ?? null) : null;
     $initialVariant = $product['variants'][0] ?? null;
     $baseProductId = $product['id']
         ?? ($initialVariant['product_id'] ?? null)
@@ -10,10 +20,32 @@
     $primaryImage = $product['images'][0] ?? ($product['image'] ?? '');
     $productTitleSafe = $product['title'] ?? 'Experience';
     $productUrlCurrent = url()->current();
+    $bookingFlow = strtolower(trim((string) ($product['booking_flow'] ?? 'flexible')));
+    $bookingSourceVersion = strtolower(trim((string) ($product['source_version'] ?? 'legacy')));
+    $isEventOffering = !empty($isEventOffering)
+        || in_array(strtolower((string) ($type ?? '')), ['event', 'events'], true)
+        || str_contains(strtolower((string) ($product['type'] ?? '')), 'event')
+        || !empty($product['start_date'])
+        || !empty($product['end_date']);
+    $primaryActionLabel = $isEventOffering ? 'Book tickets' : 'Add to cart';
+    $secondaryActionLabel = $isEventOffering ? 'Checkout' : 'Book now';
+    $mobileActionLabel = $isEventOffering ? 'Book tickets' : 'Add to cart';
+    $bookingHeaderLabel = $isEventOffering ? 'Book tickets' : 'Select a Date & Time';
 @endphp
 
 <style>
-    .buybox{position:sticky;top:24px;max-width:420px;margin-left:auto;margin-right:0}
+    .buybox{
+        position:-webkit-sticky;
+        position:sticky;
+        top:calc(var(--wow-header-offset, 0px) + 24px);
+        align-self:flex-start;
+        z-index:20;
+        width:100%;
+        max-width:365.33px;
+        margin-left:auto;
+        margin-right:0;
+        box-sizing:border-box;
+    }
     .buybox .card {
         background: #fff;
         backdrop-filter: saturate(1.2) blur(12px);
@@ -22,6 +54,8 @@
         border-radius: 11px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, .1);
         padding: 30px 25px 20px !important;
+        width:100%;
+        max-width:365.33px;
     }
     .chips{display:flex;gap:.5rem;flex-wrap:nowrap;width:100%}
     .chip{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:1px solid rgba(0,0,0,.08);background:#fff;border-radius:16px;padding:.6rem .9rem;font-weight:600;flex:1 1 0}
@@ -53,9 +87,21 @@
     .btn-basket{background:#f1f3f5;color:#111827;border:1px solid #d0d5dd}
     .group-range{display:none}
     .booking-wrap{border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fafafa}
+    .availability-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;align-items:start}
+    .availability-action-stack{display:flex;flex-direction:column;gap:10px;width:100%;align-items:stretch}
+    .availability-action-stack .btn,
+    .availability-action-stack .preferred-time-box{width:100%}
     .badge-note{font-size:.8rem;background:#eef7f2;color:#185a44;border:1px solid #c7e5d9}
     .sel-pill{display:inline-flex;gap:.5rem;align-items:center;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:.25rem .6rem}
     .sel-pill .edit{cursor:pointer}
+    .booking-title-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    .booking-title-left{display:flex;align-items:center;gap:8px;min-width:0}
+    .booking-title-left i{font-size:1rem;line-height:1;color:inherit;flex:0 0 auto}
+    .booking-title-left .fw-semibold{font-size:1rem;line-height:1.2;font-weight:600;color:inherit;white-space:nowrap}
+    .booking-title-row .badge-note{margin-left:auto;flex:0 0 auto;white-space:nowrap}
+    .preferred-time-box{margin-top:0;box-sizing:border-box;margin-bottom:20px}
+    .preferred-time-box label{display:block;margin:0 0 6px 0}
+    .preferred-time-box textarea{width:100%;box-sizing:border-box}
     .cal-head{display:flex;align-items:center;justify-content:space-between}
     .cal-month{font-weight:700}
     .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem}
@@ -144,14 +190,14 @@
                 </div>
             </div>
 
-            <div class="booking-wrap mt-3 mb-2">
-                <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="booking-wrap mt-3 mb-2" style="{{ $isEventOffering ? 'display:none' : '' }}">
+                <div class="d-flex align-items-center gap-2 mb-2 booking-wrap-standard">
                     <i class="bi bi-calendar-event"></i>
-                    <div class="fw-semibold">Availability</div>
-                    <span class="badge rounded-pill ms-auto badge-note">Select a date</span>
+                    <div class="fw-semibold">{{ $isEventOffering ? 'Tickets' : 'Availability' }}</div>
+                    <span class="badge rounded-pill ms-auto badge-note">{{ $isEventOffering ? 'Book tickets' : 'Select a date' }}</span>
                 </div>
 
-                <div class="d-flex gap-2 mb-2" role="group" aria-label="Availability choice">
+                <div class="d-flex gap-2 mb-2 booking-wrap-standard" role="group" aria-label="Availability choice">
                     <button type="button" class="btn btn-outline-success" id="btnBookNow">
                         <i class="bi bi-check2-circle me-1"></i>Pick now
                     </button>
@@ -160,7 +206,7 @@
                     </button>
                 </div>
 
-                <div class="small" id="bookingSelectionRow" style="display:none">
+                <div class="small booking-wrap-standard" id="bookingSelectionRow" style="display:none">
                     <span class="sel-pill">
                         <i class="bi bi-calendar2-week"></i>
                         <span id="bookingSelectionText"></span>
@@ -168,19 +214,58 @@
                     </span>
                 </div>
 
-                <div class="small text-warning d-flex align-items-center gap-2 mt-2" id="pillHoldBanner" style="display:none;">
+                <div class="small text-warning d-flex align-items-center gap-2 mt-2 booking-wrap-standard" id="pillHoldBanner" style="display:none;">
                     <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                     <span>Held for <span id="pillHoldCountdown">10:00</span></span>
                 </div>
 
-                <div class="small text-secondary mt-2" id="bookNote">
-                    Choose a date now, or decide later. We’ll still secure your order and you can confirm with your practitioner anytime.
+                <div class="small text-secondary mt-2 booking-wrap-standard" id="bookNote">
+                    {{ $isEventOffering ? 'Choose your ticket, then pick the date and time you want to attend.' : 'Choose a date now, or decide later. We’ll still secure your order and you can confirm with your practitioner anytime.' }}
+                </div>
+
+                <div class="booking-wrap-flexible d-none">
+                    <div class="d-flex align-items-center gap-2 mb-2 booking-title-row">
+                        <div class="booking-title-left">
+                            <i class="bi bi-calendar-event"></i>
+                            <div class="fw-semibold">Availability</div>
+                        </div>
+                        <span class="badge rounded-pill ms-auto badge-note">Flexible booking</span>
+                    </div>
+
+                    <div class="availability-actions" role="group" aria-label="Availability choice">
+                        <button type="button" class="btn btn-outline-success active" id="btnBookLaterFlexible">
+                            <i class="bi bi-check2-circle"></i>
+                            Confirm later
+                        </button>
+
+                        <div class="availability-action-stack">
+                            <button type="button" class="btn btn-outline-secondary" id="btnRequestTime">
+                                <i class="bi bi-chat-dots"></i>
+                                Add preference
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="preferred-time-box d-none" id="preferredTimeBox">
+                        <label for="preferredTimeNote">Preferred days or times</label>
+                        <textarea class="form-control" id="preferredTimeNote" placeholder="Example: Weekday evenings, Saturday morning, or any time next week"></textarea>
+                    </div>
+
+                    <div class="flexible-confirm-row" id="flexibleConfirmRow">
+                        <i class="bi bi-shield-check" aria-hidden="true"></i>
+                        <span>Your order is secured today</span>
+                    </div>
+
+                    <p class="book-note" id="bookNoteFlexible">
+                        This practitioner confirms times personally. Book now and you’ll agree a suitable date together after checkout.
+                    </p>
                 </div>
 
                 <input type="hidden" id="bookingChoice" value="later">
                 <input type="hidden" id="preferredDateValue" value="">
                 <input type="hidden" id="preferredTimeValue" value="">
                 <input type="hidden" id="preferredTZValue" value="">
+                <input type="hidden" id="preferredTimeNoteValue" value="">
             </div>
 
             <div class="mb-4 d-flex align-items-center gap-3 mt-3">
@@ -193,7 +278,7 @@
             </div>
 
             <div class="d-grid gap-2 mb-2" id="ctaWrap">
-                <button class="btn btn-basket btn-lg js-add-to-cart js-open-cart" id="addBtn"
+                <button class="btn btn-basket btn-lg js-add-to-cart" id="addBtn"
                         data-id="{{ $baseProductId }}"
                         data-product-id="{{ $baseProductId }}"
                         data-title="{{ e($productTitleSafe) }}"
@@ -201,7 +286,7 @@
                         data-image="{{ $primaryImage }}"
                         data-url="{{ $productUrlCurrent }}"
                         data-qty="1"
-                >Add to cart</button>
+                >{{ $primaryActionLabel }}</button>
                 <button class="btn btn-main btn-lg" id="buyNow"
                         data-id="{{ $baseProductId }}"
                         data-product-id="{{ $baseProductId }}"
@@ -210,7 +295,7 @@
                         data-image="{{ $primaryImage }}"
                         data-url="{{ $productUrlCurrent }}"
                         data-qty="1"
-                >Book now</button>
+                >{{ $secondaryActionLabel }}</button>
             </div>
 
             <div class="meta mb-3 mt-2">
@@ -235,8 +320,8 @@
             <div class="text-secondary small" id="mRatingText"></div>
         </div>
     </div>
-    <div class="m-right">
-        <button class="btn btn-main" id="mobileAdd"
+        <div class="m-right">
+            <button class="btn btn-main" id="mobileAdd"
                 data-id="{{ $baseProductId }}"
                 data-product-id="{{ $baseProductId }}"
                 data-title="{{ e($productTitleSafe) }}"
@@ -244,9 +329,9 @@
                 data-image="{{ $primaryImage }}"
                 data-url="{{ $productUrlCurrent }}"
                 data-qty="1"
-        >Add to cart</button>
+        >{{ $mobileActionLabel }}</button>
+        </div>
     </div>
-</div>
 
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="addToast" class="toast text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
@@ -281,24 +366,56 @@
                 <div class="booking-wrap">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-calendar-event"></i>
-                        <div class="fw-semibold">Availability</div>
-                    <span class="badge rounded-pill ms-auto badge-note">Select a date</span>
+                        <div class="fw-semibold">{{ $isEventOffering ? 'Tickets' : 'Availability' }}</div>
+                    <span class="badge rounded-pill ms-auto badge-note">{{ $isEventOffering ? 'Book tickets' : 'Select a date' }}</span>
                     </div>
                     <div class="d-flex gap-2" role="group" aria-label="Availability choice (sheet)">
                         <button type="button" class="btn btn-outline-success" id="sheetBookNow">
-                            <i class="bi bi-check2-circle me-1"></i>Pick now
+                            <i class="bi bi-check2-circle me-1"></i>{{ $isEventOffering ? 'Book tickets' : 'Pick now' }}
                         </button>
                         <button type="button" class="btn btn-outline-secondary active" id="sheetBookLater">
-                            <i class="bi bi-clock-history me-1"></i>Pick later
+                            <i class="bi bi-clock-history me-1"></i>{{ $isEventOffering ? 'Book later' : 'Pick later' }}
                         </button>
                     </div>
-                    <div class="small text-secondary mt-2" id="sheetBookingNote">Choose now or decide later — your order is still secured.</div>
+                    <div class="small text-secondary mt-2" id="sheetBookingNote">{{ $isEventOffering ? 'Choose your ticket to continue. The calendar stays open so you can pick the date and time you want.' : 'Choose now or decide later — your order is still secured.' }}</div>
+                </div>
+
+                <div class="booking-wrap booking-wrap-flexible d-none mt-3" id="sheetFlexibleWrap">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-calendar-event"></i>
+                        <div class="fw-semibold">{{ $isEventOffering ? 'Tickets' : 'Availability' }}</div>
+                        <span class="badge rounded-pill ms-auto badge-note">{{ $isEventOffering ? 'Book tickets' : 'Flexible booking' }}</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-success active" id="sheetBtnBookLaterFlexible">
+                            <i class="bi bi-check2-circle me-1"></i>Confirm later
+                        </button>
+
+                        <button type="button" class="btn btn-outline-secondary" id="sheetBtnRequestTime">
+                            <i class="bi bi-chat-dots me-1"></i>Add preference
+                        </button>
+
+                        <div class="preferred-time-box d-none" id="sheetPreferredTimeBox">
+                            <label for="sheetPreferredTimeNote">Preferred days or times</label>
+                            <textarea class="form-control" id="sheetPreferredTimeNote" placeholder="Example: Weekday evenings, Saturday morning, or any time next week"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flexible-confirm-row mt-3" id="sheetFlexibleConfirmRow">
+                        <i class="bi bi-shield-check" aria-hidden="true"></i>
+                        <span>{{ $isEventOffering ? 'Your ticket is secured today' : 'Your order is secured today' }}</span>
+                    </div>
+
+                    <p class="book-note mb-0" id="sheetBookNoteFlexible">
+                        {{ $isEventOffering ? 'Tickets are reserved instantly. Choose the date and time from the calendar and we’ll hold it in your basket.' : 'This practitioner confirms times personally. Book now and you’ll agree a suitable date together after checkout.' }}
+                    </p>
                 </div>
             </div>
             <div class="modal-footer">
                 <div class="me-auto small text-secondary" id="sheetSubtotal">Subtotal: £0.00</div>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-main" id="sheetConfirm">Confirm</button>
+                <button type="button" class="btn btn-main" id="sheetConfirm">{{ $isEventOffering ? 'Book tickets' : 'Confirm' }}</button>
             </div>
         </div>
     </div>
@@ -308,9 +425,24 @@
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content" id="bookingModalContent">
             <div class="modal-header">
-                <div>
-                    <div class="text-muted small">Select a Date & Time</div>
-                    <h5 class="modal-title" id="bookingModalLabel">Discovery Call — We Offer Wellness®</h5>
+                    <div class="d-flex align-items-center gap-3">
+                        @if($bookingModalPhoto)
+                        <div class="flex-shrink-0">
+                            <img
+                                src="{{ $bookingModalPhoto }}"
+                                alt="{{ $bookingModalTitle }} practitioner photo"
+                                class="rounded-circle border"
+                                style="width:52px;height:52px;object-fit:cover;"
+                            >
+                        </div>
+                    @endif
+                    <div>
+                        <div class="text-muted small">{{ $bookingHeaderLabel }}</div>
+                        <h5 class="modal-title mb-0" id="bookingModalLabel">{{ $bookingModalTitle }}</h5>
+                        @if($bookingModalSubtitle)
+                            <div class="small fw-semibold text-secondary">{{ $bookingModalSubtitle }}</div>
+                        @endif
+                    </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -348,7 +480,7 @@
                     Holding your slot for <span id="holdCountdown">10:00</span>
                 </div>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-main" id="confirmBooking" disabled>Confirm selection</button>
+                <button type="button" class="btn btn-main" id="confirmBooking" disabled>{{ $isEventOffering ? 'Book tickets' : 'Confirm selection' }}</button>
             </div>
         </div>
     </div>
@@ -386,14 +518,305 @@ const BASE_PRODUCT_ID = @json($baseProductId ?? null);
 const BASE_PRODUCT_TITLE = @json($product['title'] ?? 'Experience');
 const BASE_PRODUCT_IMAGE = @json($product['images'][0] ?? ($product['image'] ?? ''));
 const BASE_PRODUCT_URL = @json(url()->current());
+const BOOKING_FLOW = @json($bookingFlow);
+const BOOKING_SOURCE_VERSION = @json($bookingSourceVersion);
+const IS_EVENT_OFFERING = @json($isEventOffering);
+const PRIMARY_ACTION_LABEL = @json($primaryActionLabel);
+const SECONDARY_ACTION_LABEL = @json($secondaryActionLabel);
+const MOBILE_ACTION_LABEL = @json($mobileActionLabel);
+const BOOKING_ENDPOINT = BOOKING_SOURCE_VERSION === 'v3' ? 'offering' : 'product';
+const IS_LIVE_BOOKING = BOOKING_FLOW === 'live';
+const SERVER_DURATION_TEXT = @json(trim((string)($durationText ?? '')));
 const HOLD_MINUTES=10;const bookings={};function dateKey(d){return d.toISOString().slice(0,10)}function ensureDay(d){const k=dateKey(d);if(!bookings[k])bookings[k]={booked:new Set(),reserved:{}};return bookings[k]}(function seed(){const day=new Date(Date.UTC(2025,9,7,0,0,0));const d=ensureDay(day);d.booked.add("16:28");const reservedStart=new Date(Date.UTC(2025,9,7,16,30));d.reserved["16:30"]={until:new Date(reservedStart.getTime()+HOLD_MINUTES*60000)}})();
 const state={mode:"evoucher",selected:product.options.map(o=>o.values[0]),qty:1,variant:null,groupCount:3,recur:{cadence:"none",length:1}};const priceEl=document.getElementById("price"),compareEl=document.getElementById("compare"),optionsWrap=document.getElementById("options"),addBtn=document.getElementById("addBtn"),buyNow=document.getElementById("buyNow"),qty=document.getElementById("qty"),dec=document.getElementById("dec"),inc=document.getElementById("inc"),toastEl=document.getElementById("addToast"),stars=document.getElementById("stars"),ratingText=document.getElementById("ratingText"),groupRange=document.getElementById("groupRange"),groupCount=document.getElementById("groupCount"),groupInc=document.getElementById("groupInc"),groupDec=document.getElementById("groupDec");
 const mPrice=document.getElementById('mPrice'),mStars=document.getElementById('mStars'),mRatingText=document.getElementById('mRatingText'),mobileAdd=document.getElementById('mobileAdd');
 const configModalEl=document.getElementById('configModal'),configModal=new bootstrap.Modal(configModalEl),sheetOptions=document.getElementById('sheetOptions'),groupRangeSheet=document.getElementById('groupRangeSheet'),groupCountSheet=document.getElementById('groupCountSheet'),groupIncSheet=document.getElementById('groupIncSheet'),groupDecSheet=document.getElementById('groupDecSheet'),sheetBookLater=document.getElementById('sheetBookLater'),sheetBookNow=document.getElementById('sheetBookNow'),sheetConfirm=document.getElementById('sheetConfirm'),sheetSubtotal=document.getElementById('sheetSubtotal');
+const sheetBookingWrap = configModalEl ? configModalEl.querySelector('.booking-wrap') : null;
+const sheetBookingWrapFlexible = document.getElementById('sheetFlexibleWrap');
+const sheetBtnBookLaterFlexible = document.getElementById('sheetBtnBookLaterFlexible');
+const sheetBtnRequestTime = document.getElementById('sheetBtnRequestTime');
+const sheetPreferredTimeBox = document.getElementById('sheetPreferredTimeBox');
+const sheetPreferredTimeNote = document.getElementById('sheetPreferredTimeNote');
 let sheetIntent='add';
 const btnBookNow=document.getElementById('btnBookNow'),btnBookLater=document.getElementById('btnBookLater'),bookingChoice=document.getElementById('bookingChoice'),preferredDateValue=document.getElementById('preferredDateValue'),preferredTimeValue=document.getElementById('preferredTimeValue'),preferredTZValue=document.getElementById('preferredTZValue'),bookingSelectionRow=document.getElementById('bookingSelectionRow'),bookingSelectionText=document.getElementById('bookingSelectionText'),changeBooking=document.getElementById('changeBooking');
 const bookingModalEl=document.getElementById('bookingModal'),bookingModal=new bootstrap.Modal(bookingModalEl),bookingModalContent=document.getElementById('bookingModalContent'),calMonthLabel=document.getElementById('calMonthLabel'),calDayNames=document.getElementById('calDayNames'),calGrid=document.getElementById('calGrid'),calPrev=document.getElementById('calPrev'),calNext=document.getElementById('calNext'),slotList=document.getElementById('slotList'),bookingSummary=document.getElementById('bookingSummary'),confirmBooking=document.getElementById('confirmBooking'),tzCurrent=document.getElementById('tzCurrent'),tzSelect=document.getElementById('tzSelect'),modalHint=document.getElementById('modalHint'),mobileBack=document.getElementById('mobileBack'),holdTimer=document.getElementById('holdTimer'),holdCountdown=document.getElementById('holdCountdown');
 const pillHoldBanner=document.getElementById('pillHoldBanner'),pillHoldCountdown=document.getElementById('pillHoldCountdown'),pillHourglass=pillHoldBanner.querySelector('i.bi-hourglass-split');
+const PRACTITIONER_DATA = @json($product['practitioner'] ?? null);
+const PRACTITIONER_PLAN_KEY = String(PRACTITIONER_DATA?.plan_key || PRACTITIONER_DATA?.plan_label || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const IS_PAID_PRACTITIONER = Boolean(PRACTITIONER_DATA?.is_paid_plan) || (!['', 'starter'].includes(PRACTITIONER_PLAN_KEY));
+const bookingState = {
+  loading: false,
+  loaded: false,
+  cacheKey: '',
+  error: null,
+  payload: null,
+  slotsByDay: {},
+  reservationHolds: {},
+  availabilitySettings: {},
+};
+const bookingWrap = document.querySelector('.booking-wrap');
+const bookingWrapStandardEls = bookingWrap ? bookingWrap.querySelectorAll('.booking-wrap-standard') : [];
+const bookingWrapFlexible = bookingWrap ? bookingWrap.querySelector('.booking-wrap-flexible') : null;
+const btnBookLaterFlexible = document.getElementById('btnBookLaterFlexible');
+const btnRequestTime = document.getElementById('btnRequestTime');
+const preferredTimeBox = document.getElementById('preferredTimeBox');
+const preferredTimeNote = document.getElementById('preferredTimeNote');
+const preferredTimeNoteValue = document.getElementById('preferredTimeNoteValue');
+const AVAILABILITY_TEXT = {
+  voucher: 'Your voucher is valid for 12 months from the date of purchase. Please book and take your therapy before the expiry date.',
+  leadTime: 'We recommend booking at least 2–4 weeks in advance to ensure your preferred slots are available.',
+  duration: 'Please allow up to 60 minutes for the full therapy (plus a few minutes to settle in).',
+};
+function weekdayNameFromIso(isoDay){
+  return ({1:'Monday',2:'Tuesday',3:'Wednesday',4:'Thursday',5:'Friday',6:'Saturday',7:'Sunday'})[Number(isoDay)] || null;
+}
+function joinWeekdayNames(names){
+  const list = (Array.isArray(names) ? names : []).filter(Boolean);
+  if (!list.length) return '';
+  if (list.length === 1) return list[0];
+  if (list.length === 2) return `${list[0]} and ${list[1]}`;
+  const last = list[list.length - 1];
+  return `${list.slice(0, -1).join(', ')}, and ${last}`;
+}
+function buildAvailabilityPatternFromSlots(slotsByDay){
+  try{
+    const seen = new Set();
+    Object.keys(slotsByDay || {}).forEach(key => {
+      const slots = slotsByDay?.[key]?.slots || [];
+      if (!Array.isArray(slots) || !slots.length) return;
+      const date = new Date(key + 'T00:00:00');
+      if (Number.isNaN(date.getTime())) return;
+      seen.add(date.getDay() === 0 ? 7 : date.getDay());
+    });
+    const names = Array.from(seen).sort((a,b)=>a-b).map(weekdayNameFromIso).filter(Boolean);
+    if (!names.length) return '';
+    if (names.length === 7) {
+      return 'This therapy is available 7 days a week (subject to practitioner availability).';
+    }
+    return `This therapy is usually available on ${joinWeekdayNames(names)} (subject to practitioner availability).`;
+  }catch(_e){
+    return '';
+  }
+}
+function parseDurationMinutesFromText(text){
+  try{
+    const value = String(text || '').toLowerCase().trim();
+    if (!value) return 0;
+    const hourMatch = value.match(/(\d+(?:\.\d+)?)\s*(hour|hr|hrs|hours)\b/);
+    if (hourMatch) return Math.max(0, Math.round(parseFloat(hourMatch[1]) * 60));
+    const minuteMatch = value.match(/(\d+(?:\.\d+)?)\s*(minute|min|mins|minutes)\b/);
+    if (minuteMatch) return Math.max(0, Math.round(parseFloat(minuteMatch[1])));
+    return 0;
+  }catch(_e){
+    return 0;
+  }
+}
+function resolvedBookingDurationText(){
+  const serverText = bookingState.payload?.bookingConfig?.duration || '';
+  if (bookingState.loaded && serverText) {
+    return serverText;
+  }
+  const localText = bookingVariantLabel() || (state.variant && state.variant.title ? String(state.variant.title).trim() : '');
+  const minutes = parseDurationMinutesFromText(localText);
+  if (minutes > 0) {
+    return `${minutes} Minutes`;
+  }
+  return serverText || '60 Minutes';
+}
+function hasLiveAvailability(){
+  try{
+    return Object.values(bookingState.slotsByDay || {}).some(day => Array.isArray(day?.slots) && day.slots.length > 0);
+  }catch(_e){
+    return false;
+  }
+}
+function syncBookingMode(){
+  if (!bookingWrap) return;
+  const flexibleMode = !IS_LIVE_BOOKING;
+  bookingWrapStandardEls.forEach(function(el){
+    el.classList.toggle('d-none', flexibleMode);
+  });
+  if (bookingWrapFlexible) {
+    bookingWrapFlexible.classList.toggle('d-none', !flexibleMode);
+  }
+  if (sheetBookingWrap) {
+    sheetBookingWrap.classList.toggle('d-none', flexibleMode);
+  }
+  if (sheetBookingWrapFlexible) {
+    sheetBookingWrapFlexible.classList.toggle('d-none', !flexibleMode);
+  }
+  if (flexibleMode) {
+    bookingChoice.value = 'later';
+    preferredTimeValue.value = '';
+    preferredDateValue.value = '';
+    preferredTZValue.value = '';
+    if (bookingSelectionRow) bookingSelectionRow.style.display = 'none';
+    if (bookingSelectionText) bookingSelectionText.textContent = '';
+    if (btnBookLaterFlexible) {
+      btnBookLaterFlexible.classList.add('active', 'btn-outline-success');
+      btnBookLaterFlexible.classList.remove('btn-outline-secondary');
+    }
+    if (btnRequestTime) {
+      btnRequestTime.classList.remove('active', 'btn-outline-success');
+      btnRequestTime.classList.add('btn-outline-secondary');
+    }
+    if (preferredTimeBox) preferredTimeBox.classList.add('d-none');
+    if (sheetBtnBookLaterFlexible) {
+      sheetBtnBookLaterFlexible.classList.add('active', 'btn-outline-success');
+      sheetBtnBookLaterFlexible.classList.remove('btn-outline-secondary');
+    }
+    if (sheetBtnRequestTime) {
+      sheetBtnRequestTime.classList.remove('active', 'btn-outline-success');
+      sheetBtnRequestTime.classList.add('btn-outline-secondary');
+    }
+    if (sheetPreferredTimeBox) sheetPreferredTimeBox.classList.add('d-none');
+  }
+}
+function syncAvailabilityCopy(){
+  try{
+    const patternEl = document.getElementById('wowAvailabilityPattern');
+    const leadTimeEl = document.getElementById('wowAvailabilityLeadTime');
+    const durationEl = document.getElementById('wowAvailabilityDuration');
+    const voucherEl = document.getElementById('wowAvailabilityVoucher');
+    if (voucherEl) voucherEl.textContent = AVAILABILITY_TEXT.voucher;
+    if (bookingState.loaded) {
+      const pattern = buildAvailabilityPatternFromSlots(bookingState.slotsByDay);
+      if (patternEl && pattern) patternEl.textContent = pattern;
+      const leadTime = bookingState.availabilitySettings?.leadTimeText || bookingState.payload?.bookingConfig?.lead_time_text || '';
+      if (leadTimeEl) leadTimeEl.textContent = leadTime || AVAILABILITY_TEXT.leadTime;
+      const durationText = resolvedBookingDurationText();
+      if (durationEl) durationEl.textContent = durationText ? `Please allow up to ${durationText.replace(/\s+/g, ' ').trim().replace(/^(\d+)\s*Minutes?$/i, '$1 minutes')} for the full therapy (plus a few minutes to settle in).` : AVAILABILITY_TEXT.duration;
+      if (patternEl && pattern) patternEl.style.display = '';
+    } else {
+      const durationText = resolvedBookingDurationText();
+      if (durationEl && durationText) {
+        durationEl.textContent = `Please allow up to ${durationText.replace(/\s+/g, ' ').trim().replace(/^(\d+)\s*Minutes?$/i, '$1 minutes')} for the full therapy (plus a few minutes to settle in).`;
+      }
+    }
+    syncBookingMode();
+  }catch(_e){}
+}
+function getCurrentPriceOptionId(){
+  try {
+    const id = state?.variant?.id ? String(state.variant.id) : '';
+    const match = id.match(/po_(\d+)/i);
+    if (match) return parseInt(match[1], 10);
+    if (/^\d+$/.test(id)) return parseInt(id, 10);
+    const url = new URL(window.location.href);
+    const variant = String(url.searchParams.get('variant') || '');
+    const qMatch = variant.match(/po_(\d+)/i);
+    if (qMatch) return parseInt(qMatch[1], 10);
+    return /^\d+$/.test(variant) ? parseInt(variant, 10) : null;
+  } catch (_e) {
+    return null;
+  }
+}
+function bookingCacheKey(){
+  return `${String(BASE_PRODUCT_ID || '')}:${String(getCurrentPriceOptionId() || 'default')}:${String(bookingVariantLabel() || '')}`;
+}
+function bookingDateKey(d){
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function bookingSlotsForDate(d){
+  return bookingState.slotsByDay?.[bookingDateKey(d)]?.slots || [];
+}
+function bookingHoldUntilForSlot(d, slotStart){
+  return bookingState.reservationHolds?.[bookingDateKey(d)]?.[slotStart] || null;
+}
+function firstAvailableBookingDate(){
+  try{
+    const keys = Object.keys(bookingState.slotsByDay || {}).filter(key => {
+      const slots = bookingState.slotsByDay?.[key]?.slots || [];
+      return Array.isArray(slots) && slots.length > 0;
+    }).sort();
+    const key = keys[0];
+    if(!key) return null;
+    const date = new Date(key + 'T00:00:00');
+    return Number.isNaN(date.getTime()) ? null : date;
+  }catch(_e){
+    return null;
+  }
+}
+function syncCalendarToAvailability(){
+  try{
+    if (!bookingState.loaded) return false;
+    const selected = calendarState.selectedDate;
+    const selectedHasAvailability = selected ? bookingSlotsForDate(selected).length > 0 : false;
+    const firstAvailable = firstAvailableBookingDate();
+    const target = selectedHasAvailability ? selected : firstAvailable;
+    if (!target) return false;
+    calendarState.viewYear = target.getFullYear();
+    calendarState.viewMonth = target.getMonth();
+    if (!selectedHasAvailability) {
+      calendarState.selectedDate = target;
+      calendarState.selectedTime = null;
+    }
+    return true;
+  }catch(_e){
+    return false;
+  }
+}
+async function loadBookingContext(force = false){
+  if (!IS_LIVE_BOOKING) {
+    return false;
+  }
+  const cacheKey = bookingCacheKey();
+  if (!force && bookingState.loaded && bookingState.cacheKey === cacheKey) {
+    return true;
+  }
+  bookingState.loading = true;
+  bookingState.error = null;
+  try {
+    const priceOptionId = getCurrentPriceOptionId();
+    const variantLabel = bookingVariantLabel();
+    const url = new URL(`/api/booking/${BOOKING_ENDPOINT}/${encodeURIComponent(String(BASE_PRODUCT_ID || ''))}`, window.location.origin);
+    if (priceOptionId) {
+      url.searchParams.set('price_option_id', String(priceOptionId));
+    }
+    if (variantLabel) {
+      url.searchParams.set('variant_label', variantLabel);
+    }
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      credentials: 'same-origin',
+    });
+    if (!response.ok) {
+      throw new Error(`Availability request failed (${response.status})`);
+    }
+    const json = await response.json();
+    const payload = json?.bookingPayload || {};
+    bookingState.payload = payload;
+    bookingState.slotsByDay = payload.slotsByDay || {};
+    bookingState.reservationHolds = payload.reservationHolds || {};
+    bookingState.availabilitySettings = payload.availabilitySettings || {};
+    bookingState.cacheKey = cacheKey;
+    bookingState.loaded = true;
+
+    const timezone = bookingState.availabilitySettings.timezone || calendarState.tz;
+    if (timezone) {
+      calendarState.tz = timezone;
+      if (tzCurrent) tzCurrent.textContent = timezone;
+      if (tzSelect) {
+        tzSelect.value = timezone;
+        tzSelect.disabled = true;
+      }
+    }
+    syncAvailabilityCopy();
+    return true;
+  } catch (error) {
+    bookingState.error = error;
+    bookingState.loaded = false;
+    bookingState.payload = null;
+    bookingState.slotsByDay = {};
+    bookingState.reservationHolds = {};
+    return false;
+  } finally {
+    bookingState.loading = false;
+  }
+}
 function fmt(c){try{return new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP"}).format(c/100)}catch(e){return "£"+(c/100).toFixed(2)}}
 function buildStarsHTML(r){
   const full=Math.floor(Number(r)||0);
@@ -447,6 +870,59 @@ function parseSessions(val){
     return m ? parseInt(m[1],10) : null;
   }catch(e){ return null }
 }
+function parseDurationRange(text){
+  try{
+    const raw = String(text || '').toLowerCase().trim();
+    if (!raw) return null;
+    const ranged = raw.match(/(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*(hour|hr|hrs|hours|minute|min|mins|minutes)\b/i);
+    if (ranged) {
+      const unit = String(ranged[3] || '').toLowerCase();
+      const a = parseFloat(ranged[1]);
+      const b = parseFloat(ranged[2]);
+      const factor = /hour|hr/.test(unit) ? 60 : 1;
+      const min = Math.round(Math.min(a, b) * factor);
+      const max = Math.round(Math.max(a, b) * factor);
+      return { min, max };
+    }
+    const single = raw.match(/(\d+(?:\.\d+)?)\s*(hour|hr|hrs|hours|minute|min|mins|minutes)\b/i);
+    if (single) {
+      const unit = String(single[2] || '').toLowerCase();
+      const value = parseFloat(single[1]);
+      const minutes = Math.round(/hour|hr/.test(unit) ? value * 60 : value);
+      return { min: minutes, max: minutes };
+    }
+    return null;
+  }catch(_e){
+    return null;
+  }
+}
+function getBaseDurationInfo(){
+  const text = bookingState.loaded
+    ? (bookingState.payload?.bookingConfig?.duration || SERVER_DURATION_TEXT || '')
+    : (SERVER_DURATION_TEXT || '');
+  const parsed = parseDurationRange(text);
+  return parsed ? { text, parsed } : null;
+}
+function hasResolvedDurationData(){
+  const info = getBaseDurationInfo();
+  if (!info) return false;
+  const min = Number(info.parsed?.min || 0);
+  const max = Number(info.parsed?.max || 0);
+  if (min <= 0 || max <= 0) return false;
+  if (min !== 60 || max !== 60) return true;
+  return /[-–—]/.test(String(info.text || ''));
+}
+function getEffectiveSessionMinutes(val){
+  const parsed = parseDurationRange(val);
+  if (parsed && Number.isFinite(parsed.max) && parsed.max > 0) {
+    return parsed.max;
+  }
+  const info = getBaseDurationInfo();
+  if (info && Number.isFinite(info.parsed?.max) && info.parsed.max > 0 && hasResolvedDurationData()) {
+    return info.parsed.max;
+  }
+  return 60;
+}
 function sessionsSummaryForValue(val, minTotal){
   const n = parseSessions(val) || 1;
   const unit = Math.round((minTotal||0)/n);
@@ -457,11 +933,11 @@ function computeBestValue(variants, optIdx){
   const map = new Map();
   (variants||[]).forEach(v=>{
     const val = (v.options||[])[optIdx];
-    const n = parseSessions(val);
-    if(!n || !v.price) return;
-    const cur = map.get(n);
+    const sessions = parseSessions(val) || 1;
+    if(!sessions || !v.price) return;
     const price = Number(v.price)||0;
-    if(cur==null || price < cur) map.set(n, price);
+    const cur = map.get(sessions);
+    if(cur==null || price < cur) map.set(sessions, price);
   });
   // Find best by lowest unit price with tie-breakers
   let best = { n:null, unit:Infinity, total:Infinity };
@@ -502,19 +978,21 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
         if (!equalsAtIndex(j, sel, got)) return;
       }
       const val = String(ops[optIdx]||'');
-      const n = parseSessions(val) || 1;
+      const sessions = parseSessions(val) || 1;
       const price = Number(v.price)||0;
-      const cur = map.get(n);
-      if (cur==null || price < cur) map.set(n, price);
-    });
-    let best = { n:null, unit:Infinity, total:Infinity };
-    map.forEach((total, n)=>{
-      const unit = total / n;
-      if (unit < best.unit || (unit===best.unit && (n > best.n || (n===best.n && total < best.total)))){
-        best = { n, unit, total };
+      const cur = map.get(val);
+      if (cur == null || price < cur.price) {
+        map.set(val, { price, sessions });
       }
     });
-    return best.n ? best : null;
+    let best = { value:null, sessions:null, unit:Infinity, total:Infinity };
+    map.forEach((entry, value)=>{
+      const unit = entry.price / entry.sessions;
+      if (unit < best.unit || (unit === best.unit && (entry.sessions > best.sessions || (entry.sessions === best.sessions && entry.price < best.total)))){
+        best = { value, sessions: entry.sessions, unit, total: entry.price };
+      }
+    });
+    return best.value ? best : null;
   }
 
   function labelForVal(val){
@@ -554,7 +1032,7 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
       const sub = document.createElement('div'); sub.className='sd-sub'; sub.textContent = `${fmt(total)} total • ${fmt(unit)} / session`;
       left.appendChild(ttl); left.appendChild(sub);
       const right = document.createElement('div'); right.className='sd-right';
-      if (best && best.n === n && total === best.total){ const badge=document.createElement('span'); badge.className='sd-badge'; badge.textContent='Best value'; right.appendChild(badge); }
+      if (best && best.value === val){ const badge=document.createElement('span'); badge.className='sd-badge'; badge.textContent='Best value'; right.appendChild(badge); }
       const chk = document.createElement('span'); chk.className='sd-check'; chk.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
       right.appendChild(chk);
       row.appendChild(left); row.appendChild(right);
@@ -601,7 +1079,7 @@ function buildSessionsDropdown(container, optIdx, opt, { contextAware=false } = 
     left.innerHTML = '';
     const label = document.createElement('span'); label.textContent = (/^\d+$/.test(cur.trim()) && n ? `${n} Sessions` : cur);
     left.appendChild(label);
-    const bc = computeBestContext(); if (bc && bc.n === (n||1)){ const b = document.createElement('span'); b.className='sd-badge'; b.textContent='Best value'; left.appendChild(b); }
+    const bc = computeBestContext(); if (bc && bc.value === cur){ const b = document.createElement('span'); b.className='sd-badge'; b.textContent='Best value'; left.appendChild(b); }
     if (changed) {
       try { updateVariant(); updateSheetSubtotal(); } catch(e){}
     }
@@ -827,13 +1305,16 @@ function currentVariantLabel(){
     return parts.join(' • ');
   } catch(_e) { return ''; }
 }
+function bookingVariantLabel(){
+  return currentVariantLabel() || (state.variant && state.variant.title ? String(state.variant.title).trim() : '');
+}
 function syncCartButtons(){
   const variantId = state.variant && state.variant.id ? state.variant.id : null;
   const productId = BASE_PRODUCT_ID || (product?.id ?? '');
   const qtyVal = Math.max(1, Number(state.qty||1)||1);
   const pricePennies = unitPriceWithMode();
   const pricePounds = (pricePennies >= 0 ? (pricePennies/100).toFixed(2) : '0.00');
-  const variantLabel = currentVariantLabel() || (state.variant && state.variant.title ? state.variant.title : '');
+  const variantLabel = bookingVariantLabel();
   [addBtn, mobileAdd].forEach(function(btn){
     if(!btn) return;
     btn.dataset.id = String(productId);
@@ -845,7 +1326,6 @@ function syncCartButtons(){
     btn.dataset.qty = String(qtyVal);
     if(btn===addBtn){
       btn.classList.add('js-add-to-cart');
-      btn.classList.add('js-open-cart');
     }
     if(variantId){ btn.dataset.variantId = String(variantId); }
     else { delete btn.dataset.variantId; }
@@ -873,12 +1353,19 @@ function updateVariant(){
     else{groupRange.style.display="none";state.groupCount=3;if(groupCount) groupCount.value=3;}
   }
   addBtn.disabled=!state.variant || !state.variant.available;
-  addBtn.textContent=(state.variant && state.variant.available)?"Add to cart":"Sold out";
+  addBtn.textContent=(state.variant && state.variant.available)?PRIMARY_ACTION_LABEL:"Sold out";
+  if (buyNow) buyNow.textContent = SECONDARY_ACTION_LABEL;
+  if (mobileAdd) mobileAdd.textContent = MOBILE_ACTION_LABEL;
   updatePriceUI();
   try { syncFormatUI(); } catch(e) {}
   // Notify helper of current selection + variant id
   try{ document.dispatchEvent(new CustomEvent('wow:selected', { detail: { options: (state.selected||[]), variantId: state.variant ? state.variant.id : null } })); }catch(e){}
   syncVariantQueryParam();
+  if (IS_LIVE_BOOKING) {
+    bookingState.loaded = false;
+    bookingState.cacheKey = '';
+    loadBookingContext(false).then(syncAvailabilityCopy).catch(()=>{});
+  }
 }
 function clampGroupCount(){let v=parseInt(groupCount.value||"3",10);if(isNaN(v)||v<3) v=3; if(v>10) v=10;groupCount.value=v; state.groupCount=v}
 function stepGroup(delta){let v=parseInt(groupCount.value||"3",10); if(isNaN(v)) v=3;v=Math.min(10,Math.max(3,v+delta));groupCount.value=v; state.groupCount=v; updatePriceUI()}
@@ -945,11 +1432,47 @@ const calendarState={viewYear:new Date().getFullYear(),viewMonth:new Date().getM
 function exitMobileTimesMode(){bookingModalContent.classList.remove('mobile-times')}
 function clearBookingSelection(){bookingChoice.value='later';preferredDateValue.value='';preferredTimeValue.value='';preferredTZValue.value='';bookingSelectionRow.style.display='none';bookingSelectionText.textContent='';calendarState.selectedDate=null;calendarState.selectedTime=null;bookingSummary.textContent='No date selected.';confirmBooking.disabled=true;modalHint.textContent='Pick a date, then choose a time.';btnBookLater?.classList.add('active');btnBookNow?.classList.remove('active');exitMobileTimesMode();stopUserHold()}
 btnBookLater?.addEventListener('click',clearBookingSelection);btnBookNow?.addEventListener('click',()=>{btnBookNow.classList.add('active');btnBookLater.classList.remove('active');bookingChoice.value='now';bookingModal.show()});changeBooking?.addEventListener('click',(e)=>{e.preventDefault();btnBookNow.click()});
-sheetBookLater.addEventListener('click',()=>{sheetBookLater.classList.add('active');sheetBookNow.classList.remove('active');bookingChoice.value='later';});sheetBookNow.addEventListener('click',()=>{sheetBookNow.classList.add('active');sheetBookLater.classList.remove('active');bookingChoice.value='now';});sheetConfirm.addEventListener('click',()=>{if(bookingChoice.value==='now' && !(preferredDateValue.value && preferredTimeValue.value)){configModal.hide();bookingModal.show();return;}configModal.hide();const redirect = (sheetIntent==='buy');doAddToCart({ redirect });sheetIntent='add';});
+btnBookLaterFlexible?.addEventListener('click',()=>{
+  bookingChoice.value='later';
+  btnBookLaterFlexible.classList.add('active','btn-outline-success');
+  btnBookLaterFlexible.classList.remove('btn-outline-secondary');
+  btnRequestTime?.classList.remove('active','btn-outline-success');
+  btnRequestTime?.classList.add('btn-outline-secondary');
+  if (preferredTimeBox) preferredTimeBox.classList.add('d-none');
+});
+btnRequestTime?.addEventListener('click',()=>{
+  bookingChoice.value='preferred';
+  btnRequestTime.classList.add('active','btn-outline-secondary');
+  btnRequestTime.classList.remove('btn-outline-success');
+  btnBookLaterFlexible?.classList.remove('active','btn-outline-secondary');
+  btnBookLaterFlexible?.classList.add('btn-outline-success');
+  if (preferredTimeBox) preferredTimeBox.classList.remove('d-none');
+});
+preferredTimeNote?.addEventListener('input',()=>{ if (preferredTimeNoteValue) preferredTimeNoteValue.value = preferredTimeNote.value || ''; });
+sheetBookLater?.addEventListener('click',()=>{sheetBookLater.classList.add('active');sheetBookNow.classList.remove('active');bookingChoice.value='later';});
+sheetBookNow?.addEventListener('click',()=>{sheetBookNow.classList.add('active');sheetBookLater.classList.remove('active');bookingChoice.value='now';});
+sheetBtnBookLaterFlexible?.addEventListener('click',()=>{
+  bookingChoice.value='later';
+  sheetBtnBookLaterFlexible.classList.add('active','btn-outline-success');
+  sheetBtnBookLaterFlexible.classList.remove('btn-outline-secondary');
+  sheetBtnRequestTime?.classList.remove('active','btn-outline-success');
+  sheetBtnRequestTime?.classList.add('btn-outline-secondary');
+  if (sheetPreferredTimeBox) sheetPreferredTimeBox.classList.add('d-none');
+});
+sheetBtnRequestTime?.addEventListener('click',()=>{
+  bookingChoice.value='preferred';
+  sheetBtnRequestTime.classList.add('active','btn-outline-secondary');
+  sheetBtnRequestTime.classList.remove('btn-outline-success');
+  sheetBtnBookLaterFlexible?.classList.remove('active','btn-outline-secondary');
+  sheetBtnBookLaterFlexible?.classList.add('btn-outline-success');
+  if (sheetPreferredTimeBox) sheetPreferredTimeBox.classList.remove('d-none');
+});
+sheetPreferredTimeNote?.addEventListener('input',()=>{ if (preferredTimeNoteValue) preferredTimeNoteValue.value = sheetPreferredTimeNote.value || ''; });
+sheetConfirm?.addEventListener('click',()=>{if(bookingChoice.value==='now' && !(preferredDateValue.value && preferredTimeValue.value)){configModal.hide();bookingModal.show();return;}configModal.hide();const redirect = (sheetIntent==='buy');doAddToCart({ redirect });sheetIntent='add';});
 function generateSlotsForDate(d){const day=d.getDay(); if(day===0||day===6) return [];const slots=[]; for(let h=9;h<=16;h++){slots.push(`${String(h).padStart(2,'0')}:00`);slots.push(`${String(h).padStart(2,'0')}:30`)} return slots}
 function renderDayNames(){calDayNames.innerHTML='';['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(n=>{const el=document.createElement('div');el.className='cal-dayname text-center';el.textContent=n;calDayNames.appendChild(el)})}
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}function firstWeekday(y,m){const js=new Date(y,m,1).getDay();return (js+6)%7}function isSameDate(a,b){return a&&b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
-function renderCalendar(){const y=calendarState.viewYear,m=calendarState.viewMonth;calMonthLabel.textContent=new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});calGrid.innerHTML='';const lead=firstWeekday(y,m),total=daysInMonth(y,m);if(!calDayNames.children.length) renderDayNames();const today=new Date(); today.setHours(0,0,0,0);for(let i=0;i<lead;i++){const d=document.createElement('div');d.className='cal-cell';d.setAttribute('aria-disabled','true');calGrid.appendChild(d)}for(let day=1;day<=total;day++){const cellDate=new Date(y,m,day); cellDate.setHours(0,0,0,0);const btn=document.createElement('button'); btn.type='button'; btn.className='cal-cell'; btn.textContent=String(day);const past=cellDate<today; if(past) btn.setAttribute('aria-disabled','true');btn.addEventListener('click',()=>{if(past) return;calendarState.selectedDate=cellDate; calendarState.selectedTime=null;[...calGrid.querySelectorAll('.cal-cell')].forEach(c=>c.classList.remove('active'));btn.classList.add('active'); renderSlots(); updateSummary(); confirmBooking.disabled=true; modalHint.textContent='Choose a time.'; if (window.matchMedia('(max-width: 991px)').matches) bookingModalContent.classList.add('mobile-times');});if(isSameDate(cellDate,calendarState.selectedDate)) btn.classList.add('active');calGrid.appendChild(btn)}}
+function renderCalendar(){const y=calendarState.viewYear,m=calendarState.viewMonth;calMonthLabel.textContent=new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});calGrid.innerHTML='';const lead=firstWeekday(y,m),total=daysInMonth(y,m);if(!calDayNames.children.length) renderDayNames();const today=new Date(); today.setHours(0,0,0,0);for(let i=0;i<lead;i++){const d=document.createElement('div');d.className='cal-cell';d.setAttribute('aria-disabled','true');calGrid.appendChild(d)}for(let day=1;day<=total;day++){const cellDate=new Date(y,m,day); cellDate.setHours(0,0,0,0);const btn=document.createElement('button'); btn.type='button'; btn.className='cal-cell'; btn.textContent=String(day);const past=cellDate<today; const slots=IS_LIVE_BOOKING ? (bookingState.loaded ? bookingSlotsForDate(cellDate) : []) : generateSlotsForDate(cellDate); const noAvailability=slots.length===0; if(past||noAvailability){btn.disabled=true;btn.setAttribute('aria-disabled','true');btn.title=past?'Past date':'No availability'}btn.addEventListener('click',()=>{if(past||noAvailability) return;calendarState.selectedDate=cellDate; calendarState.selectedTime=null;[...calGrid.querySelectorAll('.cal-cell')].forEach(c=>c.classList.remove('active'));btn.classList.add('active'); renderSlots(); updateSummary(); confirmBooking.disabled=true; modalHint.textContent='Choose a time.'; if (window.matchMedia('(max-width: 991px)').matches) bookingModalContent.classList.add('mobile-times');});if(isSameDate(cellDate,calendarState.selectedDate)&&!past&&!noAvailability) btn.classList.add('active');calGrid.appendChild(btn)}}
 function validReserved(dayObj, timeKey){const res = dayObj.reserved[timeKey]; if(!res) return null; const now = new Date(); if(now >= res.until){delete dayObj.reserved[timeKey]; return null;} return res }
 function mmss(ms){const total=Math.max(0,Math.ceil(ms/1000));const m=String(Math.floor(total/60)).padStart(2,'0');const s=String(total%60).padStart(2,'0');return `${m}:${s}`}
 let userHoldInterval=null,userHoldUntil=null,userHoldKey=null;
@@ -957,15 +1480,48 @@ function startUserHold(dateObj,timeStr){stopUserHold();const k=dateKey(new Date(
 function stopUserHold(){document.getElementById('holdTimer').style.display='none';document.getElementById('holdCountdown').textContent='10:00';const banner=document.getElementById('pillHoldBanner');banner.style.display='none';banner.classList.remove('hourglass-active');banner.querySelector('i')?.classList.remove('hourglass-spin');document.getElementById('pillHoldCountdown').textContent='10:00';if(userHoldInterval){clearInterval(userHoldInterval);userHoldInterval=null}if(userHoldKey){const d = bookings[userHoldKey.k];if(d && d.reserved[userHoldKey.timeStr]){delete d.reserved[userHoldKey.timeStr]}userHoldKey=null}userHoldUntil=null}
 function tickUserHold(){if(!userHoldUntil){document.getElementById('holdTimer').style.display='none';const banner=document.getElementById('pillHoldBanner');banner.style.display='none';banner.classList.remove('hourglass-active');banner.querySelector('i')?.classList.remove('hourglass-spin');return}const remaining=userHoldUntil-Date.now();if(remaining<=0){stopUserHold();calendarState.selectedTime=null;updateSummary();confirmBooking.disabled=true;modalHint.textContent='Hold expired — please choose another time.';renderSlots();return}const t=mmss(remaining);document.getElementById('holdCountdown').textContent=t;document.getElementById('pillHoldCountdown').textContent=t}
 function refreshReservedCountdowns(){const spans=[...document.querySelectorAll('button.slot.reserved span[data-until]')];if(!spans.length) return;const now=new Date();spans.forEach(s=>{const until=new Date(s.dataset.until);const remaining=until-now;if(remaining<=0){renderSlots()}else{s.textContent=`(${mmss(remaining)}) reserved`}})}
-function renderSlots(){slotList.innerHTML='';const d=calendarState.selectedDate;if(!d){slotList.innerHTML='<div class="text-secondary small">Select a date to see available times.</div>';return}const slots=generateSlotsForDate(d); if(!slots.length){slotList.innerHTML='<div class="text-secondary small">No times available for this date.</div>';return;}const dayObj=ensureDay(new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())));slots.forEach(s=>{if(dayObj.booked.has(s)) return;const reservedObj=validReserved(dayObj,s);const b=document.createElement('button');b.type='button';b.className='slot';b.textContent=s;if(reservedObj){b.classList.add('reserved');b.disabled=true;const span=document.createElement('span');span.className='ms-1 small';span.dataset.until=reservedObj.until.toISOString();span.textContent='(reserved)';b.appendChild(span)}else{b.addEventListener('click',()=>{[...slotList.querySelectorAll('.slot')].forEach(x=>x.classList.remove('active'));b.classList.add('active');calendarState.selectedTime=s;updateSummary();confirmBooking.disabled=false;modalHint.textContent='Nice choice — we’ll hold this for 10 minutes.';startUserHold(d,s);})}if(calendarState.selectedTime===s) b.classList.add('active');slotList.appendChild(b)});refreshReservedCountdowns()}
-function populateTimezones(){const tzs=['Europe/London','Europe/Dublin','Europe/Lisbon','Europe/Paris','Europe/Berlin','UTC','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','Asia/Dubai','Asia/Kolkata','Asia/Singapore','Australia/Sydney'];tzSelect.innerHTML='';tzs.forEach(tz=>{const o=document.createElement('option');o.value=tz;o.textContent=tz;if(tz===calendarState.tz)o.selected=true;tzSelect.appendChild(o)});tzCurrent.textContent=calendarState.tz;tzSelect.addEventListener('change',()=>{calendarState.tz=tzSelect.value;tzCurrent.textContent=calendarState.tz;updateSummary()})}
+function renderSlots(){slotList.innerHTML='';const d=calendarState.selectedDate;if(!d){slotList.innerHTML='<div class="text-secondary small">Select a date to see available times.</div>';return}const slots=IS_LIVE_BOOKING ? (bookingState.loaded ? bookingSlotsForDate(d) : []) : generateSlotsForDate(d); if(!slots.length){slotList.innerHTML='<div class="text-secondary small">No times available for this date.</div>';return;}const dayObj=(IS_LIVE_BOOKING&&bookingState.loaded)?null:ensureDay(new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())));slots.forEach(s=>{const slotStart=String(s?.start||s||''); if(dayObj && dayObj.booked.has(slotStart)) return;const reservedUntil=IS_LIVE_BOOKING&&bookingState.loaded?bookingHoldUntilForSlot(d,slotStart):(validReserved(dayObj,slotStart)?.until || null);const b=document.createElement('button');b.type='button';b.className='slot';b.textContent=slotStart;if(reservedUntil){b.classList.add('reserved');b.disabled=true;const span=document.createElement('span');span.className='ms-1 small';span.dataset.until=reservedUntil;span.textContent='(reserved)';b.appendChild(span)}else{b.addEventListener('click',()=>{[...slotList.querySelectorAll('.slot')].forEach(x=>x.classList.remove('active'));b.classList.add('active');calendarState.selectedTime=slotStart;updateSummary();confirmBooking.disabled=false;modalHint.textContent='Nice choice — we’ll hold this for 10 minutes.';startUserHold(d,slotStart);})}if(calendarState.selectedTime===slotStart) b.classList.add('active');slotList.appendChild(b)});refreshReservedCountdowns()}
+function populateTimezones(){const tzs=['Europe/London','Europe/Dublin','Europe/Lisbon','Europe/Paris','Europe/Berlin','UTC','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','Asia/Dubai','Asia/Kolkata','Asia/Singapore','Australia/Sydney'];tzSelect.innerHTML='';tzs.forEach(tz=>{const o=document.createElement('option');o.value=tz;o.textContent=tz;if(tz===calendarState.tz)o.selected=true;tzSelect.appendChild(o)});tzCurrent.textContent=calendarState.tz;if(IS_LIVE_BOOKING&&bookingState.loaded){tzSelect.value=calendarState.tz;tzSelect.disabled=true;return}tzSelect.addEventListener('change',()=>{calendarState.tz=tzSelect.value;tzCurrent.textContent=calendarState.tz;updateSummary()})}
 function updateSummary(){if(calendarState.selectedDate && calendarState.selectedTime){const ds=calendarState.selectedDate.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});bookingSummary.innerHTML=`<div class="fw-semibold">${ds}</div><div>${calendarState.selectedTime} (${calendarState.tz})</div>`}else if(calendarState.selectedDate){const ds=calendarState.selectedDate.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});bookingSummary.textContent=`${ds} — select a time`}else bookingSummary.textContent='No date selected.'}
 calPrev.addEventListener('click',()=>{calendarState.viewMonth--; if(calendarState.viewMonth<0){calendarState.viewMonth=11;calendarState.viewYear--} renderCalendar()});calNext.addEventListener('click',()=>{calendarState.viewMonth++; if(calendarState.viewMonth>11){calendarState.viewMonth=0;calendarState.viewYear++} renderCalendar()});mobileBack?.addEventListener('click',()=>{bookingModalContent.classList.remove('mobile-times')});
 confirmBooking.addEventListener('click',()=>{if(!(calendarState.selectedDate && calendarState.selectedTime)) return;preferredDateValue.value=calendarState.selectedDate.toISOString().slice(0,10);preferredTimeValue.value=calendarState.selectedTime;preferredTZValue.value=calendarState.tz;const ds=calendarState.selectedDate.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});bookingSelectionText.textContent=`${ds} • ${calendarState.selectedTime}`;bookingSelectionRow.style.display='inline-block';bookingModal.hide()});
-bookingModalEl.addEventListener('shown.bs.modal',()=>{bookingModalContent.classList.remove('mobile-times');if(!calDayNames.children.length){populateTimezones();}renderCalendar();renderSlots();updateSummary()});
+bookingModalEl.addEventListener('shown.bs.modal',async()=>{
+  bookingModalContent.classList.remove('mobile-times');
+  if(!calDayNames.children.length){
+    populateTimezones();
+  }
+  if(IS_LIVE_BOOKING){
+    slotList.innerHTML='<div class="text-secondary small">Loading availability…</div>';
+    const loaded = await loadBookingContext(true);
+    if(!loaded && modalHint){
+      modalHint.textContent='Availability is temporarily unavailable.';
+    }
+    syncCalendarToAvailability();
+  }
+  renderCalendar();
+  renderSlots();
+  updateSummary();
+});
+configModalEl?.addEventListener('shown.bs.modal',async()=>{await loadBookingContext(false);syncBookingMode();});
 // (mode note removed)
 function wireCTA(){addBtn.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()});buyNow.addEventListener("click",e=>{e.preventDefault();const t=new bootstrap.Toast(toastEl);t.show()})}
-function init(){renderStars();buildFormatBlock();applyVariantFromQuery();buildOptions();updateVariant();wireQty();wireCTA();updatePriceUI();window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); })}
+function init(){
+  renderStars();
+  buildFormatBlock();
+  applyVariantFromQuery();
+  buildOptions();
+  updateVariant();
+  wireQty();
+  wireCTA();
+  updatePriceUI();
+  window.addEventListener('resize',()=>{ bookingModalContent.classList.remove('mobile-times'); });
+  const load = loadBookingContext(false).then(syncAvailabilityCopy).catch(()=>{});
+  if (IS_EVENT_OFFERING) {
+    load.finally(() => {
+      try { bookingModal.show(); } catch(_e) {}
+    });
+  }
+}
 init();
 
 // Listen for external variant selection (from Product Data Helper)

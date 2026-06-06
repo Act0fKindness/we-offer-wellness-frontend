@@ -8,10 +8,10 @@
         @php
           $appName = config('app.name', 'We Offer Wellness');
           $defaultDesc = 'Book trusted therapies, classes, and wellness sessions that actually help: massage, reiki, breathwork, sound therapy and more — online or in‑studio.';
-          $defaultOg = env('OG_IMAGE_URL', '//www.weofferwellness.co.uk/cdn/shop/files/wow-og-default.jpg');
+          $defaultOg = asset('images/default-social-preview.jpg');
           $canonical = url()->current();
           $gtmId = env('GTM_ID') ?: env('VITE_GTM_ID');
-          $gaId = env('GA_ID') ?: env('VITE_GA_ID');
+          $gaId = env('GA_ID') ?: env('VITE_GA_ID') ?: 'G-MZMQNETBYH';
           $favicon = config('app.favicon_url', '/favicon.ico');
         @endphp
         <link rel="canonical" href="{{ $canonical }}" />
@@ -54,18 +54,10 @@
         @endif
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-MZMQNETBYH"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-MZMQNETBYH');
-        </script>
-
         <!-- Favicon -->
         <link rel="icon" type="image/png" href="{{ $favicon }}">
         <link rel="shortcut icon" href="{{ $favicon }}">
+        <link rel="apple-touch-icon" href="{{ $favicon }}">
 
         <!-- Fonts: Instrument Sans -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,8 +76,8 @@
         @else
             <!-- Vite manifest missing; temporarily skip assets to avoid 500. Build assets via `npm run build`. -->
         @endif
-        <script>
-          window.WOW_MAPS_KEY = @json(env('MAPBOX_API_KEY'));
+        <script data-cfasync="false">
+          window.WOW_MAPS_KEY = @json(config('services.mapbox.token'));
           window.WOW_APP_NAME = @json($appName);
         </script>
         
@@ -135,19 +127,54 @@
         <script>
           // Basic analytics bridge for SPA navigations and key commerce events
           (function(){
-            window.dataLayer = window.dataLayer || [];
-            function pushEvent(name, params){ try{ window.dataLayer.push({ event:name, ...params }); }catch(e){} }
+            function track(name, params){
+              try {
+                if (window.WOWAnalytics && typeof window.WOWAnalytics.track === 'function') {
+                  return window.WOWAnalytics.track(name, params || {});
+                }
+                if (typeof window.gtag === 'function') {
+                  return window.gtag('event', name, params || {});
+                }
+                window.dataLayer = window.dataLayer || [];
+                window.dataLayer.push({ event:name, ...(params || {}) });
+              } catch(e){}
+            }
+            function currentPageParams(){
+              try {
+                return {
+                  page_location: location.pathname + location.search + location.hash,
+                  page_title: document.title,
+                };
+              } catch(_){
+                return { page_location: '', page_title: document.title || '' };
+              }
+            }
+            function trackInitialPageView(){
+              track('page_view', currentPageParams());
+            }
             // Inertia page view
             document.addEventListener('inertia:success', function(ev){
               try {
-                const url = location.pathname + location.search + location.hash;
-                pushEvent('page_view', { page_location: url, page_title: document.title });
+                track('page_view', currentPageParams());
               } catch {}
             });
             // Cart events (custom)
             window.addEventListener('wow:add-to-cart', function(e){
-              pushEvent('add_to_cart', { item_id: e?.detail?.id || null });
+              const detail = e?.detail || {};
+              const items = Array.isArray(detail.items) ? detail.items : [detail];
+              track('wow_v3_add_to_cart', {
+                items,
+                currency: detail.currency || 'GBP',
+                value: detail.value ?? null,
+                item_count: detail.item_count ?? detail.qty ?? null,
+                source: detail.source || 'inertia-bridge',
+              });
             });
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', trackInitialPageView, { once: true });
+            } else {
+              trackInitialPageView();
+            }
           })();
         </script>
     </body>

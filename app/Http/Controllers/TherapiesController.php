@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Support\EventListing;
 use App\Support\ProductRanking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -20,6 +21,8 @@ class TherapiesController extends Controller
             ->where(function ($q) {
                 $q->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'");
             })
+            ->get()
+            ->reject(fn ($product) => EventListing::isPast($product))
             ->count();
         $featuredOfferings = Product::query()
             ->with(['media', 'category', 'options.values', 'vendor.tiers', 'vendor.user.settings'])
@@ -32,7 +35,9 @@ class TherapiesController extends Controller
             ->where(function ($q) {
                 $q->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'");
             })
-            ->get();
+            ->get()
+            ->reject(fn ($product) => EventListing::isPast($product))
+            ->values();
 
         $featuredOfferings = ProductRanking::sortCollection($featuredOfferings)->take(8)->values();
 
@@ -236,7 +241,10 @@ class TherapiesController extends Controller
             }
 
             $sort = $query['sort'] ?? '';
-            $items = ProductRanking::sortCollection($builder->get(), $sort);
+            $items = $builder->get()
+                ->reject(fn ($product) => EventListing::isPast($product))
+                ->values();
+            $items = ProductRanking::sortCollection($items, $sort);
             $total = $items->count();
             $items = $items->forPage($page, $perPage)->values();
 

@@ -3,18 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProductReview;
+use App\Models\Review;
 
 class ReviewStatsController extends Controller
 {
     public function index()
     {
-        // Overall stats from product reviews
-        $avg = (float) (ProductReview::query()->avg('rating') ?? 0);
-        $avgRounded = $avg > 0 ? round($avg, 1) : null;
-        $count = (int) (ProductReview::query()->count() ?? 0);
+        // Overall stats from canonical site reviews
+        $query = Review::query()->whereRaw("TRIM(COALESCE(review_text, '')) <> ''");
 
-        // Verified count: ProductReview has no provider-added flag; treat all as verified
+        $avg = (float) ($query->avg('rating') ?? 0);
+        $avgRounded = $avg > 0 ? round($avg, 1) : null;
+        $count = (int) ($query->count() ?? 0);
+
+        // Treat site reviews as verified feedback unless a future moderation flag changes that.
         $verifiedCount = $count;
 
         return response()->json([

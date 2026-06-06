@@ -87,6 +87,31 @@ class CartController extends Controller
             return response()->json(['ok'=>false,'error'=>'invalid'], 400);
         }
 
+        $normalizeArray = static function ($value): array {
+            return is_array($value) ? $value : [];
+        };
+
+        $incomingMeta = $normalizeArray($request->input('meta', []));
+        $incomingBooking = $normalizeArray($request->input('booking', $incomingMeta['booking'] ?? []));
+        $incomingSelected = $request->input('selected', $incomingMeta['selected'] ?? []);
+        if (!is_array($incomingSelected)) {
+            $incomingSelected = [];
+        }
+        $incomingOptions = $normalizeArray($request->input('options', $incomingMeta['variant_options'] ?? []));
+        $groupCount = $request->input(
+            'group_count',
+            $request->input('groupCount', $incomingMeta['group_count'] ?? ($incomingMeta['groupCount'] ?? null))
+        );
+        $reservationId = $request->input(
+            'reservation_id',
+            $request->input('reservationId', $incomingMeta['reservation_id'] ?? ($incomingMeta['reservationId'] ?? null))
+        );
+        $holdExpiresAt = $request->input(
+            'hold_expires_at',
+            $request->input('holdExpiresAt', $incomingMeta['hold_expires_at'] ?? ($incomingMeta['holdExpiresAt'] ?? null))
+        );
+        $locationValue = $request->input('location', $incomingMeta['location'] ?? null);
+
         $variantLabel = trim((string)$request->input('variant_label', '')) ?: null;
         $variantOptions = [];
         $image = null;
@@ -134,7 +159,7 @@ class CartController extends Controller
                 } elseif (!is_array($opts)) {
                     $opts = [];
                 }
-                $variantOptions = $opts;
+                $variantOptions = array_values(array_filter(array_unique(array_merge($opts, $incomingOptions))));
                 if (! $variantLabel) {
                     $variantLabel = $this->buildVariantLabel($variant->title ?? null, $variantOptions);
                 }
@@ -225,9 +250,41 @@ class CartController extends Controller
             }
         }
 
+        $selectedValues = array_values(array_filter(array_unique(array_merge(
+            $incomingSelected,
+            $variantOptions,
+            $variantLabel ? [$variantLabel] : []
+        ))));
+        $resolvedSourceVersion = $sourceVersion !== '' ? $sourceVersion : ($offering ? 'v3' : 'legacy');
+        $metaPayload = array_merge($incomingMeta, [
+            'booking' => $incomingBooking,
+            'selected' => $selectedValues,
+            'group_count' => $groupCount !== null ? (int) $groupCount : null,
+            'reservation_id' => $reservationId,
+            'hold_expires_at' => $holdExpiresAt,
+            'location' => $locationValue,
+            'variant_id' => $product ? ($variant?->id ?? ($offeringVariantId !== '' ? $offeringVariantId : null)) : ($offeringVariantId !== '' ? $offeringVariantId : null),
+            'variant_label' => $variantLabel,
+            'variant_options' => $variantOptions,
+            'product_id' => $product ? (int) $productId : $productId,
+            'source_version' => $resolvedSourceVersion,
+        ]);
+        $metaPayload = array_filter($metaPayload, static function ($value) {
+            return $value !== null && $value !== '';
+        });
+
         if(isset($items[$key])){
             $items[$key]['qty'] = (int)($items[$key]['qty'] ?? 1) + $qty;
             if($variantLabel){ $items[$key]['variant_label'] = $variantLabel; }
+            $items[$key]['options'] = $variantOptions;
+            $items[$key]['meta'] = array_merge((array) ($items[$key]['meta'] ?? []), $metaPayload);
+            $items[$key]['booking'] = $incomingBooking;
+            $items[$key]['selected'] = $selectedValues;
+            $items[$key]['group_count'] = $groupCount !== null ? (int) $groupCount : ($items[$key]['group_count'] ?? null);
+            $items[$key]['reservation_id'] = $reservationId ?? ($items[$key]['reservation_id'] ?? null);
+            $items[$key]['hold_expires_at'] = $holdExpiresAt ?? ($items[$key]['hold_expires_at'] ?? null);
+            $items[$key]['location'] = $locationValue ?? ($items[$key]['location'] ?? null);
+            $items[$key]['source_version'] = $resolvedSourceVersion;
         }
         else {
             $items[$key] = [
@@ -242,7 +299,14 @@ class CartController extends Controller
                 'image' => $image,
                 'url' => $url,
                 'vendor_id' => $vendorId,
-                'source_version' => $offering ? 'v3' : 'legacy',
+                'source_version' => $resolvedSourceVersion,
+                'meta' => $metaPayload,
+                'booking' => $incomingBooking,
+                'selected' => $selectedValues,
+                'group_count' => $groupCount !== null ? (int) $groupCount : null,
+                'reservation_id' => $reservationId,
+                'hold_expires_at' => $holdExpiresAt,
+                'location' => $locationValue,
             ];
         }
         session(['cart.items' => $items]);
@@ -367,10 +431,40 @@ class CartController extends Controller
         if (!is_array($options)) {
             $options = [];
         }
+        $meta = is_array($entry['meta'] ?? null) ? $entry['meta'] : [];
+        $booking = $entry['booking'] ?? ($meta['booking'] ?? []);
+        if (!is_array($booking)) {
+            $booking = [];
+        }
+        $selected = $entry['selected'] ?? ($meta['selected'] ?? []);
+        if (!is_array($selected)) {
+            $selected = [];
+        }
+        $groupCount = $entry['group_count'] ?? $entry['groupCount'] ?? ($meta['group_count'] ?? ($meta['groupCount'] ?? null));
+        $reservationId = $entry['reservation_id'] ?? $entry['reservationId'] ?? ($meta['reservation_id'] ?? ($meta['reservationId'] ?? null));
+        $holdExpiresAt = $entry['hold_expires_at'] ?? $entry['holdExpiresAt'] ?? ($meta['hold_expires_at'] ?? ($meta['holdExpiresAt'] ?? null));
+        $location = $entry['location'] ?? ($meta['location'] ?? null);
+        $sourceVersion = strtolower(trim((string) ($entry['source_version'] ?? ($meta['source_version'] ?? ''))));
         $rawProductId = $entry['product_id'] ?? $entry['productId'] ?? null;
         if ($rawProductId === null && isset($entry['id'])) {
             $rawProductId = str_starts_with((string)$entry['id'], 'p:') ? substr((string)$entry['id'], 2) : $entry['id'];
         }
+        $meta = array_merge($meta, [
+            'booking' => $booking,
+            'selected' => array_values(array_filter($selected)),
+            'group_count' => $groupCount !== null ? (int) $groupCount : null,
+            'reservation_id' => $reservationId,
+            'hold_expires_at' => $holdExpiresAt,
+            'location' => $location,
+            'product_id' => $rawProductId,
+            'variant_id' => $variantId,
+            'variant_label' => $variantLabel,
+            'variant_options' => $options,
+            'source_version' => $sourceVersion !== '' ? $sourceVersion : null,
+        ]);
+        $meta = array_filter($meta, static function ($value) {
+            return $value !== null && $value !== '';
+        });
         return [
             'product_id' => $rawProductId,
             'vendor_id' => $entry['vendor_id'] ?? $entry['vendorId'] ?? null,
@@ -382,6 +476,14 @@ class CartController extends Controller
             'qty' => max(1, (int) ($entry['qty'] ?? $entry['quantity'] ?? 1)),
             'image' => $entry['image'] ?? $entry['img'] ?? null,
             'url' => $entry['url'] ?? $entry['href'] ?? '#',
+            'meta' => $meta,
+            'booking' => $booking,
+            'selected' => array_values(array_filter($selected)),
+            'group_count' => $groupCount !== null ? (int) $groupCount : null,
+            'reservation_id' => $reservationId,
+            'hold_expires_at' => $holdExpiresAt,
+            'location' => $location,
+            'source_version' => $sourceVersion !== '' ? $sourceVersion : null,
         ];
     }
 

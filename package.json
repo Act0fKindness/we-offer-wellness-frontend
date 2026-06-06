@@ -18,12 +18,16 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+        "@nuxt/ui": "^4.7.1",
         "@popperjs/core": "^2.11.8",
+        "@tailwindcss/vite": "^4.2.4",
         "bootstrap": "^5.3.3",
         "bootstrap-icons": "^1.13.1",
         "flatpickr": "^4.6.13",
         "gsap": "^3.14.2",
         "mapbox-gl": "^2.15.0",
-        "puppeteer": "^22.10.0"
+        "puppeteer": "^22.10.0",
+        "tailwindcss": "^4.2.4",
+        "vue-router": "^4.6.4"
     }
 }

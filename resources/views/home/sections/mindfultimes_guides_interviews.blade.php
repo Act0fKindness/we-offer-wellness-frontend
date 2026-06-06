@@ -1,109 +1,561 @@
-<section id="mindful-times" class="section">
-  <div class="container-page">
-    <div class="mb-8 mindful-times__heading">
+<section class="wow-mindful-times-section" aria-label="Mindful Times articles" id="mindful-times">
+  <div class="wow-mindful-container container-page">
+    <header class="wow-section-heading">
       <div>
-        <div class="kicker">Mindful Times</div>
-        <h2>Guides, practitioner interviews and tools to help you feel better</h2>
+        <p class="wow-kicker">Mindful Times</p>
+        <h2>Stories, interviews and practical guides for modern wellbeing</h2>
+        <p>Editorial features from We Offer Wellness® - practitioner interviews, grounded guides, event stories and helpful tools for feeling better.</p>
       </div>
-      <a class="btn-wow btn-wow--outline btn-sm btn-arrow mindful-times__cta"
-         href="https://times.weofferwellness.co.uk" data-loader-init="1">
+
+      <a href="https://times.weofferwellness.co.uk/" class="btn-wow btn-wow--outline btn-sm btn-arrow wow-mindful-cta" target="_blank" rel="noopener" data-loader-init="1">
         <span class="btn-label">Visit Mindful Times</span>
         <span class="btn-icon-wrap" aria-hidden="true">
           <svg class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg>
           <svg class="btn-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg>
         </span>
-        <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
       </a>
+    </header>
+
+    <div class="wow-news-board">
+      <a class="wow-lead-story wow-link" href="#" target="_blank" rel="noopener" id="mindful-times-featured">
+        <div class="wow-lead-media">
+          <img src="" alt="" loading="lazy">
+        </div>
+
+        <div class="wow-lead-content">
+          <div>
+            <div class="wow-news-meta">
+              <span class="wow-news-pill wow-news-pill--red">Featured</span>
+              <span class="wow-news-pill">Mindful Times</span>
+            </div>
+
+            <h3>Featured story</h3>
+            <p>Loading latest stories...</p>
+          </div>
+
+          <div class="wow-story-footer">
+            <span>Latest from Mindful Times</span>
+            <span class="wow-read-link">Read interviews &rarr;</span>
+          </div>
+        </div>
+      </a>
+
+      <aside class="wow-editor-list" aria-label="Editor's picks">
+        <div class="wow-editor-head">
+          <p class="wow-kicker">Editor’s picks</p>
+          <h3>Fresh from the newsroom</h3>
+          <p>Quick reads, interviews and features from the Mindful Times desk.</p>
+        </div>
+
+        <div id="mindful-times-editor-list">
+          <div class="wow-editor-item" aria-hidden="true">
+            <div class="wow-editor-thumb"></div>
+            <div>
+              <strong>Loading stories</strong>
+              <span>Mindful Times</span>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
 
-    <div id="mt-wrap">
-      <div class="text-muted">Loading latest stories…</div>
-    </div>
+    <div class="wow-article-grid" aria-label="Latest articles" id="mindful-times-article-grid"></div>
   </div>
 
   <style>
-    /* Section header layout */
-    #mindful-times .mindful-times__heading{ display:flex; flex-direction:column; gap:16px; align-items:stretch; text-align:left; }
-    #mindful-times .mindful-times__heading > *{ text-align:left; }
-    #mindful-times .mindful-times__cta{ width:100%; align-self:stretch; }
-    @media (min-width:768px){
-      #mindful-times .mindful-times__heading{ flex-direction:row; align-items:flex-end; justify-content:flex-start; }
-      #mindful-times .mindful-times__cta{ width:auto; align-self:auto; flex:0 0 auto; margin-left:auto; }
+    #mindful-times.wow-mindful-times-section{
+      position:relative;
+      overflow:hidden;
+      background: linear-gradient(180deg, rgba(255, 242, 246, 0.88), rgba(255, 248, 250, 0.72));
+      margin: 48px 0 64px;
+      padding: 68px 0 82px;
+      border-top: 1px solid rgba(226, 169, 181, 0.38);
+      border-bottom: 1px solid rgba(226, 169, 181, 0.38);
+      box-shadow:
+        inset 24px 0 34px -26px rgba(130, 44, 72, 0.34),
+        inset -24px 0 34px -26px rgba(130, 44, 72, 0.34);
     }
-
-    /* Scoped styles for the tabloid layout within #mindful-times */
-    #mindful-times .tabloid-wrap{ display:grid; gap:16px; }
-    #mindful-times .tabloid-hero{ position:relative; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,.18); background:#0b1220; box-shadow:0 18px 50px rgba(16,24,40,.22); min-height:360px; }
-    #mindful-times .tabloid-hero .bg{ position:absolute; inset:0; opacity:.95 }
-    #mindful-times .tabloid-hero .bg img{ width:100%; height:100%; object-fit:cover; filter:contrast(1.06) saturate(1.05); transform:scale(1.01) }
-    #mindful-times .tabloid-hero::after{ content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.05) 0%, rgba(0,0,0,.55) 55%, rgba(0,0,0,.82) 100%); }
-    #mindful-times .tabloid-hero .content{ position:relative; z-index:2; padding:24px; display:flex; flex-direction:column; justify-content:flex-end; gap:10px; min-height:360px }
-    #mindful-times .tabloid-hero .strap{ display:flex; align-items:center; gap:10px }
-    #mindful-times .tabloid-hero .bigword{ font-weight:900; letter-spacing:.06em; text-transform:uppercase; font-size: clamp(34px, 5vw, 72px); line-height:.95; margin:0; color:#fff; text-shadow:0 16px 50px rgba(0,0,0,.35) }
-    #mindful-times .tabloid-hero .wow-meta{ color: rgba(255,255,255,.78) }
-    #mindful-times .tabloid-hero .wow-meta .cat{ color:#9fd0ff }
-    #mindful-times .tabloid-row{ display:grid; gap:14px; grid-template-columns: repeat(3, 1fr); }
-    #mindful-times .tabloid-small{ display:grid; gap:10px; padding:12px; border-radius:6px; border:1px solid var(--ink-200, rgba(16,24,40,.12)); background:#fff; box-shadow:0 12px 30px rgba(16,24,40,.08) }
-    #mindful-times .tabloid-small .wow-media{ height:150px; width:100%; border-radius:3px; overflow:hidden; background:#f8fafc }
-    #mindful-times .tabloid-small .wow-media img{ width:100%; height:100%; object-fit:cover }
-    #mindful-times .wow-link{ color:inherit; text-decoration:none }
-    #mindful-times .wow-h{ margin:0; font-weight:800; letter-spacing:-.02em; line-height:1.2; font-size:16px }
-    #mindful-times .wow-h--hero{ font-size: clamp(28px, 3vw, 44px) }
-    #mindful-times .wow-meta{ display:flex; gap:10px; align-items:center; margin-top:6px; font-size:12px; color:rgba(11,18,32,.55); flex-wrap:wrap; font-weight:700 }
-    #mindful-times .wow-meta .cat{ color:#d0021b; font-weight:900 }
-    #mindful-times .tag{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid rgba(16,24,40,.12); background:rgba(255,255,255,.9); font-weight:900; font-size:12px; letter-spacing:.02em; text-transform:uppercase; box-shadow:0 10px 24px rgba(16,24,40,.14) }
-    #mindful-times .tag--exclusive{ color:#fff; background:#e11d48; border-color:transparent }
-    @media (max-width: 992px){
-      #mindful-times .tabloid-hero, #mindful-times .tabloid-hero .content{ min-height:320px }
-      #mindful-times .tabloid-row{ grid-template-columns: 1fr }
-      #mindful-times .tabloid-small .wow-media{ height:190px }
+    #mindful-times .wow-mindful-container{
+      position:relative;
+      z-index:1;
+      width:min(100% - 40px, 1280px);
+      margin:0 auto;
     }
-
-    /* (Removed alt news grid layout) */
+#mindful-times .wow-kicker{
+  margin:0 0 10px;
+  color:#344054;
+  font-size:13px;
+  font-weight:300;
+  letter-spacing:0.16em;
+      text-transform:uppercase;
+    }
+    #mindful-times .wow-section-heading{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      gap:24px;
+      align-items:end;
+      margin-bottom:30px;
+    }
+    #mindful-times .wow-section-heading h2{
+      max-width:1030px;
+      margin:0;
+      color:#101828;
+      font-family:"Playfair Display", Georgia, "Times New Roman", serif;
+      font-size:clamp(46px, 6.4vw, 82px);
+      font-weight:500;
+      line-height:0.94;
+      letter-spacing:-0.06em;
+    }
+    #mindful-times .wow-section-heading p{
+      max-width:680px;
+      margin:16px 0 0;
+      color:#596275;
+      font-size:17px;
+      line-height:1.58;
+    }
+    #mindful-times .wow-mindful-cta{
+      align-self:end;
+      white-space:nowrap;
+    }
+    #mindful-times .wow-news-board{
+      display:grid;
+      grid-template-columns:minmax(0, 1.35fr) minmax(340px, 0.65fr);
+      gap:22px;
+      align-items:stretch;
+      margin-bottom:22px;
+    }
+    #mindful-times .wow-lead-story,
+    #mindful-times .wow-editor-list,
+    #mindful-times .wow-article-card{
+      background:rgba(255,255,255,0.98);
+      border:1px solid #dfe4ea;
+      box-shadow:0 14px 42px rgba(16,24,40,.055);
+    }
+    #mindful-times .wow-link{
+      color:inherit;
+      text-decoration:none;
+    }
+    #mindful-times .wow-lead-story{
+      display:grid;
+      grid-template-columns:minmax(320px, 0.95fr) minmax(0, 1.05fr);
+      min-height:480px;
+      border-radius:18px;
+      overflow:hidden;
+    }
+    #mindful-times .wow-lead-media{
+      position:relative;
+      min-height:100%;
+      background:#111827;
+      overflow:hidden;
+    }
+    #mindful-times .wow-lead-media img,
+    #mindful-times .wow-article-image img,
+    #mindful-times .wow-editor-thumb img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+    }
+    #mindful-times .wow-lead-media::after{
+      content:"Featured";
+      position:absolute;
+      left:18px;
+      top:18px;
+      min-height:30px;
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      background:#e60023;
+      color:#fff;
+      padding:0 12px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:0.04em;
+      text-transform:uppercase;
+    }
+    #mindful-times .wow-lead-content{
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      padding:28px;
+    }
+    #mindful-times .wow-news-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    #mindful-times .wow-news-pill{
+      min-height:28px;
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      background:#f2f4f7;
+      color:#344054;
+      padding:0 10px;
+      font-size:12px;
+      font-weight:700;
+    }
+    #mindful-times .wow-news-pill--red{
+      background:#fff1f3;
+      color:#e60023;
+    }
+    #mindful-times .wow-lead-content h3{
+      margin:0;
+      color:#101828;
+      font-family:"Playfair Display", Georgia, "Times New Roman", serif;
+      font-size:clamp(38px, 4.6vw, 64px);
+      font-weight:500;
+      line-height:0.96;
+      letter-spacing:-0.06em;
+    }
+    #mindful-times .wow-lead-content p{
+      max-width:560px;
+      margin:18px 0 0;
+      color:#596275;
+      font-size:16px;
+      line-height:1.58;
+    }
+    #mindful-times .wow-story-footer{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      margin-top:28px;
+      padding-top:18px;
+      border-top:1px solid #edf0f2;
+      color:#667085;
+      font-size:13px;
+    }
+    #mindful-times .wow-read-link{
+      color:#4f9381;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    #mindful-times .wow-editor-list{
+      border-radius:18px;
+      overflow:hidden;
+    }
+    #mindful-times .wow-editor-head{
+      padding:20px;
+      border-bottom:1px solid #edf0f2;
+    }
+    #mindful-times .wow-editor-head h3{
+      margin:0;
+      color:#101828;
+      font-size:18px;
+      line-height:1.2;
+      letter-spacing:-0.03em;
+    }
+    #mindful-times .wow-editor-head p{
+      margin:8px 0 0;
+      color:#667085;
+      font-size:13px;
+      line-height:1.45;
+    }
+    #mindful-times .wow-editor-item{
+      display:grid;
+      grid-template-columns:76px 1fr;
+      gap:14px;
+      padding:16px 20px;
+      border-bottom:1px solid #edf0f2;
+      text-decoration:none;
+      transition:background 160ms ease;
+    }
+    #mindful-times .wow-editor-item:last-child{ border-bottom:0; }
+    #mindful-times .wow-editor-item:hover{ background:#f8fafc; }
+    #mindful-times .wow-editor-thumb{
+      width:76px;
+      height:58px;
+      overflow:hidden;
+      border-radius:8px;
+      background:#eef2f4;
+      flex:0 0 auto;
+    }
+    #mindful-times .wow-editor-item strong{
+      display:block;
+      color:#101828;
+      font-size:14px;
+      line-height:1.25;
+      letter-spacing:-0.02em;
+    }
+    #mindful-times .wow-editor-item span{
+      display:block;
+      margin-top:6px;
+      color:#e60023;
+      font-size:12px;
+      font-weight:700;
+    }
+    #mindful-times .wow-article-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:22px;
+    }
+    #mindful-times .wow-article-card{
+      overflow:hidden;
+      border-radius:14px;
+      text-decoration:none;
+      transition:transform 160ms ease, border-color 160ms ease;
+    }
+    #mindful-times .wow-article-card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(79, 147, 129, 0.42);
+    }
+    #mindful-times .wow-article-image{
+      height:190px;
+      overflow:hidden;
+      background:#eef2f4;
+    }
+    #mindful-times .wow-article-body{
+      padding:18px;
+    }
+    #mindful-times .wow-article-body h3{
+      min-height:58px;
+      margin:12px 0 0;
+      color:#101828;
+      font-size:20px;
+      line-height:1.12;
+      letter-spacing:-0.035em;
+    }
+    #mindful-times .wow-article-body p{
+      margin:10px 0 0;
+      color:#667085;
+      font-size:14px;
+      line-height:1.5;
+      display:-webkit-box;
+      -webkit-line-clamp:3;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
+    #mindful-times .wow-card-foot{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid #edf0f2;
+      color:#667085;
+      font-size:13px;
+    }
+    #mindful-times .wow-empty{
+      padding:18px 20px;
+      color:#667085;
+      font-size:14px;
+    }
+    @media (max-width:1080px){
+      #mindful-times .wow-news-board,
+      #mindful-times .wow-lead-story{ grid-template-columns:1fr; }
+      #mindful-times .wow-lead-media{ min-height:360px; }
+      #mindful-times .wow-article-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width:760px){
+      #mindful-times.wow-mindful-times-section{ padding:42px 0 58px; }
+      #mindful-times .wow-section-heading{
+        display:block !important;
+        grid-template-columns:none !important;
+        align-items:start;
+      }
+      #mindful-times .wow-lead-story{
+        grid-template-columns:1fr;
+        min-height:0;
+      }
+      #mindful-times .wow-lead-media{
+        min-height:240px;
+        height:240px;
+      }
+      #mindful-times .wow-lead-content{
+        min-height:0;
+        overflow:hidden;
+        padding:22px;
+      }
+      #mindful-times .wow-lead-content > div:first-child{
+        min-height:0;
+      }
+      #mindful-times .wow-lead-content h3{
+        display:-webkit-box;
+        -webkit-box-orient:vertical;
+        -webkit-line-clamp:3;
+        overflow:hidden;
+      }
+      #mindful-times .wow-lead-content p{
+        display:-webkit-box;
+        -webkit-box-orient:vertical;
+        -webkit-line-clamp:4;
+        overflow:hidden;
+        margin-top:14px;
+      }
+      #mindful-times .wow-story-footer{
+        flex-direction:column;
+        align-items:flex-start;
+        margin-top:18px;
+      }
+      #mindful-times .wow-mindful-cta{ width:100%; }
+    }
+    @media (max-width:560px){
+      #mindful-times .wow-mindful-container,
+      #mindful-times .wow-page-grid{ width:min(100% - 28px, 1280px); }
+      #mindful-times .wow-section-heading h2{ font-size:46px; }
+      #mindful-times .wow-lead-content h3{ font-size:34px; line-height:1; }
+      #mindful-times .wow-lead-media{ min-height:220px; height:220px; }
+      #mindful-times .wow-article-grid{ grid-template-columns:1fr; }
+    }
   </style>
 
   <script>
     (function(){
-      var mount = document.getElementById('mt-wrap');
-      if(!mount) return;
-      function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]); }); }
+      var featured = document.getElementById('mindful-times-featured');
+      var editorList = document.getElementById('mindful-times-editor-list');
+      var articleGrid = document.getElementById('mindful-times-article-grid');
+      if(!featured || !editorList || !articleGrid) return;
+
+      function esc(s){
+        return String(s || '').replace(/[&<>"']/g, function(c){
+          return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);
+        });
+      }
+
       function normImg(u){
         if(!u) return '';
-        try { var url = new URL(u, window.location.origin); var path = url.pathname + (url.search||''); return 'https://atease.weofferwellness.co.uk' + path; }
-        catch(e){ var p = String(u||''); if(p && p.charAt(0) !== '/') p = '/' + p; return 'https://atease.weofferwellness.co.uk' + p; }
+        try {
+          var url = new URL(u, window.location.origin);
+          var path = url.pathname + (url.search || '');
+          return 'https://atease.weofferwellness.co.uk' + path;
+        } catch(e) {
+          var p = String(u || '');
+          if(p && p.charAt(0) !== '/') p = '/' + p;
+          return 'https://atease.weofferwellness.co.uk' + p;
+        }
       }
-      function renderTabloid(items){
-        var list = items.slice(0,4);
-        var hero = list[0]; var rest = list.slice(1,4);
-        var heroImg = hero && hero.img ? normImg(hero.img) : '';
-        var tag = (hero && (hero.tag||'MindfulTimes')) || 'MindfulTimes';
-        var heroHtml = hero ? (
-          '<a class="wow-link tabloid-hero" href="'+esc(hero.href||'#')+'" aria-label="Featured article">'
-          + '<div class="bg">'+ (heroImg ? '<img loading="lazy" src="'+esc(heroImg)+'" alt="'+esc(hero.title)+'">' : '') +'</div>'
-          + '<div class="content">'
-          +   '<div class="strap"><span class="tag tag--exclusive">FEATURED</span><span class="tag" style="background:rgba(255,255,255,.92)">'+esc(tag)+'</span></div>'
-          +   '<p class="bigword">INSIGHT</p>'
-          +   '<h3 class="wow-h wow-h--hero" style="color:#fff">'+esc(hero.title)+'</h3>'
-          +   '<div class="wow-meta"><span class="cat">'+esc(tag)+'</span></div>'
+
+      function decodeEntities(text){
+        var out = String(text || '');
+        var textarea = document.createElement('textarea');
+        var prev = null;
+        var passes = 0;
+        while (out !== prev && passes < 3) {
+          prev = out;
+          textarea.innerHTML = out;
+          out = textarea.value || textarea.textContent || out;
+          passes += 1;
+        }
+        return out.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+
+      function shortText(text, max){
+        var clean = decodeEntities(text);
+        if(!clean) return '';
+        var limit = Math.max(0, parseInt(max, 10) || 0);
+        if(!limit || clean.length <= limit) return clean;
+        return clean.slice(0, Math.max(0, limit - 1)).trimEnd() + '…';
+      }
+
+      function firstWords(title){
+        var clean = decodeEntities(title);
+        if(!clean) return 'Mindful Times';
+        var parts = clean.split(' ');
+        return parts.slice(0, 4).join(' ');
+      }
+
+      function renderCard(item, index){
+        var src = item.img ? normImg(item.img) : '';
+        var title = decodeEntities(item.title || 'Untitled story');
+        var tag = item.tag || 'Mindful Times';
+        var href = item.href || '#';
+        var lead = shortText(item.excerpt || 'Read the latest story from Mindful Times.', 88);
+        var pill = index === 0 ? 'Interviews' : tag;
+        return (
+          '<a href="'+esc(href)+'" class="wow-article-card wow-link" target="_blank" rel="noopener">'
+          + '<div class="wow-article-image">'+ (src ? '<img loading="lazy" src="'+esc(src)+'" alt="'+esc(title)+'">' : '') +'</div>'
+          + '<div class="wow-article-body">'
+          +   '<span class="wow-news-pill'+(index === 0 ? ' wow-news-pill--red' : '')+'">'+esc(pill)+'</span>'
+          +   '<h3>'+esc(title)+'</h3>'
+          +   '<p>'+esc(lead)+'</p>'
+          +   '<div class="wow-card-foot"><span>Mindful Times</span><strong>Read &rarr;</strong></div>'
           + '</div>'
           + '</a>'
-        ) : '';
-        function small(a){ var src = a.img ? normImg(a.img) : ''; return '<a class="wow-link tabloid-small" href="'+esc(a.href||'#')+'">'+ '<div class="wow-media">'+ (src ? '<img loading="lazy" src="'+esc(src)+'" alt="'+esc(a.title)+'">' : '') +'</div>' + '<div><h4 class="wow-h">'+esc(a.title)+'</h4><div class="wow-meta"><span class="cat">'+esc(a.tag||'MindfulTimes')+'</span></div></div>' + '</a>'; }
-        return '<div class="tabloid-wrap">'+ heroHtml + '<div class="tabloid-row">'+ rest.map(small).join('') + '</div></div>';
+        );
       }
 
-
-      function render(items){
-        if(!Array.isArray(items) || items.length===0){ mount.innerHTML = '<div class="text-muted">No stories yet. <a class="link-wow" href="https://times.weofferwellness.co.uk">Visit Mindful Times</a>.</div>'; return; }
-        var html = renderTabloid(items);
-        mount.innerHTML = html;
+      function renderFeatured(item){
+        var src = item.img ? normImg(item.img) : '';
+        var title = decodeEntities(item.title || 'Featured story');
+        var tag = item.tag || 'Mindful Times';
+        var href = item.href || '#';
+        var excerpt = shortText(item.excerpt || 'Read the latest story from Mindful Times.', 120);
+        featured.href = href;
+        featured.setAttribute('aria-label', 'Featured article: ' + title);
+        featured.querySelector('.wow-lead-media img').src = src || '';
+        featured.querySelector('.wow-lead-media img').alt = title;
+        featured.querySelector('.wow-lead-content h3').textContent = title;
+        featured.querySelector('.wow-lead-content p').textContent = excerpt;
+        var meta = featured.querySelectorAll('.wow-news-pill');
+        if(meta[0]) meta[0].textContent = 'Featured';
+        if(meta[1]) meta[1].textContent = tag;
       }
 
-      // Fetch a generous set; renderer will slice
-      fetch('/api/articles?limit=9', { headers: { 'Accept':'application/json' }})
+      function renderEditors(items){
+        var list = items.slice(1, 4);
+        if(!list.length){
+          editorList.innerHTML = '<div class="wow-empty">No stories yet. <a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener">Visit Mindful Times</a>.</div>';
+          return;
+        }
+        editorList.innerHTML = list.map(function(item){
+          var src = item.img ? normImg(item.img) : '';
+          var title = decodeEntities(item.title || 'Untitled story');
+          var tag = item.tag || 'Mindful Times';
+          var href = item.href || '#';
+          return (
+            '<a href="'+esc(href)+'" class="wow-editor-item wow-link" target="_blank" rel="noopener">'
+            + '<div class="wow-editor-thumb">'+ (src ? '<img loading="lazy" src="'+esc(src)+'" alt="'+esc(title)+'">' : '') +'</div>'
+            + '<div><strong>'+esc(firstWords(title))+'</strong><span>'+esc(tag)+'</span></div>'
+            + '</a>'
+          );
+        }).join('');
+      }
+
+      function renderGrid(items){
+        var list = items.slice(0, 3);
+        if(!list.length){
+          articleGrid.innerHTML = '<div class="wow-empty">No stories yet. <a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener">Visit Mindful Times</a>.</div>';
+          return;
+        }
+        articleGrid.innerHTML = list.map(renderCard).join('');
+      }
+
+      fetch('/api/articles?limit=9', { headers: { 'Accept': 'application/json' } })
         .then(function(r){ return r.json(); })
-        .then(render)
-        .catch(function(){ mount.innerHTML = '<div class="text-muted">Couldn\'t load stories right now.</div>'; });
+        .then(function(items){
+          if(!Array.isArray(items) || items.length === 0){
+            articleGrid.innerHTML = '<div class="wow-empty">No stories yet. <a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener">Visit Mindful Times</a>.</div>';
+          return;
+        }
+          var unique = [];
+          var seen = {};
+          items.forEach(function(item){
+            var key = String(item && (item.href || item.url || item.link || item.title || '')).trim().toLowerCase();
+            if (!key) return;
+            if (seen[key]) return;
+            seen[key] = true;
+            unique.push(item);
+          });
+          if (!unique.length) {
+            articleGrid.innerHTML = '<div class="wow-empty">No stories yet. <a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener">Visit Mindful Times</a>.</div>';
+            editorList.innerHTML = '<div class="wow-empty">No stories yet. <a href="https://times.weofferwellness.co.uk" target="_blank" rel="noopener">Visit Mindful Times</a>.</div>';
+            return;
+          }
+          renderFeatured(unique[0]);
+          renderEditors(unique.slice(1));
+          renderGrid(unique.slice(4));
+        })
+        .catch(function(){
+          articleGrid.innerHTML = '<div class="wow-empty">Couldn\'t load stories right now.</div>';
+          editorList.innerHTML = '<div class="wow-empty">Couldn\'t load stories right now.</div>';
+          featured.querySelector('.wow-lead-content h3').textContent = 'Couldn\'t load stories right now';
+          featured.querySelector('.wow-lead-content p').textContent = 'Try again in a moment.';
+          featured.querySelector('.wow-lead-media img').removeAttribute('src');
+        });
     })();
   </script>
 </section>

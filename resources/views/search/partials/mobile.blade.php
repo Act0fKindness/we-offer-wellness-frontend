@@ -165,7 +165,7 @@
             <div class="wow-mobile__sheet-results" id="wowMobileResults" role="list">
                 @forelse(($products ?? collect()) as $product)
                     <article class="wow-mobile__result" data-pid="{{ $product->id }}" role="listitem">
-                        @include('partials.product_card', ['product' => $product])
+                        @include('partials.product_card_v4', ['product' => $product])
                     </article>
                 @empty
                     <div class="wow-mobile__empty">No results matched your filters. Try widening your search.</div>

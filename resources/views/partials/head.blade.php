@@ -2,15 +2,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+@php
+  $gaId = env('GA_ID') ?: env('VITE_GA_ID') ?: 'G-MZMQNETBYH';
+@endphp
+@if ($gaId)
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MZMQNETBYH"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
-  gtag('config', 'G-MZMQNETBYH');
+  gtag('config', '{{ $gaId }}');
 </script>
+@endif
 
 
 @php
@@ -19,8 +23,13 @@
   $title = $seo['title'] ?? ($pageTitle ?? $defaultTitle);
   $desc  = $seo['description'] ?? ($metaDescription ?? $defaultDesc);
   $canonicalUrl = $seo['canonical'] ?? ($canonical ?? url()->current());
-  $ogImage = $seo['og_image'] ?? (config('app.og_image') ?: env('OG_IMAGE_URL'));
+  $ogImage = $seo['og_image'] ?? asset('images/default-social-preview.jpg');
+  $ogImageAlt = $seo['og_image_alt'] ?? $title;
+  $siteName = $seo['site_name'] ?? config('app.name', 'We Offer Wellness');
+  $twitterCard = $seo['twitter_card'] ?? 'summary_large_image';
+  $ogType = $seo['og_type'] ?? 'website';
   $favicon = config('app.favicon_url', '/favicon.ico');
+  $isHomePage = trim((string) request()->getPathInfo(), '/') === '';
 @endphp
 
 <title>{{ $title }}</title>
@@ -29,12 +38,26 @@
 <!-- Favicon -->
 <link rel="icon" type="image/png" href="{{ $favicon }}">
 <link rel="shortcut icon" href="{{ $favicon }}">
-<meta property="og:type" content="website">
+<link rel="apple-touch-icon" href="{{ $favicon }}">
+<meta property="og:type" content="{{ $ogType }}">
 <meta property="og:title" content="{{ $title }}">
 <meta property="og:description" content="{{ $desc }}">
 <meta property="og:url" content="{{ $canonicalUrl }}">
+<meta property="og:site_name" content="{{ $siteName }}">
 @if(!empty($ogImage))
 <meta property="og:image" content="{{ $ogImage }}">
+<meta property="og:image:alt" content="{{ $ogImageAlt }}">
+@endif
+<meta name="twitter:card" content="{{ $twitterCard }}">
+<meta name="twitter:title" content="{{ $title }}">
+<meta name="twitter:description" content="{{ $desc }}">
+@if(!empty($ogImage))
+<meta name="twitter:image" content="{{ $ogImage }}">
+<meta name="twitter:image:alt" content="{{ $ogImageAlt }}">
+@endif
+
+@if($isHomePage)
+  @include('partials.home-jsonld')
 @endif
 
 
@@ -42,7 +65,6 @@
 @php $csrfToken = csrf_token(); @endphp
 <meta name="csrf-token" content="{{ $csrfToken }}">
 <script>window.__csrfToken = @js($csrfToken);</script>
-<link rel="canonical" href="{{ url()->current() }}">
 
 <!-- Fonts: Manrope (general text, buttons, product headings) and Playfair Display (section headings) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,100 +73,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
-
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/Home-PUJfnV1T.js">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/SiteLayout-DKnyduE5.js">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/_plugin-vue_export-helper-1tPrXgE0.js">
-<link rel="stylesheet" crossorigin="" href="/build/assets/SiteLayout-dNJFhRS5.css">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/ProductCard-BSjt_v_N.js">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/WowButton-CFEh0Oz8.js">
-<link rel="stylesheet" crossorigin="" href="/build/assets/ProductCard-CWmZ0eZB.css">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/UltraSearchBar-BfOnvyJy.js">
-<link rel="modulepreload" as="script" crossorigin=""
-      href="/build/assets/UltraSearchBar.vue_vue_type_style_index_0_lang-DRm_99TD.js">
-<link rel="stylesheet" crossorigin="" href="/build/assets/UltraSearchBar-NUgbpZRO.css">
-<link rel="modulepreload" as="script" crossorigin="" href="/build/assets/ClassSchedule-CsCHxwuF.js">
-<link rel="stylesheet" crossorigin="" href="/build/assets/ClassSchedule-CH6Jm1u5.css">
-<link rel="stylesheet" crossorigin="" href="/build/assets/Home-DuBmdSoH.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+@stack('styles')
 
 <link rel="manifest" href="/manifest.json?v=3">
 <meta name="theme-color" content="#90b9a9">
-
-<!-- Preload the boot logo so it appears ASAP (reduces “white screen” time) -->
-<link rel="preload" as="image"
-      href="https://testing.studio.weofferwellness.co.uk/workspace-favicon.png?v=2">
-
-<style>
-  /* PWA boot/splash overlay */
-  #pwa-boot{
-    position: fixed;
-    inset: 0;
-    background: #ffffff;
-    display: grid;
-    place-items: center;
-    z-index: 2147483647; /* always on top */
-    opacity: 1;
-    transition: opacity 180ms ease;
-  }
-
-  .boot-wrap{
-    text-align: center;
-    padding: 18px;
-  }
-
-  /* Thumb-sized logo */
-  .boot-logo{
-    width: 76px;          /* ~thumb size */
-    height: 76px;
-    border-radius: 18px;  /* app-ish rounding */
-    overflow: hidden;
-    background: #ffffff;
-    box-shadow: 0 10px 30px rgba(11,18,32,.10);
-    margin: 0 auto;
-    display: grid;
-    place-items: center;
-  }
-
-  .boot-logo img{
-    width: 100%;
-    height: 100%;
-    object-fit: contain;  /* keep logo intact */
-    display: block;
-    background: #ffffff;
-  }
-
-  /* Fallback text if the image fails to load */
-  .boot-fallback{
-    display: none;
-    width: 100%;
-    height: 100%;
-    place-items: center;
-    font: 700 12px system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
-    letter-spacing: .08em;
-    color: #90b9a9;
-  }
-
-  /* Subtle spinner under the logo */
-  .boot-spinner{
-    width: 26px;
-    height: 26px;
-    border-radius: 999px;
-    border: 3px solid rgba(11,18,32,.12);
-    border-top-color: #90b9a9; /* match theme */
-    animation: boot-spin .9s linear infinite;
-    margin: 16px auto 0;
-  }
-
-  @keyframes boot-spin{
-    to { transform: rotate(360deg); }
-  }
-
-  /* Respect reduced motion */
-  @media (prefers-reduced-motion: reduce){
-    .boot-spinner{ animation: none; }
-    #pwa-boot{ transition: none; }
-  }
-</style>
 
 <!-- Built assets via Vite (JS only here; keep inline <style> below intact) -->
 @php $manifest = public_path('build/manifest.json'); @endphp
@@ -182,7 +117,7 @@
 .auth-switch{ text-align:center; margin-top:10px; color: var(--ink-600); }
 .auth-switch a{ font-weight:700; }
 .account-wrap{ position:relative; }
-.account-dropdown{ position:absolute; right:0; top:calc(100% + 8px); width:280px; background:#fff; border:1px solid rgba(0,0,0,0.15); border-radius:3px; box-shadow:0 20px 40px rgba(15,23,42,.15); padding:16px 16px 0; display:none; z-index:70; }
+.account-dropdown{ position:absolute; right:0; top:calc(100% + 8px); width:280px; height:auto; min-height:238px; max-height:calc(100vh - 120px); overflow-y:auto; background:#fff; border:1px solid rgba(0,0,0,0.15); border-radius:3px; box-shadow:0 20px 40px rgba(15,23,42,.15); padding:16px 16px 0; display:none; z-index:70; }
 .account-dropdown.show{ display:block; }
 .account-name{ font-weight:600; font-size:18px; margin-bottom:4px; }
 .account-email{ color: var(--ink-600); margin-bottom:12px; font-size:14px; }
@@ -26157,7 +26092,7 @@ This stylesheet scopes variables to .wow-card to avoid global conflicts. */
     --ok-ink: #065f46;
     --danger-bg: #fff1f2;
     --danger-br: #fecdd3;
-    --radius: 4px;
+    --radius: 13px !important;
     --shadow: 0 12px 28px rgba(11, 19, 35, .06);
     --shadow-lg: 0 18px 44px rgba(11, 19, 35, .10);
     --card-h: 540px; /* default height; can be overridden by size variants */

@@ -86,10 +86,32 @@
 
     /* Responsive */
     @media (max-width: 860px){
+      #wowGallery{
+        --bg: #ffffff;
+        --card: #ffffff;
+        --border: rgba(16, 24, 40, .10);
+        --shadow: 0 12px 30px rgba(16, 24, 40, .10);
+        --radius: 18px;
+        --gap: 14px;
+        --arrowSize: 46px;
+        --arrowIcon: rgba(11, 18, 32, .82);
+        --arrowGlass: rgba(255, 255, 255, .78);
+        --arrowBorder: rgba(255, 255, 255, .35);
+        --arrowShadow: 0 14px 34px rgba(16, 24, 40, .18);
+        --arrowShadowHover: 0 18px 44px rgba(16, 24, 40, .22);
+        --arrowRing: rgba(46, 125, 90, .35);
+        --edgeFade: rgba(250, 250, 250, 1);
+        --edgeWidth: 90px;
+        margin-bottom: 15px;
+      }
       #wowGallery .page{ padding:14px 0px; }
       #wowGallery .mosaic{ grid-template-columns:1fr; }
       #wowGallery .tile--big{ min-height:240px; }
       #wowGallery .rightGrid{ min-height:240px; }
+      #wowGallery .mosaic--single .rightGrid{
+        display: none !important;
+        min-height: 0 !important;
+      }
       #wowGallery{ --arrowSize:42px; --edgeWidth:70px; }
     }
     @media (max-width: 520px){
@@ -99,6 +121,31 @@
       #wowGallery .tile--tall{ grid-row: 1 / span 2; }
       #wowGallery .arrow--left{ left:10px; }
       #wowGallery .arrow--right{ right:10px; }
+      #wowGallery .mosaic--single{
+        grid-template-columns: 1fr;
+      }
+      #wowGallery .mosaic--single .rightGrid{
+        display: none;
+      }
+      #wowGallery .mosaic--compact{
+        grid-template-columns: 1fr;
+      }
+      #wowGallery .mosaic--compact .rightGrid{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        grid-template-rows: 1fr;
+        min-height: auto;
+      }
+      #wowGallery .mosaic--compact .tile--big{
+        min-height: 220px;
+      }
+      #wowGallery .mosaic--compact .tile--r1,
+      #wowGallery .mosaic--compact .tile--r2,
+      #wowGallery .mosaic--compact .tile--tall{
+        grid-column: auto;
+        grid-row: auto;
+        min-height: 120px;
+      }
     }
     /* ===== Modal (scoped to gallery) ===== */
     #wowGallery .modal{ position: fixed; inset: 0; display: none; z-index: 3000; }
@@ -258,6 +305,11 @@
           mosaic.className = "mosaic";
 
           const base = pageIdx * 4;
+          if (set.length === 1) {
+            mosaic.classList.add("mosaic--single");
+          } else if (set.length <= 3) {
+            mosaic.classList.add("mosaic--compact");
+          }
           if (set[0]) mosaic.appendChild(tile(set[0], "tile--big", base + 0));
 
           const right = document.createElement("div");

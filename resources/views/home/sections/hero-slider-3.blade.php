@@ -4,10 +4,11 @@
   .whero.whero--s3 {
     --s3-grid-size: 45px;
     --s3-grid-line: rgba(255, 255, 255, 0.15);
-    --s3-height: clamp(560px, 72vh, 820px);
+    --s3-height: clamp(480px, 58vh, 700px);
 
     position: relative;
     overflow: hidden;
+    height: 100%;
     color: #ffffff;
     background:
       linear-gradient(90deg, var(--s3-grid-line) 1px, transparent 1px var(--s3-grid-size)) 50% 50% / var(--s3-grid-size) var(--s3-grid-size),
@@ -33,8 +34,9 @@
 
   .whero.whero--s3 .whero-pad {
     min-height: var(--s3-height);
-    padding-top: clamp(56px, 8vw, 100px);
-    padding-bottom: clamp(52px, 6vw, 88px);
+    height: 100%;
+    padding-top: clamp(40px, 5vw, 72px);
+    padding-bottom: clamp(36px, 4vw, 60px);
   }
 
   .whero.whero--s3 .row,
@@ -45,7 +47,7 @@
   }
 
   .whero.whero--s3 .s3-copy {
-    max-width: 760px;
+    max-width: 720px;
   }
 
   .whero.whero--s3 .s3-eyebrow {
@@ -67,35 +69,35 @@
   .whero.whero--s3 .s3-title {
     margin: 0;
     color: #ffffff;
-    font-size: clamp(2.2rem, 3.2vw + 0.8rem, 3.75rem);
+    font-size: clamp(1.9rem, 2.6vw + 0.75rem, 3.15rem);
     line-height: 0.98;
     font-weight: 500;
     letter-spacing: -0.03em;
   }
 
   .whero.whero--s3 .s3-description {
-    margin: 1.3rem 0 0;
+    margin: 1rem 0 0;
     max-width: 680px;
     color: rgba(255, 255, 255, 0.88);
-    font-size: clamp(1rem, 0.8rem + 0.6vw, 1.22rem);
-    line-height: 1.72;
+    font-size: clamp(.98rem, 0.75rem + 0.45vw, 1.08rem);
+    line-height: 1.6;
   }
 
   .whero.whero--s3 .s3-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.9rem;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
   }
 
   .whero.whero--s3 .s3-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 52px;
+    min-height: 48px;
     border: 1px solid transparent;
     border-radius: 0;
-    padding: 0.9rem 1.35rem;
+    padding: 0.8rem 1.15rem;
     font-size: 0.98rem;
     font-weight: 500;
     line-height: 1;
@@ -154,7 +156,7 @@
   .whero.whero--s3 .s3-media-holder {
     position: relative;
     width: 100%;
-    max-width: 720px;
+    max-width: 640px;
     aspect-ratio: 16 / 9;
     margin-left: auto;
   }
@@ -182,7 +184,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    padding: 1.25rem;
+    padding: 1rem;
     pointer-events: none;
   }
 
@@ -233,19 +235,19 @@
   }
 
   .whero.whero--s3 .s3-video-btn--main {
-    width: 62px;
-    height: 62px;
+    width: 56px;
+    height: 56px;
     border-radius: 999px;
   }
 
   .whero.whero--s3 .s3-video-btn--main svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 
   .whero.whero--s3 .s3-video-btn--aux {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 999px;
   }
 
@@ -266,8 +268,8 @@
   @media (max-width: 991.98px) {
     .whero.whero--s3 .whero-pad {
       min-height: auto;
-      padding-top: 4rem;
-      padding-bottom: 3rem;
+      padding-top: 3.5rem;
+      padding-bottom: 2.5rem;
     }
 
     .whero.whero--s3 .s3-copy {
@@ -325,6 +327,13 @@
       height: 40px;
     }
   }
+
+  @media (max-width: 575.98px) {
+    .whero.whero--s3 .whero-pad {
+      padding-top: 72px;
+      padding-bottom: 32px;
+    }
+  }
 </style>
 
 <section data-v-f43bb09d="" class="whero whero--s3">
@@ -334,7 +343,7 @@
         <div class="s3-copy">
           <span class="s3-eyebrow">WHY BECOME A WOW PRACTITIONER </span>
 
-          <h1 class="s3-title">WOW Studio is the all-in-one platform for managing and growing your wellness practice</h1>
+          <h2 class="s3-title">WOW Studio is the all-in-one platform for managing and growing your wellness practice</h2>
 
           <p class="s3-description">Built for wellness practitioners by wellness practitioners who actually understand the work.
 <br><br>

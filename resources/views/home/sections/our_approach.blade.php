@@ -1,32 +1,38 @@
-<section data-v-f43bb09d="" class="section" aria-labelledby="values-title">
-    <div data-v-f43bb09d="" class="container-page">
-        <div data-v-f43bb09d="" class="grid md:grid-cols-2 gap-8">
-            <div data-v-f43bb09d="">
-                <div data-v-f43bb09d="" class="kicker">Our approach</div>
-                <h2 data-v-f43bb09d="" id="values-title">Holistic therapies, grounded in care</h2>
-                <p data-v-f43bb09d="" class="text-ink-600 mt-3">We champion modalities that meet you where
-                    you are, taught and held by practitioners who prioritise nervous-system safety.</p>
-            </div>
-            <dl data-v-f43bb09d="" class="space-y-5">
-                <div data-v-f43bb09d="">
-                    <dt data-v-f43bb09d="" class="font-semibold text-ink-900">Therapies first</dt>
-                    <dd data-v-f43bb09d="" class="text-ink-600 mt-1">Evidence-informed modalities and
-                        trauma-aware practitioners are prioritised before everything else we do.
-                    </dd>
-                </div>
-                <div data-v-f43bb09d="">
-                    <dt data-v-f43bb09d="" class="font-semibold text-ink-900">Human guidance</dt>
-                    <dd data-v-f43bb09d="" class="text-ink-600 mt-1">Every offering is reviewed by our
-                        practitioner team so you know who is holding space for you.
-                    </dd>
-                </div>
-                <div data-v-f43bb09d="">
-                    <dt data-v-f43bb09d="" class="font-semibold text-ink-900">Whole-self care</dt>
-                    <dd data-v-f43bb09d="" class="text-ink-600 mt-1">We look at sleep, stress, digestion,
-                        hormones and energy together—never in isolation.
-                    </dd>
-                </div>
-            </dl>
+<section class="wow-approach-section" aria-label="Our approach">
+    <div class="wow-approach-copy">
+        <p class="wow-kicker">Our approach</p>
+        <h2>Holistic therapies, grounded in care</h2>
+        <p>We champion therapies that meet people where they are — online, nearby, gently, and with enough clarity that nobody has to guess what they are booking.</p>
+
+        <div class="wow-approach-actions">
+            <a href="/collections/therapies" class="wow-btn wow-btn-primary">Browse therapies</a>
+            <a href="/pages/safety-contraindications" class="wow-btn wow-btn-outline">Safety guidance</a>
         </div>
     </div>
-</section><!----><!---->
+
+    <div class="wow-principles">
+        <article class="wow-principle-card">
+            <span class="wow-principle-number">01</span>
+            <div>
+                <h3>Therapies first</h3>
+                <p>We focus on modalities designed to support the whole person — from stress and sleep to energy, movement and emotional wellbeing.</p>
+            </div>
+        </article>
+
+        <article class="wow-principle-card">
+            <span class="wow-principle-number">02</span>
+            <div>
+                <h3>Human guidance</h3>
+                <p>Every offering should make it clear who is holding the space, what the session involves, and whether it is suitable before someone books.</p>
+            </div>
+        </article>
+
+        <article class="wow-principle-card">
+            <span class="wow-principle-number">03</span>
+            <div>
+                <h3>Whole-self care</h3>
+                <p>Sleep, stress, digestion, hormones, recovery and mindset are connected — so we avoid treating wellbeing like a set of random browser tabs.</p>
+            </div>
+        </article>
+    </div>
+</section>

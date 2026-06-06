@@ -218,7 +218,7 @@
 
     .wow-safe-proof {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
         padding: 18px;
         border-left: 1px solid var(--wow-soft-line);
@@ -263,6 +263,11 @@
 
     .wow-score-icon--dot {
         font-size: 16px;
+    }
+
+    .wow-score-icon--count {
+        background: var(--wow-blue-soft);
+        color: var(--wow-blue-text);
     }
 
     .wow-score-card strong {

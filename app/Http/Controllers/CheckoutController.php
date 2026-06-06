@@ -6,6 +6,8 @@ use App\Models\CheckoutAttempt;
 use App\Models\Order;
 use App\Models\OrderCustomer;
 use App\Models\OrderItem;
+use App\Models\OfferingV3;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +17,8 @@ use Stripe\Checkout\Session as StripeSession;
 
 class CheckoutController extends Controller
 {
+    protected const BOOKING_FEE_RATE = 0.05;
+
     public function createSession(Request $request)
     {
         $items = [];
@@ -46,6 +50,7 @@ class CheckoutController extends Controller
                     'vendor_id' => $entry['vendor_id'] ?? $entry['vendorId'] ?? null,
                     'variant_id' => $entry['variant_id'] ?? $entry['variantId'] ?? ($incomingMeta['variant_id'] ?? null),
                     'variant_label' => $entry['variant_label'] ?? $entry['options_label'] ?? null,
+                    'source_version' => strtolower(trim((string) ($entry['source_version'] ?? ($incomingMeta['source_version'] ?? '')))),
                     'title' => (string)($entry['title'] ?? ('Item '.$id)),
                     'price' => (float)($entry['price'] ?? $entry['unit'] ?? 0),
                     'qty' => max(1, (int)($entry['qty'] ?? $entry['quantity'] ?? 1)),
@@ -60,6 +65,22 @@ class CheckoutController extends Controller
                     'location' => $entry['location'] ?? ($incomingMeta['location'] ?? null),
                     'options' => $incomingOptions,
                 ];
+
+                if (
+                    $normalized[(string)$id]['source_version'] === ''
+                    && ! empty($normalized[(string)$id]['product_id'])
+                ) {
+                    try {
+                        $legacyExists = Product::query()->where('id', (int) $normalized[(string)$id]['product_id'])->exists();
+                        $v3Exists = OfferingV3::query()->where('id', (int) $normalized[(string)$id]['product_id'])->exists();
+                        if (! $legacyExists && $v3Exists) {
+                            $normalized[(string)$id]['source_version'] = 'v3';
+                            $normalized[(string)$id]['meta']['source_version'] = 'v3';
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('checkout.create.source_version_infer_failed', ['e' => $e->getMessage()]);
+                    }
+                }
             }
             if (!empty($normalized)) {
                 $items = $normalized;
@@ -123,6 +144,22 @@ class CheckoutController extends Controller
             ];
         }
 
+        $bookingFee = $this->calculateBookingFee($amountTotal);
+        if ($bookingFee > 0) {
+            $lineItems[] = [
+                    'price_data' => [
+                        'currency' => $currency,
+                        'product_data' => [
+                            'name' => 'WOW Booking fee (5%)',
+                            'description' => 'Booking fee applied at 5%',
+                        ],
+                        'unit_amount' => $bookingFee,
+                    ],
+                'quantity' => 1,
+            ];
+            $amountTotal += $bookingFee;
+        }
+
         // Prepare checkout attempt (used to create the order only after payment succeeds)
         $attempt = null;
         $order = null;
@@ -155,6 +192,8 @@ class CheckoutController extends Controller
                         'last_name' => $guestLastName,
                         'ip' => $request->ip(),
                         'user_agent' => substr((string)$request->userAgent(), 0, 255),
+                        'booking_fee' => $bookingFee,
+                        'booking_fee_rate' => self::BOOKING_FEE_RATE,
                     ],
                 ]);
             } catch (\Throwable $e) {
@@ -241,6 +280,11 @@ class CheckoutController extends Controller
         return $hasTable;
     }
 
+    protected function calculateBookingFee(int $amountPence): int
+    {
+        return max(0, (int) round($amountPence * self::BOOKING_FEE_RATE));
+    }
+
     protected function createPendingOrderFromItems(
         Request $request,
         array $items,
@@ -311,6 +355,16 @@ class CheckoutController extends Controller
                 $holdExpiresAt = $it['hold_expires_at'] ?? $it['holdExpiresAt'] ?? null;
                 $location = $it['location'] ?? ($incomingMeta['location'] ?? null);
                 $variantId = $it['variant_id'] ?? $it['variantId'] ?? ($incomingMeta['variant_id'] ?? null);
+                $sourceVersion = strtolower(trim((string) ($it['source_version'] ?? ($incomingMeta['source_version'] ?? ''))));
+                if ($sourceVersion !== 'v3' && $productId) {
+                    try {
+                        if (! Product::query()->where('id', (int) $productId)->exists() && OfferingV3::query()->where('id', (int) $productId)->exists()) {
+                            $sourceVersion = 'v3';
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('checkout.create.v3_fallback_check_failed', ['e' => $e->getMessage()]);
+                    }
+                }
 
                 $meta = array_merge($incomingMeta, [
                     'url' => $it['url'] ?? ($incomingMeta['url'] ?? null),
@@ -318,6 +372,7 @@ class CheckoutController extends Controller
                     'variant_label' => $variantLabel ?? ($incomingMeta['variant_label'] ?? null),
                     'product_id' => $productId ?? ($incomingMeta['product_id'] ?? null),
                     'vendor_id' => $vendorId ?? ($incomingMeta['vendor_id'] ?? null),
+                    'source_version' => $sourceVersion ?: ($incomingMeta['source_version'] ?? null),
                 ]);
                 if (!empty($variantOptions)) {
                     $meta['variant_options'] = $variantOptions;
@@ -343,6 +398,12 @@ class CheckoutController extends Controller
                 if (!is_null($variantId) && $variantId !== '') {
                     $meta['variant_id'] = $variantId;
                 }
+                if ($sourceVersion === 'v3') {
+                    $resolvedOfferingId = $productId ?: ($incomingMeta['offering_id'] ?? null);
+                    if (is_numeric($resolvedOfferingId) && (int) $resolvedOfferingId > 0) {
+                        $meta['offering_id'] = (int) $resolvedOfferingId;
+                    }
+                }
 
                 $meta = array_filter($meta, function ($value) {
                     return !is_null($value) && $value !== '' && $value !== [];
@@ -356,9 +417,11 @@ class CheckoutController extends Controller
                     'quantity' => $qty,
                     'meta' => $meta,
                 ];
-                if ($hasProductId) {
-                    // Legacy schemas require a non-null product_id.
+                if ($hasProductId && $sourceVersion !== 'v3') {
+                    // Legacy product-backed lines keep the foreign key; v3 offerings are stored in meta only.
                     $payload['product_id'] = $productId ?: 0;
+                } elseif ($hasProductId) {
+                    $payload['product_id'] = null;
                 }
                 if ($hasVendorId) {
                     $payload['vendor_id'] = $vendorId;

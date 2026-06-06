@@ -5,7 +5,6 @@
   <title>{{ $seo['title'] ?? (($need['title'] ?? 'Need').' | We Offer Wellness™') }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
 @endpush
 
 @section('content')
@@ -15,7 +14,117 @@
   if (!($items instanceof \Illuminate\Support\Collection)) {
     $items = collect($items ?? []);
   }
+  $sortValue = (string) ($filters['sort'] ?? '');
+  $formatValue = (string) ($filters['format'] ?? '');
+  $locationValue = trim((string) ($filters['location'] ?? ''));
+  $sortLabel = match ($sortValue) {
+    'price_asc' => 'Price: Low → High',
+    'price_desc' => 'Price: High → Low',
+    'rating_desc' => 'Top rated',
+    default => 'Recommended',
+  };
+  $formatLabel = match ($formatValue) {
+    'online' => 'Online',
+    'in_person' => 'Near me',
+    default => 'All',
+  };
+  $needFilterSegments = [
+    [
+      'key' => 'sort',
+      'label' => 'Sort',
+      'value' => $sortLabel,
+      'placeholder' => 'Recommended',
+      'panelTitle' => 'Sort results',
+      'panelSubtitle' => 'Choose how results are ordered.',
+      'panelWidth' => 430,
+      'options' => [
+        [
+          'label' => 'Recommended',
+          'value' => '',
+          'subtitle' => 'Best match for this page',
+          'count' => 'Default',
+          'selected' => $sortValue === '',
+        ],
+        [
+          'label' => 'Price: Low → High',
+          'value' => 'price_asc',
+          'subtitle' => 'Cheaper options first',
+          'selected' => $sortValue === 'price_asc',
+        ],
+        [
+          'label' => 'Price: High → Low',
+          'value' => 'price_desc',
+          'subtitle' => 'Higher-priced options first',
+          'selected' => $sortValue === 'price_desc',
+        ],
+        [
+          'label' => 'Top rated',
+          'value' => 'rating_desc',
+          'subtitle' => 'Highest reviewed offerings first',
+          'selected' => $sortValue === 'rating_desc',
+        ],
+      ],
+    ],
+    [
+      'key' => 'format',
+      'label' => 'Format',
+      'value' => $formatLabel,
+      'placeholder' => 'All',
+      'panelTitle' => 'Choose format',
+      'panelSubtitle' => 'Online or in-person sessions.',
+      'panelWidth' => 430,
+      'options' => [
+        [
+          'label' => 'All',
+          'value' => '',
+          'subtitle' => 'Any format',
+          'selected' => $formatValue === '',
+        ],
+        [
+          'label' => 'Online',
+          'value' => 'online',
+          'subtitle' => 'Join from anywhere',
+          'selected' => $formatValue === 'online',
+        ],
+        [
+          'label' => 'Near me',
+          'value' => 'in_person',
+          'subtitle' => 'Physical sessions near you',
+          'selected' => $formatValue === 'in_person',
+        ],
+      ],
+    ],
+    [
+      'key' => 'location',
+      'label' => 'Location',
+      'value' => $locationValue !== '' ? $locationValue : 'Anywhere',
+      'placeholder' => 'Anywhere',
+      'panelTitle' => 'Filter by location',
+      'panelSubtitle' => 'Search by city, county, or area.',
+      'panelWidth' => 480,
+      'kind' => 'input',
+      'param' => 'location',
+      'inputLabel' => 'Location',
+      'inputValue' => $locationValue,
+      'inputPlaceholder' => 'e.g. London, Kent',
+      'buttonLabel' => 'Update location',
+    ],
+  ];
+  $needFilterChips = array_values(array_filter([
+    $sortValue !== '' ? ['param' => 'sort', 'label' => 'Sort', 'value' => $sortLabel] : null,
+    $formatValue !== '' ? ['param' => 'format', 'label' => 'Format', 'value' => $formatLabel] : null,
+    $locationValue !== '' ? ['param' => 'location', 'label' => 'Location', 'value' => $locationValue] : null,
+  ]));
 @endphp
+
+@include('partials.breadcrumbs', [
+  'crumbs' => [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Needs', 'url' => url('/needs')],
+    ['label' => $need['title'] ?? 'Need'],
+  ],
+  'schemaUrl' => url('/needs/' . $slug),
+])
 
 <section class="section">
   <div class="container-page">
@@ -32,44 +141,23 @@
       </div>
     </div>
 
-    {{-- Filters --}}
-    <form method="get" action="{{ url('/needs/'.$slug) }}" class="card p-3 mb-4" style="border-radius:18px;">
-      <div class="grid md:grid-cols-3 gap-3 items-end">
-        <div class="col-span-3 md:col-span-1">
-          <label class="form-label">Format</label>
-          <select class="form-control" name="format">
-            <option value="" @selected(($filters['format'] ?? '') === '')>All</option>
-            <option value="online" @selected(($filters['format'] ?? '') === 'online')>Online</option>
-            <option value="in_person" @selected(($filters['format'] ?? '') === 'in_person')>Near me</option>
-          </select>
-        </div>
-        <div class="col-span-3 md:col-span-1">
-          <label class="form-label">Location</label>
-          <input class="form-control" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="e.g. London, Kent">
-        </div>
-        <div class="col-span-3 md:col-span-1">
-          <label class="form-label">Sort</label>
-          <div class="flex gap-2">
-            <select class="form-control" name="sort">
-              <option value="" @selected(($filters['sort'] ?? '') === '')>Recommended</option>
-              <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price: Low → High</option>
-              <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price: High → Low</option>
-              <option value="rating_desc" @selected(($filters['sort'] ?? '') === 'rating_desc')>Top rated</option>
-            </select>
-            <div class="flex gap-2">
-              <button class="btn btn-primary" type="submit">Apply</button>
-              <a class="btn btn-light" href="{{ url('/needs/'.$slug) }}">Reset</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
+    @include('partials.wow-filter-bar', [
+      'action' => url('/needs/' . $slug),
+      'clearUrl' => url('/needs/' . $slug),
+      'ariaLabel' => 'Filter needs',
+      'mobileLabel' => 'Filters',
+      'resultCount' => $items->count(),
+      'resultLabel' => 'results',
+      'filters' => $filters,
+      'segments' => $needFilterSegments,
+      'chips' => $needFilterChips,
+    ])
 
     {{-- Results --}}
     @if($items->count())
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         @foreach($items as $product)
-          @include('partials.product_card', [
+          @include('partials.product_card_v4', [
             'product' => $product,
             'preferredLocation' => $filters['location'] ?? null,
           ])

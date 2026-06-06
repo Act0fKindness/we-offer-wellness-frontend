@@ -1,6 +1,6 @@
 # Email Trigger Matrix
 
-This project now covers the most common ecommerce scenarios. Each template lives under `resources/views/emails` and is sent through `App\Services\TransactionalMail`.
+This project now covers the most common ecommerce scenarios. The frontend still raises the trigger through `App\Services\TransactionalMail`, but delivery is relayed to the backend so the email can be rendered, tracked, and edited from the admin template system.
 
 ## Marketing & Opt-ins
 | Template | View | Trigger |
@@ -31,4 +31,4 @@ This project now covers the most common ecommerce scenarios. Each template lives
 | Refund confirmation | `emails/refund-confirmation.blade.php` | Stripe webhook `charge.refunded`. |
 | Dispute/chargeback received | `emails/dispute-notice.blade.php` | Stripe webhook `charge.dispute.created`. |
 
-Each template reuses the shared `emails.layout` styling so future additions simply need a new Blade view and a call through `TransactionalMail`.
+The frontend views now mirror the backend store-email templates, so future additions only need the frontend trigger plus the matching backend `emails/store/*` Blade view.

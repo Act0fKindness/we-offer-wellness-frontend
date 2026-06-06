@@ -1,10 +1,63 @@
 {{-- resources/views/home/sections/hero-slider-1.blade.php --}}
 
 <style>
+    .whero.whero--s1{
+      height: 100%;
+    }
+
+    .whero.whero--s1 .container.whero-pad{
+      height: 100%;
+    }
 
     @media (max-width: 575.98px){
-      .container.whero-pad{
-        padding: 30px !important;
+      .whero.whero--s1 .container.whero-pad{
+        padding: 84px 30px 30px !important;
+      }
+
+      .whero .row.align-items-center.g-5{
+        row-gap: 20px !important;
+      }
+
+      .whero.whero--s1 .row.align-items-center.g-5{
+        flex-direction: column;
+      }
+
+      .whero.whero--s1 .row.align-items-center.g-5 > .browser-window{
+        display: none !important;
+      }
+
+      .whero.whero--s1 .row.align-items-center.g-5 > .col-12{
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+
+      .whero.whero--s1 .row.align-items-center.g-5 > .col-lg-7{
+        order: 2;
+      }
+
+      .whero-title,
+      .whero-sub,
+      .whero-cta{
+        max-width: none;
+        width: 100%;
+      }
+
+      .whero-cta{
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px;
+        border-radius: 20px;
+      }
+
+      .whero-cta-input{
+        flex: 1 1 100%;
+        width: 100%;
+        height: 46px;
+        padding: 0 8px;
+      }
+
+      .whero-cta .btn-wow{
+        width: 100%;
       }
     }
 
@@ -16,11 +69,10 @@
 
     <div data-v-f43bb09d="" class="container whero-pad">
         <div data-v-f43bb09d="" class="row align-items-center g-5">
-            <div data-v-f43bb09d="" class="col-12 col-lg-7"><span data-v-f43bb09d="" class="whero-eyebrow">Trusted holistic therapies</span>
-                <h1 data-v-f43bb09d="" class="whero-title">Discover therapies and classes that work for
-                    you</h1>
-                <p data-v-f43bb09d="" class="whero-sub mt-3"> Every part of your well-being is connected —
-                    stress, sleep, energy, digestion, and calm all thread through one another. <span
+            <div data-v-f43bb09d="" class="col-12 col-lg-7">
+                <span data-v-f43bb09d="" class="whero-eyebrow">Trusted holistic therapies</span>
+                <h1 data-v-f43bb09d="" class="whero-title">Discover therapies and classes that work for you</h1>
+                <p data-v-f43bb09d="" class="whero-sub mt-3"> Explore therapies, classes, workshops and experiences by the kind of support you are looking for. <span
                         data-v-f43bb09d="" class="whero-subline">Therapies, classes, and workshops curated by practitioners you can trust so you can feel better, faster.</span>
                 </p>
                 <form data-v-f43bb09d="" class="whero-cta mt-4" data-subscriber-form="hero-slider-1" data-subscriber-source="hero-slider-1:community" novalidate>

@@ -1,21 +1,41 @@
-<section data-v-f43bb09d="" id="practitioner-chats" class="section"
-         aria-labelledby="practitioner-chats-title">
-    <div data-v-f43bb09d="" class="container-page">
-        <div data-v-f43bb09d="" class="card p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
-            <div data-v-f43bb09d="" class="flex-1">
-                <div data-v-f43bb09d="" class="kicker">New series</div>
-                <h2 data-v-f43bb09d="" id="practitioner-chats-title">Practitioner Chats</h2>
-                <p data-v-f43bb09d="" class="text-ink-600 mt-2">Monthly conversations with WOW practitioners
-                    on how they hold space, approach safety, and design therapies that work.</p></div>
-            <div data-v-f43bb09d="" class="flex gap-3"><a data-v-f43bb09d=""
-                                                          href="https://times.weofferwellness.co.uk#practitioner-chats"
-                                                          class="btn-wow btn-wow--cta btn-arrow"
-                                                          data-loader-init="1"><span data-v-f43bb09d=""
-                                                                                     class="btn-label">Explore chats</span><span
-                class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></a><a
-                data-v-f43bb09d="" href="https://times.weofferwellness.co.uk" class="btn-wow btn-wow--ghost"
-                data-loader-init="1">See notes<span class="btn-spinner" aria-hidden="true"><span
-                class="spin"></span></span></a></div>
+<section class="wow-chat-panel" aria-label="Practitioner chats">
+    <div class="wow-chat-copy">
+        <p class="wow-kicker">Practitioner stories</p>
+        <h2>Practitioner Chats</h2>
+        <p>Read Mindful Times interviews and watch We Offer Wellness® videos with practitioners discussing how they hold space, approach safety and support real people.</p>
+
+        <div class="wow-chat-actions">
+            <a href="https://times.weofferwellness.co.uk/category/interviews" class="wow-btn wow-btn-primary" target="_blank" rel="noopener">Read interviews</a>
+            <a href="https://www.youtube.com/@WeOfferWellness/videos" class="wow-btn wow-btn-outline" target="_blank" rel="noopener">Watch videos</a>
         </div>
     </div>
-</section><!---->
+
+    <div class="wow-chat-preview" aria-label="Practitioner chat links">
+        <a class="wow-mini-card" href="https://times.weofferwellness.co.uk/category/interviews" target="_blank" rel="noopener">
+            <div class="wow-mini-avatar wow-mini-avatar--article" aria-hidden="true"></div>
+            <div>
+                <h3>Mindful Times interviews</h3>
+                <p>Practitioner conversations, stories and thoughtful editorial pieces.</p>
+            </div>
+            <span class="wow-mini-time">Articles</span>
+        </a>
+
+        <a class="wow-mini-card" href="https://www.youtube.com/@WeOfferWellness/videos" target="_blank" rel="noopener">
+            <div class="wow-mini-avatar wow-mini-avatar--video" aria-hidden="true"></div>
+            <div>
+                <h3>Watch practitioner videos</h3>
+                <p>Video conversations, wellness features and behind-the-scenes content.</p>
+            </div>
+            <span class="wow-mini-time">YouTube</span>
+        </a>
+
+        <a class="wow-mini-card" href="/pages/safety-contraindications">
+            <div class="wow-mini-avatar wow-mini-avatar--guide" aria-hidden="true"></div>
+            <div>
+                <h3>Before you book</h3>
+                <p>Useful notes on suitability, safety and choosing the right support.</p>
+            </div>
+            <span class="wow-mini-time">Guide</span>
+        </a>
+    </div>
+</section>

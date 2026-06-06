@@ -1,0 +1,79 @@
+{
+    "generated_at": "2026-06-06T00:05:05+00:00",
+    "index_url": "https://www.weofferwellness.co.uk/sitemap.xml",
+    "submission_urls": [
+        "https://www.weofferwellness.co.uk/sitemap.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/static.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/modalities.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/types.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/locations.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/near-me.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/modality-location.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/type-location.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/offerings.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/events.xml",
+        "https://www.weofferwellness.co.uk/sitemaps/practitioners.xml"
+    ],
+    "sitemaps": [
+        {
+            "name": "static",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/static.xml",
+            "lastmod": "2026-06-06T00:05:02+00:00",
+            "count": 26
+        },
+        {
+            "name": "modalities",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/modalities.xml",
+            "lastmod": "2026-06-05T09:41:21+00:00",
+            "count": 101
+        },
+        {
+            "name": "types",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/types.xml",
+            "lastmod": "2026-06-06T00:05:03+00:00",
+            "count": 112
+        },
+        {
+            "name": "locations",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/locations.xml",
+            "lastmod": "2026-06-06T00:05:03+00:00",
+            "count": 185
+        },
+        {
+            "name": "near-me",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/near-me.xml",
+            "lastmod": "2026-06-06T00:05:03+00:00",
+            "count": 104
+        },
+        {
+            "name": "modality-location",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/modality-location.xml",
+            "lastmod": "2026-06-06T00:05:03+00:00",
+            "count": 18768
+        },
+        {
+            "name": "type-location",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/type-location.xml",
+            "lastmod": "2026-06-05T09:41:21+00:00",
+            "count": 494
+        },
+        {
+            "name": "offerings",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/offerings.xml",
+            "lastmod": "2026-06-05T18:49:38+00:00",
+            "count": 593
+        },
+        {
+            "name": "events",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/events.xml",
+            "lastmod": "2026-06-06T00:05:03+00:00",
+            "count": 1
+        },
+        {
+            "name": "practitioners",
+            "url": "https://www.weofferwellness.co.uk/sitemaps/practitioners.xml",
+            "lastmod": "2026-06-05T21:04:11+00:00",
+            "count": 399
+        }
+    ]
+}

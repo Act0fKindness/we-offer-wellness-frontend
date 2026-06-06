@@ -2,9 +2,19 @@
 @extends('layouts.app')
 
 @php
-    $pageTitle = $title ?? 'About We Offer Wellness™';
-    $pageDescription = $metaDescription ?? 'Our story, our founders, and why We Offer Wellness™ exists.';
+    $pageTitle = $title ?? 'About We Offer Wellness®';
+    $pageDescription = $metaDescription ?? 'Meet the founders of We Offer Wellness®, learn our story, and discover how we connect people with trusted holistic therapies, classes, events, and practitioner tools across the UK.';
     $pageCanonical = $canonical ?? url('/about');
+    $pageOgImage = asset('images/about-social-preview.jpg');
+    $seo = $seo ?? [
+        'title' => 'About We Offer Wellness® | Trusted Holistic Therapies & Wellness Tools',
+        'description' => $pageDescription,
+        'canonical' => $pageCanonical,
+        'og_image' => $pageOgImage,
+        'og_image_alt' => 'We Offer Wellness about page social preview image',
+        'site_name' => 'We Offer Wellness®',
+        'twitter_card' => 'summary_large_image',
+    ];
 
     $founders = [
         [
@@ -15,7 +25,7 @@
                 "Ian began exploring meditation in 1991, particularly its connection with music, using percussive instruments such as chimes, singing bowls, bells, and drums. This naturally led him to playing gongs — a deep passion of his — and he now loves facilitating gong bath meditation sessions.",
                 "For many years, Ian has been fascinated by ancient cultures, especially civilisations like Egypt and China, which continue to inspire him.",
                 "He’s equally passionate about anything that promotes wellbeing, healing, and reconnecting people with their sense of humanness. He teaches Tai Chi Qigong, holds regular meditation sessions, and has written over 30 books — all expressions of his lifelong commitment to personal and collective growth.",
-                "Ian is proud and grateful to be building We Offer Wellness™ — a meaningful contribution to humanity and a platform to provide empowering wellness opportunities in a world that deeply needs them.",
+                "Ian is proud and grateful to be building We Offer Wellness® — a meaningful contribution to humanity and a platform to provide empowering wellness opportunities in a world that deeply needs them.",
             ],
             'highlights' => [
                 'Meditation since 1991',
@@ -48,8 +58,8 @@
             'tagline' => 'Holistic Health Coach & Breathwork Facilitator — and the friendly engine behind the scenes.',
             'bio' => [
                 "Tash is a certified Holistic Health Coach and Breathwork Facilitator who, for many years, supported women and teenagers in regaining their menstrual cycles after experiencing hypothalamic amenorrhea — a condition often caused by mental stress, under-fuelling, or over-exercising.",
-                "She’s also a proud mum to her beautiful toddler, Arabella, who’s very much part of the little We Offer Wellness™ family!",
-                "At WOW™, Tash plays a key role in the day-to-day running of the platform, managing communications with both providers and customers. She also leads our digital presence — especially on Instagram — helping to keep the wellness conversation flowing.",
+                "She’s also a proud mum to her beautiful toddler, Arabella, who’s very much part of the little We Offer Wellness® family!",
+                "At WOW®, Tash plays a key role in the day-to-day running of the platform, managing communications with both providers and customers. She also leads our digital presence — especially on Instagram — helping to keep the wellness conversation flowing.",
                 "In April 2024, she launched her podcast Seeking Wellness with Tash, created for anyone curious about alternative therapies or looking for practical ways to feel better. Give it a listen and follow along here!",
             ],
             'highlights' => [
@@ -69,7 +79,7 @@
             'role' => 'CTO',
             'tagline' => 'The one turning chaos into code (and caffeine into features).',
             'bio' => [
-                "Known internally as Dandulf the Wizard by the We Offer Wellness™ founders, Daniel is the spell-slinging technologist behind the platform.",
+                "Known internally as Dandulf the Wizard by the We Offer Wellness® founders, Daniel is the spell-slinging technologist behind the platform.",
                 "With over a decade of experience — including time at Google and Spotify — he’s architected everything from multi-vendor wellness marketplaces to AI-powered social networks, often while debugging issues that were definitely not his fault.",
                 "As the mastermind behind @ease, Daniel leads all things tech, turning chaos into code and caffeine into features.",
             ],
@@ -83,16 +93,15 @@
     ];
 @endphp
 
-@section('title', $pageTitle)
-
-@section('head')
-    @if(!empty($pageDescription))
-        <meta name="description" content="{{ $pageDescription }}">
-    @endif
-    <link rel="canonical" href="{{ $pageCanonical }}">
-@endsection
-
 @section('content')
+@include('partials.breadcrumbs', [
+    'crumbs' => [
+        ['label' => 'Home', 'url' => url('/')],
+        ['label' => 'About We Offer Wellness'],
+    ],
+    'schemaUrl' => $pageCanonical,
+])
+
 <style>
     :root{
         --ab-bg: #f6f7fb;
@@ -107,7 +116,7 @@
         --ab-focus: 0 0 0 4px rgba(75, 137, 255, .18);
         --ab-accent: #4b89ff;
     }
-    .ab{background: var(--ab-bg); color: var(--ab-ink);}
+    .ab{background: transparent; color: var(--ab-ink);}
     .ab .wrap{max-width: 1180px; margin: 0 auto; padding: 28px 18px 72px;}
     .ab .kicker{font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: rgba(11,18,32,.62);}
     .ab h1{font-size: clamp(30px, 3.2vw, 44px); line-height: 1.08; margin: 8px 0 10px; letter-spacing: -.025em;}
@@ -186,6 +195,26 @@
     .ab .step .txt{margin-top: 2px; font-size: 13.5px; color: rgba(11,18,32,.72); line-height: 1.6;}
 
     .ab .founders{margin-top: 16px;}
+    .ab .foundersBanner{
+        margin-top: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(16,24,40,.12);
+        border-radius: 20px;
+        background: rgba(255,255,255,.9);
+        box-shadow: 0 12px 30px rgba(16,24,40,.08);
+    }
+    .ab .foundersBanner img{
+        display:block;
+        width:100%;
+        aspect-ratio: 21 / 9;
+        object-fit: cover;
+        object-position: center center;
+    }
+    @media (max-width: 767.98px){
+        .ab .foundersBanner img{
+            aspect-ratio: 16 / 9;
+        }
+    }
     .ab .founder{
         padding: 16px;
         border-radius: 20px;
@@ -290,14 +319,14 @@
     <div class="wrap">
 
         {{-- HERO --}}
-        <section class="hero" aria-label="About We Offer Wellness™">
+        <section class="hero" aria-label="About We Offer Wellness®">
             <div class="heroGrid">
                 <div>
                     <div class="kicker">About us</div>
                     <h1 id="about-title">{{ $pageTitle }}</h1>
 
                     <p>
-                        We Offer Wellness™ began with a simple idea — born from the frustration of searching for the perfect gift
+                        We Offer Wellness® began with a simple idea — born from the frustration of searching for the perfect gift
                         for someone you love. Not another “I saw this in the aisle near the deodorant” gift… a real one. A gift of wellness.
                     </p>
 
@@ -375,7 +404,7 @@
                             <div>
                                 <strong>The seed was sown</strong>
                                 <div class="txt">
-                                    The seed of We Offer Wellness™ was sown — a platform where holistic therapies could be found easily,
+                                    The seed of We Offer Wellness® was sown — a platform where holistic therapies could be found easily,
                                     with a range of therapies to suit all needs and all located in one place.
                                 </div>
                             </div>
@@ -383,7 +412,7 @@
                     </div>
                 </div>
 
-                <div class="card" aria-label="What We Offer Wellness™ is for">
+                <div class="card" aria-label="What We Offer Wellness® is for">
                     <div class="cardHd">
                         <h2>What we’re building</h2>
                         <div class="muted">Clarity + care</div>
@@ -434,9 +463,18 @@
                     <div class="muted">The humans behind the mission</div>
                 </div>
                 <p style="margin-top:10px;">
-                    We Offer Wellness™ is built by people who live and breathe this work — from holistic practice and community
+                    We Offer Wellness® is built by people who live and breathe this work — from holistic practice and community
                     to platform engineering. Different worlds, one goal: make wellbeing more accessible.
                 </p>
+            </div>
+
+            <div class="foundersBanner" aria-label="We Offer Wellness founders banner">
+                <img
+                    src="https://studio.weofferwellness.co.uk/storage/uploads/images/d24a0088-7ec5-4019-88b4-86923a69e602.jpg"
+                    alt="We Offer Wellness founders banner"
+                    loading="lazy"
+                    decoding="async"
+                >
             </div>
 
             <div class="grid two" style="margin-top:16px;">

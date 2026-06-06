@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ProfilePageResolver;
 use Illuminate\Http\Request;
 
 class AboutController extends Controller
@@ -11,10 +12,40 @@ class AboutController extends Controller
      */
     public function index()
     {
+        $title = 'About We Offer Wellness®';
+        $description = 'Meet the founders of We Offer Wellness®, learn our story, and discover how we connect people with trusted holistic therapies, classes, events, and practitioner tools across the UK.';
+        $ogImage = asset('images/about-social-preview.jpg');
+
         return view('about.index', [
-            'title' => 'About We Offer Wellness™',
-            'metaDescription' => 'Learn about We Offer Wellness™ — our mission, how we work, and how we help people find trusted holistic therapies.',
+            'title' => $title,
+            'metaDescription' => $description,
             'canonical' => url('/about'),
+            'seo' => [
+                'title' => 'About We Offer Wellness® | Trusted Holistic Therapies & Wellness Tools',
+                'description' => $description,
+                'canonical' => url('/about'),
+                'og_image' => $ogImage,
+                'og_image_alt' => 'We Offer Wellness about page social preview image',
+                'site_name' => 'We Offer Wellness®',
+                'twitter_card' => 'summary_large_image',
+            ],
+        ]);
+    }
+
+    /**
+     * Display a team member placeholder profile page.
+     */
+    public function team(string $slug, ProfilePageResolver $resolver)
+    {
+        $user = $resolver->resolve($slug, 'team');
+
+        abort_if($user === null, 404);
+
+        return view('providers.show', [
+            'seo' => $resolver->buildSeo($user, 'team', url('/about/team/' . $slug)),
+            'slug' => $slug,
+            'profileType' => 'team',
+            'user' => $user,
         ]);
     }
 

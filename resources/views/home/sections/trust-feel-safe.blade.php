@@ -1,34 +1,64 @@
-<section data-v-f43bb09d="" class="section">
-    <div data-v-f43bb09d="" class="container-page">
-        <div data-v-f43bb09d="" class="card p-6 md:p-8">
-            <div data-v-f43bb09d="" class="grid md:grid-cols-3 gap-6 items-center">
-                <div data-v-f43bb09d="" class="space-y-2">
-                    <div data-v-f43bb09d="" class="kicker">Feel safe to try</div>
-                    <h3 data-v-f43bb09d="">You’re in safe hands</h3>
-                    <p data-v-f43bb09d="" class="text-ink-600">Real outcomes, real people. Verified reviews
-                        and clear pricing — so you can relax into booking and focus on how you want to
-                        feel.</p></div>
-                <div data-v-f43bb09d="" class="stat-row">
-                    <div data-v-f43bb09d="" class="stat-pill">
-                        <svg data-v-f43bb09d="" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                             class="icon star" aria-hidden="true" fill="currentColor">
-                            <path data-v-f43bb09d=""
-                                  d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-                        </svg>
-                        <div data-v-f43bb09d="">
-                            <div data-v-f43bb09d="" class="title">{{ isset($avg_rating) && $avg_rating ? number_format($avg_rating, 1) . '/5' : '—' }}</div>
-                            <div data-v-f43bb09d="" class="sub">{{ number_format((int)($review_count ?? 0)) }} verified reviews</div>
-                        </div>
-                    </div>
-                    <div data-v-f43bb09d="" class="stat-pill"><span data-v-f43bb09d="" class="dot"
-                                                                    aria-hidden="true"></span>
-                        <div data-v-f43bb09d="">
-                            <div data-v-f43bb09d="" class="title">97% would book again</div>
-                            <div data-v-f43bb09d="" class="sub">People felt better after their session</div>
-                        </div>
-                    </div>
+<section class="wow-safe-card" aria-label="Safety and review proof">
+    <div class="wow-safe-intro">
+        <p class="wow-kicker">Feel safe to try</p>
+        <h2>You’re in safe hands</h2>
+        <p>Clear information, reviewed offerings and real feedback from people who have booked through We Offer Wellness®. So choosing support feels simple — not like decoding a wellness menu written by a crystal ball.</p>
+
+        <div class="wow-safe-checks" aria-label="Trust signals">
+            <span class="wow-tag wow-tag--green">Verified reviews</span>
+            <span class="wow-tag wow-tag--blue">Clear pricing</span>
+            <span class="wow-tag">Practitioner-led</span>
+        </div>
+    </div>
+
+    <div class="wow-safe-proof">
+        <article class="wow-score-card">
+            <div class="wow-score-heading">
+                <span class="wow-score-icon" aria-hidden="true">★</span>
+                <strong>5.0/5</strong>
+            </div>
+            <span>Average rating from verified reviews</span>
+        </article>
+
+        <article class="wow-score-card">
+            <div class="wow-score-heading">
+                <span class="wow-score-icon wow-score-icon--count" aria-hidden="true">#</span>
+                <strong>{{ number_format((int) ($verified_count ?? $review_count ?? 0)) }}</strong>
+            </div>
+            <span>Verified practitioner reviews gathered</span>
+        </article>
+
+        <article class="wow-score-card">
+            <div class="wow-score-heading">
+                <span class="wow-score-icon wow-score-icon--dot" aria-hidden="true">●</span>
+                <strong>97%</strong>
+            </div>
+            <span>Would book again after their session</span>
+        </article>
+
+        <div class="wow-proof-list" aria-label="Booking reassurance">
+            <div class="wow-proof-row">
+                <span class="wow-proof-tick" aria-hidden="true">✓</span>
+                <div>
+                    <strong>Know what you are booking</strong>
+                    <span>Each offering should clearly explain the session format, price, location and what to expect.</span>
                 </div>
-                {{-- Review CTA removed by request --}}
+            </div>
+
+            <div class="wow-proof-row">
+                <span class="wow-proof-tick" aria-hidden="true">✓</span>
+                <div>
+                    <strong>Check suitability before you book</strong>
+                    <span>Review practitioner details, safety notes and contraindications before choosing a therapy.</span>
+                </div>
+            </div>
+
+            <div class="wow-proof-row">
+                <span class="wow-proof-tick" aria-hidden="true">✓</span>
+                <div>
+                    <strong>Real people, real experiences</strong>
+                    <span>Reviews help people understand how sessions feel in practice, not just how nice the listing sounds.</span>
+                </div>
             </div>
         </div>
     </div>

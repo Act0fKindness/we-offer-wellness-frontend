@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+  @php
+    $emailLogoUrl = 'https://atease.weofferwellness.co.uk/storage/uploads/images/1f5b73d7-4d96-4756-8f48-4d605e4e43bf.png';
+  @endphp
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title', 'We Offer Wellness')</title>
@@ -54,7 +57,7 @@
           <tr>
             <td class="hero-top">
               <a href="https://weofferwellness.co.uk" target="_blank" rel="noopener">
-                <img src="https://testing.studio.weofferwellness.co.uk/storage/uploads/images/35492c96-eb24-42d7-a913-e9e0775f2f17.png" alt="We Offer Wellness" height="33" style="height:33px; width:auto; display:block;">
+                <img src="{{ $emailLogoUrl }}" alt="We Offer Wellness" height="33" style="height:33px; width:auto; display:block;">
               </a>
               <div class="hero-heading">@yield('title', 'We Offer Wellness')</div>
               <p class="hero-sub">Calm technology for your rituals, ready in under a minute.</p>

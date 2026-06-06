@@ -2,10 +2,12 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 use App\Models\LegacyPageVisit;
 use App\Models\Product;
 use App\Models\ProductStatus;
 use App\Models\V3Subscriber;
+use App\Services\WhatCategoryCacheService;
 use App\Support\BotPathMatcher;
 use App\Support\ExternalReviews\VendorReviewFetcher;
 use App\Support\ExternalReviews\VendorReviewPublisher;
@@ -240,3 +242,31 @@ Artisan::command('reviews:publish {--vendor-id=} {--limit=0} {--dry-run} {--refr
 
     return $publisher->run($this, $options);
 })->purpose('Publish vendor review rows into the primary reviews table for vendors');
+
+Artisan::command('categories:export-what {--path=}', function (WhatCategoryCacheService $service) {
+    $path = $service->export($this->option('path') ?: null);
+    $payload = $service->load();
+    $count = (int) ($payload['count'] ?? 0);
+    $this->info("Exported {$count} categories to {$path}");
+    return 0;
+})->purpose('Export the nightly what-category lookup cache');
+
+Schedule::command('locations:export-catalog')
+    ->dailyAt('00:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+Schedule::command('categories:export-what')
+    ->dailyAt('00:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+Schedule::command('sitemaps:generate')
+    ->dailyAt('00:05')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+Schedule::command('search-console:submit-sitemap')
+    ->dailyAt('00:20')
+    ->withoutOverlapping()
+    ->runInBackground();

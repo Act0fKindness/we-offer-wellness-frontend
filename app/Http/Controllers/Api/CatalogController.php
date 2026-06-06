@@ -7,6 +7,8 @@ use App\Models\OfferingV3;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\VendorDetail;
+use App\Support\EventListing;
+use App\Support\ProductRanking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -23,8 +25,7 @@ class CatalogController extends Controller
                   ->withAvg('reviews', 'rating')
                   ->withMin('variants','price')
                   ->withMax('variants','price')
-                  ->with(['media', 'options.values', 'category', 'vendor.tiers'])
-                  ->when(!$includeAll, fn($qq) => $qq->limit($productLimit));
+                  ->with(['media', 'options.values', 'category', 'vendor.tiers', 'vendor.user.settings']);
             }])
             ->orderBy('name')
             ->get();
@@ -96,18 +97,27 @@ class CatalogController extends Controller
             ];
         };
 
-        $data = $categories->map(function (ProductCategory $cat) use ($transformProduct) {
+        $data = $categories->map(function (ProductCategory $cat) use ($transformProduct, $includeAll, $productLimit) {
+            $products = ProductRanking::sortCollection($cat->products)
+                ->reject(fn ($product) => EventListing::isPast($product));
+
+            if (! $includeAll) {
+                $products = $products->take($productLimit);
+            }
+
             return [
                 'id' => $cat->id,
                 'name' => $cat->name,
-                'products' => $cat->products->map($transformProduct)->values(),
+                'products' => $products->map($transformProduct)->values(),
             ];
         })->values();
 
         $offerings = OfferingV3::query()
-            ->with(['category', 'type', 'vendor.tiers', 'media', 'coverMedia'])
+            ->with(['category', 'type', 'vendor.tiers', 'vendor.user.settings', 'media', 'coverMedia'])
             ->whereIn('status', ['live', 'approved'])
             ->get()
+            ->reject(fn ($offering) => EventListing::isPast($offering))
+            ->pipe(fn ($items) => ProductRanking::sortCollection($items))
             ->map($transformOffering)
             ->values();
 

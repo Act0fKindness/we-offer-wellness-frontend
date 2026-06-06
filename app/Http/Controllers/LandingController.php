@@ -2,27 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\OfferingV3;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Review;
 use App\Models\VendorDetail;
 use App\Services\BookingContextBuilder;
+use App\Support\EventListing;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class LandingController extends Controller
 {
     // Supported hubs/types
-    private const TYPES = ['therapies','events','workshops','classes','retreats','gifts'];
+    private const TYPES = ['therapies', 'events', 'workshops', 'classes', 'retreats', 'gifts'];
 
     public function hub(Request $request, string $type)
     {
         $type = strtolower($type);
-        if (!in_array($type, self::TYPES, true) && $type !== 'near-me') {
+        if (! in_array($type, self::TYPES, true) && $type !== 'near-me') {
             abort(404);
         }
 
@@ -40,8 +45,8 @@ class LandingController extends Controller
                     'id' => $cat->id,
                     'name' => $cat->name,
                     'slug' => $this->slugify($cat->name),
-                    'count' => (int)($cat->products_count ?? 0),
-                    'url' => url('/' . $this->slugify($cat->name) . '/' . $type . '/'),
+                    'count' => (int) ($cat->products_count ?? 0),
+                    'url' => url('/'.$this->slugify($cat->name).'/'.$type.'/'),
                 ];
             })->values();
 
@@ -51,22 +56,25 @@ class LandingController extends Controller
                 $agg = Product::query();
                 $this->applyTypeFilter($agg, $type);
                 $agg = $agg->selectRaw('category_id, COUNT(*) as cnt')
-                           ->whereNotNull('category_id')
-                           ->groupBy('category_id')
-                           ->orderByDesc('cnt')
-                           ->limit(24)
-                           ->get();
+                    ->whereNotNull('category_id')
+                    ->groupBy('category_id')
+                    ->orderByDesc('cnt')
+                    ->limit(24)
+                    ->get();
                 $ids = $agg->pluck('category_id')->filter()->unique()->values();
                 $map = ProductCategory::query()->whereIn('id', $ids)->get()->keyBy('id');
-                $categories = $agg->map(function($row) use ($map, $type){
+                $categories = $agg->map(function ($row) use ($map, $type) {
                     $cat = $map->get($row->category_id);
-                    if (!$cat) return null;
+                    if (! $cat) {
+                        return null;
+                    }
+
                     return [
                         'id' => $cat->id,
                         'name' => $cat->name,
                         'slug' => $this->slugify($cat->name),
-                        'count' => (int)($row->cnt ?? 0),
-                        'url' => url('/' . $this->slugify($cat->name) . '/' . $type . '/'),
+                        'count' => (int) ($row->cnt ?? 0),
+                        'url' => url('/'.$this->slugify($cat->name).'/'.$type.'/'),
                     ];
                 })->filter()->values();
             } catch (\Throwable $e) {
@@ -100,7 +108,7 @@ class LandingController extends Controller
             }
         }
         // Map products into view model while preserving paginator meta
-        $mapped = $paginator->getCollection()->map(fn($p) => $this->transformProduct($p));
+        $mapped = $paginator->getCollection()->map(fn ($p) => $this->transformProduct($p));
         $paginator->setCollection($mapped);
 
         if ($type === 'near-me') {
@@ -122,7 +130,7 @@ class LandingController extends Controller
         $category = trim($category);
         $cat = $this->findCategoryBySlug($category);
 
-        if (!$cat) {
+        if (! $cat) {
             abort(404);
         }
 
@@ -131,22 +139,22 @@ class LandingController extends Controller
 
         return view('landing.show', [
             'seo' => [
-                'title' => $cat->name . ' | We Offer Wellness',
-                'description' => $cat->name . ' therapies, classes, events, workshops and retreats on We Offer Wellness.',
+                'title' => $cat->name.' | We Offer Wellness',
+                'description' => $cat->name.' therapies, classes, events, workshops and retreats on We Offer Wellness.',
                 'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/' . $slug),
+                'canonical' => url('/'.$slug),
             ],
             'landing' => [
                 'kicker' => 'Category',
                 'title' => $cat->name,
-                'intro' => 'Browse ' . $cat->name . ' experiences across therapies, classes, events, workshops and retreats.',
+                'intro' => 'Browse '.$cat->name.' experiences across therapies, classes, events, workshops and retreats.',
                 'points' => [
                     'Therapies, classes and events in one place',
                     'Online and in-person listings',
                     'Browse by format or location',
                 ],
-                'primary_cta' => ['label' => 'Browse ' . $cat->name, 'href' => '#' . 'landing-products'],
-                'secondary_cta' => ['label' => 'View therapies', 'href' => '/' . $slug . '/therapies'],
+                'primary_cta' => ['label' => 'Browse '.$cat->name, 'href' => '#'.'landing-products'],
+                'secondary_cta' => ['label' => 'View therapies', 'href' => '/'.$slug.'/therapies'],
             ],
             'type' => 'therapies',
             'categories' => ProductCategory::query()
@@ -159,6 +167,7 @@ class LandingController extends Controller
                 ->get()
                 ->map(function (ProductCategory $category) {
                     $name = trim((string) ($category->name ?? ''));
+
                     return [
                         'name' => $name,
                         'slug' => $this->slugify($name),
@@ -174,38 +183,38 @@ class LandingController extends Controller
     public function categoryType(Request $request, string $category, string $type)
     {
         $type = strtolower(trim($type));
-        if (!in_array($type, self::TYPES, true)) {
+        if (! in_array($type, self::TYPES, true)) {
             abort(404);
         }
 
         $cat = $this->findCategoryBySlug($category);
-        if (!$cat) {
+        if (! $cat) {
             abort(404);
         }
 
         $slug = $this->slugify($cat->name);
         $products = $this->queryProducts($type, $cat->id, $request)->limit(12)->get();
 
-        $title = $cat->name . ' ' . ucfirst($type);
+        $title = $cat->name.' '.ucfirst($type);
 
         return view('landing.show', [
             'seo' => [
-                'title' => $title . ' | We Offer Wellness',
-                'description' => $cat->name . ' ' . ucfirst($type) . ' options on We Offer Wellness.',
+                'title' => $title.' | We Offer Wellness',
+                'description' => $cat->name.' '.ucfirst($type).' options on We Offer Wellness.',
                 'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/' . $slug . '/' . $type),
+                'canonical' => url('/'.$slug.'/'.$type),
             ],
             'landing' => [
                 'kicker' => ucfirst($type),
                 'title' => $title,
-                'intro' => 'Browse ' . $cat->name . ' ' . $type . ' listings across trusted practitioners.',
+                'intro' => 'Browse '.$cat->name.' '.$type.' listings across trusted practitioners.',
                 'points' => [
                     'Curated and search-friendly',
                     'Online and in-person availability',
                     'Popular results surfaced first',
                 ],
                 'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
-                'secondary_cta' => ['label' => 'View category', 'href' => '/' . $slug],
+                'secondary_cta' => ['label' => 'View category', 'href' => '/'.$slug],
             ],
             'type' => $type,
             'categories' => ProductCategory::query()
@@ -218,11 +227,12 @@ class LandingController extends Controller
                 ->get()
                 ->map(function (ProductCategory $category) use ($type) {
                     $name = trim((string) ($category->name ?? ''));
+
                     return [
                         'name' => $name,
                         'slug' => $this->slugify($name),
                         'count' => (int) ($category->products_count ?? 0),
-                        'url' => url('/' . $this->slugify($name) . '/' . $type . '/'),
+                        'url' => url('/'.$this->slugify($name).'/'.$type.'/'),
                     ];
                 })
                 ->filter(fn (array $category) => $category['count'] > 0)
@@ -234,38 +244,38 @@ class LandingController extends Controller
     public function categoryTypeLocation(Request $request, string $category, string $type, string $location)
     {
         $type = strtolower(trim($type));
-        if (!in_array($type, self::TYPES, true)) {
+        if (! in_array($type, self::TYPES, true)) {
             abort(404);
         }
 
         $cat = $this->findCategoryBySlug($category);
-        if (!$cat) {
+        if (! $cat) {
             abort(404);
         }
 
         $slug = $this->slugify($cat->name);
         $locationName = trim(str_replace(['-', '+'], ' ', $location));
         $products = $this->queryProducts($type, $cat->id, $request, $locationName)->limit(12)->get();
-        $title = $cat->name . ' ' . ucfirst($type) . ' in ' . ucwords($locationName);
+        $title = $cat->name.' '.ucfirst($type).' in '.ucwords($locationName);
 
         return view('landing.show', [
             'seo' => [
-                'title' => $title . ' | We Offer Wellness',
-                'description' => $cat->name . ' ' . ucfirst($type) . ' in ' . ucwords($locationName) . '.',
+                'title' => $title.' | We Offer Wellness',
+                'description' => $cat->name.' '.ucfirst($type).' in '.ucwords($locationName).'.',
                 'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/' . $slug . '/' . $type . '/' . Str::slug($locationName)),
+                'canonical' => url('/'.$slug.'/'.$type.'/'.Str::slug($locationName)),
             ],
             'landing' => [
                 'kicker' => ucfirst($type),
                 'title' => $title,
-                'intro' => 'Browse ' . $cat->name . ' ' . $type . ' in ' . ucwords($locationName) . '.',
+                'intro' => 'Browse '.$cat->name.' '.$type.' in '.ucwords($locationName).'.',
                 'points' => [
                     'Ranked for the selected location',
                     'Online fallback available',
                     'Trusted practitioners and venues',
                 ],
                 'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
-                'secondary_cta' => ['label' => 'View category', 'href' => '/' . $slug . '/'],
+                'secondary_cta' => ['label' => 'View category', 'href' => '/'.$slug.'/'],
             ],
             'type' => $type,
             'city' => ucwords($locationName),
@@ -279,11 +289,12 @@ class LandingController extends Controller
                 ->get()
                 ->map(function (ProductCategory $category) use ($type) {
                     $name = trim((string) ($category->name ?? ''));
+
                     return [
                         'name' => $name,
                         'slug' => $this->slugify($name),
                         'count' => (int) ($category->products_count ?? 0),
-                        'url' => url('/' . $this->slugify($name) . '/' . $type . '/'),
+                        'url' => url('/'.$this->slugify($name).'/'.$type.'/'),
                     ];
                 })
                 ->filter(fn (array $category) => $category['count'] > 0)
@@ -295,12 +306,12 @@ class LandingController extends Controller
     public function category(Request $request, string $type, string $category)
     {
         $type = strtolower($type);
-        if (!in_array($type, self::TYPES, true)) {
+        if (! in_array($type, self::TYPES, true)) {
             abort(404);
         }
 
         $cat = $this->findCategoryBySlug($category);
-        if (!$cat) {
+        if (! $cat) {
             // Fallback: virtual category by slug terms (noindex is handled in page head via canonical elsewhere)
             return $this->renderVirtualCategory($request, $type, $category, null);
         }
@@ -313,7 +324,7 @@ class LandingController extends Controller
         if ($paginator->total() === 0 && $cookieCity !== '') {
             $paginator = $this->queryProducts($type, $cat->id, $request, '')->paginate($perPage, ['*'], 'page', $page);
         }
-        $paginator->setCollection($paginator->getCollection()->map(fn($p) => $this->transformProduct($p)));
+        $paginator->setCollection($paginator->getCollection()->map(fn ($p) => $this->transformProduct($p)));
 
         return Inertia::render('Landing/Listing', [
             'type' => $type,
@@ -334,7 +345,7 @@ class LandingController extends Controller
         $products = $this->queryProducts(null, null, $request, $city)
             ->limit(24)
             ->get()
-            ->map(fn($p) => $this->transformProduct($p));
+            ->map(fn ($p) => $this->transformProduct($p));
 
         return Inertia::render('Landing/City', [
             'city' => $city,
@@ -345,11 +356,11 @@ class LandingController extends Controller
     public function cityCategory(Request $request, string $city, string $type, string $category)
     {
         $type = strtolower($type);
-        if (!in_array($type, self::TYPES, true)) {
+        if (! in_array($type, self::TYPES, true)) {
             abort(404);
         }
         $cat = $this->findCategoryBySlug($category);
-        if (!$cat) {
+        if (! $cat) {
             return $this->renderVirtualCategory($request, $type, $category, $city);
         }
 
@@ -358,7 +369,7 @@ class LandingController extends Controller
         $page = (int) $request->integer('page', 1);
         $paginator = $this->queryProducts($type, $cat->id, $request, $city)
             ->paginate($perPage, ['*'], 'page', $page);
-        $paginator->setCollection($paginator->getCollection()->map(fn($p) => $this->transformProduct($p)));
+        $paginator->setCollection($paginator->getCollection()->map(fn ($p) => $this->transformProduct($p)));
 
         return Inertia::render('Landing/Listing', [
             'city' => $city,
@@ -381,7 +392,7 @@ class LandingController extends Controller
         $q = Product::query()
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
-            ->with(['media','options.values','category']);
+            ->with(['media', 'options.values', 'category']);
 
         // Type narrowing
         $this->applyTypeFilter($q, $type);
@@ -389,76 +400,78 @@ class LandingController extends Controller
         // Mode filter (same rules as queryProducts)
         $modeParam = strtolower((string) $request->string('mode'));
         $cookieMode = strtolower((string) $request->cookie('wow_mode', ''));
-        $mode = in_array($modeParam, ['online','in-person','all'], true) ? $modeParam : (in_array($cookieMode, ['online','in-person','all'], true) ? $cookieMode : '');
+        $mode = in_array($modeParam, ['online', 'in-person', 'all'], true) ? $modeParam : (in_array($cookieMode, ['online', 'in-person', 'all'], true) ? $cookieMode : '');
         if ($mode !== '') {
             $q->whereHas('options', function ($oq) use ($mode) {
-                $oq->where(function($w){
-                        $w->whereRaw("LOWER(TRIM(COALESCE(meta_name,''))) = 'locations'")
-                          ->orWhereRaw("LOWER(TRIM(COALESCE(name,''))) IN ('location(s)','locations')");
-                    });
+                $oq->where(function ($w) {
+                    $w->whereRaw("LOWER(TRIM(COALESCE(meta_name,''))) = 'locations'")
+                        ->orWhereRaw("LOWER(TRIM(COALESCE(name,''))) IN ('location(s)','locations')");
+                });
                 if ($mode === 'online') {
-                    $oq->whereHas('values', function ($vq) { $vq->whereRaw("LOWER(TRIM(COALESCE(value,''))) = 'online'"); });
+                    $oq->whereHas('values', function ($vq) {
+                        $vq->whereRaw("LOWER(TRIM(COALESCE(value,''))) = 'online'");
+                    });
                 } elseif ($mode === 'in-person') {
                     $oq->whereHas('values', function ($vq) {
                         $vq->whereRaw("LOWER(TRIM(COALESCE(value,''))) <> 'online'")
-                           ->whereRaw("TRIM(COALESCE(value,'')) <> ''");
+                            ->whereRaw("TRIM(COALESCE(value,'')) <> ''");
                     });
                 }
             });
         }
 
         // Case-insensitive text relevance across key fields
-        $q->where(function($qq) use ($terms){
+        $q->where(function ($qq) use ($terms) {
             foreach ($terms as $t) {
                 $like = '%'.strtolower($t).'%';
                 $qq->orWhereRaw('LOWER(title) LIKE ?', [$like])
-                   ->orWhereRaw('LOWER(summary) LIKE ?', [$like])
-                   ->orWhereRaw('LOWER(body_html) LIKE ?', [$like])
-                   ->orWhereRaw('LOWER(what_to_expect) LIKE ?', [$like])
-                   ->orWhereRaw('LOWER(included) LIKE ?', [$like])
-                   ->orWhereRaw('LOWER(COALESCE(tags_list,\'\')) LIKE ?', [$like]);
+                    ->orWhereRaw('LOWER(summary) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(body_html) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(what_to_expect) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(included) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(COALESCE(tags_list,\'\')) LIKE ?', [$like]);
             }
         });
 
         // City scoping where provided
         if ($city !== null && trim($city) !== '') {
             $like = '%'.trim($city).'%';
-            $q->whereHas('options', function($oq) use ($like){
+            $q->whereHas('options', function ($oq) use ($like) {
                 $oq->where('meta_name', 'locations')
-                   ->whereHas('values', fn($vq)=>$vq->where('value','like',$like));
+                    ->whereHas('values', fn ($vq) => $vq->where('value', 'like', $like));
             });
         }
 
         // Popular first
         $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-          ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-          ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+            ->orderByRaw('COALESCE(reviews_count, 0) DESC');
 
         $items = $q->limit($limit)->get();
-        $products = $items->map(fn($p) => $this->transformProduct($p));
+        $products = $items->map(fn ($p) => $this->transformProduct($p));
 
         // Broaden if empty: include any type while keeping text relevance
         if ($products->isEmpty()) {
             $q2 = Product::query()
                 ->withCount('reviews')
                 ->withAvg('reviews', 'rating')
-                ->with(['media','options.values','category']);
-            $q2->where(function($qq) use ($terms){
+                ->with(['media', 'options.values', 'category']);
+            $q2->where(function ($qq) use ($terms) {
                 foreach ($terms as $t) {
                     $like = '%'.strtolower($t).'%';
                     $qq->orWhereRaw('LOWER(title) LIKE ?', [$like])
-                       ->orWhereRaw('LOWER(summary) LIKE ?', [$like])
-                       ->orWhereRaw('LOWER(body_html) LIKE ?', [$like])
-                       ->orWhereRaw('LOWER(what_to_expect) LIKE ?', [$like])
-                       ->orWhereRaw('LOWER(included) LIKE ?', [$like])
-                       ->orWhereRaw('LOWER(COALESCE(tags_list,\'\')) LIKE ?', [$like]);
+                        ->orWhereRaw('LOWER(summary) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(body_html) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(what_to_expect) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(included) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(COALESCE(tags_list,\'\')) LIKE ?', [$like]);
                 }
             });
             $q2->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-               ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-               ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+                ->orderByRaw('COALESCE(reviews_count, 0) DESC');
             $items = $q2->limit($limit)->get();
-            $products = $items->map(fn($p) => $this->transformProduct($p));
+            $products = $items->map(fn ($p) => $this->transformProduct($p));
         }
 
         $name = ucwords(str_replace('-', ' ', strtolower($slug)));
@@ -466,7 +479,7 @@ class LandingController extends Controller
         return Inertia::render('Landing/Listing', [
             'city' => $city,
             'type' => $type,
-            'category' => [ 'id' => null, 'name' => $name, 'slug' => strtolower($slug) ],
+            'category' => ['id' => null, 'name' => $name, 'slug' => strtolower($slug)],
             'products' => $products,
         ]);
     }
@@ -476,33 +489,38 @@ class LandingController extends Controller
         $s = strtolower($slug);
         $map = [
             // Therapies
-            'massage-therapy' => ['massage','deep tissue','sports massage','swedish massage'],
-            'manual-lymphatic-drainage' => ['manual lymphatic drainage','mld','lymphatic drainage'],
+            'massage-therapy' => ['massage', 'deep tissue', 'sports massage', 'swedish massage'],
+            'manual-lymphatic-drainage' => ['manual lymphatic drainage', 'mld', 'lymphatic drainage'],
             'reiki' => ['reiki'],
             'acupuncture' => ['acupuncture'],
-            'reflexology' => ['reflexology','foot reflexology'],
-            'sound-therapy' => ['sound therapy','sound healing','sound bath','gong bath'],
+            'reflexology' => ['reflexology', 'foot reflexology'],
+            'sound-therapy' => ['sound therapy', 'sound healing', 'sound bath', 'gong bath'],
             // Events
-            'sound-bath' => ['sound bath','gong bath','sound healing'],
-            'gong-bath' => ['gong bath','sound bath'],
-            'breathwork' => ['breathwork','breathing','pranayama'],
-            'meditation' => ['meditation','mindfulness'],
-            'reiki-circles' => ['reiki circle','reiki share'],
-            'ice-bath-workshops' => ['ice bath','cold immersion','cold plunge'],
+            'sound-bath' => ['sound bath', 'gong bath', 'sound healing'],
+            'gong-bath' => ['gong bath', 'sound bath'],
+            'breathwork' => ['breathwork', 'breathing', 'pranayama'],
+            'meditation' => ['meditation', 'mindfulness'],
+            'reiki-circles' => ['reiki circle', 'reiki share'],
+            'ice-bath-workshops' => ['ice bath', 'cold immersion', 'cold plunge'],
             // Classes
-            'yoga' => ['yoga','vinyasa','yin','hatha'],
-            'qigong' => ['qigong','chi kung'],
-            'tre' => ['tre','tension release exercises','trauma release exercises'],
+            'yoga' => ['yoga', 'vinyasa', 'yin', 'hatha'],
+            'qigong' => ['qigong', 'chi kung'],
+            'tre' => ['tre', 'tension release exercises', 'trauma release exercises'],
             'pilates' => ['pilates'],
             // Gifts
-            'massage-gift-voucher' => ['massage','gift'],
-            'reiki-gift-voucher' => ['reiki','gift'],
-            'sound-bath-gift-voucher' => ['sound bath','gift'],
+            'massage-gift-voucher' => ['massage', 'gift'],
+            'reiki-gift-voucher' => ['reiki', 'gift'],
+            'sound-bath-gift-voucher' => ['sound bath', 'gift'],
         ];
-        if (isset($map[$s])) return $map[$s];
+        if (isset($map[$s])) {
+            return $map[$s];
+        }
         // Fallback to slug tokens
-        $tokens = array_filter(explode('-', preg_replace('~[^a-z0-9\-]+~','-', $s)));
-        if (empty($tokens)) return [$s];
+        $tokens = array_filter(explode('-', preg_replace('~[^a-z0-9\-]+~', '-', $s)));
+        if (empty($tokens)) {
+            return [$s];
+        }
+
         return [str_replace('-', ' ', $s), ...$tokens];
     }
 
@@ -510,34 +528,39 @@ class LandingController extends Controller
     {
         $slug = strtolower(trim($need));
         $map = [
-            'sleep' => ['name' => 'Sleep better', 'terms' => ['sleep','insomnia','rest','nidra']],
-            'stress' => ['name' => 'Stress reset', 'terms' => ['stress relief','calm','relaxation','breathwork','anxiety']],
-            'energy' => ['name' => 'Energy boost', 'terms' => ['energy','focus','breath','mobility','sauna','cold']],
-            'pain' => ['name' => 'Pain relief', 'terms' => ['pain relief','mobility','massage','acupuncture','physio']],
+            'sleep' => ['name' => 'Sleep better', 'terms' => ['sleep', 'insomnia', 'rest', 'nidra']],
+            'stress' => ['name' => 'Stress reset', 'terms' => ['stress relief', 'calm', 'relaxation', 'breathwork', 'anxiety']],
+            'energy' => ['name' => 'Energy boost', 'terms' => ['energy', 'focus', 'breath', 'mobility', 'sauna', 'cold']],
+            'pain' => ['name' => 'Pain relief', 'terms' => ['pain relief', 'mobility', 'massage', 'acupuncture', 'physio']],
         ];
         // alias support
-        if (!isset($map[$slug])) {
-            if (in_array($slug, ['sleep-better'])) $slug = 'sleep';
-            elseif (in_array($slug, ['stress-relief','calm'])) $slug = 'stress';
-            elseif (in_array($slug, ['energy-boost'])) $slug = 'energy';
-            elseif (in_array($slug, ['pain-relief'])) $slug = 'pain';
+        if (! isset($map[$slug])) {
+            if (in_array($slug, ['sleep-better'])) {
+                $slug = 'sleep';
+            } elseif (in_array($slug, ['stress-relief', 'calm'])) {
+                $slug = 'stress';
+            } elseif (in_array($slug, ['energy-boost'])) {
+                $slug = 'energy';
+            } elseif (in_array($slug, ['pain-relief'])) {
+                $slug = 'pain';
+            }
         }
         // Add support for additional recognised needs without 404
-        if (!isset($map[$slug])) {
+        if (! isset($map[$slug])) {
             // Minimal curated additions
             if ($slug === 'gut') {
                 $map['gut'] = [
                     'name' => 'Gut health',
-                    'terms' => ['gut','digestion','digestive','microbiome','bloating','stomach','ibs']
+                    'terms' => ['gut', 'digestion', 'digestive', 'microbiome', 'bloating', 'stomach', 'ibs'],
                 ];
             }
         }
         // Generic fallback: treat any slug as a free-text need page
-        if (!isset($map[$slug])) {
+        if (! isset($map[$slug])) {
             $readable = ucwords(str_replace('-', ' ', $slug));
             $tokens = array_filter(explode('-', $slug));
             $terms = array_values(array_unique(array_filter(array_merge([$slug, strtolower($readable)], $tokens))));
-            $map[$slug] = [ 'name' => $readable, 'terms' => $terms ];
+            $map[$slug] = ['name' => $readable, 'terms' => $terms];
         }
 
         $conf = $map[$slug];
@@ -546,29 +569,29 @@ class LandingController extends Controller
         $q = Product::query()
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
-            ->with(['media','options.values','category']);
+            ->with(['media', 'options.values', 'category']);
 
-        $q->where(function($qq) use ($terms){
+        $q->where(function ($qq) use ($terms) {
             foreach ($terms as $t) {
                 $like = '%'.$t.'%';
-                $qq->orWhere('title','like',$like)
-                   ->orWhere('summary','like',$like)
-                   ->orWhere('body_html','like',$like)
-                   ->orWhere('what_to_expect','like',$like)
-                   ->orWhere('included','like',$like)
-                   ->orWhere('tags_list','like',$like);
+                $qq->orWhere('title', 'like', $like)
+                    ->orWhere('summary', 'like', $like)
+                    ->orWhere('body_html', 'like', $like)
+                    ->orWhere('what_to_expect', 'like', $like)
+                    ->orWhere('included', 'like', $like)
+                    ->orWhere('tags_list', 'like', $like);
             }
         });
 
         // Prefer popular within matches using weighted favorability
         $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-          ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-          ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+            ->orderByRaw('COALESCE(reviews_count, 0) DESC');
 
-        $products = $q->limit(48)->get()->map(fn($p) => $this->transformProduct($p));
+        $products = $q->limit(48)->get()->map(fn ($p) => $this->transformProduct($p));
 
         return Inertia::render('Landing/Need', [
-            'need' => [ 'slug' => $slug, 'name' => $conf['name'] ],
+            'need' => ['slug' => $slug, 'name' => $conf['name']],
             'products' => $products,
         ]);
     }
@@ -585,18 +608,18 @@ class LandingController extends Controller
         $q = Product::query()
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
-            ->with(['media','options.values','category']);
+            ->with(['media', 'options.values', 'category']);
 
         // Text search across relevant fields
         if ($what !== '') {
             $q->where(function ($qq) use ($what) {
                 $pattern = '%'.$what.'%';
-                $qq->where('title','like',$pattern)
-                   ->orWhere('summary','like',$pattern)
-                   ->orWhere('body_html','like',$pattern)
-                   ->orWhere('what_to_expect','like',$pattern)
-                   ->orWhere('included','like',$pattern)
-                   ->orWhere('tags_list','like',$pattern);
+                $qq->where('title', 'like', $pattern)
+                    ->orWhere('summary', 'like', $pattern)
+                    ->orWhere('body_html', 'like', $pattern)
+                    ->orWhere('what_to_expect', 'like', $pattern)
+                    ->orWhere('included', 'like', $pattern)
+                    ->orWhere('tags_list', 'like', $pattern);
             });
         }
 
@@ -606,16 +629,16 @@ class LandingController extends Controller
         }
 
         // Mode filter based on locations option
-        if (in_array($mode, ['online','in-person'], true)) {
+        if (in_array($mode, ['online', 'in-person'], true)) {
             $q->whereHas('options', function ($oq) use ($mode) {
                 $oq->where('meta_name', 'locations')
-                   ->whereHas('values', function ($vq) use ($mode) {
-                       if ($mode === 'online') {
-                           $vq->where('value', 'Online');
-                       } else {
-                           $vq->where('value', '!=', 'Online');
-                       }
-                   });
+                    ->whereHas('values', function ($vq) use ($mode) {
+                        if ($mode === 'online') {
+                            $vq->where('value', 'Online');
+                        } else {
+                            $vq->where('value', '!=', 'Online');
+                        }
+                    });
             });
         }
 
@@ -623,19 +646,19 @@ class LandingController extends Controller
         if ($where !== '') {
             $like = '%'.$where.'%';
             $q->whereHas('options', function ($oq) use ($like) {
-                $oq->where('meta_name','locations')
-                   ->whereHas('values', function ($vq) use ($like) {
-                       $vq->where('value', 'like', $like);
-                   });
+                $oq->where('meta_name', 'locations')
+                    ->whereHas('values', function ($vq) use ($like) {
+                        $vq->where('value', 'like', $like);
+                    });
             });
         }
 
         // Price
         if ($priceMax !== null) {
             $pm = $priceMax;
-            $q->where(function($qq) use ($pm) {
-                $qq->where('price','<=',$pm)
-                   ->orWhere('price','<=',$pm*100);
+            $q->where(function ($qq) use ($pm) {
+                $qq->where('price', '<=', $pm)
+                    ->orWhere('price', '<=', $pm * 100);
             });
         }
 
@@ -644,72 +667,76 @@ class LandingController extends Controller
         if ($when === 'this week') {
             $start = $now->copy()->startOfWeek();
             $end = $now->copy()->endOfWeek();
-            $q->where(function($qq) use ($start,$end){
+            $q->where(function ($qq) use ($start, $end) {
                 $qq->whereBetween('meta_json->date', [$start->toDateString(), $end->toDateString()])
-                   ->orWhere(function($q2) use ($start,$end){
-                       $q2->where('meta_json->start_date','<=',$end->toDateString())
-                          ->where('meta_json->end_date','>=',$start->toDateString());
-                   });
+                    ->orWhere(function ($q2) use ($start, $end) {
+                        $q2->where('meta_json->start_date', '<=', $end->toDateString())
+                            ->where('meta_json->end_date', '>=', $start->toDateString());
+                    });
             });
         } elseif ($when === 'this weekend') {
             $sat = $now->copy()->startOfWeek()->addDays(5); // Saturday
             $sun = $now->copy()->startOfWeek()->addDays(6)->endOfDay();
-            $q->where(function($qq) use ($sat,$sun){
+            $q->where(function ($qq) use ($sat, $sun) {
                 $qq->whereBetween('meta_json->date', [$sat->toDateString(), $sun->toDateString()])
-                   ->orWhere(function($q2) use ($sat,$sun){
-                       $q2->where('meta_json->start_date','<=',$sun->toDateString())
-                          ->where('meta_json->end_date','>=',$sat->toDateString());
-                   });
+                    ->orWhere(function ($q2) use ($sat, $sun) {
+                        $q2->where('meta_json->start_date', '<=', $sun->toDateString())
+                            ->where('meta_json->end_date', '>=', $sat->toDateString());
+                    });
             });
         } elseif ($when === 'next month') {
             $first = $now->copy()->addMonthNoOverflow()->startOfMonth();
             $last = $first->copy()->endOfMonth();
-            $q->where(function($qq) use ($first,$last){
+            $q->where(function ($qq) use ($first, $last) {
                 $qq->whereBetween('meta_json->date', [$first->toDateString(), $last->toDateString()])
-                   ->orWhere(function($q2) use ($first,$last){
-                       $q2->where('meta_json->start_date','<=',$last->toDateString())
-                          ->where('meta_json->end_date','>=',$first->toDateString());
-                   });
+                    ->orWhere(function ($q2) use ($first, $last) {
+                        $q2->where('meta_json->start_date', '<=', $last->toDateString())
+                            ->where('meta_json->end_date', '>=', $first->toDateString());
+                    });
             });
         }
 
         // Sort by weighted favorability within the filters
         $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-          ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-          ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+            ->orderByRaw('COALESCE(reviews_count, 0) DESC');
 
         $perPage = (int) $request->integer('per_page', 48);
         $perPage = max(6, min($perPage, 120));
         $page = (int) $request->integer('page', 1);
         $paginator = $q->paginate($perPage, ['*'], 'page', $page);
-        $paginator->setCollection($paginator->getCollection()->map(fn($p) => $this->transformProduct($p)));
+        $paginator->setCollection($paginator->getCollection()->map(fn ($p) => $this->transformProduct($p)));
 
         $fallback = [];
         if ($paginator->total() === 0) {
             $fb = Product::query()
                 ->withCount('reviews')
-                ->withAvg('reviews','rating')
-                ->with(['media','options.values','category']);
+                ->withAvg('reviews', 'rating')
+                ->with(['media', 'options.values', 'category']);
             // keep mode and where if given
-            if (in_array($mode, ['online','in-person'], true)) {
+            if (in_array($mode, ['online', 'in-person'], true)) {
                 $fb->whereHas('options', function ($oq) use ($mode) {
-                    $oq->where('meta_name','locations')
-                       ->whereHas('values', function ($vq) use ($mode) {
-                           if ($mode === 'online') $vq->where('value','Online'); else $vq->where('value','!=','Online');
-                       });
+                    $oq->where('meta_name', 'locations')
+                        ->whereHas('values', function ($vq) use ($mode) {
+                            if ($mode === 'online') {
+                                $vq->where('value', 'Online');
+                            } else {
+                                $vq->where('value', '!=', 'Online');
+                            }
+                        });
                 });
             }
             if ($where !== '') {
                 $like = '%'.$where.'%';
                 $fb->whereHas('options', function ($oq) use ($like) {
-                    $oq->where('meta_name','locations')
-                       ->whereHas('values', fn($vq)=>$vq->where('value','like',$like));
+                    $oq->where('meta_name', 'locations')
+                        ->whereHas('values', fn ($vq) => $vq->where('value', 'like', $like));
                 });
             }
             $fb->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-               ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-               ->orderByRaw('COALESCE(reviews_count, 0) DESC');
-            $fallback = $fb->limit(24)->get()->map(fn($p) => $this->transformProduct($p))->values();
+                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+                ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+            $fallback = $fb->limit(24)->get()->map(fn ($p) => $this->transformProduct($p))->values();
         }
 
         return Inertia::render('Landing/Plan', [
@@ -732,45 +759,51 @@ class LandingController extends Controller
         // Attempt to match by slugified name
         $cats = ProductCategory::query()->get();
         foreach ($cats as $c) {
-            if ($this->slugify($c->name) === $slug) return $c;
+            if ($this->slugify($c->name) === $slug) {
+                return $c;
+            }
         }
+
         return null;
     }
 
     private function slugify(?string $name): string
     {
-        $s = strtolower(trim((string)$name));
+        $s = strtolower(trim((string) $name));
         $s = preg_replace('~[^a-z0-9]+~', '-', $s ?? '') ?? '';
+
         return trim($s, '-');
     }
 
     private function applyTypeFilter($query, ?string $type): void
     {
-        if (!$type) return;
+        if (! $type) {
+            return;
+        }
         $lc = strtolower($type);
         if ($lc === 'events') {
-            $query->where(function($q){
+            $query->where(function ($q) {
                 $q->whereRaw("LOWER(product_type) like '%event%'")
-                  ->orWhereRaw("LOWER(product_type) like '%workshop%'")
-                  ->orWhereNotNull('meta_json->date')
-                  ->orWhereNotNull('meta_json->start_date');
+                    ->orWhereRaw("LOWER(product_type) like '%workshop%'")
+                    ->orWhereNotNull('meta_json->date')
+                    ->orWhereNotNull('meta_json->start_date');
             });
         } elseif ($lc === 'workshops') {
             $query->whereRaw("LOWER(product_type) like '%workshop%'");
         } elseif ($lc === 'classes') {
             $query->whereRaw("LOWER(product_type) like '%class%'");
         } elseif ($lc === 'therapies') {
-            $query->where(function($q){
+            $query->where(function ($q) {
                 $q->whereRaw("LOWER(COALESCE(product_type,'')) not like '%event%'")
-                  ->whereRaw("LOWER(COALESCE(product_type,'')) not like '%workshop%'")
-                  ->whereRaw("LOWER(COALESCE(product_type,'')) not like '%class%'");
+                    ->whereRaw("LOWER(COALESCE(product_type,'')) not like '%workshop%'")
+                    ->whereRaw("LOWER(COALESCE(product_type,'')) not like '%class%'");
             });
         } elseif ($lc === 'retreats') {
             $query->whereRaw("LOWER(product_type) like '%retreat%'");
         } elseif ($lc === 'gifts') {
-            $query->where(function($q){
+            $query->where(function ($q) {
                 $q->whereRaw("LOWER(COALESCE(tags_list,'')) like '%gift%'")
-                  ->orWhereRaw("LOWER(COALESCE(product_type,'')) like '%gift%'");
+                    ->orWhereRaw("LOWER(COALESCE(product_type,'')) like '%gift%'");
             });
         }
     }
@@ -797,28 +830,28 @@ class LandingController extends Controller
         // Apply city filter either from explicit param or from cookies (wow_city)
         $cookieCity = trim((string) $request->cookie('wow_city', ''));
         // If $city is provided (even empty string), use it; else fall back to cookie
-        $useCity = ($city !== null) ? trim((string)$city) : ($cookieCity ?: null);
+        $useCity = ($city !== null) ? trim((string) $city) : ($cookieCity ?: null);
         if ($useCity) {
             $like = '%'.$useCity.'%';
-            $q->whereHas('options', function($oq) use ($like){
+            $q->whereHas('options', function ($oq) use ($like) {
                 $oq->where('meta_name', 'locations')
-                   ->whereHas('values', function($vq) use ($like){
-                       $vq->where('value', 'like', $like);
-                   });
+                    ->whereHas('values', function ($vq) use ($like) {
+                        $vq->where('value', 'like', $like);
+                    });
             });
         }
 
         // Mode filter: query param takes precedence over cookie; accept alias `format`
         $modeParam = strtolower((string) ($request->filled('mode') ? $request->string('mode') : $request->string('format')));
         $cookieMode = strtolower((string) $request->cookie('wow_mode', ''));
-        $mode = in_array($modeParam, ['online','in-person','all'], true) ? $modeParam : (in_array($cookieMode, ['online','in-person','all'], true) ? $cookieMode : '');
+        $mode = in_array($modeParam, ['online', 'in-person', 'all'], true) ? $modeParam : (in_array($cookieMode, ['online', 'in-person', 'all'], true) ? $cookieMode : '');
         if ($mode !== '') {
             $q->whereHas('options', function ($oq) use ($mode) {
                 // Target the Locations option only (case-insensitive exact names)
-                $oq->where(function($w){
-                        $w->whereRaw("LOWER(TRIM(COALESCE(meta_name,''))) = 'locations'")
-                          ->orWhereRaw("LOWER(TRIM(COALESCE(name,''))) IN ('location(s)','locations')");
-                    });
+                $oq->where(function ($w) {
+                    $w->whereRaw("LOWER(TRIM(COALESCE(meta_name,''))) = 'locations'")
+                        ->orWhereRaw("LOWER(TRIM(COALESCE(name,''))) IN ('location(s)','locations')");
+                });
                 if ($mode === 'online') {
                     // EXACT value 'Online' (case-insensitive). Do not match partials like 'online (live)'.
                     $oq->whereHas('values', function ($vq) {
@@ -828,7 +861,7 @@ class LandingController extends Controller
                     // Any non-empty value that is NOT exactly 'Online'
                     $oq->whereHas('values', function ($vq) {
                         $vq->whereRaw("LOWER(TRIM(COALESCE(value,''))) <> 'online'")
-                           ->whereRaw("TRIM(COALESCE(value,'')) <> ''");
+                            ->whereRaw("TRIM(COALESCE(value,'')) <> ''");
                     });
                 } else {
                     // 'all': just ensure Locations exists (handled above)
@@ -839,22 +872,22 @@ class LandingController extends Controller
         // Anytime (on-demand): no scheduled date/time in meta
         if ($request->boolean('anytime')) {
             $q->whereRaw("(JSON_EXTRACT(meta_json, '$.date') IS NULL OR JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.date')) = '')")
-              ->whereRaw("(JSON_EXTRACT(meta_json, '$.start_date') IS NULL OR JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.start_date')) = '')")
-              ->whereRaw("(JSON_EXTRACT(meta_json, '$.end_date') IS NULL OR JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.end_date')) = '')");
+                ->whereRaw("(JSON_EXTRACT(meta_json, '$.start_date') IS NULL OR JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.start_date')) = '')")
+                ->whereRaw("(JSON_EXTRACT(meta_json, '$.end_date') IS NULL OR JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.end_date')) = '')");
         }
 
         // Sorting preference: popular by default
-        $sort = strtolower($request->string('sort','popular')->toString());
+        $sort = strtolower($request->string('sort', 'popular')->toString());
         if ($sort === 'newest') {
             $q->latest('id');
         } elseif ($sort === 'price_asc') {
-            $q->orderBy('price','asc');
+            $q->orderBy('price', 'asc');
         } elseif ($sort === 'price_desc') {
-            $q->orderBy('price','desc');
+            $q->orderBy('price', 'desc');
         } else {
             $q->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-              ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-              ->orderByRaw('COALESCE(reviews_count, 0) DESC');
+                ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
+                ->orderByRaw('COALESCE(reviews_count, 0) DESC');
         }
 
         return $q;
@@ -864,23 +897,24 @@ class LandingController extends Controller
     {
         $locations = method_exists($p, 'getLocations') ? $p->getLocations() : [];
         $isOnline = in_array('Online', $locations, true);
-        $physical = array_values(array_filter($locations, fn($l)=> $l !== 'Online'));
+        $physical = array_values(array_filter($locations, fn ($l) => $l !== 'Online'));
         $meta = $p->meta_json ?? [];
-        $slug = $this->slugify($p->title ?? (string)$p->id);
+        $slug = $this->slugify($p->title ?? (string) $p->id);
+
         return [
             'id' => $p->id,
             'title' => $p->title,
             'source_version' => 'legacy',
             'type' => $p->product_type ?: 'experience',
-            'category' => $p->category ? ['id'=>$p->category->id,'name'=>$p->category->name] : null,
+            'category' => $p->category ? ['id' => $p->category->id, 'name' => $p->category->name] : null,
             'mode' => $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null),
             'location' => $physical[0] ?? ($isOnline ? 'Online' : null),
             'locations' => $locations,
             'price' => $p->price ?? null,
             'compare_at_price' => $meta['compare_at_price'] ?? null,
             'currency' => $meta['currency'] ?? 'GBP',
-            'rating' => round((float)($p->reviews_avg_rating ?? 0), 1) ?: null,
-            'review_count' => (int)($p->reviews_count ?? 0),
+            'rating' => round((float) ($p->reviews_avg_rating ?? 0), 1) ?: null,
+            'review_count' => (int) ($p->reviews_count ?? 0),
             'image' => method_exists($p, 'getFirstImageUrl') ? $p->getFirstImageUrl() : null,
             'tags' => $p->tags_list ? array_map('trim', explode(',', $p->tags_list)) : [],
             'booking_flow' => $this->legacyProductBookingFlow($p),
@@ -892,38 +926,62 @@ class LandingController extends Controller
     {
         $t = strtolower((string) $p->product_type);
         $tags = strtolower((string) $p->tags_list);
-        if (str_contains($t, 'workshop')) return 'workshops';
-        if (str_contains($t, 'event')) return 'events';
-        if (str_contains($t, 'class')) return 'classes';
-        if (str_contains($t, 'retreat')) return 'retreats';
-        if (str_contains($t, 'gift') || str_contains($tags, 'gift')) return 'gifts';
+        if (str_contains($t, 'workshop')) {
+            return 'workshops';
+        }
+        if (str_contains($t, 'event')) {
+            return 'events';
+        }
+        if (str_contains($t, 'class')) {
+            return 'classes';
+        }
+        if (str_contains($t, 'retreat')) {
+            return 'retreats';
+        }
+        if (str_contains($t, 'gift') || str_contains($tags, 'gift')) {
+            return 'gifts';
+        }
+
         return 'therapies';
     }
 
     private function offeringTypeSegment(string $value): string
     {
         $type = strtolower(trim($value));
-        if (str_contains($type, 'workshop')) return 'workshops';
-        if (str_contains($type, 'event')) return 'events';
-        if (str_contains($type, 'class')) return 'classes';
-        if (str_contains($type, 'retreat')) return 'retreats';
-        if (str_contains($type, 'gift')) return 'gifts';
+        if (str_contains($type, 'workshop')) {
+            return 'workshops';
+        }
+        if (str_contains($type, 'event')) {
+            return 'events';
+        }
+        if (str_contains($type, 'class')) {
+            return 'classes';
+        }
+        if (str_contains($type, 'retreat')) {
+            return 'retreats';
+        }
+        if (str_contains($type, 'gift')) {
+            return 'gifts';
+        }
+
         return 'therapies';
     }
 
     public function offering(\Illuminate\Http\Request $request, string $type, string $handle)
     {
         $type = strtolower($type);
-        if (!in_array($type, self::TYPES, true)) abort(404);
+        if (! in_array($type, self::TYPES, true)) {
+            abort(404);
+        }
 
         // Accept forms: "{id}-{slug}", "{id}", or legacy "{handle}"
         $id = null;
-        if (preg_match('/^(\d+)(?:-.+)?$/', (string)$handle, $m)) {
+        if (preg_match('/^(\d+)(?:-.+)?$/', (string) $handle, $m)) {
             $id = (int) $m[1];
         }
 
         $query = Product::query()
-            ->with(['media','options.values','variants','reviews.user','category','vendor.user.tier'])
+            ->with(['media', 'options.values', 'variants', 'reviews.user', 'category', 'vendor.user.tier'])
             ->withCount('reviews')
             ->withAvg('reviews', 'rating');
         if ($id) {
@@ -932,30 +990,88 @@ class LandingController extends Controller
             $query->where('handle', $handle);
         }
         $product = $query->first();
-        if (!$product) {
+        if (! $product) {
             $offering = $this->resolveV3Offering($id, (string) $handle);
-            if (!$offering) {
+            if (! $offering) {
                 abort(404);
             }
 
+            $requestedVariantId = trim((string) $request->query('variant', ''));
+            $requestedVariantId = $requestedVariantId !== '' ? $requestedVariantId : null;
+            $requestedPriceOptionId = $this->resolveRequestedPriceOptionId($request);
+            $productData = $this->transformV3Offering($offering, $type, $requestedVariantId, $requestedPriceOptionId);
+
             return view('offering.show', [
                 'type' => $type,
-                'product' => $this->transformV3Offering($offering, $type),
+                'product' => $productData,
+                'seo' => $this->offeringSeoData($productData),
             ]);
         }
 
         $slug = $this->slugify($product->title ?: (string) $product->id);
         $meta = $product->meta_json ?? [];
-        $locations = $product->getLocations();
+        $metaEvent = data_get($meta, 'event', []);
+        if ($metaEvent instanceof \Illuminate\Support\Collection) {
+            $metaEvent = $metaEvent->all();
+        }
+        if (is_object($metaEvent)) {
+            $metaEvent = (array) $metaEvent;
+        }
+        if (! is_array($metaEvent)) {
+            $metaEvent = [];
+        }
+
+        $metaVenueLocations = data_get($meta, 'venue_locations', []);
+        if ($metaVenueLocations instanceof \Illuminate\Support\Collection) {
+            $metaVenueLocations = $metaVenueLocations->all();
+        }
+        if (is_object($metaVenueLocations)) {
+            $metaVenueLocations = (array) $metaVenueLocations;
+        }
+        if (! is_array($metaVenueLocations)) {
+            $metaVenueLocations = [];
+        }
+
+        $metaVenueLocationLabels = array_values(array_filter(array_map(function ($loc) {
+            if (is_object($loc)) {
+                $loc = (array) $loc;
+            }
+            if (! is_array($loc)) {
+                return null;
+            }
+
+            return trim(implode(', ', array_filter([
+                (string) ($loc['label'] ?? ''),
+                (string) ($loc['city'] ?? $loc['locality'] ?? ''),
+                (string) ($loc['region'] ?? $loc['county'] ?? ''),
+            ])));
+        }, $metaVenueLocations)));
+
+        $metaSummary = trim((string) data_get($meta, 'summary', ''));
+        $metaWhatToExpect = trim((string) data_get($meta, 'what_to_expect_md', data_get($meta, 'what_to_expect', '')));
+        $metaIncluded = trim((string) data_get($meta, 'included_md', data_get($meta, 'included', '')));
+        $metaVideoUrl = trim((string) data_get($meta, 'video_url', data_get($meta, 'video_embed_url', data_get($meta, 'media.video_url', ''))));
+        $metaDate = trim((string) data_get($meta, 'date', data_get($metaEvent, 'start_date', '')));
+        $metaStartDate = trim((string) data_get($meta, 'start_date', data_get($metaEvent, 'start_date', $metaDate)));
+        $metaStartTime = trim((string) data_get($meta, 'start_time', data_get($metaEvent, 'start_time', '')));
+        $metaEndDate = trim((string) data_get($meta, 'end_date', data_get($metaEvent, 'end_date', $metaStartDate)));
+        $metaEndTime = trim((string) data_get($meta, 'end_time', data_get($metaEvent, 'end_time', '')));
+        $metaTimezone = trim((string) data_get($meta, 'timezone', data_get($metaEvent, 'timezone', config('app.timezone', 'UTC'))));
+        $locations = $metaVenueLocationLabels ?: $product->getLocations();
         $isOnline = in_array('Online', $locations, true);
-        $phys = array_values(array_filter($locations, fn($l) => $l !== 'Online'));
-        $images = $product->media->map(function($m){
+        $phys = array_values(array_filter($locations, fn ($l) => $l !== 'Online'));
+        $images = $product->media->map(function ($m) {
             $url = (string) ($m->media_url ?? '');
-            if ($url === '') return null;
-            if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) return $url;
+            if ($url === '') {
+                return null;
+            }
+            if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+                return $url;
+            }
             $backend = rtrim((string) env('BACKEND_ASSET_URL', env('BACKEND_URL', '')), '/');
             $clean = ltrim($url, '/');
-            return $backend ? $backend . '/storage/' . $clean : asset('storage/' . $clean);
+
+            return $backend ? $backend.'/storage/'.$clean : asset('storage/'.$clean);
         })->filter()->values();
 
         // Eager-load options + values + variants for the buy box
@@ -965,9 +1081,12 @@ class LandingController extends Controller
 
         // Build options array and a lookup of value id -> label for variant option_ids mapping
         $valueLookup = [];
-        $optionsArr = $product->options->map(function($o) use (&$valueLookup){
+        $optionsArr = $product->options->map(function ($o) use (&$valueLookup) {
             $vals = $o->values->pluck('value', 'id')->all();
-            foreach ($vals as $id => $label) { $valueLookup[$id] = $label; }
+            foreach ($vals as $id => $label) {
+                $valueLookup[$id] = $label;
+            }
+
             return [
                 'name' => $o->name ?? $o->meta_name,
                 'meta_name' => $o->meta_name,
@@ -975,29 +1094,35 @@ class LandingController extends Controller
             ];
         })->values()->all();
 
-        $variantsArr = $product->variants->map(function($v) use ($valueLookup){
+        $variantsArr = $product->variants->map(function ($v) use ($valueLookup) {
             // Prefer explicit options array; else derive from option_ids
             $optList = [];
             if (is_array($v->options) && count($v->options)) {
                 $optList = array_values($v->options);
-            } elseif (is_string($v->options) && !empty($v->options)) {
+            } elseif (is_string($v->options) && ! empty($v->options)) {
                 // Some variants store options as a JSON string like {"option1":"1","option2":"3","option3":"Online"}
                 $decoded = json_decode($v->options, true);
-                if (is_array($decoded) && !empty($decoded)) {
+                if (is_array($decoded) && ! empty($decoded)) {
                     // Keep natural option ordering by key name if present
                     // Accept option1, option2, option3... else fallback to array_values
                     $ordered = [];
-                    foreach (['option1','option2','option3','option4','option5'] as $k) {
-                        if (array_key_exists($k, $decoded)) { $ordered[] = $decoded[$k]; unset($decoded[$k]); }
+                    foreach (['option1', 'option2', 'option3', 'option4', 'option5'] as $k) {
+                        if (array_key_exists($k, $decoded)) {
+                            $ordered[] = $decoded[$k];
+                            unset($decoded[$k]);
+                        }
                     }
                     $optList = array_values(array_merge($ordered, $decoded));
                 }
-            } elseif (!empty($v->option_ids)) {
+            } elseif (! empty($v->option_ids)) {
                 $ids = json_decode($v->option_ids, true) ?: [];
                 foreach ($ids as $oid) {
-                    if (isset($valueLookup[$oid])) { $optList[] = $valueLookup[$oid]; }
+                    if (isset($valueLookup[$oid])) {
+                        $optList[] = $valueLookup[$oid];
+                    }
                 }
             }
+
             return [
                 'id' => $v->id,
                 'options' => $optList,
@@ -1010,27 +1135,38 @@ class LandingController extends Controller
         // Fallback: if variants have no option labels but there is a Sessions option, infer mapping by price order vs session duration order
         try {
             $allEmpty = true;
-            foreach ($variantsArr as $vv) { if (!empty($vv['options'])) { $allEmpty = false; break; } }
+            foreach ($variantsArr as $vv) {
+                if (! empty($vv['options'])) {
+                    $allEmpty = false;
+                    break;
+                }
+            }
             if ($allEmpty && is_array($optionsArr) && count($optionsArr)) {
                 // Attempt a full cartesian combination from option values first
                 $combos = [[]];
                 foreach ($optionsArr as $idx => $opt) {
                     $vals = $opt['values'] ?? [];
                     if (empty($vals)) {
-                        foreach ($combos as &$combo) { $combo[$idx] = ''; }
+                        foreach ($combos as &$combo) {
+                            $combo[$idx] = '';
+                        }
                         unset($combo);
+
                         continue;
                     }
                     $expanded = [];
                     foreach ($combos as $combo) {
                         foreach ($vals as $val) {
                             $next = $combo;
-                            $next[$idx] = (string)$val;
+                            $next[$idx] = (string) $val;
                             $expanded[] = $next;
                         }
                     }
                     $combos = $expanded;
-                    if (count($combos) > 300) { $combos = []; break; }
+                    if (count($combos) > 300) {
+                        $combos = [];
+                        break;
+                    }
                 }
 
                 if (count($combos) > 0 && count($combos) === count($variantsArr)) {
@@ -1044,54 +1180,86 @@ class LandingController extends Controller
                         $variantsArr[$idx]['options'] = $normalized;
                     }
                 } else {
-                    $peopleIdx = null; $sessionsIdx = null; $locIdx = null;
+                    $peopleIdx = null;
+                    $sessionsIdx = null;
+                    $locIdx = null;
                     foreach ($optionsArr as $i => $opt) {
-                        $nm = strtolower(trim((string)($opt['meta_name'] ?? $opt['name'] ?? '')));
-                        if ($peopleIdx === null && str_contains($nm, 'person')) $peopleIdx = $i;
-                        if ($sessionsIdx === null && str_contains($nm, 'session')) $sessionsIdx = $i;
-                        if ($locIdx === null && str_contains($nm, 'location')) $locIdx = $i;
+                        $nm = strtolower(trim((string) ($opt['meta_name'] ?? $opt['name'] ?? '')));
+                        if ($peopleIdx === null && str_contains($nm, 'person')) {
+                            $peopleIdx = $i;
+                        }
+                        if ($sessionsIdx === null && str_contains($nm, 'session')) {
+                            $sessionsIdx = $i;
+                        }
+                        if ($locIdx === null && str_contains($nm, 'location')) {
+                            $locIdx = $i;
+                        }
                     }
                     if ($sessionsIdx !== null) {
                         $sessionVals = $optionsArr[$sessionsIdx]['values'] ?? [];
                         // Parse labels to a numeric score in minutes
-                        $score = function($label) {
-                            $s = strtolower(trim((string)$label));
-                            if (preg_match('/(\d+(?:\.\d+)?)\s*(hour|hr|hours|hrs)/', $s, $m)) { return (float)$m[1] * 60; }
-                            if (preg_match('/(\d+(?:\.\d+)?)\s*(min|mins|minute|minutes)/', $s, $m)) { return (float)$m[1]; }
-                            if (preg_match('/\d+/', $s, $m)) { return (float)$m[0]; }
+                        $score = function ($label) {
+                            $s = strtolower(trim((string) $label));
+                            if (preg_match('/(\d+(?:\.\d+)?)\s*(hour|hr|hours|hrs)/', $s, $m)) {
+                                return (float) $m[1] * 60;
+                            }
+                            if (preg_match('/(\d+(?:\.\d+)?)\s*(min|mins|minute|minutes)/', $s, $m)) {
+                                return (float) $m[1];
+                            }
+                            if (preg_match('/\d+/', $s, $m)) {
+                                return (float) $m[0];
+                            }
+
                             return 0.0;
                         };
                         $pairs = [];
-                        foreach ($sessionVals as $lbl) { $pairs[] = ['label' => $lbl, 'n' => $score($lbl)]; }
-                        usort($pairs, function($a, $b){ return $a['n'] <=> $b['n']; });
-                        $sortedSession = array_map(fn($p) => $p['label'], $pairs);
+                        foreach ($sessionVals as $lbl) {
+                            $pairs[] = ['label' => $lbl, 'n' => $score($lbl)];
+                        }
+                        usort($pairs, function ($a, $b) {
+                            return $a['n'] <=> $b['n'];
+                        });
+                        $sortedSession = array_map(fn ($p) => $p['label'], $pairs);
 
                         // Sort variants by numeric price ascending
                         $sortedVariants = $variantsArr;
-                        usort($sortedVariants, function($a, $b){ return (float)$a['price'] <=> (float)$b['price']; });
+                        usort($sortedVariants, function ($a, $b) {
+                            return (float) $a['price'] <=> (float) $b['price'];
+                        });
 
                         // Prepare default labels for people and location (first values if available)
-                        $peopleLabel = ($peopleIdx !== null && isset($optionsArr[$peopleIdx]['values'][0])) ? (string)$optionsArr[$peopleIdx]['values'][0] : '';
-                        $locLabel = ($locIdx !== null && isset($optionsArr[$locIdx]['values'][0])) ? (string)$optionsArr[$locIdx]['values'][0] : '';
+                        $peopleLabel = ($peopleIdx !== null && isset($optionsArr[$peopleIdx]['values'][0])) ? (string) $optionsArr[$peopleIdx]['values'][0] : '';
+                        $locLabel = ($locIdx !== null && isset($optionsArr[$locIdx]['values'][0])) ? (string) $optionsArr[$locIdx]['values'][0] : '';
                         $optCount = count($optionsArr);
 
                         // Map by index
                         $mapped = [];
                         foreach ($sortedVariants as $i => $sv) {
-                            $sessionLabel = (string)($sortedSession[$i] ?? ($sessionVals[$i] ?? ''));
+                            $sessionLabel = (string) ($sortedSession[$i] ?? ($sessionVals[$i] ?? ''));
                             $optList = array_fill(0, $optCount, '');
-                            if ($peopleIdx !== null) $optList[$peopleIdx] = $peopleLabel;
-                            if ($sessionsIdx !== null) $optList[$sessionsIdx] = $sessionLabel;
-                            if ($locIdx !== null) $optList[$locIdx] = $locLabel;
+                            if ($peopleIdx !== null) {
+                                $optList[$peopleIdx] = $peopleLabel;
+                            }
+                            if ($sessionsIdx !== null) {
+                                $optList[$sessionsIdx] = $sessionLabel;
+                            }
+                            if ($locIdx !== null) {
+                                $optList[$locIdx] = $locLabel;
+                            }
                             $sv['options'] = $optList;
                             $mapped[$sv['id']] = $sv;
                         }
                         // Rebuild in original order with mapped options
-                        foreach ($variantsArr as $k => $vv) { if (isset($mapped[$vv['id']])) { $variantsArr[$k] = $mapped[$vv['id']]; } }
+                        foreach ($variantsArr as $k => $vv) {
+                            if (isset($mapped[$vv['id']])) {
+                                $variantsArr[$k] = $mapped[$vv['id']];
+                            }
+                        }
                     }
                 }
             }
-        } catch (\Throwable $e) { /* swallow fallback errors */ }
+        } catch (\Throwable $e) { /* swallow fallback errors */
+        }
 
         $vendor = $product->vendor;
         $clientReviews = [];
@@ -1119,11 +1287,13 @@ class LandingController extends Controller
                         'body' => trim((string) $review->review_text),
                         'author' => optional($review->user)->name ?? 'Verified client',
                         'date' => optional($review->created_at)->format('M Y') ?? '',
+                        'title' => trim((string) ($review->title ?? '')),
+                        'user_id' => $review->user_id,
                     ];
                 })->values()->all();
         }
-        $ratingFallback = round((float)($product->reviews_avg_rating ?? 0), 1) ?: null;
-        $countFallback = (int)($product->reviews_count ?? 0);
+        $ratingFallback = round((float) ($product->reviews_avg_rating ?? 0), 1) ?: null;
+        $countFallback = (int) ($product->reviews_count ?? 0);
         if ($vendorReviewCount > 0 && $vendorRatingAvg !== null) {
             $ratingFallback = $vendorRatingAvg;
             $countFallback = $vendorReviewCount;
@@ -1142,7 +1312,7 @@ class LandingController extends Controller
             'source_version' => 'legacy',
             'booking_flow' => $this->legacyProductBookingFlow($product, $priceOptionId, $variantLabel),
             'type' => $product->product_type ?: 'experience',
-            'category' => $product->category ? ['id'=>$product->category->id,'name'=>$product->category->name] : null,
+            'category' => $product->category ? ['id' => $product->category->id, 'name' => $product->category->name] : null,
             'rating' => $ratingFallback,
             'review_count' => $countFallback,
             'vendor_rating' => $vendorRatingAvg,
@@ -1157,13 +1327,13 @@ class LandingController extends Controller
             'options' => $optionsArr,
             'variants' => $variantsArr,
             'mode' => $isOnline && count($phys) === 0 ? 'Online' : (count($phys) ? 'In-person' : null),
-            'location' => $phys[0] ?? ($isOnline ? 'Online' : null),
+            'location' => $phys[0] ?? ($isOnline ? 'Online' : (trim((string) data_get($meta, 'location', data_get($meta, 'venue.name', ''))) ?: null)),
             'locations' => $locations,
             'description' => (string) ($product->description ?? ''),
-            'summary' => (string) ($product->summary ?? ''),
+            'summary' => $metaSummary !== '' ? $metaSummary : (string) ($product->summary ?? ''),
             'body_html' => (string) ($product->body_html ?? ''),
-            'what_to_expect' => (string) ($product->what_to_expect ?? ''),
-            'included' => (string) ($product->included ?? ''),
+            'what_to_expect' => $metaWhatToExpect !== '' ? $metaWhatToExpect : (string) ($product->what_to_expect ?? ''),
+            'included' => $metaIncluded !== '' ? $metaIncluded : (string) ($product->included ?? ''),
             'aftercare' => (string) $metaAftercare,
             'duration' => $meta['duration'] ?? $meta['duration_minutes'] ?? null,
             'tags' => $product->tags_list ? array_values(array_filter(array_map('trim', explode(',', $product->tags_list)))) : [],
@@ -1173,15 +1343,22 @@ class LandingController extends Controller
             'faq' => is_array($metaFaq) ? array_values(array_filter($metaFaq)) : [],
             'safety_notes' => (string) $metaSafety,
             'contraindications' => (string) $metaContra,
-            'date' => $meta['date'] ?? null,
-            'start_date' => $meta['start_date'] ?? null,
-            'end_date' => $meta['end_date'] ?? null,
+            'date' => $metaDate !== '' ? $metaDate : null,
+            'start_date' => $metaStartDate !== '' ? $metaStartDate : null,
+            'start_time' => $metaStartTime !== '' ? $metaStartTime : null,
+            'end_date' => $metaEndDate !== '' ? $metaEndDate : null,
+            'end_time' => $metaEndTime !== '' ? $metaEndTime : null,
+            'timezone' => $metaTimezone,
+            'capacity' => data_get($metaEvent, 'capacity', data_get($meta, 'capacity')),
+            'event' => $metaEvent,
+            'venue_locations' => $metaVenueLocations,
+            'video_url' => $metaVideoUrl,
             'practitioner' => $this->practitionerPayload($vendor, $vendor?->user),
-            'reviews' => $product->reviews->map(function($r){
+            'reviews' => $product->reviews->map(function ($r) {
                 return [
                     'id' => $r->id,
-                    'rating' => (int)($r->rating ?? 0),
-                    'review' => (string)($r->review ?? ''),
+                    'rating' => (int) ($r->rating ?? 0),
+                    'review' => (string) ($r->review ?? ''),
                     'user' => $r->user ? [
                         'id' => $r->user->id,
                         'name' => trim(($r->user->name ?? '') ?: ($r->user->email ?? 'User')),
@@ -1192,17 +1369,113 @@ class LandingController extends Controller
             'client_reviews' => $clientReviews,
             'url' => $this->canonicalOfferingUrl($product->id, $slug),
             'booking_variant_label' => $variantLabel,
+            'is_past_event' => EventListing::isPast($product),
         ];
 
         return view('offering.show', [
             'type' => $type,
             'product' => $data,
+            'seo' => $this->offeringSeoData($data),
         ]);
+    }
+
+    private function offeringSeoData(array $product): array
+    {
+        $title = trim((string) ($product['title'] ?? 'Offering'));
+        $descriptionSource = trim((string) strip_tags((string) (
+            $product['summary']
+            ?? $product['what_to_expect']
+            ?? $product['description']
+            ?? $product['body_html']
+            ?? ''
+        )));
+        $descriptionSource = preg_replace('/\s+/', ' ', $descriptionSource) ?? $descriptionSource;
+        $description = $descriptionSource !== ''
+            ? \Illuminate\Support\Str::limit($descriptionSource, 160, '…')
+            : ('Book '.$title.' with trusted practitioners at We Offer Wellness®.');
+
+        return [
+            'title' => $title.' | We Offer Wellness®',
+            'description' => $description,
+            'canonical' => trim((string) ($product['url'] ?? url()->current())),
+            'og_image' => $this->resolveOfferingSeoImage($product),
+            'og_image_alt' => $title,
+            'site_name' => 'We Offer Wellness®',
+            'twitter_card' => 'summary_large_image',
+            'og_type' => 'product',
+        ];
+    }
+
+    private function resolveOfferingSeoImage(array $product): string
+    {
+        $imageCandidates = [];
+
+        foreach (['cover_image', 'image'] as $key) {
+            if (! empty($product[$key])) {
+                $imageCandidates[] = $product[$key];
+            }
+        }
+
+        if (! empty($product['images']) && is_array($product['images'])) {
+            $imageCandidates = array_merge($imageCandidates, $product['images']);
+        }
+
+        foreach ($imageCandidates as $candidate) {
+            $resolved = $this->normalizeOfferingSeoImageCandidate($candidate);
+            if ($resolved !== '') {
+                return $resolved;
+            }
+        }
+
+        return asset('images/default-social-preview.jpg');
+    }
+
+    private function normalizeOfferingSeoImageCandidate(mixed $candidate): string
+    {
+        $value = '';
+
+        if (is_array($candidate)) {
+            foreach (['url', 'src', 'path', 'original_url', 'original', 'media_url', 'image'] as $key) {
+                $raw = trim((string) data_get($candidate, $key, ''));
+                if ($raw !== '') {
+                    $value = $raw;
+                    break;
+                }
+            }
+        } elseif (is_object($candidate)) {
+            foreach (['url', 'src', 'path', 'original_url', 'original', 'media_url', 'image'] as $key) {
+                $raw = trim((string) data_get($candidate, $key, ''));
+                if ($raw !== '') {
+                    $value = $raw;
+                    break;
+                }
+            }
+        } else {
+            $value = trim((string) $candidate);
+        }
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (str_contains($value, 'no-product-image.jpg')) {
+            return '';
+        }
+
+        if (preg_match('#^https?://#i', $value)) {
+            return $value;
+        }
+
+        if (str_starts_with($value, '/')) {
+            return url($value);
+        }
+
+        return url('/'.ltrim($value, '/'));
     }
 
     private function resolveV3Offering(?int $id, string $handle): ?OfferingV3
     {
-        $query = OfferingV3::query()->with(['category', 'type', 'vendor.user.tier', 'media', 'coverMedia']);
+        $query = OfferingV3::query()->with(['category', 'type', 'vendor.user.tier', 'vendor.locations', 'media', 'coverMedia']);
 
         if ($id) {
             $query->where('id', $id);
@@ -1218,7 +1491,84 @@ class LandingController extends Controller
         return null;
     }
 
-    private function transformV3Offering(OfferingV3 $offering, string $type): array
+    private function mapboxCountryCode(string $country): string
+    {
+        $country = strtolower(trim($country));
+
+        if (in_array($country, ['gb', 'uk', 'u.k.', 'united kingdom', 'great britain', 'england', 'scotland', 'wales', 'northern ireland'], true)) {
+            return 'gb';
+        }
+
+        return '';
+    }
+
+    private function geocodeVenueLocation(array $location): ?array
+    {
+        $query = trim(implode(', ', array_filter([
+            trim((string) ($location['label'] ?? '')),
+            trim((string) ($location['address_line_1'] ?? '')),
+            trim((string) ($location['address_line_2'] ?? '')),
+            trim((string) ($location['city'] ?? '')),
+            trim((string) ($location['county'] ?? '')),
+            trim((string) ($location['postcode'] ?? '')),
+            trim((string) ($location['country'] ?? '')),
+        ])));
+
+        if ($query === '') {
+            return null;
+        }
+
+        $cacheKey = 'wow.offering.geocode.' . md5(Str::lower($query));
+
+        return Cache::remember($cacheKey, now()->addDays(30), function () use ($query, $location) {
+            $token = trim((string) config('services.mapbox.token'));
+            if ($token === '') {
+                return null;
+            }
+
+            try {
+                $params = [
+                    'access_token' => $token,
+                    'limit' => 1,
+                    'autocomplete' => 'false',
+                    'types' => 'address,place,poi,locality,neighborhood,postcode,region,district',
+                ];
+
+                $country = $this->mapboxCountryCode((string) ($location['country'] ?? ''));
+                if ($country !== '') {
+                    $params['country'] = $country;
+                }
+
+                $response = Http::timeout(8)->get(
+                    'https://api.mapbox.com/geocoding/v5/mapbox.places/' . rawurlencode($query) . '.json',
+                    $params
+                );
+
+                if (! $response->ok()) {
+                    return null;
+                }
+
+                $feature = $response->json('features.0');
+                if (! is_array($feature)) {
+                    return null;
+                }
+
+                $center = $feature['center'] ?? ($feature['geometry']['coordinates'] ?? null);
+                if (! is_array($center) || ! isset($center[0], $center[1])) {
+                    return null;
+                }
+
+                return [
+                    'lat' => (float) $center[1],
+                    'lng' => (float) $center[0],
+                ];
+            } catch (\Throwable $e) {
+                return null;
+            }
+        });
+    }
+
+    private function transformV3Offering(OfferingV3 $offering, string $type, ?string $requestedVariantId = null, ?int $requestedPriceOptionId = null): array
     {
         $channels = DB::table('offering_channels')
             ->where('offering_id', $offering->id)
@@ -1231,11 +1581,16 @@ class LandingController extends Controller
         $images = $offering->media
             ->map(function ($m) {
                 $url = (string) ($m->media_url ?? '');
-                if ($url === '') return null;
-                if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) return $url;
+                if ($url === '') {
+                    return null;
+                }
+                if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+                    return $url;
+                }
                 $backend = rtrim((string) env('BACKEND_ASSET_URL', env('BACKEND_URL', '')), '/');
                 $clean = ltrim($url, '/');
-                return $backend ? $backend . '/storage/' . $clean : asset('storage/' . $clean);
+
+                return $backend ? $backend.'/storage/'.$clean : asset('storage/'.$clean);
             })
             ->filter()
             ->values()
@@ -1243,6 +1598,78 @@ class LandingController extends Controller
 
         $meta = DB::table('offering_meta')->where('offering_id', $offering->id)->first();
         $details = DB::table('offering_details')->where('offering_id', $offering->id)->first();
+        $schedule = DB::table('offering_schedule')->where('offering_id', $offering->id)->first();
+        $eventPayload = (array) ($offering->event ?? []);
+        $descriptionHtml = \App\Support\ContentFormatter::format((string) ($details->description ?? ''));
+        $whatToExpectHtml = \App\Support\ContentFormatter::format((string) ($details->what_to_expect ?? ''));
+        $includedHtml = \App\Support\ContentFormatter::format((string) ($details->whats_included ?? ''));
+        $venueLocations = [];
+        if (Schema::hasTable('offering_locations')) {
+            $venueLocations = DB::table('offering_locations')
+                ->where('offering_id', $offering->id)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get([
+                    'label',
+                    'address_line_1',
+                    'address_line_2',
+                    'city',
+                    'county',
+                    'postcode',
+                    'country',
+                    'lat',
+                    'lng',
+                    'notes',
+                ])
+                ->map(function ($row) {
+                    $label = trim((string) ($row->label ?? ''));
+                    $addressLine1 = trim((string) ($row->address_line_1 ?? ''));
+                    $addressLine2 = trim((string) ($row->address_line_2 ?? ''));
+                    $city = trim((string) ($row->city ?? ''));
+                    $county = trim((string) ($row->county ?? ''));
+                    $postcode = trim((string) ($row->postcode ?? ''));
+                    $country = trim((string) ($row->country ?? ''));
+                    $lat = is_numeric($row->lat ?? null) ? (float) $row->lat : null;
+                    $lng = is_numeric($row->lng ?? null) ? (float) $row->lng : null;
+
+                    if ($lat === null || $lng === null) {
+                        $resolved = $this->geocodeVenueLocation([
+                            'label' => $label,
+                            'address_line_1' => $addressLine1,
+                            'address_line_2' => $addressLine2,
+                            'city' => $city,
+                            'county' => $county,
+                            'postcode' => $postcode,
+                            'country' => $country,
+                        ]);
+
+                        if (is_array($resolved)) {
+                            $lat = $resolved['lat'] ?? $lat;
+                            $lng = $resolved['lng'] ?? $lng;
+                        }
+                    }
+
+                    return [
+                        'label' => $label !== '' ? $label : trim(implode(', ', array_filter([$addressLine1, $city]))),
+                        'address_line_1' => $addressLine1,
+                        'address_line_2' => $addressLine2,
+                        'city' => $city,
+                        'county' => $county,
+                        'postcode' => $postcode,
+                        'country' => $country,
+                        'lat' => $lat,
+                        'lng' => $lng,
+                        'notes' => trim((string) ($row->notes ?? '')),
+                    ];
+                })
+                ->filter(fn (array $location) => trim((string) ($location['label'] ?? '')) !== '')
+                ->values()
+                ->all();
+        }
+        $firstOccurrence = DB::table('offering_fixed_occurrences')
+            ->where('offering_id', $offering->id)
+            ->orderBy('starts_at')
+            ->first();
         $priceOptions = DB::table('offering_price_options')
             ->where('offering_id', $offering->id)
             ->where('is_active', true)
@@ -1251,6 +1678,316 @@ class LandingController extends Controller
         $priceTiers = DB::table('offering_price_tiers')
             ->whereIn('price_option_id', $priceOptions->pluck('id'))
             ->get();
+        $isEventType = str_contains(strtolower((string) ($offering->type?->name ?? '')), 'event');
+
+        $extractPriceOptionId = static function (?string $variantId): ?int {
+            $variantId = trim((string) $variantId);
+            if ($variantId === '') {
+                return null;
+            }
+
+            if (preg_match('/^po_(\d+)(?:_tier_(\d+))?$/', $variantId, $matches)) {
+                return (int) $matches[1];
+            }
+
+            if (preg_match('/^(\d+)$/', $variantId, $matches)) {
+                return (int) $matches[1];
+            }
+
+            return null;
+        };
+
+        $selectVariantCard = static function (array $variantCards, ?string $requestedVariantId, ?int $requestedPriceOptionId) use ($extractPriceOptionId): array {
+            if (empty($variantCards)) {
+                return [];
+            }
+
+            $selectedVariantCard = $variantCards[0];
+            $requestedVariantId = trim((string) $requestedVariantId);
+
+            if ($requestedVariantId !== '') {
+                foreach ($variantCards as $variantCard) {
+                    if (strcasecmp((string) ($variantCard['id'] ?? ''), $requestedVariantId) === 0) {
+                        $selectedVariantCard = $variantCard;
+                        break;
+                    }
+                }
+            }
+
+            if ($requestedPriceOptionId !== null) {
+                foreach ($variantCards as $variantCard) {
+                    $variantPriceOptionId = $variantCard['price_option_id'] ?? $extractPriceOptionId((string) ($variantCard['id'] ?? ''));
+                    if ($variantPriceOptionId !== null && (int) $variantPriceOptionId === (int) $requestedPriceOptionId) {
+                        $selectedVariantCard = $variantCard;
+                        break;
+                    }
+                }
+            }
+
+            return $selectedVariantCard;
+        };
+
+        $venueLocations = [];
+        if (Schema::hasTable('offering_locations')) {
+            $venueLocations = DB::table('offering_locations')
+                ->where('offering_id', $offering->id)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get([
+                    'label',
+                    'address_line_1',
+                    'address_line_2',
+                    'city',
+                    'county',
+                    'postcode',
+                    'country',
+                    'lat',
+                    'lng',
+                    'notes',
+                ])
+                ->map(function ($row) {
+                    $label = trim((string) ($row->label ?? ''));
+                    $addressLine1 = trim((string) ($row->address_line_1 ?? ''));
+                    $addressLine2 = trim((string) ($row->address_line_2 ?? ''));
+                    $city = trim((string) ($row->city ?? ''));
+                    $county = trim((string) ($row->county ?? ''));
+                    $postcode = trim((string) ($row->postcode ?? ''));
+                    $country = trim((string) ($row->country ?? ''));
+                    $lat = is_numeric($row->lat ?? null) ? (float) $row->lat : null;
+                    $lng = is_numeric($row->lng ?? null) ? (float) $row->lng : null;
+
+                    if ($lat === null || $lng === null) {
+                        $resolved = $this->geocodeVenueLocation([
+                            'label' => $label,
+                            'address_line_1' => $addressLine1,
+                            'address_line_2' => $addressLine2,
+                            'city' => $city,
+                            'county' => $county,
+                            'postcode' => $postcode,
+                            'country' => $country,
+                        ]);
+
+                        if (is_array($resolved)) {
+                            $lat = $resolved['lat'] ?? $lat;
+                            $lng = $resolved['lng'] ?? $lng;
+                        }
+                    }
+
+                    return [
+                        'label' => $label !== '' ? $label : trim(implode(', ', array_filter([$city, $county, $postcode]))),
+                        'address_line_1' => $addressLine1,
+                        'address_line_2' => $addressLine2,
+                        'city' => $city,
+                        'county' => $county,
+                        'postcode' => $postcode,
+                        'country' => $country,
+                        'lat' => $lat,
+                        'lng' => $lng,
+                        'notes' => trim((string) ($row->notes ?? '')),
+                    ];
+                })
+                ->filter(fn (array $location) => trim((string) ($location['label'] ?? '')) !== '')
+                ->values()
+                ->all();
+        }
+
+        if ($isEventType) {
+            $startDate = null;
+            $endDate = null;
+            $startTime = null;
+            $endTime = null;
+            if ($firstOccurrence?->starts_at) {
+                $startAt = Carbon::parse($firstOccurrence->starts_at, (string) ($schedule->timezone ?? 'Europe/London'));
+                $endAt = $firstOccurrence->ends_at
+                    ? Carbon::parse($firstOccurrence->ends_at, (string) ($schedule->timezone ?? 'Europe/London'))
+                    : null;
+                $startDate = $startAt->toDateString();
+                $endDate = $endAt ? $endAt->toDateString() : $startDate;
+                $startTime = $startAt->format('H:i');
+                $endTime = $endAt ? $endAt->format('H:i') : $startTime;
+            }
+
+            $eventDates = [];
+            if ($startDate) {
+                $eventDates = [];
+                $cursor = Carbon::parse($startDate, (string) ($schedule->timezone ?? 'Europe/London'))->startOfDay();
+                $limit = Carbon::parse($endDate ?: $startDate, (string) ($schedule->timezone ?? 'Europe/London'))->startOfDay();
+                $safety = 0;
+                while ($cursor->lte($limit) && $safety < 366) {
+                    $eventDates[] = [
+                        'index' => count($eventDates) + 1,
+                        'date' => $cursor->toDateString(),
+                        'label' => $cursor->format('D j M'),
+                    ];
+                    $cursor->addDay();
+                    $safety++;
+                }
+            }
+
+            $eventPriceOptions = $priceOptions
+                ->filter(fn ($option) => strtolower(trim((string) ($option->audience_type ?? ''))) === 'event')
+                ->sortBy('sort_order')
+                ->values();
+            $ticketOption = $eventPriceOptions->first(fn ($option) => strtolower(trim((string) ($option->pricing_type ?? ''))) === 'ticket');
+            $dayOptions = $eventPriceOptions->filter(fn ($option) => strtolower(trim((string) ($option->pricing_type ?? ''))) === 'day')->values();
+
+            $eventVariants = [];
+            if ($ticketOption || $eventPriceOptions->isEmpty()) {
+                $ticketPrice = $ticketOption?->price_amount;
+                if ($ticketPrice === null) {
+                    $ticketPrice = $dayOptions->first()?->price_amount ?? $offering->price ?? 0;
+                }
+                $eventVariants[] = [
+                    'id' => $ticketOption ? 'po_'.(string) $ticketOption->id : 'event_ticket',
+                    'options' => ['Full event ticket'],
+                    'selection' => ['Full event ticket'],
+                    'price' => (float) $ticketPrice,
+                    'compare' => null,
+                    'available' => true,
+                ];
+            }
+
+            if ($dayOptions->isNotEmpty()) {
+                foreach ($dayOptions as $index => $option) {
+                    $dayMeta = $eventDates[$index] ?? null;
+                    $eventVariants[] = [
+                        'id' => 'po_'.(string) $option->id,
+                        'options' => [
+                            $dayMeta ? ('Day '.$dayMeta['index'].' · '.$dayMeta['label']) : ('Day '.($index + 1)),
+                        ],
+                        'selection' => [
+                            $dayMeta ? ('Day '.$dayMeta['index'].' · '.$dayMeta['label']) : ('Day '.($index + 1)),
+                        ],
+                        'price' => (float) ($option->price_amount ?? $offering->price ?? 0),
+                        'compare' => null,
+                        'available' => true,
+                    ];
+                }
+            }
+
+            if (empty($eventVariants)) {
+                $fallbackPrice = $offering->price;
+                if ($fallbackPrice === null) {
+                    $firstOptionPrice = $priceOptions->first()?->price_amount;
+                    $fallbackPrice = is_numeric($firstOptionPrice) ? (float) $firstOptionPrice : 0.0;
+                }
+
+                $eventVariants[] = [
+                    'id' => 'event_ticket',
+                    'options' => ['Full event ticket'],
+                    'selection' => ['Full event ticket'],
+                    'price' => (float) $fallbackPrice,
+                    'compare' => null,
+                    'available' => true,
+                ];
+            }
+
+            $optionValues = array_values(array_unique(array_filter(array_map(
+                fn ($variant) => (string) ($variant['options'][0] ?? ''),
+                $eventVariants
+            ))));
+            if (empty($optionValues)) {
+                $optionValues = ['Full event ticket'];
+            }
+
+            $minPrice = collect([$offering->price])
+                ->merge($priceOptions->pluck('price_amount'))
+                ->merge($priceTiers->pluck('price_amount'))
+                ->filter(fn ($v) => is_numeric($v))
+                ->map(fn ($v) => (float) $v)
+                ->min();
+            $maxPrice = collect([$offering->price])
+                ->merge($priceOptions->pluck('price_amount'))
+                ->merge($priceTiers->pluck('price_amount'))
+                ->filter(fn ($v) => is_numeric($v))
+                ->map(fn ($v) => (float) $v)
+                ->max();
+
+            $ticketOptionMeta = [
+                'name' => 'Ticket type',
+                'meta_name' => 'ticket',
+                'values' => $optionValues,
+            ];
+
+            $selectedVariantCard = $selectVariantCard($eventVariants, $requestedVariantId, $requestedPriceOptionId);
+            $selectedVariantId = (string) ($selectedVariantCard['id'] ?? ($eventVariants[0]['id'] ?? 'event_ticket'));
+            $selectedVariantSelection = array_values(array_filter(array_map('trim', (array) ($selectedVariantCard['selection'] ?? ($selectedVariantCard['options'] ?? [])))));
+            $selectedVariantLabel = trim((string) ($selectedVariantCard['label'] ?? (empty($selectedVariantSelection) ? ($selectedVariantCard['options'][0] ?? 'Full event ticket') : implode(' • ', $selectedVariantSelection))));
+            if ($selectedVariantLabel === '') {
+                $selectedVariantLabel = 'Full event ticket';
+            }
+            $selectedVariantPrice = (float) ($selectedVariantCard['price'] ?? $offering->price ?? 0);
+            $selectedVariantPriceOptionId = $extractPriceOptionId($selectedVariantId);
+            $isPastEvent = EventListing::isPast([
+                'start_date' => $startDate,
+                'start_time' => $startTime,
+                'end_date' => $endDate,
+                'end_time' => $endTime,
+                'timezone' => (string) ($schedule->timezone ?? 'Europe/London'),
+            ]);
+
+            return [
+                'id' => $offering->id,
+                'title' => $offering->title,
+                'source_version' => 'v3',
+                'booking_flow' => $this->offeringBookingFlow($offering),
+                'type' => $offering->type?->name ?: 'experience',
+                'category' => $offering->category ? ['id' => $offering->category->id, 'name' => $offering->category->name] : null,
+                'rating' => ($vendorReviewSummary = $offering->vendor?->review_summary ?? ['count' => 0, 'rating' => null])['rating'] ?? null,
+                'review_count' => $vendorReviewSummary['count'] ?? 0,
+                'vendor_rating' => $vendorReviewSummary['rating'] ?? null,
+                'vendor_review_count' => $vendorReviewSummary['count'] ?? 0,
+                'price' => (float) ($offering->price ?? $minPrice ?? 0),
+                'price_min' => (float) ($minPrice ?? $offering->price ?? 0),
+                'price_max' => (float) ($maxPrice ?? $offering->price ?? 0),
+                'compare_at_price' => null,
+                'currency' => 'GBP',
+                'image' => $offering->getFirstImageUrl(),
+                'images' => $images,
+                'options' => [$ticketOptionMeta],
+                'variants' => $eventVariants,
+                'selectedVariantId' => $selectedVariantId,
+                'selectedVariantLabel' => $selectedVariantLabel,
+                'selectedVariantSelection' => $selectedVariantSelection,
+                'selectedVariantPrice' => $selectedVariantPrice,
+                'selectedVariantPriceOptionId' => $selectedVariantPriceOptionId,
+                'mode' => $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null),
+                'location' => $physical[0] ?? ($isOnline ? 'Online' : null),
+                'locations' => $locations,
+                'description' => $descriptionHtml,
+                'summary' => (string) ($offering->summary ?? ''),
+                'body_html' => $descriptionHtml,
+                'what_to_expect' => $whatToExpectHtml,
+                'included' => $includedHtml,
+                'aftercare' => '',
+                'duration' => null,
+                'tags' => array_values(array_filter(array_map('trim', array_filter([
+                    $offering->type?->name,
+                    $offering->category?->name,
+                ])))),
+                'benefits' => [],
+                'who_for' => [],
+                'who_not_for' => [],
+                'faq' => [],
+                'safety_notes' => '',
+                'contraindications' => '',
+                'date' => $startDate,
+                'start_date' => $startDate,
+                'start_time' => $startTime,
+                'end_date' => $endDate,
+                'end_time' => $endTime,
+                'practitioner' => $this->practitionerPayload($offering->vendor, $offering->vendor?->user),
+                'video_url' => trim((string) ($details->video_url ?? '')),
+                'capacity' => is_numeric(data_get($eventPayload, 'capacity')) ? (int) data_get($eventPayload, 'capacity') : null,
+                'event' => $eventPayload,
+                'venue_locations' => $venueLocations,
+                'reviews' => collect(),
+                'client_reviews' => $this->vendorClientReviews($offering->vendor),
+                'url' => $this->canonicalOfferingUrl($offering->id, $this->slugify($offering->title ?: (string) $offering->id)),
+                'is_past_event' => $isPastEvent,
+            ];
+        }
+
         $formatValues = [];
         if (in_array('online', $channels, true)) {
             $formatValues[] = 'Online';
@@ -1274,9 +2011,10 @@ class LandingController extends Controller
                         return '2 Persons';
                     }
                     if ($max === null || $max <= $min) {
-                        return $min >= 3 ? (($min === 3) ? '3+ Group' : $min . ' People') : null;
+                        return $min >= 3 ? (($min === 3) ? '3+ Group' : $min.' People') : null;
                     }
-                    return $min . '-' . $max . ' Group';
+
+                    return $min.'-'.$max.' Group';
                 }
             }
 
@@ -1293,7 +2031,7 @@ class LandingController extends Controller
 
                 $minPeople = (int) ($option->min_qty ?? 0);
                 if ($minPeople >= 3) {
-                    return $minPeople === 3 ? '3+ Group' : $minPeople . ' People';
+                    return $minPeople === 3 ? '3+ Group' : $minPeople.' People';
                 }
 
                 return '3+ Group';
@@ -1312,6 +2050,27 @@ class LandingController extends Controller
             }
 
             return null;
+        };
+
+        $variantLocationPriority = static function (array $variant): int {
+            $text = strtolower(trim(implode(' ', array_filter(array_map(
+                static fn ($value): string => trim((string) $value),
+                (array) ($variant['selection'] ?? $variant['options'] ?? [])
+            )))));
+
+            if ($text === '') {
+                return 2;
+            }
+
+            if (str_contains($text, 'in-person') || str_contains($text, 'in person')) {
+                return 0;
+            }
+
+            if (str_contains($text, 'online')) {
+                return 1;
+            }
+
+            return 2;
         };
 
         $peopleValues = [];
@@ -1345,11 +2104,13 @@ class LandingController extends Controller
                     }
 
                     $variants[] = [
-                        'id' => 'po_' . (string) $option->id . '_tier_' . (string) $tierRow->id,
+                        'id' => 'po_'.(string) $option->id.'_tier_'.(string) $tierRow->id,
                         'options' => $variantOptions,
+                        'selection' => $variantOptions,
                         'price' => (float) ($tierRow->price_amount ?? $option->price_amount ?? 0),
                         'compare' => null,
                         'available' => (bool) ($option->is_active ?? true),
+                        '__order' => count($variants),
                     ];
                 }
 
@@ -1361,13 +2122,28 @@ class LandingController extends Controller
             }
 
             $variants[] = [
-                'id' => 'po_' . (string) $option->id,
+                'id' => 'po_'.(string) $option->id,
                 'options' => array_values(array_filter([$formatLabel, $basePeopleLabel], fn ($v) => $v !== null && $v !== '')),
+                'selection' => array_values(array_filter([$formatLabel, $basePeopleLabel], fn ($v) => $v !== null && $v !== '')),
                 'price' => (float) ($option->price_amount ?? 0),
                 'compare' => null,
                 'available' => (bool) ($option->is_active ?? true),
+                '__order' => count($variants),
             ];
         }
+        usort($variants, static function (array $left, array $right) use ($variantLocationPriority): int {
+            $priorityDiff = $variantLocationPriority($left) <=> $variantLocationPriority($right);
+            if ($priorityDiff !== 0) {
+                return $priorityDiff;
+            }
+
+            return (int) ($left['__order'] ?? 0) <=> (int) ($right['__order'] ?? 0);
+        });
+        $variants = array_values(array_map(static function (array $variant): array {
+            unset($variant['__order']);
+
+            return $variant;
+        }, $variants));
         $peopleValues = array_values(array_unique(array_filter($peopleValues)));
         if (empty($peopleValues)) {
             $peopleValues[] = '1 Person';
@@ -1400,6 +2176,20 @@ class LandingController extends Controller
             ->map(fn ($v) => (float) $v)
             ->max();
 
+        $selectedVariantCard = $selectVariantCard($variants, $requestedVariantId, $requestedPriceOptionId);
+        $selectedVariantId = (string) ($selectedVariantCard['id'] ?? ($variants[0]['id'] ?? 'variant-default'));
+        $selectedVariantSelection = array_values(array_filter(array_map('trim', (array) ($selectedVariantCard['selection'] ?? ($selectedVariantCard['options'] ?? [])))));
+        $selectedVariantLabel = trim((string) ($selectedVariantCard['label'] ?? (empty($selectedVariantSelection) ? ($selectedVariantCard['options'][0] ?? 'Option') : implode(' • ', $selectedVariantSelection))));
+        if ($selectedVariantLabel === '') {
+            $selectedVariantLabel = 'Option';
+        }
+        $selectedVariantPrice = (float) ($selectedVariantCard['price'] ?? $offering->price ?? 0);
+        $selectedVariantPriceOptionId = $extractPriceOptionId($selectedVariantId);
+        $bookingContext = app(BookingContextBuilder::class)->buildForOffering($offering, $selectedVariantPriceOptionId, $selectedVariantLabel);
+        $bookingPayload = is_array($bookingContext['bookingPayload'] ?? null) ? $bookingContext['bookingPayload'] : [];
+        $bookingPayload['weeklyWindows'] = $bookingContext['weeklyWindows'] ?? ($bookingPayload['weeklyWindows'] ?? []);
+        $bookingPayload['availabilitySettings'] = $bookingContext['availabilitySettings'] ?? ($bookingPayload['availabilitySettings'] ?? []);
+
         return [
             'id' => $offering->id,
             'title' => $offering->title,
@@ -1407,10 +2197,10 @@ class LandingController extends Controller
             'booking_flow' => $this->offeringBookingFlow($offering),
             'type' => $offering->type?->name ?: 'experience',
             'category' => $offering->category ? ['id' => $offering->category->id, 'name' => $offering->category->name] : null,
-            'rating' => null,
-            'review_count' => 0,
-            'vendor_rating' => null,
-            'vendor_review_count' => 0,
+            'rating' => ($vendorReviewSummary = $offering->vendor?->review_summary ?? ['count' => 0, 'rating' => null])['rating'] ?? null,
+            'review_count' => $vendorReviewSummary['count'] ?? 0,
+            'vendor_rating' => $vendorReviewSummary['rating'] ?? null,
+            'vendor_review_count' => $vendorReviewSummary['count'] ?? 0,
             'price' => $offering->price ?? null,
             'price_min' => $minPrice ?? $offering->price ?? null,
             'price_max' => $maxPrice ?? $offering->price ?? null,
@@ -1420,6 +2210,11 @@ class LandingController extends Controller
             'images' => $images,
             'options' => $options,
             'variants' => $variants,
+            'selectedVariantId' => $selectedVariantId,
+            'selectedVariantLabel' => $selectedVariantLabel,
+            'selectedVariantSelection' => $selectedVariantSelection,
+            'selectedVariantPrice' => $selectedVariantPrice,
+            'selectedVariantPriceOptionId' => $selectedVariantPriceOptionId,
             'mode' => $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null),
             'location' => $physical[0] ?? ($isOnline ? 'Online' : null),
             'locations' => $locations,
@@ -1443,10 +2238,13 @@ class LandingController extends Controller
             'date' => null,
             'start_date' => null,
             'end_date' => null,
+            'venue_locations' => $venueLocations,
+            'booking' => $bookingPayload,
             'practitioner' => $this->practitionerPayload($offering->vendor, $offering->vendor?->user),
             'reviews' => collect(),
-            'client_reviews' => [],
+            'client_reviews' => $this->vendorClientReviews($offering->vendor),
             'url' => $this->canonicalOfferingUrl($offering->id, $this->slugify($offering->title ?: (string) $offering->id)),
+            'is_past_event' => false,
         ];
     }
 
@@ -1483,7 +2281,7 @@ class LandingController extends Controller
 
     private function canonicalOfferingUrl(int|string $id, string $slug): string
     {
-        return url('/offerings/' . $id . '-' . $this->slugify($slug));
+        return url('/offerings/'.$id.'-'.$this->slugify($slug));
     }
 
     private function legacyProductBookingFlow(Product $product, ?int $priceOptionId = null, ?string $variantLabel = null): string
@@ -1585,6 +2383,7 @@ class LandingController extends Controller
         }
 
         $parts = array_values(array_filter($parts));
+
         return $parts ? implode(' • ', $parts) : null;
     }
 
@@ -1605,13 +2404,117 @@ class LandingController extends Controller
 
         $user ??= $vendor?->user;
         $firstName = trim((string) ($user?->first_name ?: Str::of((string) ($user?->name ?? ''))->before(' ')));
-        $fullName = trim((string) (($user?->name ?: '') ?: ($vendor?->vendor_name ?? '')));
+        $fullName = trim((string) ($user?->public_display_name ?? ''));
+        $vendorReviewSummary = $vendor?->review_summary ?? ['count' => 0, 'rating' => null];
         $planKey = $this->normalizePlanKey(
             $user?->tier?->tier
                 ?? $user?->account_type
                 ?? ($vendor?->tiers()->orderByDesc('plan_started_at')->orderByDesc('id')->value('tier'))
         );
         $profilePicture = $user?->profile_picture ? $this->profilePhotoUrl($user->profile_picture) : null;
+        $normalizeTelephone = static function (?string $value): ?string {
+            $digits = preg_replace('/\D+/', '', (string) $value);
+            if ($digits === '') {
+                return null;
+            }
+
+            if (str_starts_with($digits, '00')) {
+                $digits = substr($digits, 2);
+            }
+
+            if (str_starts_with($digits, '0') && strlen($digits) === 11) {
+                $digits = '44' . substr($digits, 1);
+            }
+
+            return '+' . ltrim($digits, '+');
+        };
+        $normalizeCountryCode = static function (?string $value): ?string {
+            $country = strtolower(trim((string) $value));
+            if ($country === '') {
+                return null;
+            }
+
+            return in_array($country, ['gb', 'uk', 'u.k.', 'united kingdom', 'great britain', 'england', 'scotland', 'wales', 'northern ireland'], true)
+                ? 'GB'
+                : strtoupper($country);
+        };
+
+        $vendorLocations = [];
+        $vendorPrimaryLocation = null;
+        if ($vendor) {
+            $vendor->loadMissing('locations');
+            $vendorLocations = collect($vendor->locations ?? [])
+                ->map(static function ($location) use ($normalizeCountryCode): ?array {
+                    $locationData = is_array($location) ? $location : (method_exists($location, 'getAttributes') ? $location->getAttributes() : []);
+                    if (! is_array($locationData)) {
+                        return null;
+                    }
+
+                    $label = trim((string) ($locationData['label'] ?? ''));
+                    $formattedAddress = trim((string) ($locationData['formatted_address'] ?? ''));
+                    $line1 = trim((string) ($locationData['line1'] ?? $locationData['address_line_1'] ?? $locationData['street_address'] ?? $locationData['building_name'] ?? ''));
+                    $line2 = trim((string) ($locationData['line2'] ?? $locationData['address_line2'] ?? $locationData['address_line_2'] ?? ''));
+                    $city = trim((string) ($locationData['city'] ?? ''));
+                    $county = trim((string) ($locationData['county'] ?? ''));
+                    $postcode = trim((string) ($locationData['postcode'] ?? ''));
+                    $country = trim((string) ($locationData['country'] ?? ''));
+                    $countryCode = $normalizeCountryCode($country);
+
+                    $streetAddress = trim(implode(', ', array_filter([$line1, $line2])));
+                    if ($streetAddress === '') {
+                        $streetAddress = $formattedAddress !== '' ? $formattedAddress : $label;
+                    }
+
+                    $address = array_filter([
+                        '@type' => 'PostalAddress',
+                        'streetAddress' => $streetAddress !== '' ? $streetAddress : null,
+                        'addressLocality' => $city !== '' ? $city : null,
+                        'addressRegion' => $county !== '' ? $county : (($city === '' && $label !== '' && ! in_array(strtolower($label), ['united kingdom', 'great britain', 'gb', 'uk'], true)) ? $label : null),
+                        'postalCode' => $postcode !== '' ? $postcode : null,
+                        'addressCountry' => $countryCode,
+                    ], static fn ($value) => $value !== null && $value !== '' && $value !== []);
+
+                    return array_filter([
+                        'label' => $label !== '' ? $label : null,
+                        'formatted_address' => $formattedAddress !== '' ? $formattedAddress : null,
+                        'line1' => $line1 !== '' ? $line1 : null,
+                        'line2' => $line2 !== '' ? $line2 : null,
+                        'city' => $city !== '' ? $city : null,
+                        'county' => $county !== '' ? $county : null,
+                        'postcode' => $postcode !== '' ? $postcode : null,
+                        'country' => $country !== '' ? $country : null,
+                        'address' => $address ?: null,
+                        'lat' => is_numeric($locationData['lat'] ?? null) ? (float) $locationData['lat'] : null,
+                        'lng' => is_numeric($locationData['lng'] ?? null) ? (float) $locationData['lng'] : null,
+                    ], static fn ($value) => $value !== null && $value !== '' && $value !== []);
+                })
+                ->filter()
+                ->values()
+                ->all();
+
+            $bestScore = -1;
+            foreach ($vendorLocations as $location) {
+                $score = 0;
+                foreach (['line1', 'line2', 'city', 'county', 'postcode', 'formatted_address'] as $field) {
+                    if (trim((string) ($location[$field] ?? '')) !== '') {
+                        $score++;
+                    }
+                }
+
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                    $vendorPrimaryLocation = $location;
+                }
+            }
+        }
+
+        $vendorAddress = null;
+        if (is_array($vendorPrimaryLocation)) {
+            $vendorAddress = $vendorPrimaryLocation['address'] ?? null;
+            if (! is_array($vendorAddress)) {
+                $vendorAddress = null;
+            }
+        }
 
         return [
             'name' => $fullName !== '' ? $fullName : ($vendor?->vendor_name ?? ''),
@@ -1619,11 +2522,24 @@ class LandingController extends Controller
             'bio' => $vendor?->bio ?? $vendor?->about ?? '',
             'credentials' => $vendor?->credentials ?? $vendor?->qualifications ?? '',
             'photo' => $profilePicture ?? ($vendor?->photo_url ?? $vendor?->headshot_url ?? $vendor?->avatar_url ?? null),
+            'profile_url' => $user?->practitioner_profile_url ?? null,
+            'review_url' => filled($user?->practitioner_profile_url ?? null)
+                ? rtrim((string) ($user?->practitioner_profile_url ?? ''), '/') . '/reviews'
+                : null,
             'location' => $vendor?->location ?? '',
+            'telephone' => $normalizeTelephone($user?->phone ?? null),
+            'phone' => $normalizeTelephone($user?->phone ?? null),
+            'vendor_contact' => $vendor?->vendor_contact ?? null,
+            'address' => $vendorAddress,
+            'locations' => $vendorLocations,
             'specialties' => is_array($vendor?->specialties ?? null) ? array_values(array_filter($vendor->specialties)) : [],
             'plan_key' => $planKey,
             'plan_label' => $this->planTitleForKey($planKey),
             'is_paid_plan' => ! in_array($planKey, ['starter', ''], true),
+            'rating' => $vendorReviewSummary['rating'] ?? null,
+            'review_count' => $vendorReviewSummary['count'] ?? 0,
+            'vendor_rating' => $vendorReviewSummary['rating'] ?? null,
+            'vendor_review_count' => $vendorReviewSummary['count'] ?? 0,
         ];
     }
 
@@ -1639,6 +2555,34 @@ class LandingController extends Controller
             'become-partner', 'partner' => 'become-partner',
             default => $normalized,
         };
+    }
+
+    private function vendorClientReviews(?VendorDetail $vendor, int $limit = 6): array
+    {
+        if (! $vendor) {
+            return [];
+        }
+
+        return Review::query()
+            ->where('vendor_id', $vendor->id)
+            ->whereRaw("TRIM(COALESCE(review_text, '')) <> ''")
+            ->with('user')
+            ->latest('created_at')
+            ->take($limit)
+            ->get()
+            ->map(function (Review $review) {
+                return [
+                    'id' => $review->id,
+                    'rating' => (int) ($review->rating ?? 0),
+                    'body' => trim((string) $review->review_text),
+                    'author' => optional($review->user)->name ?? 'Verified client',
+                    'date' => optional($review->created_at)->format('M Y') ?? '',
+                    'title' => trim((string) ($review->title ?? '')),
+                    'user_id' => $review->user_id,
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function planTitleForKey(?string $value): string
@@ -1664,6 +2608,7 @@ class LandingController extends Controller
         }
 
         $assetHost = rtrim((string) (config('app.asset_url') ?: config('services.asset_host') ?: 'https://atease.weofferwellness.co.uk'), '/');
+
         return $assetHost.'/storage/'.ltrim($path, '/');
     }
 }

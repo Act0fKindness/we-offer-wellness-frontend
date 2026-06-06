@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Support\EventListing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -41,8 +42,8 @@ class SeoLandingController extends Controller
             ->values();
 
         $products = $this->queryProducts($request, $type, $category)
-            ->limit(12)
-            ->get();
+            ->take(12)
+            ->values();
 
         if ($category) {
             $baseTitle = $config['title'];
@@ -187,7 +188,9 @@ class SeoLandingController extends Controller
                 ->orderByRaw('COALESCE(reviews_count, 0) DESC');
         }
 
-        return $builder;
+        return $builder->get()
+            ->reject(fn ($product) => EventListing::isPast($product))
+            ->values();
     }
 
     private function findCategoryBySlug(string $slug): ?ProductCategory

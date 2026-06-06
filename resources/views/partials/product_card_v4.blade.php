@@ -8,12 +8,45 @@
     $ucWords = function ($s) {
         return function_exists('mb_convert_case') ? mb_convert_case((string) $s, MB_CASE_TITLE, 'UTF-8') : ucwords((string) $s);
     };
+    $normalizeTypeLabel = function ($value) use ($toLower, $ucWords) {
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return 'Experience';
+        }
+
+        $normalized = $toLower(str_replace(['_', '-'], ' ', $raw));
+        $map = [
+            'therapies' => 'Therapy',
+            'therapy' => 'Therapy',
+            'workshops' => 'Workshop',
+            'workshop' => 'Workshop',
+            'events' => 'Event',
+            'event' => 'Event',
+            'classes' => 'Class',
+            'class' => 'Class',
+            'retreats' => 'Retreat',
+            'retreat' => 'Retreat',
+            'experiences' => 'Experience',
+            'experience' => 'Experience',
+        ];
+
+        return $map[$normalized] ?? $ucWords($normalized);
+    };
 
     $title = trim((string) ($product->title ?? 'Untitled'));
     $titleFormatted = $ucWords($toLower($title));
 
-    $typeRaw = trim((string) ($product->product_type ?? 'Experience'));
-    $typeLabel = $ucWords($toLower($typeRaw));
+    $typeCandidate = data_get($product, 'type.name')
+        ?? data_get($product, 'type_label')
+        ?? data_get($product, 'type_name');
+    if ($typeCandidate === null) {
+        $rawType = data_get($product, 'type');
+        if (is_string($rawType) || is_numeric($rawType)) {
+            $typeCandidate = (string) $rawType;
+        }
+    }
+    $typeRaw = trim((string) ($typeCandidate ?? ($product->product_type ?? 'Experience')));
+    $typeLabel = $normalizeTypeLabel($typeRaw);
 
     $categoryRaw = $product->category?->name
         ?? ($product->category_name ?? null)
@@ -22,7 +55,31 @@
     if (is_array($categoryRaw)) {
         $categoryRaw = $categoryRaw['name'] ?? reset($categoryRaw) ?? null;
     }
-    $categoryLabel = $categoryRaw ? $ucWords($toLower(str_replace(['_', '-'], ' ', $categoryRaw))) : null;
+    $categoryLabel = $categoryRaw ? $normalizeTypeLabel($categoryRaw) : null;
+
+    $eventSource = data_get($product, 'when.event', data_get($product, 'event', []));
+    if (is_object($eventSource)) {
+        $eventSource = (array) $eventSource;
+    }
+    if (!is_array($eventSource)) {
+        $eventSource = [];
+    }
+    $hasEventSchedule = strtolower((string) data_get($product, 'when.type', '')) === 'event'
+        || filled(data_get($product, 'date'))
+        || filled(data_get($product, 'start_date'))
+        || filled(data_get($product, 'end_date'))
+        || filled(data_get($product, 'start_time'))
+        || filled(data_get($product, 'end_time'))
+        || !empty($eventSource['dates'] ?? [])
+        || !empty($eventSource['upcoming_dates'] ?? [])
+        || !empty($eventSource['availability_dates'] ?? [])
+        || !empty(data_get($product, 'event.dates', []))
+        || !empty(data_get($product, 'when.event.dates', []));
+
+    if ($hasEventSchedule) {
+        $typeLabel = 'Event';
+    }
+
     $categoryBadgeLabel = $categoryLabel ?? $typeLabel;
 
     $image = $product->getFirstImageUrl();
@@ -37,15 +94,44 @@
     if (is_numeric($compareMin) && $compareMin > 1000 && $compareMin % 100 === 0) {
         $compareMin = $compareMin / 100;
     }
-    $rating = isset($product->reviews_avg_rating) ? round((float) $product->reviews_avg_rating, 1) : null;
-    $reviewCount = (int) ($product->reviews_count ?? 0);
+    $vendorUser = data_get($product, 'vendor.user');
+    $starterPlan = $vendorUser instanceof \App\Models\User
+        ? $vendorUser->isStarterPlan()
+        : strtolower(trim((string) data_get($product, 'plan_key', ''))) === 'starter';
+    $businessAcceleratorPlan = $vendorUser instanceof \App\Models\User
+        ? $vendorUser->isBusinessAcceleratorPlan()
+        : \Illuminate\Support\Str::slug((string) data_get($product, 'plan_key', '')) === 'business-accelerator';
 
-    $provider = $product->vendor_name
-        ?? (is_object($product->vendor ?? null) ? ($product->vendor->vendor_name ?? null) : null)
-        ?? $product->practitioner_name
-        ?? $product->provider
-        ?? null;
-    $providerFormatted = $provider ? $ucWords($toLower(str_replace('_', ' ', $provider))) : null;
+    $vendorReviewSummary = data_get($product, 'vendor.review_summary');
+    if (! is_array($vendorReviewSummary)) {
+        $vendorReviewSummary = [];
+    }
+
+    $vendorReviewCount = (int) ($vendorReviewSummary['count'] ?? 0);
+    $vendorReviewRating = isset($vendorReviewSummary['rating']) ? round((float) $vendorReviewSummary['rating'], 1) : null;
+    $productReviewCount = (int) ($product->reviews_count ?? 0);
+    $productReviewRating = isset($product->reviews_avg_rating) ? round((float) $product->reviews_avg_rating, 1) : null;
+
+    $reviewCount = $vendorReviewCount > 0 ? $vendorReviewCount : $productReviewCount;
+    $rating = $vendorReviewCount > 0 ? $vendorReviewRating : $productReviewRating;
+    if ($reviewCount > 0 && (! is_numeric($rating) || (float) $rating <= 0)) {
+        $rating = 5.0;
+    }
+    $filledStars = $reviewCount > 0 ? max(0, min(5, (int) round((float) $rating))) : 0;
+    $reviewSummary = $reviewCount > 0
+        ? number_format((float) $rating, 1) . ' · ' . $reviewCount . ' review' . ($reviewCount === 1 ? '' : 's')
+        : 'Be the first to review';
+
+    $provider = $starterPlan
+        ? 'Wellness practitioner'
+        : trim((string) (
+            $product->vendor_name
+            ?? data_get($product, 'vendor.vendor_name')
+            ?? ''
+        ));
+    $providerFormatted = $provider !== ''
+        ? ($starterPlan ? $provider : $ucWords($toLower(str_replace('_', ' ', $provider))))
+        : null;
 
     $locations = $product->getLocations();
     $hasOnline = in_array('Online', $locations, true);
@@ -71,6 +157,29 @@
     $nextLabel = $product->next_label ?? $product->next ?? null;
     $benefitText = $product->benefit ?? ($product->summary ?? null);
     $fomoText = trim((string) ($product->fomo_text ?? ''));
+    $stripEmoji = function ($value) {
+        $text = (string) ($value ?? '');
+        $clean = preg_replace('/[\x{1F1E6}-\x{1F1FF}\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{FE0F}\x{200D}]/u', '', $text);
+        if ($clean === null) {
+            $clean = $text;
+        }
+        $clean = preg_replace('/\s{2,}/u', ' ', $clean);
+        if ($clean === null) {
+            $clean = $text;
+        }
+        return trim($clean);
+    };
+    $benefitTextClean = $benefitText ? $stripEmoji($benefitText) : null;
+    $giftCardHaystack = $toLower(implode(' ', array_filter([
+        $title,
+        $benefitText,
+        $slug,
+        $categoryRaw,
+        $typeRaw,
+        $product->product_type ?? null,
+        $fomoText,
+    ])));
+    $isGiftCard = (bool) preg_match('/gift\s*card|giftcard|voucher|e-?gift/i', $giftCardHaystack);
 
     $availabilityDays = [];
     try {
@@ -121,19 +230,13 @@
     $calendarNote = $availabilityDays ? 'Live calendar' : 'Practitioner confirms';
     $availabilityClass = $availabilityDays ? 'has-availability' : 'needs-availability';
     $durationLabel = $product->duration ?? null;
-    $giftCardHaystack = strtolower(implode(' ', array_filter([
-        $title,
-        $typeRaw,
-        is_string($categoryRaw) ? $categoryRaw : '',
-        (string) ($product->handle ?? ''),
-        (string) ($benefitText ?? ''),
-        (string) ($fomoText ?? ''),
-    ])));
-    $isGiftCard = \Illuminate\Support\Str::contains($giftCardHaystack, ['gift card', 'giftcard', 'voucher']);
+    $isEvent = $typeLabel === 'Event'
+        || str_contains($toLower($typeRaw), 'event')
+        || str_contains($toLower($categoryRaw ?? ''), 'event')
+        || ($hasEventSchedule && str_contains($toLower($typeRaw), 'experience'));
 @endphp
 
-@if((is_numeric($priceMin) ? (float) $priceMin : 0.0) > 0.0)
-  @once
+@once
     <style>
       .wow-therapy-card-scope{
         --ink:#101828;
@@ -155,12 +258,24 @@
         --shadow:0 12px 34px rgba(16,24,40,.045);
       }
       .wow-therapy-card-scope .wow-card{
+        position:relative;
+        display:block;
         border-radius:var(--radius);
+      }
+      .wow-therapy-card-scope .wow-card.is-image-loading{
+        pointer-events:none;
       }
       @media (min-width: 621px){
         .wow-therapy-card-scope .wow-card.md{
+          width:280px;
+          max-width:280px;
+          flex:0 0 280px;
+          justify-self:start;
           max-height:690px;
           overflow:hidden;
+        }
+        .wow-therapy-card-scope .therapy-card{
+          width:280px;
         }
         .wow-therapy-card-scope .therapy-card{
           max-height:690px;
@@ -187,43 +302,280 @@
         aspect-ratio:1.64/1;
         overflow:hidden;
         border-radius:var(--radius) var(--radius) 0 0;
-        background:#eef2f4;
+        background:
+          radial-gradient(circle at 24% 28%, rgba(79,147,129,.12), transparent 30%),
+          radial-gradient(circle at 74% 70%, rgba(37,74,133,.09), transparent 32%),
+          linear-gradient(135deg, #eef2f4 0%, #f8fbfd 100%);
       }
       .therapy-card__media img{
+        position:relative;
+        z-index:0;
         width:100%;
         height:100%;
         display:block;
         object-fit:cover;
-        transition:transform 240ms ease;
+        opacity:1;
+        transition:opacity 180ms ease, transform 240ms ease;
       }
       .wow-card:hover .therapy-card__media img{ transform:scale(1.035); }
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__media{
+        background:#111111;
+      }
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__media::before{
+        content:"";
+        position:absolute;
+        inset:0;
+        background:
+          linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.22) 100%),
+          linear-gradient(90deg, rgba(255,255,255,.14), transparent 22%, rgba(255,255,255,.08) 72%, transparent);
+        mix-blend-mode:screen;
+        opacity:.68;
+        pointer-events:none;
+        z-index:2;
+      }
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__media img{
+        opacity:0;
+      }
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__signal,
+      .wow-therapy-card-scope .wow-card.is-image-loading .wow-badge,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__title,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__provider,
+      .wow-therapy-card-scope .wow-card.is-image-loading .rating-row,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__description,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__chip,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__availability,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__price small,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__price strong,
+      .wow-therapy-card-scope .wow-card.is-image-loading .btn-wow{
+        position:relative;
+        overflow:hidden;
+        color:transparent !important;
+        text-shadow:none !important;
+        background:linear-gradient(90deg, #e7edf3, #f1f5f9);
+      }
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__signal,
+      .wow-therapy-card-scope .wow-card.is-image-loading .wow-badge{
+        background:linear-gradient(90deg, #e7edf3, #f1f5f9);
+      }
+      .wow-therapy-card-scope .wow-card.is-image-loading .rating-row > *,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__availability > *,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__chip > *,
+      .wow-therapy-card-scope .wow-card.is-image-loading .btn-wow > *{
+        opacity:0 !important;
+      }
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__title::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__provider::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .rating-row::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__description::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__chip::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__availability::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__price small::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__price strong::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .btn-wow::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .therapy-card__signal::before,
+      .wow-therapy-card-scope .wow-card.is-image-loading .wow-badge::before{
+        content:"";
+        position:absolute;
+        inset:0;
+        transform:translateX(-115%);
+        background:linear-gradient(
+          100deg,
+          transparent 0%,
+          rgba(255,255,255,.36) 28%,
+          rgba(255,255,255,.82) 50%,
+          rgba(255,255,255,.36) 72%,
+          transparent 100%
+        );
+        animation:pv4-loader-shimmer 1.55s ease-in-out infinite;
+      }
+      .gift-card-card__media{
+        position:relative;
+        aspect-ratio:1.64/1;
+        overflow:hidden;
+        border-radius:var(--radius) var(--radius) 0 0;
+        background:
+          radial-gradient(circle at 24% 28%, rgba(79,147,129,.12), transparent 30%),
+          radial-gradient(circle at 74% 70%, rgba(37,74,133,.09), transparent 32%),
+          linear-gradient(135deg, #eef2f4 0%, #f8fbfd 100%);
+      }
+      .gift-card-card__media img{
+        position:relative;
+        z-index:0;
+        width:100%;
+        height:100%;
+        display:block;
+        object-fit:cover;
+        opacity:1;
+        transition:opacity 180ms ease, transform 240ms ease;
+      }
+      .wow-card:hover .gift-card-card__media img{ transform:scale(1.035); }
       .therapy-card__media::after{
         content:"";
         position:absolute;
         inset:0 0 auto 0;
         height:72px;
         pointer-events:none;
+        z-index:2;
         background:linear-gradient(180deg, rgba(16,24,40,.34), rgba(16,24,40,0));
       }
-      .wow-like-button{
+      .gift-card-card__media::after{
+        content:"";
         position:absolute;
-        right:10px;
-        top:10px;
-        z-index:3;
-        width:38px;
-        height:38px;
-        display:inline-flex;
+        inset:0 0 auto 0;
+        height:72px;
+        pointer-events:none;
+        z-index:2;
+        background:linear-gradient(180deg, rgba(16,24,40,.22), rgba(16,24,40,0));
+      }
+      .premium-badge-holder{
+        position:absolute;
+        top:16px;
+        right:16px;
+        z-index:20;
+        width:52px;
+        height:52px;
+        overflow:visible;
+      }
+      .premium-badge-drawer{
+        position:absolute;
+        top:0;
+        right:0;
+        height:52px;
+        width:52px;
+        display:flex;
         align-items:center;
-        justify-content:center;
-        border:1px solid rgba(208,213,221,.92);
+        justify-content:flex-end;
+        gap:9px;
+        overflow:hidden;
+        border:1px solid rgba(255,255,255,.28);
+        border-radius:999px;
+        background:rgba(16,151,150,.72);
+        box-shadow:
+          0 12px 26px rgba(17,24,39,.16),
+          inset 0 1px 0 rgba(255,255,255,.14);
+        backdrop-filter:blur(14px) saturate(145%);
+        -webkit-backdrop-filter:blur(14px) saturate(145%);
+        transition:
+          width 340ms cubic-bezier(.2,.8,.2,1),
+          height 220ms ease,
+          border-color 220ms ease,
+          background 220ms ease,
+          box-shadow 220ms ease,
+          transform 220ms ease;
+      }
+      .premium-badge-holder:hover .premium-badge-drawer,
+      .premium-badge-holder:focus-within .premium-badge-drawer{
+        width:250px;
+        height:56px;
+        border-color:rgba(255,255,255,.42);
+        background:rgba(16,151,150,.86);
+        box-shadow:
+          0 20px 48px rgba(17,24,39,.24),
+          inset 0 1px 0 rgba(255,255,255,.18);
+        transform:translateY(-2px);
+      }
+      .premium-badge-copy{
+        width:174px;
+        min-width:174px;
+        padding-left:16px;
+        opacity:0;
+        transform:translateX(18px);
+        transition:
+          opacity 220ms ease 90ms,
+          transform 280ms cubic-bezier(.2,.8,.2,1) 70ms;
+      }
+      .premium-badge-holder:hover .premium-badge-copy,
+      .premium-badge-holder:focus-within .premium-badge-copy{
+        opacity:1;
+        transform:translateX(0);
+      }
+      .premium-badge-title{
+        margin:0;
+        color:#fff;
+        font-size:14px;
+        font-weight:400;
+        line-height:1.1;
+        letter-spacing:0;
+        white-space:nowrap;
+        text-shadow:0 1px 8px rgba(0,0,0,.16);
+      }
+      .premium-badge-small{
+        display:block;
+        margin-top:3px;
+        color:rgba(255,255,255,.88);
+        font-size:11px;
+        font-weight:400;
+        text-transform:uppercase;
+        line-height:1.15;
+        white-space:nowrap;
+        text-shadow:0 1px 8px rgba(0,0,0,.12);
+      }
+      .premium-badge-button{
+        position:relative;
+        z-index:2;
+        flex:0 0 46px;
+        width:46px;
+        height:46px;
+        margin-right:3px;
+        padding:0;
+        border:0;
         border-radius:999px;
         background:rgba(255,255,255,.96);
-        color:#344054;
+        display:flex;
+        align-items:center;
+        justify-content:center;
         cursor:pointer;
-        box-shadow:0 8px 18px rgba(16,24,40,.10);
+        box-shadow:0 7px 18px rgba(17,24,39,.14);
+        transition:
+          transform 260ms cubic-bezier(.2,.8,.2,1),
+          box-shadow 220ms ease,
+          background 220ms ease;
       }
-      .wow-like-button svg{ width:19px; height:19px; display:block; fill:transparent; stroke:currentColor; stroke-width:2; }
-      .wow-like-button.is-liked{ border-color:rgba(79,147,129,.24); background:var(--green-soft); color:var(--green); }
+      .premium-badge-holder:hover .premium-badge-button,
+      .premium-badge-holder:focus-within .premium-badge-button{
+        transform:scale(1.055) rotate(9deg);
+        background:#fff;
+        box-shadow:0 10px 24px rgba(17,24,39,.18);
+      }
+      .premium-badge-button:hover,
+      .premium-badge-button:focus-visible{
+        outline:none;
+      }
+      .premium-badge-button img{
+        width:36px;
+        height:36px;
+        display:block;
+        object-fit:contain;
+        filter:drop-shadow(0 3px 5px rgba(103,70,14,.24));
+      }
+      .premium-badge-sheen{
+        position:absolute;
+        top:-45%;
+        left:-80%;
+        width:70px;
+        height:140px;
+        background:linear-gradient(90deg, transparent, rgba(255,255,255,.36), transparent);
+        transform:rotate(24deg);
+        opacity:0;
+        pointer-events:none;
+      }
+      .premium-badge-holder:hover .premium-badge-sheen,
+      .premium-badge-holder:focus-within .premium-badge-sheen{
+        animation:premiumSheen 900ms ease forwards;
+      }
+      @keyframes premiumSheen{
+        0%{
+          left:-80%;
+          opacity:0;
+        }
+        30%{
+          opacity:1;
+        }
+        100%{
+          left:112%;
+          opacity:0;
+        }
+      }
       .therapy-card__signal{
         position:absolute;
         left:10px;
@@ -292,6 +644,29 @@
         color:var(--muted);
         font-size:12.75px;
       }
+      .therapy-card__description{
+        position:relative;
+        display:-webkit-box;
+        min-height:calc(1.42em * 3);
+        max-height:calc(1.42em * 3);
+        margin:0;
+        overflow:hidden;
+        color:#344054;
+        font-size:12.75px;
+        line-height:1.42;
+        -webkit-box-orient:vertical;
+        -webkit-line-clamp:3;
+      }
+      .therapy-card__description::after{
+        content:"";
+        position:absolute;
+        left:0;
+        right:0;
+        bottom:0;
+        height:1.15em;
+        background:linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.84) 68%, #fff 100%);
+        pointer-events:none;
+      }
       .rating-row{
         display:flex;
         align-items:center;
@@ -309,15 +684,7 @@
         -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
                 mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
       }
-      .star.star--empty{ background:transparent; }
-      .star.star--empty::after{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:#333;
-        -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
-                mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
-      }
+      .star.star--empty{ color:#d0d5dd; }
       .therapy-card__meta{
         display:flex;
         flex-wrap:wrap;
@@ -417,13 +784,17 @@
       }
       .therapy-card__footer{
         display:grid;
-        grid-template-columns:1fr auto;
+        grid-template-columns:1fr;
         gap:10px;
         align-items:center;
         padding:12px 14px;
         border-top:1px solid var(--soft);
         background:#fff;
         border-radius:0 0 var(--radius) var(--radius);
+      }
+      .therapy-card__price,
+      .therapy-card__actions{
+        width:100%;
       }
       .therapy-card__price small{
         display:block;
@@ -444,6 +815,11 @@
         display:flex;
         gap:7px;
         align-items:center;
+        flex-wrap:wrap;
+      }
+      .therapy-card__actions .btn-wow{
+        flex:1;
+        min-width:0;
       }
       .wow-therapy-card-scope .btn-wow{
         height:38px;
@@ -466,254 +842,64 @@
         border-color:rgba(84,148,131,.42);
         color:#549483;
       }
-      .gift-card-card{
-        display:flex;
-        flex-direction:column;
-        min-height:492px;
-        overflow:hidden;
-        background:#fff;
-        border:1px solid rgba(16,24,40,.18);
-        border-radius:var(--radius);
-        box-shadow:var(--shadow);
-        transition:transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-      }
-      .wow-card:hover .gift-card-card{
-        transform:translateY(-3px);
-        border-color:rgba(79,147,129,.42);
-        box-shadow:0 20px 48px rgba(16,24,40,.085);
-      }
-      .gift-card-card__media{
-        position:relative;
-        aspect-ratio:1.64/1;
-        overflow:hidden;
-        border-radius:var(--radius) var(--radius) 0 0;
-        background:#eef2f4;
-      }
-      .gift-card-card__media img{
-        width:100%;
-        height:100%;
-        display:block;
-        object-fit:cover;
-        transition:transform 240ms ease;
-      }
-      .wow-card:hover .gift-card-card__media img{ transform:scale(1.035); }
-      .gift-card-card__media::after{
-        content:"";
-        position:absolute;
-        inset:0 0 auto 0;
-        height:72px;
-        pointer-events:none;
-        background:linear-gradient(180deg, rgba(16,24,40,.22), rgba(16,24,40,0));
-      }
-      .gift-card-card__badges{
-        position:absolute;
-        left:10px;
-        bottom:10px;
-        z-index:3;
-        display:flex;
-        flex-wrap:wrap;
-        gap:6px;
-        max-width:calc(100% - 20px);
-      }
-      .gift-card-card__body{
-        flex:1;
-        display:flex;
-        flex-direction:column;
-        gap:10px;
-        padding:13px 14px 12px;
-      }
-      .gift-card-card__eyebrow{
-        margin:0;
-        color:#549483;
-        font-size:12px;
-        font-weight:800;
-        letter-spacing:.08em;
-        text-transform:uppercase;
-      }
-      .gift-card-card__title{
-        display:-webkit-box;
-        min-height:45px;
-        margin:0;
-        overflow:hidden;
-        color:var(--ink);
-        font-size:20px;
-        font-weight:500;
-        line-height:1.08;
-        letter-spacing:-.045em;
-        -webkit-box-orient:vertical;
-        -webkit-line-clamp:2;
-      }
-      .wow-card:hover .gift-card-card__title{ color:var(--green); }
-      .gift-card-card__provider{
-        margin:0;
-        color:var(--muted);
-        font-size:12.75px;
-      }
-      .gift-card-card__summary{
-        margin:0;
-        color:#344054;
-        font-size:12.75px;
-        line-height:1.45;
-      }
-      .gift-card-card__meta{
-        display:flex;
-        flex-wrap:wrap;
-        gap:6px;
-        min-height:26px;
-      }
-      .gift-card-card__chip{
-        min-height:27px;
-        display:inline-flex;
-        align-items:center;
-        gap:6px;
-        border:1px solid #e3e8ee;
-        border-radius:999px;
-        background:#fff;
-        color:#596275;
-        padding:0 9px;
-        font-size:12.25px;
-        white-space:nowrap;
-      }
-      .gift-card-card__chip--green{
-        color:#2f6f60;
-        border-color:rgba(79,147,129,.24);
-        background:var(--green-soft);
-      }
-      .gift-card-card__footer{
-        display:grid;
-        grid-template-columns:1fr auto;
-        gap:10px;
-        align-items:center;
-        padding:12px 14px;
-        border-top:1px solid var(--soft);
-        background:#fff;
-        border-radius:0 0 var(--radius) var(--radius);
-      }
-      .gift-card-card__price small{
-        display:block;
-        color:#667085;
-        font-size:12px;
-        line-height:1.1;
-      }
-      .gift-card-card__price strong{
-        display:block;
-        margin-top:3px;
-        color:#101828;
-        font-size:23px;
-        font-weight:600;
-        line-height:1;
-        letter-spacing:-.05em;
-      }
-      .gift-card-card__actions{
-        display:flex;
-        gap:7px;
-        align-items:center;
-      }
-      .wow-therapy-card-scope .gift-card-card .btn-wow{
-        height:38px;
-        border-radius:4px;
-      }
-      .wow-therapy-card-scope .gift-card-card .btn-wow--outline{
-        border:1px solid rgba(16,24,40,.22);
-        background:#fff !important;
-        color:rgba(11,18,32,.82);
-        box-shadow:0 10px 22px rgba(16,24,40,.08);
-      }
-      .wow-therapy-card-scope .gift-card-card .btn-wow--cta{
-        background:#549483 !important;
-        color:#fff;
-      }
-      .wow-therapy-card-scope .gift-card-card .btn-wow--cta:hover{
-        background:#417c6d !important;
-      }
-      .wow-therapy-card-scope .gift-card-card .btn-wow--outline:hover{
-        border-color:rgba(84,148,131,.42);
-        color:#549483;
+      @keyframes pv4-loader-shimmer{
+        100%{ transform:translateX(115%); }
       }
       @media (max-width: 620px){
         .wow-therapy-card-scope .therapy-card{ min-height:auto; }
-        .gift-card-card{ min-height:auto; }
-        .therapy-card__footer{ grid-template-columns:1fr; }
-        .gift-card-card__footer{ grid-template-columns:1fr; }
         .therapy-card__actions{ width:100%; }
-        .gift-card-card__actions{ width:100%; }
-        .wow-therapy-card-scope .btn-wow{ flex:1; min-width:0; }
       }
     </style>
-  @endonce
+@endonce
 
+@if($isGiftCard)
+    @include('partials.product_card_v4_giftcard')
+@elseif($isEvent)
+    @include('partials.product_card_v4_event')
+@else
   <div class="wow-therapy-card-scope">
-    @if($isGiftCard)
-    <div class="wow-card md">
-      <article class="gift-card-card" aria-label="Gift card {{ $product->id }}">
-        <div class="gift-card-card__media">
-          @if($hasDisplayableImage)
-            <img src="{{ $image }}" alt="{{ $title }}" loading="lazy">
-          @else
-            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#eff8f5,#ffffff);color:#417c6d;font-size:16px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;">
-              Gift Card
-            </div>
-          @endif
-
-          <span class="gift-card-card__badges">
-            <span class="wow-badge wow-badge--gold">Gift card</span>
-            <span class="wow-badge wow-badge--blue">Instant delivery</span>
-          </span>
-        </div>
-
-        <div class="gift-card-card__body">
-          <p class="gift-card-card__eyebrow">Digital gift card</p>
-          <h3 class="gift-card-card__title">{{ $titleFormatted }}</h3>
-
-          @if($providerFormatted)
-            <p class="gift-card-card__provider">by {{ $providerFormatted }}</p>
-          @endif
-
-          @if($benefitText)
-            <p class="gift-card-card__summary">{{ \Illuminate\Support\Str::limit($benefitText, 130) }}</p>
-          @else
-            <p class="gift-card-card__summary">A flexible digital gift card you can send instantly and redeem across We Offer Wellness.</p>
-          @endif
-
-          <div class="gift-card-card__meta">
-            <span class="gift-card-card__chip gift-card-card__chip--green">Instant email delivery</span>
-            <span class="gift-card-card__chip">Redeem on therapies, classes & events</span>
-            <span class="gift-card-card__chip">Choose any amount</span>
-          </div>
-        </div>
-
-        <footer class="gift-card-card__footer">
-          <div class="gift-card-card__price">
-            <small>From</small>
-            <strong>£{{ number_format((float) $priceMin, 2) }}</strong>
-          </div>
-
-          <div class="gift-card-card__actions">
-            <a href="{{ url('/giftcards') }}" class="btn-wow btn-wow--outline btn-sm">
-              <span class="btn-label">Choose amount</span>
-            </a>
-            <a href="{{ $url }}" class="btn-wow btn-wow--cta btn-sm">
-              <span class="btn-label">View details</span>
-            </a>
-          </div>
-        </footer>
-      </article>
-    </div>
-    @elseif($hasDisplayableImage)
-    <a href="{{ $url }}" class="wow-card md">
+    <a href="{{ $url }}" class="wow-card md {{ $hasDisplayableImage ? 'is-image-loading' : 'is-image-missing' }}" @if($hasDisplayableImage) aria-busy="true" @endif>
       <article class="therapy-card" aria-label="Offering card {{ $product->id }}">
         <div class="therapy-card__media">
-          <img src="{{ $image }}" alt="{{ $title }}" loading="lazy">
+          @if($hasDisplayableImage)
+            <img
+              src="{{ $image }}"
+              alt="{{ $title }}"
+              loading="lazy"
+              onload="var card=this.closest('.wow-card'); if(card){card.classList.remove('is-image-loading'); card.classList.add('is-image-loaded'); card.setAttribute('aria-busy','false');}"
+              onerror="var card=this.closest('.wow-card'); if(card){card.classList.remove('is-image-loading'); card.classList.add('is-image-missing'); card.setAttribute('aria-busy','false');} this.remove();"
+            >
+          @endif
 
           @if($signalText)
             <span class="therapy-card__signal">{{ $signalText }}</span>
           @endif
 
-          <span class="wow-like-button" role="button" tabindex="0" aria-label="Save offering" aria-pressed="false" title="Save">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"></path>
-            </svg>
-          </span>
+          @if($businessAcceleratorPlan)
+            <div class="premium-badge-holder">
+              <div class="premium-badge-drawer">
+                <div class="premium-badge-sheen"></div>
+
+                <div class="premium-badge-copy">
+                  <p class="premium-badge-title">Premium Partner</p>
+                  <span class="premium-badge-small">Business Accelerator</span>
+                </div>
+
+                <button
+                  class="premium-badge-button"
+                  type="button"
+                  aria-label="Business Accelerator Premium Partner"
+                  title="Premium Partner"
+                  onclick="event.preventDefault(); event.stopPropagation();"
+                >
+                  <img
+                    src="https://studio.weofferwellness.co.uk/storage/uploads/images/78aa908f-334b-45c0-9220-1c4d84053c5e.png"
+                    alt="Premium Partner rosette"
+                  >
+                </button>
+              </div>
+            </div>
+          @endif
 
           <span class="therapy-card__badges">
             <span class="wow-badge wow-badge--gold">{{ $categoryBadgeLabel }}</span>
@@ -727,20 +913,16 @@
             <p class="therapy-card__provider">with {{ $providerFormatted }}</p>
           @endif
 
-          <div class="rating-row" aria-label="Rated {{ $rating ? number_format((float) $rating, 1) : '0.0' }} out of 5">
+          <div class="rating-row" aria-label="{{ $reviewCount > 0 ? 'Rated ' . number_format((float) $rating, 1) . ' out of 5' : 'Be the first to review' }}">
             <span class="stars" aria-hidden="true">
-              <span class="star" style="color:#f5c84b;"></span>
-              <span class="star" style="color:#f5c84b;"></span>
-              <span class="star" style="color:#f5c84b;"></span>
-              <span class="star" style="color:#f5c84b;"></span>
-              <span class="star star--empty"></span>
+              @for($i = 1; $i <= 5; $i++)
+                <span class="star {{ $i > $filledStars ? 'star--empty' : '' }}" style="color: {{ $i <= $filledStars ? '#f5c84b' : '#d0d5dd' }};"></span>
+              @endfor
             </span>
-            <span>{{ $rating ? number_format((float) $rating, 1) : '0.0' }} · {{ $reviewCount }} reviews</span>
+            <span>{{ $reviewSummary }}</span>
           </div>
 
-          @if($benefitText)
-            <p class="therapy-card__provider" style="margin-top:-2px;color:#344054;">{{ \Illuminate\Support\Str::limit($benefitText, 110) }}</p>
-          @endif
+          <p class="therapy-card__description">{{ $benefitTextClean ?? '' }}</p>
 
           <div class="therapy-card__meta">
             @if($durationLabel)
@@ -795,6 +977,7 @@
             <button type="button" class="btn-wow btn-wow--outline btn-sm js-add-to-cart js-open-cart"
               data-id="{{ $product->id }}"
               data-product-id="{{ $product->id }}"
+              data-source-version="{{ $product->source_version ?? 'v1-v2' }}"
               data-title="{{ e($titleFormatted) }}"
               data-price="{{ number_format((float) $priceMin, 2, '.', '') }}"
               data-image="{{ $image }}"
@@ -805,6 +988,7 @@
             <button type="button" class="btn-wow btn-wow--cta btn-sm js-buy-now"
               data-id="{{ $product->id }}"
               data-product-id="{{ $product->id }}"
+              data-source-version="{{ $product->source_version ?? 'v1-v2' }}"
               data-title="{{ e($titleFormatted) }}"
               data-price="{{ number_format((float) $priceMin, 2, '.', '') }}"
               data-image="{{ $image }}"
@@ -817,6 +1001,5 @@
         </footer>
       </article>
     </a>
-    @endif
   </div>
 @endif

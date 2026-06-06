@@ -350,6 +350,14 @@
 @endsection
 
 @section('content')
+@include('partials.breadcrumbs', [
+    'crumbs' => [
+        ['label' => 'Home', 'url' => url('/')],
+        ['label' => 'Help Centre'],
+    ],
+    'schemaUrl' => $pageCanonical,
+])
+
 <style>
     :root{
         --hc-bg: #f6f7fb;
@@ -536,7 +544,7 @@
             <div class="kicker">We Offer Wellness™ Support</div>
             <h1 id="hc-title">{{ $pageTitle }}</h1>
             <p>
-                Search for answers, browse categories, or contact us if you need help with a booking.
+                Search for answers, browse modalities, or contact us if you need help with a booking.
             </p>
 
             <div class="searchRow">
@@ -566,9 +574,9 @@
         <div class="grid" style="margin-top: 16px;">
 
             {{-- SIDEBAR --}}
-            <aside class="panel" aria-label="Help categories">
+            <aside class="panel" aria-label="Help modalities">
                 <div class="panelHd">
-                    <strong>Categories</strong>
+                    <strong>Modalities</strong>
                 </div>
 
                 <div class="catList" id="hcCategories">
@@ -629,7 +637,7 @@
                     </div>
 
                     <div class="metaRow" style="margin-top:10px;">
-                        <span class="pill" id="hcActiveCatPill">Category: {{ $categories[0]['title'] }}</span>
+                        <span class="pill" id="hcActiveCatPill">Modality: {{ $categories[0]['title'] }}</span>
                         <span class="pill" id="hcActiveSearchPill" style="display:none;">Search: <span id="hcActiveSearchText"></span></span>
                         <button class="pill" type="button" id="hcClear" style="cursor:pointer;">Clear filters</button>
                     </div>
@@ -772,7 +780,7 @@
             });
 
             const catTitle = categoryMap?.[catId]?.title || 'All';
-            activeCatPill.textContent = 'Category: ' + catTitle;
+            activeCatPill.textContent = 'Modality: ' + catTitle;
 
             filterArticles();
         }

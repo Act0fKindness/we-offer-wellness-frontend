@@ -3,37 +3,23 @@
     <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
       <div>
         <div class="kicker mb-1 text-ink-600">{{ $resultsHeading ?? 'Search results' }}</div>
-        <h1 class="text-ink-900" style="font-size:1.75rem;font-weight:700;">{{ $resultCount }} results</h1>
+        <h1 id="searchResultsCount" class="text-ink-900" style="font-size:1.75rem;font-weight:700;">{{ $resultCount }} results</h1>
       </div>
       <div class="d-flex flex-wrap align-items-center gap-2" id="sr-tags"></div>
     </div>
 
     <div class="row gx-4 search-layout">
       <div class="col-12 col-lg-7 col-results">
-        <div class="results-scroll">
-          @if(isset($products) && $products->count())
-            <div class="row g-3">
-              @foreach($products as $product)
-                <div class="col-12" data-pid="{{ $product->id }}">
-                  <div class="wow-card-sm-wrap">
-                    <div class="result-view-map">
-                        @include('partials.product_card_list', ['product' => $product])
-                    </div>
-                    <div class="result-view-list">
-                      @include('partials.product_card', ['product' => $product])
-                    </div>
-                  </div>
-                </div>
-              @endforeach
-            </div>
+        <div class="results-scroll" id="searchResultsScroll" aria-live="polite">
+          <div class="row g-3" id="searchResultsGrid" data-ghost-count="{{ max(2, min(6, (int) ($products->count() ?: 4))) }}">
+            @include('search.partials.results_cards', ['products' => $products])
+          </div>
+
+          <div id="searchResultsPagination" class="mt-4">
             @if($products instanceof \Illuminate\Pagination\Paginator || $products instanceof \Illuminate\Pagination\LengthAwarePaginator)
-              <div class="mt-4">
-                {{ $products->withQueryString()->onEachSide(1)->links('pagination::bootstrap-4') }}
-              </div>
+              {{ $products->withQueryString()->onEachSide(1)->links('pagination::bootstrap-4') }}
             @endif
-          @else
-            <div class="card p-6 text-ink-600">No results matched your filters. Try widening your search.</div>
-          @endif
+          </div>
         </div>
       </div>
       <div class="col-12 col-lg-5 col-map">
@@ -45,11 +31,33 @@
   </div>
 </section>
 
+<div class="d-none" aria-hidden="true">
+  @include('partials.product_card_v4_ghost')
+</div>
+
+<template id="searchResultsGhostTemplate">
+  <div class="col-12">
+    <div class="wow-card-sm-wrap">
+      <div class="result-view-map">
+        @include('partials.product_card_search_ghost')
+      </div>
+      <div class="result-view-list">
+        @include('partials.product_card_v4_ghost')
+      </div>
+    </div>
+  </div>
+</template>
+
 <style>
 /* Desktop split: page scrolls the list; map stays sticky */
 @media (min-width: 992px){
   .results-scroll{ padding-right: 6px; }
-  .map-wrap{ position: sticky; top: 127px; }
+  .col-map{
+    position: sticky;
+    top: 127px;
+    align-self: flex-start;
+  }
+  .map-wrap{ position: relative; }
   /* Adjust height to account for header + search bar */
   .map{ width: 100%; height: calc(100vh - 80px - 67px); border: 1px solid var(--ink-200); border-radius: 3px; overflow: hidden; }
 }
@@ -91,7 +99,7 @@
     border-radius: 19px;
     border:3px solid rgba(0,0,0,0.1);
     position: fixed;
-    top: 126px;
+    top: 202px;
     z-index: 30;
     left: 50%; transform: translateX(-50%);
     width: min(1200px, calc(100vw - 32px));
@@ -199,8 +207,12 @@
   /* Reserve vertical space under fixed bar on mobile */
   .wow-ultra{ padding-top: 58px; }
 }
-/* Search-only overrides for legacy wow-card md sizing */
-.search-layout .wow-card.md{
+/* Search-only card sizing */
+.search-layout .result-view-map .wow-card.md{
+  width: 100%;
+  max-width: none;
+}
+.search-layout .result-view-list .wow-card.md{
   --card-h: 530px;
   width: auto;
   max-width: 309px;
@@ -249,6 +261,164 @@
 /* Constrain scrollable list */
 /* Avoid inner list scrollbars in Who pane */
 .wow-ultra #search-top-who-pane .listy{ max-height: none; overflow: visible; }
+
+/* Search ghost cards */
+.wow-search-card-ghost-scope{
+  position:relative;
+  overflow:hidden;
+  pointer-events:none;
+}
+.wow-search-card-ghost-scope .wow-card-search{
+  cursor:default;
+}
+.wow-search-card-ghost-scope .wow-row-card{
+  background:rgba(255,255,255,.98);
+}
+.wow-search-card-ghost-scope .wow-row-media-inner,
+.wow-search-card-ghost-scope .wow-row-body,
+.wow-search-card-ghost-scope .wow-row-bottom{
+  position:relative;
+}
+.wow-search-card-ghost-scope .wow-row-media-inner{
+  background:
+    radial-gradient(circle at 24% 28%, rgba(84,148,131,.12), transparent 30%),
+    radial-gradient(circle at 72% 64%, rgba(36,78,145,.08), transparent 32%),
+    linear-gradient(135deg, #eef2f4 0%, #f8fbfd 100%);
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__signal,
+.wow-search-card-ghost-scope .wow-search-card-ghost__premium,
+.wow-search-card-ghost-scope .wow-search-card-ghost__badge,
+.wow-search-card-ghost-scope .wow-search-card-ghost__line,
+.wow-search-card-ghost-scope .wow-search-card-ghost__chip,
+.wow-search-card-ghost-scope .wow-search-card-ghost__star,
+.wow-search-card-ghost-scope .wow-search-card-ghost__button{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(90deg, #e7edf3 0%, #f1f5f9 50%, #e7edf3 100%);
+  background-size:220% 100%;
+  animation:searchCardGhostShimmer 1.5s ease-in-out infinite;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__signal::before,
+.wow-search-card-ghost-scope .wow-search-card-ghost__premium::before,
+.wow-search-card-ghost-scope .wow-search-card-ghost__badge::before,
+.wow-search-card-ghost-scope .wow-search-card-ghost__line::before,
+.wow-search-card-ghost-scope .wow-search-card-ghost__chip::before,
+.wow-search-card-ghost-scope .wow-search-card-ghost__star::before,
+.wow-search-card-ghost-scope .wow-search-card-ghost__button::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.72) 50%, transparent 100%);
+  transform:translateX(-130%);
+  animation:searchCardGhostSweep 1.55s ease-in-out infinite;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__signal{
+  position:absolute;
+  top:9px;
+  left:9px;
+  width:118px;
+  height:28px;
+  border-radius:999px;
+  box-shadow:0 8px 18px rgba(16,24,40,.08);
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__premium{
+  position:absolute;
+  left:18px;
+  bottom:18px;
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  box-shadow:0 8px 18px rgba(16,24,40,.08);
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__badge{
+  min-height:28px;
+  border-radius:5px;
+  box-shadow:0 8px 18px rgba(16,24,40,.05);
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__badge--warm{
+  width:122px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__badge--cool{
+  width:96px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__line{
+  display:block;
+  border-radius:999px;
+  margin-top:10px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__title{
+  min-height:22px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__title--one{ width:86%; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__title--two{ width:72%; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__provider{ width:44%; min-height:18px; margin-top:8px; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__rating-copy{ width:170px; min-height:18px; margin-left:8px; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__summary{ min-height:18px; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__summary--one{ width:92%; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__summary--two{ width:80%; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__chip{
+  min-height:28px;
+  border-radius:999px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__chip--online{ width:118px; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__chip--location{ width:96px; }
+.wow-search-card-ghost-scope .wow-search-card-ghost__stars{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__star{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__star--empty{
+  opacity:.55;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__availability-title{
+  width:128px;
+  min-height:16px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__availability-note{
+  width:156px;
+  min-height:14px;
+  margin-left:19px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__price-label{
+  width:42px;
+  min-height:16px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__price-value{
+  width:92px;
+  min-height:30px;
+  margin-top:6px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__price-sub{
+  width:118px;
+  min-height:14px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__price-note{
+  width:168px;
+  min-height:14px;
+}
+.wow-search-card-ghost-scope .wow-search-card-ghost__button{
+  width:100%;
+  height:40px;
+  border-radius:4px;
+  box-shadow:0 10px 22px rgba(16,24,40,.08);
+}
+
+@keyframes searchCardGhostShimmer{
+  0%{ background-position:200% 0; }
+  100%{ background-position:-200% 0; }
+}
+
+@keyframes searchCardGhostSweep{
+  0%{ transform:translateX(-130%); opacity:0; }
+  30%{ opacity:1; }
+  100%{ transform:translateX(130%); opacity:0; }
+}
 </style>
 
 <script>
@@ -729,6 +899,80 @@
     })
     bindHover();
     bindScrollTracking();
+
+    (function hydrateSearchResults(){
+      var grid = document.getElementById('searchResultsGrid');
+      var countEl = document.getElementById('searchResultsCount');
+      var paginationEl = document.getElementById('searchResultsPagination');
+      var template = document.getElementById('searchResultsGhostTemplate');
+      if (!grid) return;
+
+      var initialGridHtml = grid.innerHTML;
+      var initialCountText = countEl ? countEl.textContent : '';
+      var initialPaginationHtml = paginationEl ? paginationEl.innerHTML : '';
+      var ghostCount = Math.max(2, Math.min(6, parseInt(grid.dataset.ghostCount || '4', 10) || 4));
+      var ghostHtml = '';
+
+      if (template && template.innerHTML) {
+        ghostHtml = Array.from({ length: ghostCount }, function () {
+          return template.innerHTML.trim();
+        }).join('');
+      }
+
+      if (ghostHtml) {
+        grid.innerHTML = ghostHtml;
+        grid.setAttribute('aria-busy', 'true');
+      }
+
+      if (paginationEl) {
+        paginationEl.setAttribute('aria-busy', 'true');
+      }
+
+      fetch(window.location.href, {
+        cache: 'no-store',
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error('Search API request failed: ' + response.status);
+          }
+
+          return response.json();
+        })
+        .then(function (payload) {
+          if (payload && typeof payload.grid_html === 'string') {
+            grid.innerHTML = payload.grid_html;
+          }
+
+          if (countEl && typeof payload.count_text === 'string') {
+            countEl.textContent = payload.count_text;
+          }
+
+          if (paginationEl && typeof payload.pagination_html === 'string') {
+            paginationEl.innerHTML = payload.pagination_html;
+          }
+        })
+        .catch(function (error) {
+          console.warn('[search] api hydration failed', error);
+          grid.innerHTML = initialGridHtml;
+          if (countEl) {
+            countEl.textContent = initialCountText;
+          }
+          if (paginationEl) {
+            paginationEl.innerHTML = initialPaginationHtml;
+          }
+        })
+        .finally(function () {
+          grid.removeAttribute('aria-busy');
+          if (paginationEl) {
+            paginationEl.removeAttribute('aria-busy');
+          }
+        });
+    })();
   } catch {}
 })();
 </script>

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\SitemapService;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -18,13 +19,13 @@ class SubmitSearchConsoleSitemap extends Command
         {--client-secret= : Google OAuth client secret}
         {--refresh-token= : Google OAuth refresh token}';
 
-    protected $description = 'Submit the public sitemap to Google Search Console via the Sitemaps API using OAuth.';
+    protected $description = 'Submit the generated sitemap index and child sitemap files to Google Search Console via the Sitemaps API using OAuth.';
 
     public function handle(): int
     {
         try {
             $propertyUrl = trim((string) ($this->option('property') ?: config('services.search_console.property_url', '')));
-            $sitemapUrls = $this->resolveSitemapUrls();
+            $sitemapUrls = $this->resolveSitemapUrls(app(SitemapService::class));
             $credentials = $this->loadOAuthCredentials();
 
             if ($propertyUrl === '') {
@@ -33,7 +34,7 @@ class SubmitSearchConsoleSitemap extends Command
             }
 
             if ($sitemapUrls === []) {
-                $this->error('Missing sitemap URL(s). Set GOOGLE_SEARCH_CONSOLE_SITEMAP_URLS / GOOGLE_SEARCH_CONSOLE_SITEMAP_URL or pass --sitemaps=.');
+                $this->error('Missing sitemap URL(s). Run php artisan sitemaps:generate or set GOOGLE_SEARCH_CONSOLE_SITEMAP_URLS / GOOGLE_SEARCH_CONSOLE_SITEMAP_URL.');
                 return self::FAILURE;
             }
 
@@ -72,17 +73,20 @@ class SubmitSearchConsoleSitemap extends Command
     /**
      * @return array<int, string>
      */
-    private function resolveSitemapUrls(): array
+    private function resolveSitemapUrls(SitemapService $service): array
     {
-        $raw = trim((string) ($this->option('sitemaps') ?: config('services.search_console.sitemap_urls', '')));
+        $raw = trim((string) $this->option('sitemaps'));
 
         if ($raw === '') {
-            $fallback = trim((string) ($this->option('sitemap') ?: config('services.search_console.sitemap_url', '')));
-            $raw = $fallback;
+            $single = trim((string) $this->option('sitemap'));
+
+            if ($single !== '') {
+                $raw = $single;
+            }
         }
 
         if ($raw === '') {
-            return [];
+            return $service->submissionUrls();
         }
 
         return collect(explode(',', $raw))

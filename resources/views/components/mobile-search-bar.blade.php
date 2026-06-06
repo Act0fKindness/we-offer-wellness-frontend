@@ -109,6 +109,12 @@
             -ms-overflow-style:none !important;
             scrollbar-width:none !important;
         }
+        @media (max-width: 991.98px){
+            .wow-ultra--header-search .pane.narrow{
+                width:auto !important;
+                max-width:none !important;
+            }
+        }
         .wow-ultra--header-search .pane.narrow::-webkit-scrollbar{
             width:0;
             height:0;

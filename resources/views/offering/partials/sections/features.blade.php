@@ -1,5 +1,7 @@
 @php
   $locs = is_array($locationsList ?? null) ? array_values(array_filter($locationsList)) : [];
+  $mode = trim((string)($mode ?? ''));
+  $rawLocations = is_array($locations ?? null) ? array_values(array_filter($locations)) : [];
   $hasOnline = false;
   $physicalLocations = [];
   foreach ($locs as $loc) {
@@ -8,11 +10,34 @@
       if (strcasecmp($label, 'online') === 0) { $hasOnline = true; continue; }
       $physicalLocations[] = $label;
   }
+  if ($mode !== '') {
+      $modeNorm = strtolower($mode);
+      if ($modeNorm === 'online') { $hasOnline = true; }
+      elseif ($modeNorm === 'in-person' || $modeNorm === 'in person') { $physicalLocations = $physicalLocations ?: $rawLocations; }
+      elseif ($modeNorm === 'online or in-person' || $modeNorm === 'online or in person') {
+          $hasOnline = true;
+          $physicalLocations = $physicalLocations ?: $rawLocations;
+      }
+  }
+  if (!$hasOnline && count($rawLocations) === 1 && strcasecmp((string) $rawLocations[0], 'online') === 0) {
+      $hasOnline = true;
+  }
   $physicalCount = count($physicalLocations);
+  $firstPhysicalLocation = $physicalLocations[0] ?? '';
+  $formatLabel = $hasOnline && $physicalCount === 0
+      ? 'Exclusively Online'
+      : ($hasOnline && $physicalCount === 1
+          ? ('Online + ' . $firstPhysicalLocation)
+          : ($hasOnline && $physicalCount > 1
+              ? ('Online + ' . $physicalCount . ' ' . \Illuminate\Support\Str::plural('location', $physicalCount))
+              : ($physicalCount > 0
+                  ? ($physicalCount . ' ' . \Illuminate\Support\Str::plural('location', $physicalCount))
+                  : 'Flexible format')));
+  $durationText = trim((string)($durationText ?? ''));
   $participantRange = $participantRange ?? null;
 @endphp
 <div class="wow-features">
-  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 text-center">
+  <div class="row row-cols-3 row-cols-md-3 row-cols-lg-6 g-3 text-center">
     @if($participantRange)
       <div class="col">
         <div class="wow-feature">
@@ -40,15 +65,7 @@
             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.8 13.938h-.011a7 7 0 1 0-11.464.144h-.016l.14.171c.1.127.2.251.3.371L12 21l5.13-6.248c.194-.209.374-.429.54-.659l.13-.155Z"/></svg>
           @endif
         </div>
-        @if($hasOnline && $physicalCount === 0)
-          <b>Online</b><span>only</span>
-        @elseif($hasOnline && $physicalCount > 0)
-          <b>{{ $physicalCount }} {{ \Illuminate\Support\Str::plural('location', $physicalCount) }}</b><span>in the UK &amp; Online</span>
-        @elseif($physicalCount > 0)
-          <b>{{ $physicalCount }} {{ \Illuminate\Support\Str::plural('location', $physicalCount) }}</b><span>in the UK</span>
-        @else
-          <b>Flexible</b><span>format</span>
-        @endif
+        <b>{{ $formatLabel }}</b>
       </div>
     </div>
     <div class="col">
@@ -64,7 +81,11 @@
         <div class="wow-icon-circle">
           <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.651 7.65a7.131 7.131 0 0 0-12.68 3.15M18.001 4v4h-4m-7.652 8.35A7.13 7.13 0 0 0 19.03 12M6 20v-4h4"/></svg>
         </div>
-        <b>Easy</b><span>exchanges</span>
+        @if($durationText !== '')
+          <b>{{ $durationText }}</b><span>duration</span>
+        @else
+          <b>Easy</b><span>exchanges</span>
+        @endif
       </div>
     </div>
     <div class="col">

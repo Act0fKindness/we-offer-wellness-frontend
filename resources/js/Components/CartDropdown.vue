@@ -23,7 +23,7 @@ function fmt(n) { return new Intl.NumberFormat(undefined, { style: 'currency', c
           <img v-if="it.image" :src="it.image" alt="" class="rounded" style="width:56px;height:56px;object-fit:cover" />
           <div class="min-w-0">
             <div class="fw-semibold text-truncate">{{ it.title }}</div>
-            <div class="text-ink-600 text-sm text-truncate">Qty: {{ it.qty }} • {{ fmt(it.price) }}</div>
+            <div class="text-ink-600 text-sm text-truncate">Qty: {{ it.qty }}</div>
           </div>
           <button class="btn btn-ghost" @click.stop="cart.remove(it.id)" aria-label="Remove">×</button>
         </div>

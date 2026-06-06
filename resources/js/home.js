@@ -3,6 +3,7 @@ import { createApp } from 'vue';
 import ui from '@nuxt/ui/vue-plugin';
 import { initSubscriberForms } from './lib/subscriber-forms';
 import SearchRangeCalendar from './Components/SearchRangeCalendar.vue';
+import { fetchWhatCategories } from './services/whatCategories';
 
 function runIdle(fn) {
   try {
@@ -289,16 +290,169 @@ function setupUltraSearchBar(prefix) {
   const panes = ['what-pane','where-pane','when-pane','who-pane'];
   function hideAll(){ panes.forEach((id) => { const el = byId(id); if (el) el.classList.add('d-none'); }); const what = byId('what'); if (what) what.setAttribute('aria-expanded','false'); }
   function openPane(which){ hideAll(); const pane = byId(which+'-pane'); if(pane){ pane.classList.remove('d-none'); } if(which==='what'){ const what = byId('what'); if(what) what.setAttribute('aria-expanded','true'); } }
-  const whatInput = byId('what'); if(whatInput){ whatInput.addEventListener('focus', ()=>openPane('what')); whatInput.addEventListener('input', ()=>openPane('what')); const segWhat = byId('seg-what'); if(segWhat){ segWhat.addEventListener('click', ()=>openPane('what')); } }
-  const whereEditor = byId('where-editor'); if(whereEditor){ whereEditor.addEventListener('focus', ()=>openPane('where')); whereEditor.addEventListener('click', ()=>openPane('where')); }
+  function normalizeText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+  let whereSource = [];
+  let whereSourceReady = false;
+  let whatSource = [];
+  let whatSourceReady = false;
+  function renderWhere(qs) {
+    const list = byId('where-list');
+    if (!list) return false;
+    const query = String(qs || '').trim();
+    if (!whereSourceReady) {
+      list.innerHTML = '<button type="button" class="item" aria-disabled="true"><span class="title">Loading trending destinations…</span></button>';
+      return false;
+    }
+    const needle = normalizeText(query);
+
+    let items = (whereSource || []).slice()
+    if (needle) {
+      items = items.filter((item) => normalizeText([item.title, item.label, item.search, item.country, item.county, item.region].join(' ')).includes(needle));
+    } else {
+      items = items.slice(0, 5)
+    }
+    if (!items.length) {
+      list.innerHTML = '<button type="button" class="item" aria-disabled="true"><span class="title">No locations found</span></button>';
+      return false;
+    }
+    list.innerHTML = items.slice(0, needle ? 12 : 5).map((item) => {
+      const icon = item?.online ? '<i class="bi bi-wifi"></i>' : '<i class="bi bi-geo-alt"></i>';
+      const sub = item?.subtitle ? `<span class="text-muted ms-2">${item.subtitle}</span>` : '';
+      return `<button type="button" class="item" role="option" data-value="${item.value || item.title || ''}">${icon}<span class="title">${item.title || ''}</span>${sub}</button>`;
+    }).join('');
+    return true;
+  }
+  function searchScore(query, item) {
+    const q = normalizeText(query);
+    if (!q) return 999;
+    const title = normalizeText(item?.title || '');
+    const hay = normalizeText([item?.title, item?.cat, item?.type, item?.search, item?.subtitle].filter(Boolean).join(' '));
+    const tokens = q.split(/\s+/).filter(Boolean);
+    if (title === q) return 0;
+    if (title.indexOf(q) === 0) return 1;
+    if (title.split(/\s+/).some((token) => token.indexOf(q) === 0)) return 2;
+    if (title.indexOf(q) !== -1) return 3;
+    if (hay.indexOf(q) !== -1) return 4;
+    if (tokens.length && tokens.every((token) => hay.indexOf(token) !== -1)) return 5;
+    return 999;
+  }
+  function renderWhat(qs) {
+    const list = byId('what-list');
+    if (!list) return false;
+    const query = String(qs || '').trim();
+    if (!whatSourceReady) {
+      list.innerHTML = '<button type="button" class="item" aria-disabled="true"><span class="title">Loading modalities…</span></button>';
+      return false;
+    }
+
+    const items = query.length < 2
+      ? (whatSource || []).slice(0, 5)
+      : (whatSource || [])
+        .map((item) => ({ item, score: searchScore(query, item) }))
+        .filter((row) => row.score < 999)
+        .sort((a, b) => {
+          if (a.score !== b.score) return a.score - b.score;
+          return String(a.item.title || '').localeCompare(String(b.item.title || ''));
+        })
+        .slice(0, 5)
+        .map((row) => row.item);
+
+    if (!items.length) {
+      list.innerHTML = '';
+      return false;
+    }
+
+    list.innerHTML = `<div class="section-title">${query.length < 2 ? 'Trending modalities' : 'Modalities'}</div><div>` + items.map((item) => {
+      const title = String(item?.title || '')
+      const subtitle = String(item?.subtitle || (Number(item?.counts?.total || 0) ? `${Number(item.counts.total)} offerings` : 'Modality')).replace(/\bproducts?\b/gi, 'offerings')
+      return `<button type="button" class="item" role="option" data-value="${title}"><i class="bi bi-tag"></i><span class="title">${title}</span><span class="text-muted ms-2">${subtitle || 'Modality'}</span></button>`
+    }).join('') + '</div>'
+    return true;
+  }
+  const whatInput = byId('what');
+  if(whatInput){
+    const refreshWhat = () => {
+      if (renderWhat(whatInput.value || '')) openPane('what');
+      else hideAll();
+    };
+    whatInput.addEventListener('focus', refreshWhat);
+    whatInput.addEventListener('input', refreshWhat);
+    const segWhat = byId('seg-what');
+    if(segWhat){ segWhat.addEventListener('click', refreshWhat); }
+  }
+  const whereEditor = byId('where-editor'); if(whereEditor){ whereEditor.addEventListener('focus', ()=>{ renderWhere(whereEditor.textContent || ''); openPane('where'); }); whereEditor.addEventListener('click', ()=>{ renderWhere(whereEditor.textContent || ''); openPane('where'); }); whereEditor.addEventListener('input', ()=>{ renderWhere(whereEditor.textContent || ''); openPane('where'); }); }
   const whenInput = byId('when'); if(whenInput){ whenInput.addEventListener('focus', ()=>openPane('when')); whenInput.addEventListener('click', ()=>openPane('when')); }
   const whoSeg = byId('seg-who'); if(whoSeg){ whoSeg.addEventListener('click', ()=>openPane('who')); }
   // Close only when clicking outside this specific bar
   document.addEventListener('click', (e)=>{ if(root && !root.contains(e.target)) hideAll(); });
   document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hideAll(); });
   const whatList = byId('what-list'); if(whatList && byId('what')){ whatList.addEventListener('click', (e)=>{ const btn = e.target.closest('.item'); if(btn && btn.dataset.value){ byId('what').value = btn.dataset.value; hideAll(); byId('what').blur(); } }); }
-  const whereHidden = byId('where'); if(byId('where-list') && whereEditor){ byId('where-list').addEventListener('click', (e)=>{ const btn = e.target.closest('.item'); if(btn && btn.dataset.value){ whereEditor.textContent = btn.dataset.value; if(whereHidden) whereHidden.value = btn.dataset.value; hideAll(); } }); }
+  const whereHidden = byId('where'); if(byId('where-list') && whereEditor){ byId('where-list').addEventListener('click', (e)=>{ const btn = e.target.closest('.item'); if(btn && btn.dataset.value){ whereEditor.textContent = btn.dataset.value; if(whereHidden) whereHidden.value = btn.dataset.value; hideAll(); whereEditor.blur(); } }); }
   const whoDone = byId('who-done'); if(whoDone){ whoDone.addEventListener('click', ()=>hideAll()); }
+
+  fetchWhatCategories()
+    .then((items) => {
+      whatSource = items || [];
+      whatSourceReady = true;
+      renderWhat((whatInput && whatInput.value) || '');
+    })
+    .catch(() => {
+      whatSource = [];
+      whatSourceReady = true;
+      renderWhat((whatInput && whatInput.value) || '');
+    });
+
+  if (whereEditor) {
+    fetch('/cache/locations.json', { cache: 'no-store' })
+      .then((res) => (res && res.ok) ? res.json() : null)
+      .then((payload) => {
+        const source = Array.isArray(payload?.flat) && payload.flat.length ? payload.flat : (Array.isArray(payload?.suggestions) ? payload.suggestions : []);
+        const seen = new Set();
+        whereSource = source.map((item) => {
+          const title = String(item?.title || item?.label || item?.slug || '').trim();
+          const country = String(item?.country || '').trim();
+          const county = String(item?.county || item?.district || item?.region || '').trim();
+          const slug = String(item?.slug || title || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+          return {
+            title,
+            label: title,
+            value: title,
+            subtitle: item?.online ? 'Virtual' : [county, country].filter(Boolean).join(', '),
+            slug,
+            country,
+            county,
+            region: String(item?.region || '').trim(),
+            online: !!item?.online,
+            total: Number(item?.counts?.total || item?.counts?.products || item?.counts?.offerings || 0),
+            search: [title, country, county, item?.label, item?.place_name, slug].filter(Boolean).join(' '),
+          };
+        }).filter((item) => {
+          const key = normalizeText(item.value);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }).sort((a, b) => {
+          if (a.online !== b.online) return a.online ? -1 : 1;
+          const at = Number(a.total || 0);
+          const bt = Number(b.total || 0);
+          if (at !== bt) return bt - at;
+          return a.title.localeCompare(b.title);
+        });
+        whereSourceReady = true;
+        renderWhere(whereEditor.textContent || '');
+      })
+      .catch(() => {
+        whereSource = [];
+        whereSourceReady = true;
+        renderWhere(whereEditor.textContent || '');
+      });
+  }
 
   // Shared Who panel controls (Adults counter + group type)
   (function initWhoControls(){
@@ -504,7 +658,6 @@ onDocumentReady(() => {
           var img = it.image ? '<div class="cartdd-img"><img src="'+String(it.image).replace(/"/g,'&quot;')+'" alt=""></div>' : '<div class="cartdd-img"></div>';
           var title = String(it.title||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
           var qty = Number(it.qty||1);
-          var price = (typeof it.price!== 'undefined') ? money(it.price) : '';
           var amt = (it.price!=null) ? money((Number(it.price)||0) * qty) : '';
           var variantRaw = (it.variant_label || it.subtitle || '').trim();
           var metaParts = [];
@@ -512,7 +665,7 @@ onDocumentReady(() => {
             var safeVariant = variantRaw.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
             metaParts.push(safeVariant);
           }
-          metaParts.push('Qty '+qty+(price?(' • '+price+' each'):''));
+          metaParts.push('Qty '+qty);
           var removeBtn = '<button class="cartdd-remove remove-btn js-remove" type="button" aria-label="Remove item" data-remove="'+String(it.id||'')+'">'
             + '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">'
             +   '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />'

@@ -2,6 +2,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'flatpickr/dist/flatpickr.min.css';
+import '../css/nuxt-ui.css';
 import '../css/app.css';
 import '../css/wow-buttons.css';
 import '../css/wow-cards.css';
@@ -12,13 +13,16 @@ import 'bootstrap';
 import './bootstrap';
 // Header + homepage interactivity (mega menu, mobile drawer, search panes)
 import './home';
+import './home-offerings';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
+import ui from '@nuxt/ui/vue-plugin';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { initDrawRandomUnderline } from './lib/wow-links';
 import { initClickLoaders } from './lib/wow-buttons';
+import './lib/wow-analytics';
 import './lib/cart-shortcuts';
 import './lib/cart-mini';
 
@@ -42,6 +46,7 @@ if (isInertiaPage) {
         setup({ el, App, props, plugin }) {
             const vue = createApp({ render: () => h(App, props) })
                 .use(plugin)
+                .use(ui)
                 .use(ZiggyVue)
                 .mount(el);
 

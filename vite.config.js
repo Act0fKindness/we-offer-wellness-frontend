@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import ui from '@nuxt/ui/vite';
 
 const toNumberOr = (value, fallback) => {
     const parsed = Number(value);
@@ -73,6 +74,7 @@ export default defineConfig(({ mode }) => {
             strictPort: true,
         },
         plugins: [
+            ui(),
             laravel({
                 input: [
                     'resources/css/app.css',

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Support\EventListing;
+use App\Support\ProductRanking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -182,7 +184,7 @@ class NeedsController extends Controller
             $page    = max(1, (int)($query['page'] ?? 1));
 
             $builder = Product::query()
-                ->with(['media', 'category', 'options.values'])
+                ->with(['media', 'category', 'options.values', 'vendor.tiers', 'vendor.user.settings'])
                 ->withCount('reviews')
                 ->withAvg('reviews', 'rating')
                 ->withMin('variants', 'price')
@@ -191,7 +193,7 @@ class NeedsController extends Controller
                 ->where(function ($q) {
                     $q->whereHas('status', function ($qs) {
                         $qs->whereIn('status', ['live', 'approved']);
-                    })->orWhereNull('product_status_id');
+                    });
                 });
 
             $format = strtolower((string) ($query['format'] ?? ''));
@@ -221,20 +223,12 @@ class NeedsController extends Controller
             }
 
             $sort = $query['sort'] ?? '';
-            if ($sort === 'price_asc') {
-                $builder->orderByRaw('COALESCE(variants_min_price, price) asc');
-            } elseif ($sort === 'price_desc') {
-                $builder->orderByRaw('COALESCE(variants_min_price, price) desc');
-            } elseif ($sort === 'rating_desc') {
-                $builder->orderByRaw('COALESCE(reviews_avg_rating, 0) desc nulls last');
-            } else {
-                $builder->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                        ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                        ->orderByRaw('COALESCE(reviews_count, 0) DESC');
-            }
-
-            $total = (clone $builder)->count();
-            $items = $builder->forPage($page, $perPage)->get();
+            $items = $builder->get()
+                ->reject(fn ($product) => EventListing::isPast($product))
+                ->values();
+            $items = ProductRanking::sortCollection($items, $sort);
+            $total = $items->count();
+            $items = $items->forPage($page, $perPage)->values();
 
             $lastPage = max(1, (int) ceil($total / max(1, $perPage)));
 

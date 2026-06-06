@@ -15,6 +15,8 @@ const props = defineProps({
   product: { type: Object, required: true },
 })
 
+const siteName = 'We Offer Wellness®'
+
 function fmt(n, c='GBP'){ try { return new Intl.NumberFormat(undefined, { style:'currency', currency:c }).format(Number(n)) } catch { return n } }
 const cart = useCart()
 const adding = ref(false)
@@ -162,8 +164,80 @@ const metaDescription = computed(() => {
   const s = plain(src).slice(0, 300)
   return s.length > 160 ? (s.slice(0,157) + '…') : s
 })
+const pageTitle = computed(() => `${String(props.product?.title || 'Offering')} | ${siteName}`)
 const canonical = computed(() => String(props.product?.url || ''))
-const ogImage = computed(() => Array.isArray(props.product?.images) && props.product.images[0] ? props.product.images[0] : (props.product?.image || ''))
+
+function imageCandidate(value) {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'object') {
+    return String(value.url || value.src || value.path || value.original_url || value.original || '')
+  }
+  return ''
+}
+
+const ogImage = computed(() => absoluteUrl(
+  imageCandidate(props.product?.image)
+  || imageCandidate(Array.isArray(props.product?.images) && props.product.images[0] ? props.product.images[0] : null)
+  || imageCandidate(props.product?.coverMedia)
+  || imageCandidate(props.product?.cover_media)
+))
+
+function absoluteUrl(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  if (/^https?:\/\//i.test(raw)) return raw
+  try {
+    return new URL(raw, typeof window !== 'undefined' ? window.location.origin : 'https://www.weofferwellness.co.uk').toString()
+  } catch {
+    return raw
+  }
+}
+
+function toInt(value) {
+  const n = Number(value)
+  return Number.isFinite(n) ? Math.trunc(n) : 0
+}
+
+function buildSchemaReviews() {
+  const source = [
+    ...(Array.isArray(props.product?.client_reviews) ? props.product.client_reviews : []),
+    ...(Array.isArray(props.product?.reviews) ? props.product.reviews : []),
+  ]
+
+  const out = []
+  const seen = new Set()
+
+  for (const review of source) {
+    const body = String(review?.body || review?.review || review?.review_text || '').trim()
+    if (!body) continue
+    let rating = toInt(review?.rating ?? review?.ratingValue)
+    if (rating <= 0) rating = 5
+    const author = String(review?.author || review?.user?.name || 'Verified customer').trim() || 'Verified customer'
+    const key = `${author}|${rating}|${body}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const node = {
+      '@type': 'Review',
+      'reviewBody': body,
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': rating,
+        'bestRating': 5,
+        'worstRating': 1,
+      },
+      'author': {
+        '@type': 'Person',
+        'name': author,
+      },
+    }
+    const published = String(review?.date || review?.created_at || '').trim()
+    if (published) node.datePublished = published
+    out.push(node)
+  }
+
+  return out
+}
 
 // ----- Debug inspector (variant/price) -----
 const dbgOptions = computed(() => Array.isArray(props.product?.options) ? props.product.options : [])
@@ -497,68 +571,137 @@ function updateDebugUrl(){
 const ldProduct = computed(() => {
   const p = props.product
   const images = Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : [])
+  const schemaImages = images.map(absoluteUrl).filter(Boolean)
   const offerPrice = Number(p.price_min || p.price || 0)
+  const reviewCount = Number(p.review_count || p.reviews_count || 0)
+  const ratingValue = Number(p.rating || p.reviews_avg_rating || 0)
   const obj = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     '@id': canonical.value ? `${canonical.value}#product` : undefined,
     'name': p.title,
     'description': plain(p.summary || p.description || p.body_html || ''),
-    'image': images,
+    'image': schemaImages,
     'url': canonical.value || undefined,
     'mainEntityOfPage': canonical.value || undefined,
     'category': p?.category?.name || undefined,
-    'brand': { '@type': 'Brand', 'name': 'We Offer Wellness' },
+    'sku': p?.id ? String(p.id) : undefined,
+    'brand': { '@type': 'Brand', 'name': 'We Offer Wellness', 'url': absoluteUrl('/') },
     'offers': offerPrice ? {
       '@type': 'Offer',
       'price': offerPrice,
       'priceCurrency': p.currency || 'GBP',
       'url': canonical.value || undefined,
-      'availability': 'https://schema.org/InStock'
+      'availability': 'https://schema.org/InStock',
+      'itemCondition': 'https://schema.org/NewCondition',
+      'seller': { '@type': 'Organization', 'name': 'We Offer Wellness', 'url': absoluteUrl('/') },
     } : undefined,
   }
-  if (Number(p.rating) > 0 && Number(p.review_count) > 0) {
+  const schemaReviews = buildSchemaReviews()
+  const aggregateReviewCount = Math.max(reviewCount, schemaReviews.length)
+  const aggregateRatingValue = ratingValue > 0 ? ratingValue : (aggregateReviewCount > 0 ? 5 : 0)
+  if (aggregateReviewCount > 0) {
     obj.aggregateRating = {
       '@type': 'AggregateRating',
-      'ratingValue': Number(p.rating).toFixed(1),
-      'reviewCount': Number(p.review_count)
+      'ratingValue': aggregateRatingValue.toFixed(1),
+      'reviewCount': aggregateReviewCount,
+      'bestRating': 5,
+      'worstRating': 1,
     }
+  }
+  if (schemaReviews.length) {
+    obj.review = schemaReviews
   }
   return obj
 })
+
+function parseEventDateTime(dateValue, timeValue) {
+  if (!dateValue) return null
+  const raw = timeValue
+    ? `${dateValue}T${timeValue}:00`
+    : (/[T\s]/.test(dateValue) ? dateValue : `${dateValue}T00:00:00`)
+  const parsed = new Date(raw)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function schemaDateTimeValue(dateValue, timeValue) {
+  if (!dateValue) return undefined
+  if (!timeValue) return dateValue
+  const parsed = parseEventDateTime(dateValue, timeValue)
+  if (!parsed) return dateValue
+  const pad = (value) => String(Math.trunc(Math.abs(value))).padStart(2, '0')
+  const offsetMinutes = -parsed.getTimezoneOffset()
+  const sign = offsetMinutes >= 0 ? '+' : '-'
+  const absOffset = Math.abs(offsetMinutes)
+  const offsetHours = pad(Math.floor(absOffset / 60))
+  const offsetMins = pad(absOffset % 60)
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}:${pad(parsed.getSeconds())}${sign}${offsetHours}:${offsetMins}`
+}
+
+function formatEventRange(startDate, startTime, endDate, endTime) {
+  const start = parseEventDateTime(startDate, startTime)
+  const end = parseEventDateTime(endDate || startDate, endTime || startTime)
+  if (!start || !end) return null
+  const sameYear = start.getFullYear() === end.getFullYear()
+  const startDateLabel = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) })
+  const endDateLabel = end.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) })
+  if (startTime || endTime) {
+    const startTimeLabel = start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+    const endTimeLabel = end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+    if (start.toDateString() === end.toDateString()) {
+      return `${startDateLabel}, ${startTimeLabel} – ${endTimeLabel}`
+    }
+    return `${startDateLabel}, ${startTimeLabel} – ${endDateLabel}, ${endTimeLabel}`
+  }
+  if (start.toDateString() === end.toDateString()) {
+    return startDateLabel
+  }
+  return `${startDateLabel} – ${endDateLabel}`
+}
+
 const ldEvent = computed(() => {
   const p = props.product
-  const hasDate = !!(p?.date || p?.start_date)
+  const hasDate = !!(p?.date || p?.start_date || p?.start_time || p?.end_time)
   if (!hasDate) return null
   const loc = (Array.isArray(p?.locations) ? p.locations : []).find(v => String(v||'').trim()) || (p.location || '')
   const attendance = (String(p?.mode||'').toLowerCase() === 'online' || String(loc).toLowerCase() === 'online')
     ? 'https://schema.org/OnlineEventAttendanceMode'
     : 'https://schema.org/OfflineEventAttendanceMode'
+  const schemaReviews = buildSchemaReviews()
+  const reviewCount = Number(p.review_count || p.reviews_count || 0)
+  const ratingValue = Number(p.rating || p.reviews_avg_rating || 0)
+  const aggregateReviewCount = Math.max(reviewCount, schemaReviews.length)
+  const aggregateRatingValue = ratingValue > 0 ? ratingValue : (aggregateReviewCount > 0 ? 5 : 0)
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Event',
     '@id': canonical.value ? `${canonical.value}#event` : undefined,
     'name': p.title,
     'eventAttendanceMode': attendance,
-    'startDate': p.start_date || p.date,
-    'endDate': p.end_date || undefined,
+    'startDate': schemaDateTimeValue(p.start_date || p.date, p.start_time),
+    'endDate': schemaDateTimeValue(p.end_date || p.start_date || p.date, p.end_time),
     'eventStatus': 'https://schema.org/EventScheduled',
     'organizer': { '@type': 'Organization', 'name': 'We Offer Wellness', 'url': (typeof window!== 'undefined' ? window.location.origin : '') },
   }
   if (canonical.value) data.url = canonical.value
+  if (aggregateReviewCount > 0) {
+    data.aggregateRating = {
+      '@type': 'AggregateRating',
+      'ratingValue': aggregateRatingValue.toFixed(1),
+      'reviewCount': aggregateReviewCount,
+      'bestRating': 5,
+      'worstRating': 1,
+    }
+  }
+  if (schemaReviews.length) data.review = schemaReviews
   return data
 })
 
 function whenText(){
   const p = props.product
-  if (p.start_date && p.end_date){
-    try {
-      const s = new Date(p.start_date), e = new Date(p.end_date)
-      const sameMonth = s.getMonth()===e.getMonth() && s.getFullYear()===e.getFullYear()
-      const sStr = s.toLocaleDateString(undefined, { month:'short', day:'numeric' })
-      const eStr = e.toLocaleDateString(undefined, { month:'short', day:'numeric', year: sameMonth ? undefined : 'numeric' })
-      return `${sStr} – ${eStr}`
-    } catch { return null }
+  const eventRange = formatEventRange(p.start_date || p.date, p.start_time, p.end_date || p.start_date || p.date, p.end_time)
+  if (eventRange) {
+    return eventRange
   }
   if (p.date){ try { return new Date(p.date).toLocaleString(undefined, { dateStyle:'medium', timeStyle:'short' }) } catch { return null } }
   return null
@@ -671,13 +814,21 @@ try{ onUnmounted(() => { window.removeEventListener('resize', updateMapHeight) }
 
 <template>
   <SiteLayout>
-    <Head :title="product.title">
+    <Head :title="pageTitle">
       <meta name="description" :content="metaDescription" />
       <link v-if="canonical" rel="canonical" :href="canonical" />
-      <meta property="og:title" :content="product.title" />
+      <meta property="og:type" content="product" />
+      <meta property="og:site_name" :content="siteName" />
+      <meta property="og:title" :content="pageTitle" />
       <meta property="og:description" :content="metaDescription" />
       <meta v-if="canonical" property="og:url" :content="canonical" />
       <meta v-if="ogImage" property="og:image" :content="ogImage" />
+      <meta v-if="ogImage" property="og:image:alt" :content="product.title" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" :content="pageTitle" />
+      <meta name="twitter:description" :content="metaDescription" />
+      <meta v-if="ogImage" name="twitter:image" :content="ogImage" />
+      <meta v-if="ogImage" name="twitter:image:alt" :content="product.title" />
       <script type="application/ld+json">{{ JSON.stringify(ldProduct) }}</script>
       <script v-if="ldEvent" type="application/ld+json">{{ JSON.stringify(ldEvent) }}</script>
     </Head>

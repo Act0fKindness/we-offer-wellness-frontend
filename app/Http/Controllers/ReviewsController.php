@@ -27,7 +27,7 @@ class ReviewsController extends Controller
                     'location' => $user->location ?? null,
                     'product' => $review->product?->title,
                     'product_slug' => $review->product?->slug,
-                    'vendor' => $review->vendor?->vendor_name,
+                    'vendor' => $review->vendor?->vendor_name ?? $review->title ?? null,
                     'created_at' => optional($review->created_at)->toIso8601String(),
                 ];
             });

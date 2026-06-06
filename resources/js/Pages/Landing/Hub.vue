@@ -122,7 +122,7 @@ const heroPanelMap = {
   gifts: {
     kicker: 'High-intent gifting',
     title: 'Experiences they’ll love',
-    copy: 'Send curated sessions or instant cards redeemable on every WOW category.',
+    copy: 'Send curated sessions or instant cards redeemable on every WOW modality.',
     items: [
       'Handpicked therapies & classes',
       'Schedule or send instantly',
@@ -143,7 +143,7 @@ const heroPanelMap = {
   },
 }
 
-const meta = computed(() => heads[props.type] || { title: 'Discover Wellness', kicker: 'Explore', desc: 'Browse categories and popular choices.' })
+const meta = computed(() => heads[props.type] || { title: 'Discover Wellness', kicker: 'Explore', desc: 'Browse modalities and popular choices.' })
 const categoriesFiltered = computed(() => (Array.isArray(props.categories) ? props.categories : []).filter(c => Number(c.count||0) > 0))
 const productsTitle = computed(() => props.type === 'therapies' ? 'All therapies' : 'Popular right now')
 const canonical = computed(() => {
@@ -245,11 +245,11 @@ function requestLocationAccess() {
     <!-- Classes timetable near top of Classes hub -->
     <ClassSchedule v-if="props.type==='classes'" :products="items" title="Today’s Class Schedule" />
 
-    <!-- Categories -->
+    <!-- Modalities -->
     <section class="section" v-if="categoriesFiltered?.length && props.type!=='near-me'">
       <div class="container-page">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="h4 m-0 section-title">Browse by category</h2>
+          <h2 class="h4 m-0 section-title">Browse by modality</h2>
           <a href="/search" class="btn-wow btn-wow--outline btn-sm btn-arrow">
             <span class="btn-label">See all</span>
             <span class="btn-icon-wrap" aria-hidden="true">
@@ -306,7 +306,7 @@ function requestLocationAccess() {
           <div v-if="items?.length" class="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4">
             <ProductCard v-for="p in showItems" :key="p.id" :product="p" :fluid="true" />
           </div>
-          <div v-else class="card p-6 text-ink-700">We’re curating offerings here. Try another category or check back soon.</div>
+          <div v-else class="card p-6 text-ink-700">We’re curating offerings here. Try another modality or check back soon.</div>
           <Pagination v-if="!Array.isArray(props.products) && props.products?.links" :links="props.products.links" />
         </template>
       </div>
@@ -332,7 +332,7 @@ function requestLocationAccess() {
 
 <style scoped>
 .h4 { font-size: 1.25rem; font-weight: 600; }
-/* Category grid (beautifully styled) */
+/* Modality grid (beautifully styled) */
 .cat-grid{ display:grid; grid-template-columns: repeat(1,minmax(0,1fr)); gap:12px }
 @media (min-width: 576px){ .cat-grid{ grid-template-columns: repeat(2,minmax(0,1fr)) } }
 @media (min-width: 992px){ .cat-grid{ grid-template-columns: repeat(3,minmax(0,1fr)) } }

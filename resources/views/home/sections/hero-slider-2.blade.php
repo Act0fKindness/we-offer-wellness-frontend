@@ -10,9 +10,11 @@
   .whero.whero--s2{
     position: relative;
     overflow: hidden;
-    min-height: clamp(520px, 62vh, 760px);
+    min-height: var(--wow-hero-band-height, clamp(480px, 58vh, 700px));
+    height: 100%;
     display: flex;
     align-items: stretch;
+    background-color: #f4efe6;
 
     background-image: url('{{ asset('images/hero-slider-2/background.jpg') }}');
     background-size: cover;
@@ -33,18 +35,21 @@
     position: relative;
     width: 100%;
     z-index: 1;
-    padding: clamp(14px, 3.2vw, 32px) 0;
+    padding: clamp(10px, 2.4vw, 24px) 0;
+    height: 100%;
+    min-height: 100%;
   }
 
   /* Make the container behave like a vertical poster: top / middle / bottom */
   .ourvibe-shell{
-    min-height: clamp(520px, 62vh, 760px);
+    height: 100%;
+    min-height: var(--wow-hero-band-height, clamp(480px, 58vh, 700px));
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 14px;
+    gap: 10px;
     position: relative;
-    padding-bottom: 20px !important;
+    padding-bottom: 14px !important;
   }
 
   /* TOP BRAND (centre + top) */
@@ -66,7 +71,7 @@
   }
   .ourvibe-top .brand svg{
     display:block;
-    height: 30px;
+    height: 26px;
     max-width: min(760px, 92vw);
   }
   .ourvibe-top .present{
@@ -119,14 +124,14 @@
     display:flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(8px, 2.2vw, 16px) 0;
+    padding: clamp(6px, 1.8vw, 12px) 0;
     position: relative;
     z-index: 2;
   }
   .ourvibe-mid img{
     display:block;
     height: auto;
-    max-height: 350px;
+    max-height: 280px;
     max-width: min(820px, 92vw);
     filter: drop-shadow(0 24px 60px rgba(0,0,0,.20));
   }
@@ -141,10 +146,10 @@
 
   .ourvibe-sticker{
     position:absolute;
-    top: clamp(88px, 10vh, 120px);
+    top: clamp(72px, 8vh, 104px);
     right: clamp(12px, 2.2vw, 22px);
-    width: clamp(120px, 12vw, 170px);
-    height: clamp(120px, 12vw, 170px);
+    width: clamp(96px, 10vw, 150px);
+    height: clamp(96px, 10vw, 150px);
     border-radius: 999px;
     background: #0b0f19;
     color: #42b649;
@@ -169,22 +174,22 @@
     border: 6px solid #0b0f19;
     border-radius: 10px;
     box-shadow: 0 22px 60px rgba(0,0,0,.22);
-    padding: 16px 18px;
+    padding: 14px 16px;
     color:#0b0f19;
     font-weight: 1000;
     text-transform: uppercase;
     letter-spacing: .22em;
-    font-size: clamp(12px, 1.05vw, 14px);
+    font-size: clamp(11px, .95vw, 13px);
     line-height: 1.25;
     pointer-events: none;
   }
 
   .ourvibe-box.box-1{
-    top: clamp(240px, 28vh, 310px);
+    top: clamp(188px, 22vh, 248px);
     width: min(280px, 78vw);
   }
   .ourvibe-box.box-2{
-    top: clamp(420px, 48vh, 510px);
+    top: clamp(320px, 36vh, 420px);
     width: min(340px, 84vw);
   }
 
@@ -197,7 +202,7 @@
   /* BOTTOM (text + buttons bottom centre) */
 .ourvibe-bottom {
     text-align: center;
-    font-size: clamp(18px, 1.9vw, 20px);
+    font-size: clamp(16px, 1.05vw + .35rem, 18px);
     color: rgba(11, 15, 25, .92);
     text-shadow: 0 10px 22px rgba(0, 0, 0, .10);
     line-height: 1.15;
@@ -211,7 +216,7 @@
 
 
   .ourvibe-actions{
-    margin-top: 40px;
+    margin-top: 16px;
     display:flex;
     justify-content:center;
     gap: 12px;
@@ -228,7 +233,7 @@
     border-radius: 999px;
     background: #0b0f19;
     color: #fff;
-    font-size: 30px;
+    font-size: 18px;
     text-decoration:none;
     font-weight: 900;
     letter-spacing: .04em;
@@ -265,18 +270,32 @@
   }
 
   @media (max-width: 575px){
+    .ourvibe-wrap{
+      padding-top: 72px;
+      padding-bottom: 20px;
+    }
+    .ourvibe-shell{
+      gap: 10px;
+      padding-bottom: 12px !important;
+    }
+    .ourvibe-top{
+      padding-top: 0;
+    }
+    .ourvibe-mid{
+      padding: 2px 0 6px;
+    }
     .ourvibe-top .present{ letter-spacing: .30em; }
     .ourvibe-box{ border-width: 5px; padding: 14px 14px; }
     .ourvibe-box.box-1{ bottom: 220px; }
     .ourvibe-box.box-2{ bottom: 118px; }
-        margin-top: 40px;
+    .ourvibe-actions{ margin-top: 24px; }
+    a.ourvibe-buy{ font-size: 20px; }
   }
 
   a.ourvibe-buy {
       font-family: "Gloria Hallelujah", cursive;
       background: none;
       color: #000;
-      font-size: 30px;
       box-shadow: none;
   }
   @media (max-width: 1200px){
@@ -287,7 +306,7 @@
 <section data-v-f43bb09d="" class="whero whero--s2">
 
   <div class="ourvibe-wrap">
-    <div data-v-f43bb09d="" class="container whero-pad ourvibe-shell" style="padding-top: 50px !important;">
+    <div data-v-f43bb09d="" class="container whero-pad ourvibe-shell" style="padding-top: 32px !important; padding-bottom: 14px !important;">
 
       {{-- TOP: logo centred --}}
       <div class="ourvibe-top">
@@ -344,7 +363,7 @@
       </div>
 
       {{-- BOTTOM: text + buttons centred --}}
-      <div class="ourvibe-bottom ourvibe-bottom--desktop-consistent" style="font-size:25px;">
+      <div class="ourvibe-bottom ourvibe-bottom--desktop-consistent">
         Workshops · Sound Healing · Qigong · Yoga · Meditation · Gong Baths · Kirtan ·
         Tuning Forks · Drumming
 

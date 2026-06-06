@@ -7,11 +7,14 @@ use App\Models\CheckoutAttempt;
 use App\Models\Order;
 use App\Models\OrderCustomer;
 use App\Models\OrderItem;
+use App\Models\OfferingV3;
 use App\Models\PaymentDetail;
 use App\Models\Reservation;
 use App\Models\Role;
+use App\Models\Product;
 use App\Models\User;
 use App\Models\VendorClient;
+use App\Models\VendorDetail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -145,12 +148,31 @@ class CheckoutOrderService
         $holdExpiresAt = $item['hold_expires_at'] ?? $item['holdExpiresAt'] ?? null;
         $location = $item['location'] ?? ($incomingMeta['location'] ?? null);
         $variantId = $item['variant_id'] ?? $item['variantId'] ?? null;
+        $sourceVersion = strtolower(trim((string) ($item['source_version'] ?? ($incomingMeta['source_version'] ?? ''))));
+        $offeringId = $item['offering_id'] ?? $item['offeringId'] ?? ($incomingMeta['offering_id'] ?? null);
+        if ($offeringId === null && $sourceVersion === 'v3' && is_numeric($productId)) {
+            $offeringId = (int) $productId;
+        }
+        if ($sourceVersion !== 'v3' && is_numeric($productId)) {
+            try {
+                if (! Product::query()->where('id', (int) $productId)->exists() && OfferingV3::query()->where('id', (int) $productId)->exists()) {
+                    $sourceVersion = 'v3';
+                    $offeringId = (int) $productId;
+                }
+            } catch (\Throwable $e) {
+                // Keep the legacy product path if the fallback lookup fails.
+            }
+        }
 
         $meta = $incomingMeta;
         $meta['url'] = $item['url'] ?? ($meta['url'] ?? null);
         $meta['image'] = $image ?? ($meta['image'] ?? null);
         $meta['variant_label'] = $variantLabel ?? ($meta['variant_label'] ?? null);
         $meta['product_id'] = $productId ?? ($meta['product_id'] ?? null);
+        if ($sourceVersion === 'v3' && is_numeric($offeringId) && (int) $offeringId > 0) {
+            $meta['source_version'] = 'v3';
+            $meta['offering_id'] = (int) $offeringId;
+        }
 
         if (! empty($variantOptions)) {
             $meta['variant_options'] = $variantOptions;
@@ -183,7 +205,7 @@ class CheckoutOrderService
 
         return [
             'order_id' => $order->id,
-            'product_id' => $productId ?: 0,
+            'product_id' => $sourceVersion === 'v3' ? null : ($productId ?: 0),
             'name' => $title,
             'sku' => (string) $id,
             'unit_amount' => $unit,
@@ -331,7 +353,7 @@ class CheckoutOrderService
             Booking::updateOrCreate(
                 [
                     'order_id' => $order->id,
-                    'offering_id' => $item->product_id,
+                    'offering_id' => $this->resolveOfferingIdForItem($item),
                     'date' => $bookingData['date'],
                     'start_time' => $bookingData['start_time'],
                 ],
@@ -383,7 +405,7 @@ class CheckoutOrderService
         $linkTime = $order->created_at ?? now();
 
         $vendors = $order->items
-            ->map(fn (OrderItem $item) => $item->product?->vendor)
+            ->map(fn (OrderItem $item) => $this->resolveVendorForItem($item))
             ->filter()
             ->unique('id')
             ->values();
@@ -494,8 +516,7 @@ class CheckoutOrderService
 
     protected function providerUserIdForItem(OrderItem $item): ?int
     {
-        $product = $item->product;
-        $vendor = $product?->vendor;
+        $vendor = $this->resolveVendorForItem($item);
         $user = $vendor?->user;
 
         return $user ? (int) $user->id : null;
@@ -708,5 +729,53 @@ class CheckoutOrderService
         }
 
         return $known[$key];
+    }
+
+    protected function resolveVendorForItem(OrderItem $item): ?VendorDetail
+    {
+        $product = $item->product;
+        if ($product?->vendor) {
+            return $product->vendor;
+        }
+
+        $offering = $this->resolveOfferingForItem($item);
+        return $offering?->vendor;
+    }
+
+    protected function resolveOfferingForItem(OrderItem $item): ?OfferingV3
+    {
+        $meta = is_array($item->meta) ? $item->meta : [];
+        $sourceVersion = strtolower(trim((string) ($meta['source_version'] ?? '')));
+        $offeringId = $this->resolveOfferingIdForItem($item);
+
+        if ($sourceVersion !== 'v3' && ! $offeringId) {
+            return null;
+        }
+
+        if (! $offeringId) {
+            return null;
+        }
+
+        try {
+            return OfferingV3::query()->with(['vendor.user', 'type', 'category', 'media', 'coverMedia'])->find($offeringId);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    protected function resolveOfferingIdForItem(OrderItem $item): ?int
+    {
+        $meta = is_array($item->meta) ? $item->meta : [];
+        $metaOfferingId = $meta['offering_id'] ?? null;
+        if (is_numeric($metaOfferingId) && (int) $metaOfferingId > 0) {
+            return (int) $metaOfferingId;
+        }
+
+        $sourceVersion = strtolower(trim((string) ($meta['source_version'] ?? '')));
+        if ($sourceVersion === 'v3' && is_numeric($item->product_id ?? null) && (int) $item->product_id > 0) {
+            return (int) $item->product_id;
+        }
+
+        return is_numeric($item->product_id ?? null) && (int) $item->product_id > 0 ? (int) $item->product_id : null;
     }
 }

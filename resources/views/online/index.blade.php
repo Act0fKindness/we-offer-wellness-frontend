@@ -9,14 +9,64 @@
 @endpush
 
 @section('content')
-@php
-  $items = $results['items'] ?? [];
+@include('partials.breadcrumbs', [
+  'crumbs' => [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Online'],
+  ],
+  'schemaUrl' => url('/online'),
+])
 
-  $normPrice = function($v){
-    if($v === null || $v === '') return null;
-    if(is_string($v)) $v = preg_replace('/[^0-9.\-]/', '', $v);
-    return is_numeric($v) ? (float)$v : null;
+@php
+  $items = collect($results['items'] ?? []);
+  $sortValue = (string) ($filters['sort'] ?? '');
+  $sortLabel = match ($sortValue) {
+    'price_asc' => 'Price: Low → High',
+    'price_desc' => 'Price: High → Low',
+    'rating_desc' => 'Top rated',
+    default => 'Recommended',
   };
+  $onlineFilterSegments = [
+    [
+      'key' => 'sort',
+      'label' => 'Sort',
+      'value' => $sortLabel,
+      'placeholder' => 'Recommended',
+      'panelTitle' => 'Sort results',
+      'panelSubtitle' => 'Choose how online experiences are ordered.',
+      'panelWidth' => 430,
+      'options' => [
+        [
+          'label' => 'Recommended',
+          'value' => '',
+          'subtitle' => 'Best match for this page',
+          'count' => 'Default',
+          'selected' => $sortValue === '',
+        ],
+        [
+          'label' => 'Price: Low → High',
+          'value' => 'price_asc',
+          'subtitle' => 'Cheaper options first',
+          'selected' => $sortValue === 'price_asc',
+        ],
+        [
+          'label' => 'Price: High → Low',
+          'value' => 'price_desc',
+          'subtitle' => 'Higher-priced options first',
+          'selected' => $sortValue === 'price_desc',
+        ],
+        [
+          'label' => 'Top rated',
+          'value' => 'rating_desc',
+          'subtitle' => 'Highest reviewed offerings first',
+          'selected' => $sortValue === 'rating_desc',
+        ],
+      ],
+    ],
+  ];
+  $onlineFilterChips = $sortValue !== ''
+    ? [['param' => 'sort', 'label' => 'Sort', 'value' => $sortLabel]]
+    : [];
 @endphp
 
 <section class="section">
@@ -29,74 +79,23 @@
       </p>
     </div>
 
-    {{-- Sort --}}
-    <form method="get" action="{{ url('/online') }}" class="card p-3 mb-4" style="border-radius:18px;">
-      <div class="grid md:grid-cols-2 gap-3 items-end">
-        <div>
-          <label class="form-label">Sort</label>
-          <select class="form-control" name="sort">
-            <option value="" @selected(($filters['sort'] ?? '') === '')>Recommended</option>
-            <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price: Low → High</option>
-            <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price: High → Low</option>
-            <option value="rating_desc" @selected(($filters['sort'] ?? '') === 'rating_desc')>Top rated</option>
-          </select>
-        </div>
-
-        <div class="flex gap-2 justify-end">
-          <button class="btn btn-primary" type="submit">Apply</button>
-          <a class="btn btn-light" href="{{ url('/online') }}">Reset</a>
-        </div>
-      </div>
-    </form>
+    @include('partials.wow-filter-bar', [
+      'action' => url('/online'),
+      'clearUrl' => url('/online'),
+      'ariaLabel' => 'Filter online experiences',
+      'mobileLabel' => 'Filters',
+      'resultCount' => $items->count(),
+      'resultLabel' => 'results',
+      'filters' => $filters,
+      'segments' => $onlineFilterSegments,
+      'chips' => $onlineFilterChips,
+    ])
 
     {{-- Results --}}
-    @if(count($items))
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        @foreach($items as $it)
-          @php
-            $title = $it['title'] ?? 'Untitled';
-            $type  = $it['type'] ?? ($it['offering_type'] ?? 'Therapy');
-            $img   = $it['image'] ?? ($it['featured_image'] ?? null);
-
-            $url = $it['url'] ?? ($it['handle'] ?? null);
-            if($url && !str_starts_with($url, 'http')) $url = url($url);
-            $url = $url ?: '#';
-
-            $rating  = $it['rating'] ?? null;
-            $reviews = $it['review_count'] ?? ($it['reviews'] ?? null);
-
-            $priceMin = $normPrice($it['price_min'] ?? null);
-            $price    = $priceMin ?? $normPrice($it['price'] ?? null);
-          @endphp
-
-          <a href="{{ $url }}" class="wow-card md is-fluid" style="text-decoration:none;">
-            <div class="wow-media">
-              @if($img)<img src="{{ $img }}" alt="{{ $title }}">@endif
-            </div>
-
-            <div class="wow-body">
-              <div class="wow-type text-muted">{{ $type }}</div>
-              <div class="wow-title">{{ $title }}</div>
-
-              @if($rating)
-                <div class="rating-text">
-                  ★ {{ number_format((float)$rating, 1) }}
-                  @if($reviews)<small class="text-muted">({{ (int)$reviews }})</small>@endif
-                </div>
-              @endif
-            </div>
-
-            <div class="wow-bottom">
-              <div class="price">
-                @if($price !== null)
-                  £{{ number_format($price, 2) }} @if($priceMin !== null)<small>from</small>@endif
-                @else
-                  <span class="text-muted">View</span>
-                @endif
-              </div>
-              <div class="actions"><span class="wow-btn-like">See details</span></div>
-            </div>
-          </a>
+    @if($items->count())
+      <div class="flex flex-wrap gap-6 items-start">
+        @foreach($items as $item)
+          @include('partials.product_card_v4', ['product' => $item, 'preferredLocation' => null])
         @endforeach
       </div>
 

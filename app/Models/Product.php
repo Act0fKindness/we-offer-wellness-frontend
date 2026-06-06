@@ -108,7 +108,7 @@ class Product extends Model
      */
     public function media()
     {
-        return $this->hasMany(ProductMedia::class);
+        return $this->hasMany(ProductMedia::class)->orderBy('order')->orderBy('id');
     }
 
     // Accessors and Utility Methods
@@ -190,7 +190,18 @@ class Product extends Model
         return $locationsOption->values
             ->pluck('value')
             ->filter()
-            ->map(fn($value) => is_string($value) ? trim($value) : $value)
+            ->map(function ($value) {
+                $text = is_string($value) ? trim($value) : (string) $value;
+                if ($text === '') {
+                    return $text;
+                }
+
+                if (Str::contains(Str::lower($text), 'online')) {
+                    return 'Online';
+                }
+
+                return $text;
+            })
             ->values()
             ->toArray();
     }
@@ -202,7 +213,11 @@ class Product extends Model
      */
     public function getFirstImageUrl()
     {
-        $firstImage = $this->media->first();
+        $firstImage = $this->relationLoaded('media')
+            ? $this->media->sortBy(function ($item) {
+                return sprintf('%010d-%010d', (int) ($item->order ?? 0), (int) ($item->id ?? 0));
+            })->first()
+            : $this->media()->orderBy('order')->orderBy('id')->first();
         if (!$firstImage) {
             return asset('assets/img/no-product-image.jpg');
         }
@@ -241,6 +256,11 @@ class Product extends Model
 
         // Relative or failed parse: ensure single leading slash
         return $atease . '/' . ltrim((string) $url, '/');
+    }
+
+    public function hasDisplayableImage(): bool
+    {
+        return $this->getFirstImageUrl() !== asset('assets/img/no-product-image.jpg');
     }
 
     /**

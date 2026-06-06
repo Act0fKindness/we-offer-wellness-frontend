@@ -28,14 +28,12 @@
         <div id="{{ $prefix }}-where-editor" class="where-editor" contenteditable="true" data-placeholder="City, region, or 'Online'"></div>
         <input id="{{ $prefix }}-where" type="hidden">
       </div>
-      <div id="{{ $prefix }}-where-pane" class="pane narrow d-none" role="listbox" aria-label="Trending places">
+      <div id="{{ $prefix }}-where-pane" class="pane narrow d-none" role="listbox" aria-label="Trending places" data-wow-location-source="/cache/locations.json">
         <div class="section-title">Trending destinations</div>
-        <div class="listy" id="{{ $prefix }}-where-list">
-          <button type="button" class="item" data-value="Online"><i class="bi bi-wifi"></i><span class="title">Online</span><span class="text-muted ms-2">Virtual</span></button>
-          <button type="button" class="item" data-value="London"><i class="bi bi-geo-alt"></i><span class="title">London</span><span class="text-muted ms-2">United Kingdom</span></button>
-          <button type="button" class="item" data-value="Manchester"><i class="bi bi-geo-alt"></i><span class="title">Manchester</span><span class="text-muted ms-2">United Kingdom</span></button>
-          <button type="button" class="item" data-value="Brighton &amp; Hove"><i class="bi bi-geo-alt"></i><span class="title">Brighton &amp; Hove</span><span class="text-muted ms-2">United Kingdom</span></button>
-          <button type="button" class="item" data-value="Kent"><i class="bi bi-geo-alt"></i><span class="title">Kent</span><span class="text-muted ms-2">United Kingdom</span></button>
+        <div class="listy" id="{{ $prefix }}-where-list" data-wow-location-list="1" style="max-height:none; overflow:hidden;">
+          <button type="button" class="item" aria-disabled="true">
+            <span class="title">Loading trending destinations…</span>
+          </button>
         </div>
       </div>
     </div>

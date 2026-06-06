@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
+use App\Models\Role;
 use App\Services\TransactionalMail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -39,7 +40,19 @@ class RegisteredUserController extends Controller
             'name' => trim($validated['first_name'].' '.$validated['last_name']),
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'is_active' => true,
         ]);
+
+        $clientRoleId = Role::query()
+            ->whereRaw('LOWER(name) = ?', ['client'])
+            ->value('id')
+            ?: Role::query()
+                ->whereRaw('LOWER(name) = ?', ['user'])
+                ->value('id');
+
+        if ($clientRoleId) {
+            $user->roles()->syncWithoutDetaching([$clientRoleId]);
+        }
 
         event(new Registered($user));
         TransactionalMail::accountWelcome($user);

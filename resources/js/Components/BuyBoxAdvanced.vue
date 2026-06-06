@@ -9,6 +9,28 @@ const props = defineProps({
   version: { type: String, default: 'auto' }, // 'auto'|'legacy'|'v3'
 })
 
+function normalizePlanKey(value) {
+  return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_')
+}
+
+function getPractitionerBookingHeader(product) {
+  const practitioner = product?.practitioner || null
+  const planKey = normalizePlanKey(practitioner?.plan_key || practitioner?.plan_label)
+  const planLabel = String(practitioner?.plan_label || '').trim().toLowerCase()
+  const isPaidPlan = Boolean(practitioner?.is_paid_plan) || (!['starter', ''].includes(planKey) && planLabel !== 'starter')
+  const firstName = String(practitioner?.first_name || practitioner?.name || '').trim().split(/\s+/)[0] || 'the practitioner'
+  const title = isPaidPlan && product?.title ? String(product.title) : 'Discovery Call — We Offer Wellness®'
+
+  return {
+    label: 'Select a Date & Time',
+    title,
+    subtitle: isPaidPlan ? `with ${firstName}` : null,
+    photo: isPaidPlan ? (practitioner?.photo || null) : null,
+  }
+}
+
+const bookingHeader = getPractitionerBookingHeader(props.product)
+
 onMounted(() => {
   try {
   // ---------- Build a local product model compatible with the template ----------
@@ -1253,14 +1275,23 @@ onMounted(() => {
     for(let day=1;day<=total;day++){
       const cellDate=new Date(y,m,day); cellDate.setHours(0,0,0,0)
       const btn=document.createElement('button'); btn.type='button'; btn.className='cal-cell'; btn.textContent=String(day)
-      const past=cellDate<today; if(past) btn.setAttribute('aria-disabled','true')
+      const past=cellDate<today
+      const dayObj = ensureDay(new Date(Date.UTC(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate())))
+      const slots = generateSlotsForDate(cellDate)
+      const availableSlots = slots.filter(s => !dayObj.booked.has(s) && !validReserved(dayObj, s))
+      const noAvailability = slots.length === 0 || availableSlots.length === 0
+      if (past || noAvailability) {
+        btn.disabled = true
+        btn.setAttribute('aria-disabled','true')
+        btn.title = past ? 'Past date' : 'No availability'
+      }
       btn.addEventListener('click',()=>{
-        if(past) return
+        if(past || noAvailability) return
         calendarState.selectedDate=cellDate; calendarState.selectedTime=null
         ;[...calGrid.querySelectorAll('.cal-cell')].forEach(c=>c.classList.remove('active'))
         btn.classList.add('active'); renderSlots(); updateSummary(); if(confirmBooking) confirmBooking.disabled=true; if(modalHint) modalHint.textContent='Choose a time.'; if (isMobile()) bookingModalContent?.classList.add('mobile-times')
       })
-      if(isSameDate(cellDate,calendarState.selectedDate)) btn.classList.add('active')
+      if(isSameDate(cellDate,calendarState.selectedDate) && !past && !noAvailability) btn.classList.add('active')
       calGrid.appendChild(btn)
     }
   }
@@ -1769,9 +1800,20 @@ onMounted(() => {
       <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content" id="bookingModalContent">
           <div class="modal-header">
-            <div>
-              <div class="text-muted small">Select a Date & Time</div>
-              <h5 class="modal-title" id="bookingModalLabel">Discovery Call — We Offer Wellness®</h5>
+            <div class="d-flex align-items-center gap-3">
+              <div v-if="bookingHeader.photo" class="flex-shrink-0">
+                <img
+                  :src="bookingHeader.photo"
+                  :alt="bookingHeader.title + ' practitioner photo'"
+                  class="rounded-circle border"
+                  style="width:52px;height:52px;object-fit:cover;"
+                >
+              </div>
+              <div>
+                <div class="text-muted small">{{ bookingHeader.label }}</div>
+                <h5 class="modal-title mb-0" id="bookingModalLabel">{{ bookingHeader.title }}</h5>
+                <div v-if="bookingHeader.subtitle" class="small fw-semibold text-secondary">{{ bookingHeader.subtitle }}</div>
+              </div>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>

@@ -3,10 +3,9 @@
 /* Hero base */
 .whero { position: relative; isolation: isolate; overflow: clip; }
 .whero-pad { padding-top: clamp(72px, 8vw, 120px); padding-bottom: clamp(54px, 6vw, 96px); min-height: clamp(560px, 5vh, 820px); }
-.whero-eyebrow { display:inline-flex; align-items:center; gap:.5rem; font-size:.7rem; letter-spacing:.12em; margin-bottom:5px; text-transform:uppercase; background:rgba(0,0,0,.6); color:#fff; border-radius:999px; padding:4px 12px; }
-.whero-title { font-weight: 800; line-height: 1.02; letter-spacing: -.01em; font-size: clamp(3.6rem, 4vw + 1rem, 4.6rem); margin-top:.6rem; color:#0b1323; }
-@supports (mix-blend-mode:difference) { .whero-title { color:#fff; mix-blend-mode:difference; } }
-.whero-sub { color: #000; font-size: clamp(1rem, .4vw + .95rem, 1.125rem); max-width: 44rem; mix-blend-mode: normal; }
+.whero-eyebrow { display:block; margin:0 0 10px; color:#344054; font-size:13px; font-weight:300; letter-spacing:.16em; text-transform:uppercase; }
+.whero-title { margin: 0; color:#101828; font-family:"Playfair Display", Georgia, "Times New Roman", serif; font-size:clamp(44px, 5.5vw, 76px); font-weight:500; line-height:.94; letter-spacing:-.06em; }
+.whero-sub { color:#596275; font-size:17px; line-height:1.58; max-width: 44rem; margin-top:14px; }
 .whero-subline { display:block; margin-top:1rem; max-width:36rem; }
 
 /* Background radial + subtle rays */

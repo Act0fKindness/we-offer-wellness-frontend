@@ -1,7 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ArticleController;
+use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\ProductCardsController;
+use App\Http\Controllers\Api\HomeRailsController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductTypeController;
+use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\Api\ReviewStatsController;
 use App\Http\Controllers\Api\StripeWebhookController;
+use App\Http\Controllers\Api\BookingLinkController as BookingLinkApiController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\Api\V3SubscriberController;
 use App\Http\Controllers\CheckoutController;
@@ -20,6 +30,24 @@ Route::post('/cart/gift', [CartController::class, 'gift']);
 
 // Checkout (Stripe)
 Route::post('/checkout/session', [CheckoutController::class, 'createSession']);
+
+// Lightweight frontend JSON endpoints
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/product-cards', [ProductCardsController::class, 'index']);
+Route::get('/home/rails', [HomeRailsController::class, 'index']);
+Route::get('/articles', [ArticleController::class, 'index']);
+Route::get('/catalog', [CatalogController::class, 'index']);
+Route::get('/product-types', [ProductTypeController::class, 'index']);
+Route::get('/locations', [LocationController::class, 'index']);
+Route::get('/review-stats', [ReviewStatsController::class, 'index']);
+
+// Booking availability for v3 offerings
+Route::get('/booking/offering/{offering}', [BookingLinkApiController::class, 'availability']);
+Route::get('/booking/product/{product}', [BookingLinkApiController::class, 'availabilityForProduct']);
+
+// Lightweight reservation hold/release endpoints
+Route::post('/reservations/hold', [ReservationController::class, 'hold'])->name('api.reservations.hold');
+Route::post('/reservations/release', [ReservationController::class, 'release'])->name('api.reservations.release');
 
 // V3 subscriber opt-in API
 Route::post('/v3-subscribers', [V3SubscriberController::class, 'store'])->name('api.v3-subscribers.store');

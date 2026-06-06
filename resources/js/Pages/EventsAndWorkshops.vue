@@ -121,6 +121,13 @@ function toDate(value) {
   const d = new Date(value)
   return Number.isFinite(d.getTime()) ? d : null
 }
+function parseEventDateTime(dateValue, timeValue) {
+  if (!dateValue) return null
+  if (!timeValue) return toDate(dateValue)
+  const raw = /[T\s]/.test(dateValue) ? dateValue : `${dateValue}T${timeValue}:00`
+  const d = new Date(raw)
+  return Number.isFinite(d.getTime()) ? d : null
+}
 function formatTime(date) {
   try {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -178,7 +185,7 @@ function buildFallbackEvents() {
 const calendarFallbackEvents = buildFallbackEvents()
 
 function mapProductToCalendarEvent(item, idx = 0) {
-  const start = toDate(item?.date || item?.start_date)
+  const start = parseEventDateTime(item?.start_date || item?.date || null, item?.start_time)
   if (!start) return null
   const location = cleanLocation(item?.location || (Array.isArray(item?.locations) ? item.locations.find(Boolean) : null))
   const status = item?.inventory_status || item?.inventory_label || (item?.availability === 'waitlist' ? 'Waitlist' : null)

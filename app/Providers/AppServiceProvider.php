@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.account', function ($view) {
             $reviews = Cache::remember('auth_review_snippets', now()->addMinutes(20), function () {
-                return Review::with(['user:id,first_name,last_name,name,location', 'product:id,title'])
+                return Review::with(['user:id,first_name,last_name,name,location', 'product:id,title', 'vendor:id,vendor_name'])
                     ->whereNotNull('review_text')
                     ->orderByDesc('created_at')
                     ->limit(12)
@@ -52,7 +52,9 @@ class AppServiceProvider extends ServiceProvider
 
                         return [
                             'rating' => $rating,
-                            'title' => $review->product?->title ?? 'Verified booking',
+                            'title' => $review->product?->title
+                                ?? $review->vendor?->vendor_name
+                                ?? 'Verified booking',
                             'text' => $snippet,
                             'name' => $name,
                             'location' => $location,

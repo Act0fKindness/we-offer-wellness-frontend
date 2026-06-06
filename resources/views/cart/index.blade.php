@@ -155,6 +155,36 @@
       credentials:'same-origin'
     }).then(r=>r.json());
   }
+  function trackCommerce(eventName, payload){
+    try{
+      if (window.WOWAnalytics && typeof window.WOWAnalytics.trackCommerce === 'function') {
+        return window.WOWAnalytics.trackCommerce(eventName, payload || {});
+      }
+      if (window.WOWAnalytics && typeof window.WOWAnalytics.track === 'function') {
+        return window.WOWAnalytics.track(eventName, payload || {});
+      }
+      if (typeof window.gtag === 'function') {
+        var params = Object.assign({ flow_version: 'v3', wow_event_name: eventName }, payload || {});
+        window.gtag('event', eventName, params);
+        return true;
+      }
+    }catch(_){}
+    return false;
+  }
+  function analyticsItems(list){
+    return (list || []).map(function(it){
+      return {
+        id: String(it.id || it.product_id || it.variant_id || ''),
+        title: String(it.title || 'Item'),
+        price: Number(it.unit ?? it.price ?? 0) || 0,
+        qty: Math.max(1, Number(it.qty || 1) || 1),
+        product_id: it.product_id || null,
+        variant_id: it.variant_id || null,
+        variant_label: it.variant_label || '',
+        source_version: it.source_version || null,
+      };
+    });
+  }
   function money(n){ try{ return '£'+Number(n||0).toFixed(2) }catch(_){ return '£0.00' } }
   function mapEntry(x){
     if(!x) return null;
@@ -204,6 +234,7 @@
   var cart = readLocalCart();
   try{ if(!cart.length){ cart = @json($serverCart) } }catch(_){ }
   var promo = { code:"", pct:0 };
+  trackViewCart();
 
   var grid = document.getElementById('cartGrid');
   var cartBody = document.getElementById('cartBody');
@@ -217,12 +248,28 @@
   var upsellListFull = document.getElementById('upsellListFull');
   var upsellListEmpty = document.getElementById('upsellListEmpty');
   var upsellLoaded = false; var upsellPool = [];
+  var viewCartTracked = false;
 
   function subtotal(){ return cart.reduce(function(s,it){ return s + (Number(it.unit||0) * Number(it.qty||1)); }, 0); }
   function discountAmount(){ return subtotal() * (promo.pct||0); }
   function feeBase(){ return Math.max(0, subtotal() - discountAmount()); }
   function bookingFeeAmount(){ return Math.round(feeBase() * 0.05 * 100) / 100; }
   function total(){ return Math.max(0, feeBase() + bookingFeeAmount()); }
+  function trackViewCart(){
+    if (viewCartTracked) return;
+    viewCartTracked = true;
+    trackCommerce('wow_v3_view_cart', {
+      items: analyticsItems(cart),
+      currency: 'GBP',
+      value: total(),
+      item_count: cart.reduce(function(sum, it){ return sum + (Number(it.qty||1) || 1); }, 0),
+      cart_subtotal: subtotal(),
+      cart_total: total(),
+      cart_state: cart.length ? 'filled' : 'empty',
+      checkout_type: isAuthed ? 'account' : 'guest',
+      source: 'blade-cart',
+    });
+  }
 
   function writeLocalFromCart(){
     try{
@@ -361,7 +408,12 @@
     document.getElementById('summaryWrap').style.display = isEmpty ? 'none' : '';
     document.getElementById('emptyWrap').style.display = isEmpty ? '' : 'none';
     sumHeadTitle.textContent = isEmpty ? 'Your cart' : 'Order summary';
-    if (isEmpty){ cartBody.innerHTML = ''; renderSummary(); return; }
+    if (isEmpty){
+      cartBody.innerHTML = '';
+      renderSummary();
+      writeLocalFromCart();
+      return;
+    }
     cartBody.innerHTML = cart.map(function(it){ var line = Number(it.unit||0) * Number(it.qty||1); var variant = it.variant_label ? '<div class="variant">'+escapeHtml(it.variant_label)+'</div>' : ''; return (
       '<div class="cart-row" data-id="'+escapeHtml(String(it.id))+'">'
       + '<div class="cart-item">'
@@ -451,6 +503,14 @@
     }
     guestError.textContent='';
     checkoutBusy = true;
+    trackCommerce('wow_v3_begin_checkout', {
+      items: analyticsItems(cart),
+      currency: 'GBP',
+      value: total(),
+      item_count: cart.reduce(function(sum, it){ return sum + (Number(it.qty||1) || 1); }, 0),
+      checkout_type: 'guest',
+      source: 'blade-cart',
+    });
     guestSubmitBtn.disabled=true;
     guestSubmitBtn.textContent='Redirecting…';
       post('/checkout/session', {
@@ -472,16 +532,79 @@
         else if(code==='order_failed'){ guestError.textContent='Checkout is temporarily unavailable. Please try again in a moment.'; }
         else if(code==='stripe_failed'){ guestError.textContent='Secure payment is unavailable right now. Please try again.'; }
         else { guestError.textContent='Could not start checkout. Try again.'; }
+        trackCommerce('wow_v3_checkout_failed', {
+          items: analyticsItems(cart),
+          currency: 'GBP',
+          value: total(),
+          item_count: cart.reduce(function(sum, it){ return sum + (Number(it.qty||1) || 1); }, 0),
+          checkout_type: isAuthed ? 'account' : 'guest',
+          error_code: code || 'unknown',
+          source: 'blade-cart',
+        });
         guestSubmitBtn.disabled=false; guestSubmitBtn.textContent='Continue as guest'; checkoutBusy=false;
       });
   });
 
   document.addEventListener('click', function(e){
     var row = e.target.closest('.cart-row');
-    if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){ var id=row.getAttribute('data-id'); var item=cart.find(function(x){return String(x.id)===String(id)}); if(!item) return; item.qty=Math.max(1,Number(item.qty||1)+(e.target.closest('.js-qinc')?1:-1)); suppressChange=true; renderCart(); suppressChange=false; post('/api/cart/update',{id:id,qty:item.qty}); return; }
+    if(row && (e.target.closest('.js-qinc') || e.target.closest('.js-qdec'))){
+      var id=row.getAttribute('data-id');
+      var item=cart.find(function(x){return String(x.id)===String(id)});
+      if(!item) return;
+      var previousQty = Math.max(1, Number(item.qty||1) || 1);
+      var nextQty = Math.max(1, previousQty + (e.target.closest('.js-qinc') ? 1 : -1));
+      if (nextQty === previousQty) return;
+      item.qty=nextQty;
+      suppressChange=true; renderCart(); suppressChange=false;
+      trackCommerce('wow_v3_update_cart_quantity', {
+        items: analyticsItems([item]),
+        currency: 'GBP',
+        value: Number(item.unit||0) * nextQty,
+        item_count: nextQty,
+        previous_qty: previousQty,
+        quantity_delta: nextQty - previousQty,
+        cart_value: total(),
+        source: 'blade-cart',
+      });
+      post('/api/cart/update',{id:id,qty:item.qty});
+      return;
+    }
     var rem = e.target.closest('[data-remove]');
-    if(rem){ var id=rem.getAttribute('data-remove'); cart=cart.filter(function(x){return String(x.id)!==String(id)}); suppressChange=true; renderCart(); suppressChange=false; post('/api/cart/remove',{id:id}); return; }
+    if(rem){
+      var id=rem.getAttribute('data-remove');
+      var removedItem = cart.find(function(x){return String(x.id)===String(id)});
+      if (!removedItem) return;
+      cart=cart.filter(function(x){return String(x.id)!==String(id)});
+      suppressChange=true; renderCart(); suppressChange=false;
+      trackCommerce('wow_v3_remove_from_cart', {
+        items: analyticsItems([removedItem]),
+        currency: 'GBP',
+        value: Number(removedItem.unit||0) * Math.max(1, Number(removedItem.qty||1) || 1),
+        item_count: Math.max(1, Number(removedItem.qty||1) || 1),
+        cart_value: total(),
+        source: 'blade-cart',
+      });
+      if (cart.length === 0) {
+        post('/api/cart/clear', {}).catch(function(_){});
+      } else {
+        post('/api/cart/remove',{
+          id:id,
+          product_id: removedItem.product_id || null,
+          variant_id: removedItem.variant_id || null,
+          source_version: removedItem.source_version || null
+        });
+      }
+      return;
+    }
     if(e.target && e.target.id==='clearCartBtn'){
+      var clearSnapshot = cart.slice();
+      trackCommerce('wow_v3_clear_cart', {
+        items: analyticsItems(clearSnapshot),
+        currency: 'GBP',
+        value: total(),
+        item_count: clearSnapshot.reduce(function(sum, it){ return sum + (Number(it.qty||1) || 1); }, 0),
+        source: 'blade-cart',
+      });
       cart = [];
       suppressChange=true; renderCart(); suppressChange=false;
       // Update server (best-effort)
@@ -500,6 +623,14 @@
         return;
       }
       var btn = e.target; var prev = btn.textContent; btn.disabled = true; btn.style.opacity='.65'; btn.textContent = 'Redirecting…';
+      trackCommerce('wow_v3_begin_checkout', {
+        items: analyticsItems(cart),
+        currency: 'GBP',
+        value: total(),
+        item_count: cart.reduce(function(sum, it){ return sum + (Number(it.qty||1) || 1); }, 0),
+        checkout_type: 'account',
+        source: 'blade-cart',
+      });
       post('/checkout/session', { items: serializeCartForCheckout() })
         .then(function(res){
           if(res && res.url){ window.location.assign(res.url); return; }
@@ -528,11 +659,29 @@
       var pRaw = Number(u.price_min ?? u.price ?? 0); var unit = pRaw>=1000 ? pRaw/100 : pRaw;
       var cartId = 'p:'+String(uid);
       var ex = cart.find(function(x){ return String(x.id)===cartId });
+      var addedItem = ex ? ex : {
+        id: cartId,
+        product_id:Number(uid)||uid,
+        variant_id:null,
+        variant_label:'',
+        title:String(u.title||''),
+        url:(u.url||('/offerings/'+uid)),
+        img:(u.image||(u.images&&u.images[0])||''),
+        unit:unit,
+        qty:1
+      };
       if(ex){ ex.qty = Math.max(1, Number(ex.qty||1)+1); }
       else {
-        cart.unshift({ id:cartId, product_id:Number(uid)||uid, variant_id:null, variant_label:'', title:String(u.title||''), url:(u.url||('/offerings/'+uid)), img:(u.image||(u.images&&u.images[0])||''), unit:unit, qty:1 });
+        cart.unshift(addedItem);
       }
       try{ post('/api/cart/add', { id: Number(uid)||uid, qty:1 }); }catch(_){}
+      trackCommerce('wow_v3_add_to_cart', {
+        items: analyticsItems([{ ...addedItem, qty: ex ? Number(ex.qty||1) : 1 }]),
+        currency: 'GBP',
+        value: Number(unit||0) * (ex ? Math.max(1, Number(ex.qty||1)) : 1),
+        item_count: ex ? Math.max(1, Number(ex.qty||1)) : 1,
+        source: 'blade-cart-upsell',
+      });
       add.classList.add('is-added'); add.textContent='Added'; setTimeout(function(){ add.textContent='Add'; add.classList.remove('is-added'); }, 700);
       renderCart();
       return;

@@ -11,6 +11,7 @@ BRANCH="${1:-}"
 NO_MIGRATE="false"
 NO_BUILD="false"
 NO_VERIFY="false"
+INSTALL_CRON="${INSTALL_CRON:-true}"
 STRICT_VERIFY="${STRICT_VERIFY:-false}"
 
 for arg in "$@"; do
@@ -147,6 +148,31 @@ if [[ ! -f public/build/manifest.json && "$NO_BUILD" == "true" ]]; then
   if [[ -f resources/css/we-offer-wellness-base-styles.css ]]; then
     cp -f resources/css/we-offer-wellness-base-styles.css public/css/we-offer-wellness-base-styles.css
   fi
+fi
+
+if [[ "$INSTALL_CRON" == "true" ]]; then
+  echo "==> Ensuring Laravel scheduler cron is installed"
+  if command -v crontab >/dev/null 2>&1; then
+    PROJECT_DIR="$(pwd)"
+    PHP_BIN="${PHP_BIN:-$(command -v php)}"
+    SCHEDULER_LINE="* * * * * cd ${PROJECT_DIR} && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1"
+    CURRENT_CRONTAB="$(crontab -l 2>/dev/null || true)"
+
+    if printf '%s\n' "$CURRENT_CRONTAB" | grep -Fq "artisan schedule:run"; then
+      echo "==> Laravel scheduler cron already present"
+    else
+      {
+        printf '%s\n' "$CURRENT_CRONTAB"
+        printf '%s\n' "$SCHEDULER_LINE"
+      } | crontab -
+      echo "==> Installed Laravel scheduler cron"
+    fi
+  else
+    echo "!! crontab not available; install the following on the server:" >&2
+    echo "* * * * * cd $(pwd) && $(command -v php) artisan schedule:run >> /dev/null 2>&1" >&2
+  fi
+else
+  echo "==> Skipping cron install (INSTALL_CRON=false)"
 fi
 
 echo "==> Done. Branch $BRANCH deployed."

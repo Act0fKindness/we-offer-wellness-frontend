@@ -5,7 +5,6 @@
   <title>{{ $seo['title'] ?? (($event['title'] ?? 'Event').' | We Offer Wellness™') }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
 @endpush
 
 @section('content')
@@ -52,6 +51,11 @@
             'Time' => ($event['time'] ?? $event['start_time'] ?? null),
             'Location' => ($event['location'] ?? $event['venue'] ?? null),
             'Format' => ($event['format'] ?? null),
+            'Vendor' => ($event['vendor_name'] ?? null),
+            'Rating' => (is_numeric($event['rating'] ?? null) ? number_format((float) $event['rating'], 1) . '/5' : null),
+            'Reviews' => (($event['review_count'] ?? 0) > 0 ? (string) ($event['review_count'] . ' reviews') : null),
+            'Price' => (is_numeric($event['price'] ?? null) && (float) $event['price'] > 0 ? 'From £' . number_format((float) $event['price'], 2) : null),
+            'Availability' => ($event['availability_label'] ?? null),
           ] as $label => $val)
             @if($val)
               <div class="mb-2">

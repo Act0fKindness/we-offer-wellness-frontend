@@ -8,7 +8,22 @@
   $physicalResults = $results->filter(fn ($location) => !($location['online'] ?? false))->values();
   $searchPhysicalResults = $resolved ? $physicalResults->take(5)->values() : $physicalResults;
   $onlineResult = $results->first(fn ($location) => ($location['online'] ?? false) === true);
-  $catalogCountries = collect($locationCatalog['countries'] ?? []);
+  $catalogCountries = collect($locationCatalog['countries'] ?? [])
+    ->sort(function (array $left, array $right): int {
+      $leftSlug = \Illuminate\Support\Str::slug((string) ($left['slug'] ?? $left['label'] ?? ''));
+      $rightSlug = \Illuminate\Support\Str::slug((string) ($right['slug'] ?? $right['label'] ?? ''));
+
+      if ($leftSlug === 'united-kingdom' && $rightSlug !== 'united-kingdom') {
+        return -1;
+      }
+
+      if ($rightSlug === 'united-kingdom' && $leftSlug !== 'united-kingdom') {
+        return 1;
+      }
+
+      return strcmp((string) ($left['label'] ?? $left['title'] ?? ''), (string) ($right['label'] ?? $right['title'] ?? ''));
+    })
+    ->values();
   $catalogFlat = collect($locationCatalog['flat'] ?? []);
   $catalogSuggestions = collect($locationCatalog['suggestions'] ?? [])->map(function (array $location) {
     return [
@@ -28,7 +43,7 @@
       'region' => $location['region'] ?? '',
     ];
   })->values()->all();
-  $featuredOrder = ['online' => 0, 'london' => 1, 'manchester' => 2, 'brighton-and-hove' => 3, 'kent' => 4];
+  $featuredOrder = ['united-kingdom' => 0, 'online' => 1, 'london' => 2, 'manchester' => 3, 'brighton-and-hove' => 4, 'kent' => 5];
   $featuredLocations = $catalogFlat
     ->sortBy(function (array $location) use ($featuredOrder): int {
       $slug = \Illuminate\Support\Str::slug((string) ($location['title'] ?? $location['slug'] ?? ''));
@@ -69,42 +84,17 @@
   <title>{{ $seo['title'] ?? 'Locations | We Offer Wellness®' }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
   <style>
     .wow-locations-page{
       position:relative;
       overflow:hidden;
-      background:
-        radial-gradient(circle at top left, rgba(79,147,129,.08), transparent 34%),
-        radial-gradient(circle at top right, rgba(21,94,75,.06), transparent 28%),
-        linear-gradient(180deg, #fbfcfd 0%, #ffffff 100%);
+      background:none;
       color:#101828;
       padding:44px 0 72px;
     }
     .wow-page-grid{
-      position:absolute;
-      inset:0;
-      width:min(100% - 40px, 1360px);
-      margin:0 auto;
-      pointer-events:none;
-      border-left:1px solid rgba(17,24,39,.08);
-      border-right:1px solid rgba(17,24,39,.08);
-      background-image:
-        linear-gradient(to right, transparent calc(25% - 1px), rgba(17,24,39,.08) calc(25% - 1px), rgba(17,24,39,.08) 25%, transparent 25%),
-        linear-gradient(to right, transparent calc(50% - 1px), rgba(17,24,39,.08) calc(50% - 1px), rgba(17,24,39,.08) 50%, transparent 50%),
-        linear-gradient(to right, transparent calc(75% - 1px), rgba(17,24,39,.08) calc(75% - 1px), rgba(17,24,39,.08) 75%, transparent 75%);
+      display:none;
     }
-    .wow-page-grid::before,
-    .wow-page-grid::after{
-      content:"";
-      position:absolute;
-      top:0;
-      bottom:0;
-      width:1px;
-      border-left:1px dashed rgba(17,24,39,.14);
-    }
-    .wow-page-grid::before{ left:25%; }
-    .wow-page-grid::after{ left:75%; }
     .wow-locations-container{
       position:relative;
       z-index:1;
@@ -869,6 +859,25 @@
 @endpush
 
 @section('content')
+@php
+  $locationBreadcrumb = trim((string) data_get($locationSearch, 'label', $locationQuery ?? ''));
+  if ($locationBreadcrumb === '') {
+    $locationBreadcrumb = 'Locations';
+  }
+  $locationCrumbs = [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Locations', 'url' => url('/locations')],
+  ];
+  if (strcasecmp($locationBreadcrumb, 'Locations') !== 0) {
+    $locationCrumbs[] = ['label' => $locationBreadcrumb];
+  }
+@endphp
+
+@include('partials.breadcrumbs', [
+  'crumbs' => $locationCrumbs,
+  'schemaUrl' => $seo['canonical'] ?? url()->full(),
+])
+
 <main class="wow-locations-page">
   <div class="wow-page-grid" aria-hidden="true"></div>
 

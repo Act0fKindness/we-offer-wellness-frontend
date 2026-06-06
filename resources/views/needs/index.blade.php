@@ -54,7 +54,7 @@
       margin:0 0 10px;
       color:#344054;
       font-size:13px;
-      font-weight:700;
+      font-weight:300;
       letter-spacing:.16em;
       text-transform:uppercase;
       font-family:'Manrope', system-ui, sans-serif;
@@ -258,6 +258,14 @@
 @endpush
 
 @section('content')
+@include('partials.breadcrumbs', [
+  'crumbs' => [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Needs'],
+  ],
+  'schemaUrl' => url('/needs'),
+])
+
 <main class="wow-needs-page">
   <div class="wow-page-grid" aria-hidden="true"></div>
 
@@ -275,7 +283,7 @@
       </aside>
     </header>
 
-    <section class="wow-needs-grid" aria-label="Need categories">
+    <section class="wow-needs-grid" aria-label="Need modalities">
       @foreach(($needs ?? []) as $need)
         <article class="wow-need-card">
           <div class="wow-need-card__inner">

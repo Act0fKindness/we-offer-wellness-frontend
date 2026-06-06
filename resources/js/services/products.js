@@ -1,6 +1,14 @@
 // Helpers to normalise visibility logic without over-filtering when flags are absent
 const toStr = (v) => typeof v === 'string' ? v.toLowerCase() : ''
 const isTrue = (v) => v === true || v === 1 || v === '1' || toStr(v) === 'true' || toStr(v) === 'yes'
+const NO_IMAGE_MARKERS = ['no-product-image.jpg', '/images/placeholder.png', 'placeholder.png']
+
+function hasDisplayableImageUrl(value) {
+  const url = String(value || '').trim()
+  if (!url) return false
+  const lower = url.toLowerCase()
+  return !NO_IMAGE_MARKERS.some((marker) => lower.includes(marker))
+}
 
 function inferLive(p) {
   if (p == null || typeof p !== 'object') return null
@@ -52,6 +60,15 @@ function productVisible(p) {
   const approved = inferApproved(p)
   if (live === false) return false
   if (approved === false) return false
+  const imageCandidates = [
+    p?.image,
+    p?.image_url,
+    p?.featured_image,
+    p?.media?.[0]?.url,
+    p?.media?.[0]?.original_url,
+    p?.media?.[0]?.path,
+  ]
+  if (!imageCandidates.some(hasDisplayableImageUrl)) return false
   return true
 }
 
@@ -66,8 +83,7 @@ export async function fetchProducts(params = {}, options = {}) {
     const data = await res.json();
     const list = Array.isArray(data) ? data : (data.products || []);
     const filtered = list.filter(productVisible);
-    const sorted = sortFavorability(filtered.length >= 4 ? filtered : list, params?.sort);
-    return sorted;
+    return sortFavorability(filtered, params?.sort);
   } catch (e) {
     console.warn('[products] fallback to empty list', e);
     if (opts.throwOnError) throw e;

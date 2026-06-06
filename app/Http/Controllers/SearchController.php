@@ -11,6 +11,8 @@ use App\Models\VendorAvailability;
 use App\Models\VendorDetail;
 use App\Models\VendorTier;
 use App\Services\AvailabilityWindowService;
+use App\Support\EventListing;
+use App\Support\ProductRanking;
 use App\Support\ProductSearchFilters;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -21,6 +23,8 @@ use Illuminate\Support\Str;
 
 class SearchController extends Controller
 {
+    private array $nextAvailabilityCache = [];
+
     public function index(Request $request)
     {
         $format = strtolower((string) $request->query('format', ''));
@@ -147,16 +151,7 @@ class SearchController extends Controller
                   ->whereRaw("(JSON_EXTRACT(meta_json, '$.end_date') IS NULL OR JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.end_date')) = '')");
         }
 
-        // Sort
         $sort = $request->string('sort', 'popular')->toString();
-        if ($sort === 'newest') $query->latest('id');
-        elseif ($sort === 'price_asc') $query->orderBy('price', 'asc');
-        elseif ($sort === 'price_desc') $query->orderBy('price', 'desc');
-        else {
-            $query->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                  ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                  ->orderByRaw('COALESCE(reviews_count, 0) DESC');
-        }
 
         $perPage = (int) $request->integer('per_page', 48);
         $perPage = min(96, max(12, $perPage));
@@ -168,6 +163,10 @@ class SearchController extends Controller
                 ->filter(fn (Product $product) => $this->hasAvailabilityInRange($product, $availabilityRange))
                 ->values();
         }
+        $productItems = $productItems
+            ->reject(fn (Product $product) => EventListing::isPast($product) && ! $this->isEventLikeProduct($product))
+            ->filter(fn (Product $product) => method_exists($product, 'hasDisplayableImage') ? $product->hasDisplayableImage() : true)
+            ->values();
         $productItems = $productItems->map(fn (Product $product) => $this->decorateSearchProduct($product));
 
         $offeringItems = $this->buildV3SearchItems($request, $what, $type, $tag, $modeInput, $priceMax = $request->filled('price_max') ? (float) $request->input('price_max') : null);
@@ -176,6 +175,15 @@ class SearchController extends Controller
                 ->filter(fn (OfferingV3 $offering) => $this->hasAvailabilityInRange($offering, $availabilityRange))
                 ->values();
         }
+        if ($groupType) {
+            $offeringItems = $offeringItems
+                ->filter(fn (OfferingV3 $offering) => $this->offeringMatchesGroupType($offering, $groupType))
+                ->values();
+        }
+        $offeringItems = $offeringItems
+            ->reject(fn (OfferingV3 $offering) => EventListing::isPast($offering) && ! $this->isEventLikeOffering($offering))
+            ->filter(fn (OfferingV3 $offering) => method_exists($offering, 'hasDisplayableImage') ? $offering->hasDisplayableImage() : true)
+            ->values();
         $offeringItems = $offeringItems->map(fn (OfferingV3 $offering) => $this->decorateSearchOffering($offering));
 
         $items = $productItems->concat($offeringItems)->values();
@@ -193,11 +201,48 @@ class SearchController extends Controller
             ['path' => url()->current(), 'query' => $request->query()]
         );
 
+        $seoWhat = Str::squish($what);
+        $seoWhere = Str::squish((string) $request->string('where')->toString());
+        $seoTitleBase = 'Search all Offerings';
+        if ($seoWhat !== '' && $seoWhere !== '') {
+            $seoTitleBase = 'Search ' . $seoWhat . ' in ' . $seoWhere;
+        } elseif ($seoWhat !== '') {
+            $seoTitleBase = 'Search ' . $seoWhat;
+        } elseif ($seoWhere !== '') {
+            $seoTitleBase = 'Search in ' . $seoWhere;
+        }
+
+        $seoDescription = $seoWhat !== ''
+            ? 'Search ' . $seoWhat . ' and browse live therapies, classes, events and workshops on We Offer Wellness.'
+            : 'Search all offerings and browse live therapies, classes, events and workshops on We Offer Wellness.';
+
+        $gridHtml = view('search.partials.results_cards', ['products' => $products])->render();
+        $paginationHtml = ($products instanceof LengthAwarePaginator && $products->total() > 0)
+            ? $products->withQueryString()->onEachSide(1)->links('pagination::bootstrap-4')->render()
+            : '';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'count' => $products->total(),
+                'count_text' => $products->total() . ' results',
+                'grid_html' => $gridHtml,
+                'pagination_html' => $paginationHtml,
+            ]);
+        }
+
         return view('search.index', [
             'mapsKey' => env('GOOGLE_MAPS_API_KEY'),
             'products' => $products,
             'resultCount' => $products->total(),
             'perPage' => $perPage,
+            'searchGridHtml' => $gridHtml,
+            'searchPaginationHtml' => $paginationHtml,
+            'seo' => [
+                'title' => $seoTitleBase . ' | We Offer Wellness®',
+                'description' => $seoDescription,
+                'canonical' => url()->full(),
+                'og_type' => 'website',
+            ],
         ]);
     }
 
@@ -458,42 +503,34 @@ class SearchController extends Controller
 
     private function sortSearchItems(Collection $items, string $sort): Collection
     {
-        if ($sort === 'newest') {
-            return $items->sortByDesc(fn ($item) => optional($item->created_at)->timestamp ?? 0)->values();
+        $sort = strtolower(trim($sort));
+
+        if (in_array($sort, ['', 'popular', 'relevance'], true)) {
+            return $items->sort(function ($left, $right) {
+                $leftNext = $this->nextAvailabilitySortValue($left);
+                $rightNext = $this->nextAvailabilitySortValue($right);
+                if ($leftNext !== $rightNext) {
+                    return $leftNext <=> $rightNext;
+                }
+
+                foreach ([
+                    [ProductRanking::itemKindPriority($left), ProductRanking::itemKindPriority($right)],
+                    [ProductRanking::planPriority($left), ProductRanking::planPriority($right)],
+                    [ProductRanking::ratingValue($left), ProductRanking::ratingValue($right)],
+                    [ProductRanking::reviewCountValue($left), ProductRanking::reviewCountValue($right)],
+                ] as [$leftValue, $rightValue]) {
+                    if ($leftValue === $rightValue) {
+                        continue;
+                    }
+
+                    return $rightValue <=> $leftValue;
+                }
+
+                return strcasecmp(ProductRanking::titleValue($left), ProductRanking::titleValue($right));
+            })->values();
         }
 
-        if ($sort === 'price_asc') {
-            return $items->sortBy(fn ($item) => (float) ($item->price ?? $item->variants_min_price ?? PHP_FLOAT_MAX))->values();
-        }
-
-        if ($sort === 'price_desc') {
-            return $items->sortByDesc(fn ($item) => (float) ($item->price ?? $item->variants_min_price ?? 0))->values();
-        }
-
-        return $items->sort(function ($left, $right) {
-            $leftPlan = (int) ($left->plan_priority ?? 0);
-            $rightPlan = (int) ($right->plan_priority ?? 0);
-            if ($leftPlan !== $rightPlan) {
-                return $rightPlan <=> $leftPlan;
-            }
-
-            $leftRating = (float) ($left->rating ?? $left->reviews_avg_rating ?? 0);
-            $rightRating = (float) ($right->rating ?? $right->reviews_avg_rating ?? 0);
-            if ($leftRating !== $rightRating) {
-                return $rightRating <=> $leftRating;
-            }
-
-            $leftCount = (int) ($left->review_count ?? $left->reviews_count ?? 0);
-            $rightCount = (int) ($right->review_count ?? $right->reviews_count ?? 0);
-            if ($leftCount !== $rightCount) {
-                return $rightCount <=> $leftCount;
-            }
-
-            $leftTitle = strtolower((string) ($left->title ?? ''));
-            $rightTitle = strtolower((string) ($right->title ?? ''));
-
-            return $leftTitle <=> $rightTitle;
-        })->values();
+        return ProductRanking::sortCollection($items, $sort);
     }
 
     private function applyV3TypeFilter($query, ?string $type): void
@@ -539,6 +576,55 @@ class SearchController extends Controller
                   });
             });
         }
+    }
+
+    private function offeringMatchesGroupType(OfferingV3 $offering, ?string $groupType): bool
+    {
+        $groupType = strtolower(trim((string) $groupType));
+        if (! in_array($groupType, ['solo', 'couple', 'group'], true)) {
+            return true;
+        }
+
+        $rows = DB::table('offering_price_options')
+            ->where('offering_id', $offering->id)
+            ->select(['audience_type', 'pricing_type'])
+            ->get();
+
+        if ($rows->isNotEmpty()) {
+            foreach ($rows as $row) {
+                $audience = strtolower(trim((string) ($row->audience_type ?? '')));
+                $pricing = strtolower(trim((string) ($row->pricing_type ?? '')));
+
+                if ($groupType === 'solo' && ($audience === 'solo' || str_contains($pricing, 'solo'))) {
+                    return true;
+                }
+
+                if ($groupType === 'couple' && ($audience === 'couple' || str_contains($pricing, 'couple'))) {
+                    return true;
+                }
+
+                if ($groupType === 'group' && ($audience === 'group' || str_contains($pricing, 'group'))) {
+                    return true;
+                }
+            }
+        }
+
+        $haystack = strtolower(trim(implode(' ', array_filter([
+            (string) ($offering->title ?? ''),
+            (string) ($offering->summary ?? ''),
+            (string) ($offering->type?->name ?? ''),
+            (string) ($offering->category?->name ?? ''),
+        ]))));
+
+        if ($groupType === 'solo') {
+            return str_contains($haystack, 'solo') || str_contains($haystack, '1 person') || str_contains($haystack, '1-to-1') || str_contains($haystack, '1:1');
+        }
+
+        if ($groupType === 'couple') {
+            return str_contains($haystack, 'couple') || str_contains($haystack, '2 person') || str_contains($haystack, 'pair') || str_contains($haystack, 'duo');
+        }
+
+        return str_contains($haystack, 'group') || str_contains($haystack, 'workshop') || str_contains($haystack, 'class');
     }
 
     private function offeringMode(OfferingV3 $offering): ?string
@@ -626,9 +712,16 @@ class SearchController extends Controller
         $product->setAttribute('tags', $product->tags_list ? array_map('trim', explode(',', $product->tags_list)) : []);
         $product->setAttribute('url', url('/offerings/' . $product->id . '-' . $slug));
         $product->setAttribute('vendor_name', $product->vendor?->vendor_name ?? null);
+        $product->setAttribute('source_version', 'legacy');
         $product->setAttribute('plan_key', $vendorPlan['key']);
         $product->setAttribute('plan_label', $vendorPlan['label']);
         $product->setAttribute('plan_priority', $vendorPlan['priority']);
+        $nextAvailableAt = $this->nextAvailableAt($product);
+        $product->setAttribute('next_available_at', $nextAvailableAt?->toIso8601String());
+        $product->setAttribute('next_available_timestamp', $nextAvailableAt?->timestamp);
+        $isEventLike = EventListing::isEventLike($product);
+        $product->setAttribute('is_event_like', $isEventLike);
+        $product->setAttribute('is_past_event', $isEventLike && EventListing::isPast($product));
 
         return $product;
     }
@@ -658,6 +751,8 @@ class SearchController extends Controller
     private function decorateSearchOffering(OfferingV3 $offering): OfferingV3
     {
         $vendorPlan = $this->resolveVendorPlan($offering->vendor);
+        $vendorReviewSummary = $offering->vendor?->review_summary ?? ['count' => 0, 'rating' => null];
+        $isEventLike = EventListing::isEventLike($offering);
 
         $offering->setAttribute('product_type', (string) ($offering->type?->name ?? $offering->category?->name ?? 'experience'));
         $offering->setAttribute('tags_list', trim(implode(',', array_filter([
@@ -666,6 +761,7 @@ class SearchController extends Controller
             (string) ($offering->summary ?? ''),
         ]))));
         $offering->setAttribute('vendor_name', $offering->vendor?->vendor_name ?? null);
+        $offering->setAttribute('source_version', 'v3');
         $offering->setAttribute('variants_min_price', $offering->price);
         $offering->setAttribute('reviews_avg_rating', null);
         $offering->setAttribute('reviews_count', 0);
@@ -673,13 +769,127 @@ class SearchController extends Controller
         $offering->setAttribute('image', $offering->getFirstImageUrl());
         $offering->setAttribute('locations', $offering->getLocations());
         $offering->setAttribute('mode', $this->offeringMode($offering));
-        $offering->setAttribute('rating', null);
-        $offering->setAttribute('review_count', 0);
+        $offering->setAttribute('rating', isset($vendorReviewSummary['rating']) ? round((float) $vendorReviewSummary['rating'], 1) : null);
+        $offering->setAttribute('review_count', (int) ($vendorReviewSummary['count'] ?? 0));
+        $offering->setAttribute('vendor_rating', isset($vendorReviewSummary['rating']) ? round((float) $vendorReviewSummary['rating'], 1) : null);
+        $offering->setAttribute('vendor_review_count', (int) ($vendorReviewSummary['count'] ?? 0));
         $offering->setAttribute('plan_key', $vendorPlan['key']);
         $offering->setAttribute('plan_label', $vendorPlan['label']);
         $offering->setAttribute('plan_priority', $vendorPlan['priority']);
+        $nextAvailableAt = $this->nextAvailableAt($offering);
+        $offering->setAttribute('next_available_at', $nextAvailableAt?->toIso8601String());
+        $offering->setAttribute('next_available_timestamp', $nextAvailableAt?->timestamp);
+        $offering->setAttribute('is_event_like', $isEventLike);
+        $offering->setAttribute('is_past_event', $isEventLike && EventListing::isPast($offering));
 
         return $offering;
+    }
+
+    private function isEventLikeProduct(Product $product): bool
+    {
+        return EventListing::isEventLike($product);
+    }
+
+    private function isEventLikeOffering(OfferingV3 $offering): bool
+    {
+        return EventListing::isEventLike($offering);
+    }
+
+    private function nextAvailabilitySortValue(mixed $item): int
+    {
+        $timestamp = data_get($item, 'next_available_timestamp');
+        if (is_numeric($timestamp) && (int) $timestamp > 0) {
+            return (int) $timestamp;
+        }
+
+        $value = data_get($item, 'next_available_at');
+        if (is_string($value) && trim($value) !== '') {
+            try {
+                return Carbon::parse($value)->timestamp;
+            } catch (\Throwable $e) {
+                return PHP_INT_MAX;
+            }
+        }
+
+        return PHP_INT_MAX;
+    }
+
+    private function nextAvailableAt(Product|OfferingV3 $item): ?Carbon
+    {
+        $vendor = $item->vendor;
+        $user = $vendor?->user;
+        if (! $user) {
+            return null;
+        }
+
+        $settings = AvailabilityWindowService::extractAvailabilitySettings($user);
+        $timezone = (string) ($settings['timezone'] ?? config('app.timezone', 'Europe/London'));
+        $duration = $this->availabilityDurationMinutes($item, $settings);
+        $bookingHorizon = max(1, min(365, (int) ($settings['bookingHorizon'] ?? 30)));
+        $cacheKey = implode(':', [
+            (string) $user->id,
+            (string) $duration,
+            (string) $bookingHorizon,
+            $timezone,
+        ]);
+
+        if (array_key_exists($cacheKey, $this->nextAvailabilityCache)) {
+            return $this->nextAvailabilityCache[$cacheKey];
+        }
+
+        try {
+            $anchor = Carbon::now($timezone)->startOfDay();
+            $rangeEnd = $anchor->copy()->addDays($bookingHorizon)->endOfDay();
+            $weeklyWindows = AvailabilityWindowService::buildWeeklyWindows($user);
+            $specificRecords = VendorAvailability::where('user_id', $user->id)
+                ->whereBetween('date', [$anchor->toDateString(), $rangeEnd->toDateString()])
+                ->orderBy('date')
+                ->get();
+            $specificWindows = AvailabilityWindowService::buildSpecificWindows($specificRecords);
+
+            $holdCutoff = Carbon::now($timezone)->subMinutes(10);
+            $reservationRecords = Reservation::where('user_id', $user->id)
+                ->whereBetween('date', [$anchor->toDateString(), $rangeEnd->toDateString()])
+                ->where(function ($query) use ($holdCutoff) {
+                    $query->where('is_confirmed', true)
+                        ->orWhere('created_at', '>=', $holdCutoff);
+                })
+                ->orderBy('date')
+                ->get();
+
+            $bookingRecords = Booking::where('user_id', $user->id)
+                ->whereBetween('date', [$anchor->toDateString(), $rangeEnd->toDateString()])
+                ->orderBy('date')
+                ->get();
+
+            $slotsByDay = AvailabilityWindowService::generateSlots(
+                $weeklyWindows,
+                $settings,
+                $duration,
+                $bookingHorizon,
+                $anchor,
+                $specificWindows,
+                $reservationRecords->concat($bookingRecords)->all()
+            );
+
+            foreach ($slotsByDay as $day) {
+                $firstSlot = $day['slots'][0]['iso'] ?? null;
+                if (! $firstSlot) {
+                    continue;
+                }
+
+                $next = Carbon::parse($firstSlot, $timezone);
+                $this->nextAvailabilityCache[$cacheKey] = $next;
+
+                return $next;
+            }
+        } catch (\Throwable $e) {
+            // Fall through and cache the miss so repeated items don't keep recalculating.
+        }
+
+        $this->nextAvailabilityCache[$cacheKey] = null;
+
+        return null;
     }
 
     private function resolveVendorPlan(?VendorDetail $vendor): array

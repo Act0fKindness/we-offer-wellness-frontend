@@ -5,13 +5,21 @@
   <title>{{ $seo['title'] ?? (($location['title'] ?? 'Location').' | We Offer Wellness™') }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
 @endpush
 
 @section('content')
 @php
   $locationTitle = (string) ($location['title'] ?? 'Location');
 @endphp
+
+@include('partials.breadcrumbs', [
+  'crumbs' => [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Locations', 'url' => route('locations.index')],
+    ['label' => $locationTitle],
+  ],
+  'schemaUrl' => $seo['canonical'] ?? url('/locations/' . ($location['slug'] ?? request()->route('slug'))),
+])
 
 <section class="pt-4 pb-2 bg-transparent">
   <div class="container-page">

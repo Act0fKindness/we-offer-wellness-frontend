@@ -1,22 +1,52 @@
 @php
-    // Derive URL segment from product_type or tags
-    $t = strtolower((string) ($product->product_type ?? ''));
-    $tags = strtolower((string) ($product->tags_list ?? ''));
-    $slug = \Illuminate\Support\Str::slug($product->title ?: (string) $product->id);
-    $url = url('/offerings/' . $product->id . '-' . $slug);
+    $item = is_array($product ?? null) ? (object) $product : $product;
+    $get = fn (string $key, $default = null) => data_get($product, $key, $default);
 
-    $image = $product->getFirstImageUrl();
-    $title = $product->title ?? 'Untitled';
+    // Derive URL segment from product_type or tags
+    $t = strtolower((string) $get('product_type', ''));
+    $tags = strtolower((string) $get('tags_list', ''));
+    $slug = \Illuminate\Support\Str::slug((string) ($get('title', $get('name', '')) ?: $get('id', '')));
+    $url = url('/offerings/' . $get('id', '') . '-' . $slug);
+
+    $image = method_exists($item, 'getFirstImageUrl')
+        ? $item->getFirstImageUrl()
+        : ($get('image') ?: $get('media.0.media_url'));
+    $hasDisplayableImage = method_exists($item, 'hasDisplayableImage')
+        ? $item->hasDisplayableImage()
+        : !empty($image) && !str_contains((string) $image, 'no-product-image.jpg');
+    $title = $get('title', 'Untitled');
     // Title case: first letter of each word uppercase
     $toLower = function($s){ return function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s); };
     $ucWords = function($s){ return function_exists('mb_convert_case') ? mb_convert_case($s, MB_CASE_TITLE, 'UTF-8') : ucwords($s); };
+    $normalizeTypeLabel = function ($value) use ($toLower, $ucWords) {
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return '';
+        }
+
+        $map = [
+            'therapies' => 'Therapy',
+            'workshops' => 'Workshop',
+            'events' => 'Event',
+            'classes' => 'Class',
+            'retreats' => 'Retreat',
+            'experiences' => 'Experience',
+        ];
+
+        $key = $toLower($raw);
+        if (isset($map[$key])) {
+            return $map[$key];
+        }
+
+        return $ucWords($toLower(str_replace(['_', '-'], ' ', $raw)));
+    };
     $titleFormatted = $ucWords($toLower($title));
-    $type = $product->product_type ?: 'Therapy';
-    $category = $product->category?->name;
-    $priceMin = $product->variants_min_price ?? ($product->price ?? null);
+    $type = $normalizeTypeLabel($get('product_type', 'Therapy'));
+    $category = $normalizeTypeLabel(data_get($product, 'category.name'));
+    $priceMin = $get('variants_min_price', $get('price', null));
     if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) { $priceMin = $priceMin / 100; }
-    $rating = isset($product->reviews_avg_rating) ? round((float)$product->reviews_avg_rating, 1) : null;
-    $reviewCount = (int) ($product->reviews_count ?? 0);
+    $rating = is_numeric($get('reviews_avg_rating', null)) ? round((float) $get('reviews_avg_rating'), 1) : null;
+    $reviewCount = (int) ($get('reviews_count', 0));
 @endphp
 
 @php
@@ -46,6 +76,7 @@
   @endpush
 @endonce
 
+@if($hasDisplayableImage)
 <a href="{{ $url }}" class="wow-card-sm" aria-label="{{ $titleFormatted }}">
   <div class="thumb">
     @if($image)
@@ -68,3 +99,4 @@
     </div>
   </div>
 </a>
+@endif

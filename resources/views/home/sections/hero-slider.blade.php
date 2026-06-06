@@ -5,7 +5,52 @@
 
   <style>
     /* Keep your existing whero styling intact. This only styles the slider wrapper + controls. */
-    .wow-hero-swiper { position: relative; }
+    .wow-hero-swiper {
+      --wow-hero-band-height: clamp(480px, 58vh, 700px);
+      position: relative;
+      overflow: hidden;
+      min-height: var(--wow-hero-band-height);
+    }
+    .wow-hero-swiper .swiper-wrapper,
+    .wow-hero-swiper .swiper-slide {
+      min-height: var(--wow-hero-band-height);
+    }
+    .wow-hero-swiper .swiper-slide > .whero {
+      width: 100%;
+    }
+    .wow-hero-swiper .swiper-slide > .whero .whero-pad {
+      min-height: var(--wow-hero-band-height);
+    }
+    @media (max-width: 767.98px) {
+      .wow-hero-swiper .swiper-wrapper,
+      .wow-hero-swiper .swiper-slide {
+        min-height: var(--wow-hero-band-height);
+        height: 602px !important;
+      }
+    }
+    @media (min-width: 992px) {
+      .wow-hero-swiper {
+        --wow-hero-band-height: 780px;
+        height: 780px;
+        min-height: 780px;
+      }
+      .wow-hero-swiper .swiper-wrapper,
+      .wow-hero-swiper .swiper-slide {
+        height: 100%;
+        min-height: 100%;
+      }
+      .wow-hero-swiper .swiper-slide {
+        display: flex;
+        align-items: stretch;
+      }
+      .wow-hero-swiper .swiper-slide > .whero {
+        height: 100%;
+      }
+      .wow-hero-swiper .swiper-slide > .whero .whero-pad {
+        height: 100%;
+        min-height: 100%;
+      }
+    }
 
     .wow-hero-nav{
       position:absolute;
@@ -115,50 +160,54 @@
     .whero--s3 .whero-title { /* e.g. */ }
 
     @media (max-width: 575px){
-      .wow-hero-nav{ bottom: 12px; }
-      .wow-hero-btn{ width:40px; height:40px; }
+      .wow-hero-nav{
+        top: 10px;
+        bottom: auto;
+      }
+      .wow-hero-nav .container-page{
+        gap: 10px;
+      }
+      .wow-hero-btn{
+        width: 40px;
+        height: 40px;
+      }
     }
 
     @media (max-width: 991.98px){
       .browser-window{ display:none !important; }
     }
 
-    @media (max-width: 767.98px){
-      .wow-hero-swiper,
-      .wow-hero-swiper .swiper-wrapper{
-        max-height: 846px;
-        overflow: hidden;
-      }
-    }
-
-
-    @media (max-width: 575px) {
-        .wow-hero-btn {
-            width: 60px;
-            height: 40px;
-        }
-    }
-
     /* Ensure consistent visual height across slides on desktop by
        constraining slide 2 elements to fit the same hero band height
        as slide 1. This reduces poster + typography sizes on desktop. */
     @media (min-width: 992px) {
-      /* General: keep the slider wrapper stable visually */
-      .wow-hero-swiper { overflow: hidden; }
-      .swiper.wow-hero-swiper.swiper-initialized.swiper-horizontal.swiper-backface-hidden {
-        max-height: 770px !important;
-      }
+      .wow-hero-swiper .whero-stack { min-height: 360px; }
+      .wow-hero-swiper .whero-panel { top: 180px; width: min(600px, 100%); }
+      .wow-hero-swiper .whero-browser-chrome { height: 40px; }
+      .wow-hero-swiper .whero-browser-page { padding: 12px; }
+      .wow-hero-swiper .whero-grid-viewport { margin-top: 12px; }
+      .wow-hero-swiper .whero-panel .card { min-height: 120px; width: 200px; flex: 0 0 200px; }
+      .wow-hero-swiper .whero-spark,
+      .wow-hero-swiper .spark { height: 72px; }
+
       /* Slide 2 specific tweaks */
-      .whero.whero--s2 .ourvibe-poster { max-height: 280px !important; height: auto; width: auto; }
-      .whero.whero--s2 .ourvibe-mid img { max-height: 300px !important; }
-      .whero.whero--s2 .ourvibe-sticker { width: 90px !important; height: 90px !important; }
-      .whero.whero--s2 .ourvibe-box { transform: scale(.78); transform-origin: top right; }
+      .whero.whero--s2 .ourvibe-poster { max-height: 260px !important; height: auto; width: auto; }
+      .whero.whero--s2 .ourvibe-mid img { max-height: 280px !important; }
+      .whero.whero--s2 .ourvibe-sticker { width: 82px !important; height: 82px !important; }
+      .whero.whero--s2 .ourvibe-box { transform: scale(.74); transform-origin: top right; }
       .whero.whero--s2 .present { letter-spacing: .24em; }
-      .whero.whero--s2 .ourvibe-bottom--desktop-consistent { font-size: 15px !important; line-height: 1.16; }
-      .whero.whero--s2 .ourvibe-actions { margin-top: 8px !important; }
+      .whero.whero--s2 .ourvibe-bottom--desktop-consistent { font-size: 16px !important; line-height: 1.16; }
+      .whero.whero--s2 .ourvibe-actions { margin-top: 14px !important; }
       .whero.whero--s2 a.ourvibe-buy { font-size: 18px !important; padding: 8px 12px; }
+      .whero.whero--s2 .ourvibe-top .brand svg { height: 26px; }
+      .whero.whero--s2 .ourvibe-box.box-1 { top: clamp(188px, 22vh, 248px); }
+      .whero.whero--s2 .ourvibe-box.box-2 { top: clamp(320px, 36vh, 420px); }
+      .whero.whero--s2 .ourvibe-wrap { padding: clamp(10px, 2vw, 22px) 0; }
+      .whero.whero--s2 .ourvibe-shell { gap: 10px; padding-bottom: 14px !important; }
+      .whero.whero--s2 .ourvibe-bottom { font-size: clamp(16px, 1.05vw + .35rem, 18px) !important; }
+      .whero.whero--s2 .ourvibe-bottom .ourvibe-actions { margin-top: 16px; }
       /* Cap section internal spacing to avoid overflow vs slide 1 */
-      .whero.whero--s2 .whero-pad { padding-top: 20px !important; padding-bottom: 20px !important; min-height: clamp(520px, 50vh, 680px); }
+      .whero.whero--s2 .whero-pad { padding-top: 32px !important; padding-bottom: 16px !important; min-height: var(--wow-hero-band-height); }
     }
   </style>
 
@@ -218,15 +267,15 @@
  <script>
    document.addEventListener('DOMContentLoaded', () => {
      const el = document.querySelector('[data-hero-swiper]');
-     if (!el) return;
+    if (!el) return;
 
-     const toggleBtn = document.querySelector('[data-hero-toggle]');
+    const toggleBtn = document.querySelector('[data-hero-toggle]');
      let isPaused = false;
 
-     const swiper = new Swiper(el, {
-       loop: true,
-       speed: 650,
-       effect: 'slide',
+	    const swiper = new Swiper(el, {
+	      loop: true,
+	      speed: 650,
+	      effect: 'slide',
 
        autoplay: {
          delay: 5000,
@@ -249,13 +298,13 @@
          onlyInViewport: true,
        },
 
-       a11y: {
-         enabled: true,
-       },
-     });
+	      a11y: {
+	        enabled: true,
+	      },
+	    });
 
-     function setPaused(nextPaused) {
-       isPaused = !!nextPaused;
+	    function setPaused(nextPaused) {
+	      isPaused = !!nextPaused;
 
        // If the toggle button isn't present, still allow the rest of the slider to work
        if (!toggleBtn) {

@@ -5,7 +5,6 @@
   <title>{{ $seo['title'] ?? 'Near Me | We Offer Wellness™' }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
   <style>
     .near-me-search{
       position:relative;
@@ -74,6 +73,14 @@
 @endpush
 
 @section('content')
+@include('partials.breadcrumbs', [
+  'crumbs' => [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Near Me'],
+  ],
+  'schemaUrl' => url('/near-me'),
+])
+
 <section class="section">
   <div class="container-page" style="max-width:760px;">
     <div class="mb-4">

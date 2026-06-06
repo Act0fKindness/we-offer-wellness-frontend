@@ -7,6 +7,12 @@
   $contraTxt = trim((string)($contra ?? ''));
   $locs = $locationsList ?? [];
   $participantRange = $participantRange ?? null;
+  $mode = trim((string)($mode ?? ''));
+  $locations = is_array($locations ?? null) ? array_values(array_filter($locations)) : [];
+  $availabilityPattern = trim((string)($availability_pattern ?? ''));
+  $availabilityDuration = trim((string)($availability_duration ?? ''));
+  $availabilityLeadTime = trim((string)($availability_lead_time ?? ''));
+  $durationText = trim((string)($duration_text ?? ''));
 @endphp
 
 <style>
@@ -68,7 +74,13 @@
 
 @include('offering.partials.sections.summary', ['summary' => $sum])
 
-@include('offering.partials.sections.features', ['locationsList' => $locs, 'participantRange' => $participantRange])
+@include('offering.partials.sections.features', [
+  'locationsList' => $locs,
+  'participantRange' => $participantRange,
+  'mode' => $mode,
+  'locations' => $locations,
+  'durationText' => $durationText,
+])
 
 @include('offering.partials.sections.about', ['body' => $about])
 
@@ -81,7 +93,12 @@
 
   @include('offering.partials.sections.locations', ['locationsList' => $locs])
 
-  @include('offering.partials.sections.availability', ['availability' => $availability ?? ''])
+  @include('offering.partials.sections.availability', [
+    'availability' => $availability ?? '',
+    'availability_pattern' => $availabilityPattern,
+    'availability_duration' => $availabilityDuration,
+    'availability_lead_time' => $availabilityLeadTime,
+  ])
   @include('offering.partials.sections.how_it_works', ['how' => $how ?? ''])
 </div>
 

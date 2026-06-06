@@ -102,6 +102,7 @@ class SeoMoneyPageController extends Controller
             'popularLocations' => $popularLocations,
             'catalogSuggestions' => data_get($catalog, 'flat', []),
             'savedLocation' => $locationContext,
+            'searchBreadcrumbUrl' => $this->buildSearchBreadcrumbUrl($page, $locationContext),
             'searchAction' => url('/' . $slug),
             'request' => $request,
         ]);
@@ -124,6 +125,7 @@ class SeoMoneyPageController extends Controller
                 'search_placeholder' => 'e.g. Maidstone or ME14',
                 'search_helper' => 'Enter a town, county or postcode to see what is available nearby.',
                 'query_terms' => ['reiki', 'distance reiki', 'reiki healing'],
+                'breadcrumb_search_query' => 'Reiki Healing',
                 'category_slug' => 'reiki',
                 'mode' => 'therapy',
                 'fallback_mode' => true,
@@ -170,6 +172,7 @@ class SeoMoneyPageController extends Controller
                 'search_placeholder' => 'e.g. Leeds or BN1',
                 'search_helper' => 'Search by town, county or postcode to find sound healing nearby.',
                 'query_terms' => ['sound healing', 'sound bath', 'gong', 'vibrational therapy'],
+                'breadcrumb_search_query' => 'Sound Healing',
                 'category_slug' => 'sound-healing',
                 'mode' => 'therapy',
                 'fallback_mode' => true,
@@ -216,6 +219,7 @@ class SeoMoneyPageController extends Controller
                 'search_placeholder' => 'e.g. Kent or SW1',
                 'search_helper' => 'Search by town, county or postcode for holistic therapy nearby.',
                 'query_terms' => ['reiki', 'sound healing', 'reflexology', 'breathwork', 'massage', 'hypnotherapy', 'meditation', 'acupuncture', 'somatic experiencing'],
+                'breadcrumb_search_query' => 'Holistic Therapy',
                 'category_slug' => 'holistic-therapy',
                 'mode' => 'broad',
                 'fallback_mode' => true,
@@ -262,6 +266,7 @@ class SeoMoneyPageController extends Controller
                 'search_placeholder' => 'e.g. Brighton or LS1',
                 'search_helper' => 'Search by town, county or postcode for a class near you.',
                 'query_terms' => ['yoga', 'meditation', 'breathwork', 'sound healing', 'workshop', 'class'],
+                'breadcrumb_search_query' => 'Wellness Classes',
                 'category_slug' => 'wellness-classes',
                 'mode' => 'class',
                 'fallback_mode' => true,
@@ -313,6 +318,7 @@ class SeoMoneyPageController extends Controller
             'search_placeholder' => 'e.g. Kent, London or M1',
             'search_helper' => 'Use a location or postcode to narrow the UK-wide results.',
             'query_terms' => ['reiki', 'sound healing', 'reflexology', 'breathwork', 'massage', 'hypnotherapy', 'meditation', 'acupuncture', 'somatic experiencing'],
+            'breadcrumb_search_query' => 'Holistic Therapies',
             'category_slug' => 'holistic-therapies-uk',
             'mode' => 'broad',
             'fallback_mode' => true,
@@ -857,6 +863,67 @@ class SeoMoneyPageController extends Controller
         }
 
         return $base . Str::after($path, '/locations');
+    }
+
+    private function buildSearchBreadcrumbUrl(array $page, array $locationContext = []): string
+    {
+        $query = [];
+        $what = $this->breadcrumbSearchQuery($page);
+        if ($what !== '') {
+            $query['what'] = $what;
+        }
+
+        $where = trim((string) data_get($locationContext, 'label', ''));
+        if ($where !== '') {
+            $query['where'] = $where;
+        }
+
+        if ($query === []) {
+            return url('/search');
+        }
+
+        return url('/search') . '?' . http_build_query($query);
+    }
+
+    private function breadcrumbSearchQuery(array $page): string
+    {
+        $explicit = trim((string) data_get($page, 'breadcrumb_search_query', ''));
+        if ($explicit !== '') {
+            return $explicit;
+        }
+
+        $categorySlug = trim((string) data_get($page, 'category_slug', ''));
+        if ($categorySlug !== '') {
+            return $this->humanizeSearchTerm($categorySlug);
+        }
+
+        $terms = array_values(array_filter(array_map('trim', (array) data_get($page, 'query_terms', []))));
+        if ($terms !== []) {
+            return $this->humanizeSearchTerm($terms[0]);
+        }
+
+        $h1 = trim((string) data_get($page, 'h1', ''));
+        if ($h1 !== '') {
+            return $this->humanizeSearchTerm($h1);
+        }
+
+        return '';
+    }
+
+    private function humanizeSearchTerm(string $term): string
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return '';
+        }
+
+        $term = str_replace(['-', '_'], ' ', $term);
+        $term = preg_replace('/\bnear me\b/i', '', $term) ?? $term;
+        $term = preg_replace('/\bnear you\b/i', '', $term) ?? $term;
+        $term = preg_replace('/\buk\b/i', '', $term) ?? $term;
+        $term = preg_replace('/\s+/', ' ', $term) ?? $term;
+
+        return trim(Str::title($term));
     }
 
     private function applyLocationToPage(array $page, string $locationLabel): array

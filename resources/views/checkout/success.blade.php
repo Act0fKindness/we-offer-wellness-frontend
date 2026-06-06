@@ -4,6 +4,22 @@
 @php
   $order = $order ?? null;
   $items = $order?->items ?? [];
+  $analyticsItems = [];
+  foreach ($items as $item) {
+      $meta = is_array($item->meta ?? null) ? $item->meta : (is_object($item->meta ?? null) ? (array) $item->meta : []);
+      $analyticsItems[] = [
+          'id' => (string) ($item->sku ?? $item->product_id ?? $item->id ?? ''),
+          'title' => (string) ($item->name ?? 'Item'),
+          'price' => round(((float) ($item->unit_amount ?? 0)) / 100, 2),
+          'qty' => (int) ($item->quantity ?? 1),
+          'product_id' => $item->product_id ?? null,
+          'variant_id' => $item->variant_id ?? null,
+          'variant_label' => (string) ($meta['variant_label'] ?? ''),
+          'source_version' => $meta['source_version'] ?? null,
+      ];
+  }
+  $analyticsTotal = round((float) ($order?->amount_total ?? 0) / 100, 2);
+  $analyticsCount = array_sum(array_map(static fn ($item) => (int) ($item['qty'] ?? 1), $analyticsItems));
 @endphp
 <section class="section">
   <div class="container-page">
@@ -35,6 +51,23 @@
 @push('scripts')
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    try {
+      var payload = {
+        items: @json($analyticsItems),
+        currency: 'GBP',
+        value: @json($analyticsTotal),
+        item_count: @json($analyticsCount),
+        transaction_id: @json((string) ($order?->stripe_session_id ?? $order?->id ?? '')),
+        order_id: @json((string) ($order?->id ?? '')),
+        checkout_status: 'success',
+        source: 'checkout-success',
+      };
+      if (window.WOWAnalytics && typeof window.WOWAnalytics.trackCommerce === 'function') {
+        window.WOWAnalytics.trackCommerce('wow_v3_payment_success', payload);
+      } else if (typeof window.gtag === 'function') {
+        window.gtag('event', 'wow_v3_payment_success', Object.assign({ flow_version: 'v3', wow_event_name: 'wow_v3_payment_success' }, payload));
+      }
+    } catch (_) {}
     try { localStorage.removeItem('wow_cart'); } catch (_) {}
     try { localStorage.removeItem('wow_cart_v1'); } catch (_) {}
     try {

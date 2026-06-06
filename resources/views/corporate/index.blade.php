@@ -4,6 +4,14 @@
 @section('meta_description', $seo['description'] ?? '')
 
 @section('content')
+@include('partials.breadcrumbs', [
+  'crumbs' => [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Corporate Wellness'],
+  ],
+  'schemaUrl' => url('/corporate'),
+])
+
 <section class="section">
   <div class="container-page">
     <h1 class="display-5 mb-3">Corporate Wellness</h1>
@@ -12,4 +20,3 @@
   </div>
 </section>
 @endsection
-

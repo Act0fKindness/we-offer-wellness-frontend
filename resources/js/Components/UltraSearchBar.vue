@@ -2,6 +2,7 @@
 import { onMounted, onBeforeUnmount, ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { fetchLocations } from '@/services/locations'
+import { fetchWhatCategories } from '@/services/whatCategories'
 import SearchRangeCalendar from './SearchRangeCalendar.vue'
 
 const props = defineProps({
@@ -24,7 +25,7 @@ const props = defineProps({
 const root = ref(null)
 const isFlexible = ref(false)
 const whatValue = ref('')
-const WHAT_LIMIT = 6
+const WHAT_LIMIT = 5
 
 const state = {
   who: { adults: 2, children: 0 },
@@ -317,31 +318,29 @@ function renderWhat(qs = '') {
   const list = q(`#${id('what-list')}`)
   if (!list) return false
   const query = (qs || '').trim()
-  if (!query) {
-    list.innerHTML = ''
-    return false
-  }
-  let filtered = whatCategories
-    .map((item) => ({ item, score: searchScore(query, item) }))
-    .filter((row) => row.score < 999)
-    .sort((a, b) => (a.score - b.score) || a.item.title.localeCompare(b.item.title))
-    .slice(0, WHAT_LIMIT)
-    .map((row) => row.item)
+  const filtered = query.length < 2
+    ? whatCategories.slice(0, WHAT_LIMIT)
+    : whatCategories
+      .map((item) => ({ item, score: searchScore(query, item) }))
+      .filter((row) => row.score < 999)
+      .sort((a, b) => (a.score - b.score) || a.item.title.localeCompare(b.item.title))
+      .slice(0, WHAT_LIMIT)
+      .map((row) => row.item)
   let html = ''
   if (!filtered.length) {
     list.innerHTML = ''
-    closeAll()
     return false
   } else {
-    html += `<div class="section-title">Categories</div><div>`
+    html += `<div class="section-title">${query.length < 2 ? 'Trending modalities' : 'Modalities'}</div><div>`
     filtered.forEach((x) => {
       const m = fuzzyMatch(query, x.title)
       const titleHTML = highlight(x.title, m.ranges)
+      const subtitle = String(x.subtitle || (x.counts?.total ? `${x.counts.total} offerings` : 'Modality')).replace(/\bproducts?\b/gi, 'offerings')
       html += `
         <button type="button" class="item" role="option" data-value="${x.title}">
           <i class="bi bi-tag"></i>
           <span class="title">${titleHTML}</span>
-          <span class="text-muted ms-2">Category</span>
+          <span class="text-muted ms-2">${subtitle}</span>
         </button>`
     })
     html += `</div>`
@@ -420,8 +419,8 @@ function bindInteractions() {
     const val = btn.dataset.value || ''
     addWhereChip(val)
     updateWhereDropdownVisibility()
-    // Keep the pane open to allow adding more; place cursor at end
-    if (whereEditor) placeCaretAtEnd(whereEditor)
+    closeAll()
+    if (whereEditor) whereEditor.blur()
   })
   // Direct typing in editor: leave chips intact, do not change hidden until user selects
   // WHERE typed filter: debounce fetch
@@ -540,7 +539,7 @@ function bindInteractions() {
     if (whatInput) whatInput.value = btn.dataset.value || ''
     whatValue.value = whatInput?.value || ''
     closeAll()
-    whereEditor?.focus()
+    whatInput?.blur()
   })
 }
 
@@ -549,25 +548,14 @@ onMounted(async () => {
 
   // Load categories to power WHAT suggestions
   try {
-    const catalog = await fetchCatalog({ all: true, product_limit: 200 })
-    const categories = Array.isArray(catalog) ? catalog : (Array.isArray(catalog?.categories) ? catalog.categories : [])
-    const categoryMap = new Map()
-    ;(categories || []).forEach((c) => {
-      const name = (c?.name || '').trim()
-      if (name) categoryMap.set(name.toLowerCase(), { cat: 'Categories', title: name, type: 'Category', search: name })
-      ;(c?.products || []).forEach((p) => {
-        const productCategory = (p?.category?.name || '').trim()
-        if (productCategory) categoryMap.set(productCategory.toLowerCase(), { cat: 'Categories', title: productCategory, type: 'Category', search: productCategory })
-      })
-    })
-    whatCategories = Array.from(categoryMap.values()).sort((a, b) => a.title.localeCompare(b.title))
+    whatCategories = await fetchWhatCategories()
   } catch {}
 
   bindInteractions()
 
   // Load locations for WHERE list
   try {
-    const items = await fetchLocations(12)
+    const items = await fetchLocations(5)
     renderWhereList(items)
   } catch {}
 
@@ -580,6 +568,7 @@ onMounted(async () => {
       const whatInput = q(`#${id('what')}`)
       if (whatInput) whatInput.value = whatVal
       whatValue.value = whatVal
+      renderWhat(whatVal)
     }
     // WHERE (comma-separated)
     const whereVal = urlParams.get('where') || ''
@@ -649,7 +638,7 @@ onBeforeUnmount(() => {
         </div>
         <div :id="id('where-pane')" class="pane narrow d-none" role="listbox" aria-label="Trending places">
           <div class="section-title">Trending destinations</div>
-          <div class="listy" :id="id('where-list')"></div>
+          <div class="listy" :id="id('where-list')" data-wow-location-list="1"></div>
         </div>
       </div>
 
@@ -825,6 +814,12 @@ onBeforeUnmount(() => {
   scrollbar-width:none;
 }
 .wow-ultra .pane.narrow::-webkit-scrollbar{ width:0; height:0 }
+@media (max-width: 991.98px){
+  .wow-ultra .pane.narrow{
+    width:auto;
+    max-width:none;
+  }
+}
 /* Adaptive alignment helpers */
 .wow-ultra .pane.align-left{ left:0 !important; right:auto !important }
 .wow-ultra .pane.align-right{ left:auto !important; right:0 !important }
@@ -834,6 +829,7 @@ onBeforeUnmount(() => {
   padding:10px 14px; background:#f9fafb; border-bottom:1px solid #eef2f7;
 }
 .wow-ultra .listy{ max-height:360px; overflow:auto; padding:6px 0 }
+.wow-ultra [data-wow-location-list="1"]{ max-height:none; overflow:hidden; padding:6px 0 }
 .wow-ultra .item{ display:flex; align-items:center; gap:10px; padding:12px 14px; text-align:left; background:#fff; border:0; width:100% }
 .wow-ultra .item:hover, .wow-ultra .item[aria-selected="true"]{ background:#f2f5ff }
 .wow-ultra .item .title{ font-weight:600; color:#0f172a }

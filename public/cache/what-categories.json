@@ -1,0 +1,1581 @@
+{
+    "generated_at": "2026-06-06T00:00:05+00:00",
+    "count": 105,
+    "categories": [
+        {
+            "cat": "Modalities",
+            "title": "Yoga",
+            "label": "Yoga",
+            "value": "Yoga",
+            "type": "Modality",
+            "subtitle": "45 offerings",
+            "slug": "yoga",
+            "search": "Yoga yoga",
+            "counts": {
+                "products": 45,
+                "offerings": 0,
+                "total": 45
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Breathwork",
+            "label": "Breathwork",
+            "value": "Breathwork",
+            "type": "Modality",
+            "subtitle": "44 offerings",
+            "slug": "breathwork",
+            "search": "Breathwork breathwork",
+            "counts": {
+                "products": 44,
+                "offerings": 0,
+                "total": 44
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Meditation",
+            "label": "Meditation",
+            "value": "Meditation",
+            "type": "Modality",
+            "subtitle": "37 offerings",
+            "slug": "meditation",
+            "search": "Meditation meditation",
+            "counts": {
+                "products": 37,
+                "offerings": 0,
+                "total": 37
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Coaching",
+            "label": "Coaching",
+            "value": "Coaching",
+            "type": "Modality",
+            "subtitle": "36 offerings",
+            "slug": "coaching",
+            "search": "Coaching coaching",
+            "counts": {
+                "products": 35,
+                "offerings": 1,
+                "total": 36
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Energy Healing",
+            "label": "Energy Healing",
+            "value": "Energy Healing",
+            "type": "Modality",
+            "subtitle": "34 offerings",
+            "slug": "energy-healing",
+            "search": "Energy Healing energy-healing",
+            "counts": {
+                "products": 34,
+                "offerings": 0,
+                "total": 34
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Mindfulness",
+            "label": "Mindfulness",
+            "value": "Mindfulness",
+            "type": "Modality",
+            "subtitle": "22 offerings",
+            "slug": "mindfulness",
+            "search": "Mindfulness mindfulness",
+            "counts": {
+                "products": 22,
+                "offerings": 0,
+                "total": 22
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Sound Healing",
+            "label": "Sound Healing",
+            "value": "Sound Healing",
+            "type": "Modality",
+            "subtitle": "22 offerings",
+            "slug": "sound-healing",
+            "search": "Sound Healing sound-healing",
+            "counts": {
+                "products": 21,
+                "offerings": 1,
+                "total": 22
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "9D Breathwork",
+            "label": "9D Breathwork",
+            "value": "9D Breathwork",
+            "type": "Modality",
+            "subtitle": "21 offerings",
+            "slug": "9d-breathwork",
+            "search": "9D Breathwork 9d-breathwork",
+            "counts": {
+                "products": 21,
+                "offerings": 0,
+                "total": 21
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Crystal Healing",
+            "label": "Crystal Healing",
+            "value": "Crystal Healing",
+            "type": "Modality",
+            "subtitle": "20 offerings",
+            "slug": "crystal-healing",
+            "search": "Crystal Healing crystal-healing",
+            "counts": {
+                "products": 20,
+                "offerings": 0,
+                "total": 20
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Massage",
+            "label": "Massage",
+            "value": "Massage",
+            "type": "Modality",
+            "subtitle": "20 offerings",
+            "slug": "massage",
+            "search": "Massage massage",
+            "counts": {
+                "products": 20,
+                "offerings": 0,
+                "total": 20
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Reiki",
+            "label": "Reiki",
+            "value": "Reiki",
+            "type": "Modality",
+            "subtitle": "16 offerings",
+            "slug": "reiki",
+            "search": "Reiki reiki",
+            "counts": {
+                "products": 15,
+                "offerings": 1,
+                "total": 16
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Sound Bath",
+            "label": "Sound Bath",
+            "value": "Sound Bath",
+            "type": "Modality",
+            "subtitle": "13 offerings",
+            "slug": "sound-bath",
+            "search": "Sound Bath sound-bath",
+            "counts": {
+                "products": 13,
+                "offerings": 0,
+                "total": 13
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Reiki Healing",
+            "label": "Reiki Healing",
+            "value": "Reiki Healing",
+            "type": "Modality",
+            "subtitle": "11 offerings",
+            "slug": "reiki-healing",
+            "search": "Reiki Healing reiki-healing",
+            "counts": {
+                "products": 11,
+                "offerings": 0,
+                "total": 11
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Angelic Reiki",
+            "label": "Angelic Reiki",
+            "value": "Angelic Reiki",
+            "type": "Modality",
+            "subtitle": "10 offerings",
+            "slug": "angelic-reiki",
+            "search": "Angelic Reiki angelic-reiki",
+            "counts": {
+                "products": 10,
+                "offerings": 0,
+                "total": 10
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Hypnotherapy",
+            "label": "Hypnotherapy",
+            "value": "Hypnotherapy",
+            "type": "Modality",
+            "subtitle": "10 offerings",
+            "slug": "hypnotherapy",
+            "search": "Hypnotherapy hypnotherapy",
+            "counts": {
+                "products": 10,
+                "offerings": 0,
+                "total": 10
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Indian Head Massage",
+            "label": "Indian Head Massage",
+            "value": "Indian Head Massage",
+            "type": "Modality",
+            "subtitle": "9 offerings",
+            "slug": "indian-head-massage",
+            "search": "Indian Head Massage indian-head-massage",
+            "counts": {
+                "products": 9,
+                "offerings": 0,
+                "total": 9
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Health Coaching",
+            "label": "Health Coaching",
+            "value": "Health Coaching",
+            "type": "Modality",
+            "subtitle": "8 offerings",
+            "slug": "health-coaching",
+            "search": "Health Coaching health-coaching",
+            "counts": {
+                "products": 8,
+                "offerings": 0,
+                "total": 8
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Aromatherapy",
+            "label": "Aromatherapy",
+            "value": "Aromatherapy",
+            "type": "Modality",
+            "subtitle": "7 offerings",
+            "slug": "aromatherapy",
+            "search": "Aromatherapy aromatherapy",
+            "counts": {
+                "products": 7,
+                "offerings": 0,
+                "total": 7
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Holistic Therapy",
+            "label": "Holistic Therapy",
+            "value": "Holistic Therapy",
+            "type": "Modality",
+            "subtitle": "7 offerings",
+            "slug": "holistic-therapy",
+            "search": "Holistic Therapy holistic-therapy",
+            "counts": {
+                "products": 6,
+                "offerings": 1,
+                "total": 7
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Reflexology",
+            "label": "Reflexology",
+            "value": "Reflexology",
+            "type": "Modality",
+            "subtitle": "7 offerings",
+            "slug": "reflexology",
+            "search": "Reflexology reflexology",
+            "counts": {
+                "products": 7,
+                "offerings": 0,
+                "total": 7
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Shamanic Healing",
+            "label": "Shamanic Healing",
+            "value": "Shamanic Healing",
+            "type": "Modality",
+            "subtitle": "7 offerings",
+            "slug": "shamanic-healing",
+            "search": "Shamanic Healing shamanic-healing",
+            "counts": {
+                "products": 7,
+                "offerings": 0,
+                "total": 7
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Class",
+            "label": "Class",
+            "value": "Class",
+            "type": "Modality",
+            "subtitle": "6 offerings",
+            "slug": "class",
+            "search": "Class class",
+            "counts": {
+                "products": 6,
+                "offerings": 0,
+                "total": 6
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Life Coaching",
+            "label": "Life Coaching",
+            "value": "Life Coaching",
+            "type": "Modality",
+            "subtitle": "6 offerings",
+            "slug": "life-coaching",
+            "search": "Life Coaching life-coaching",
+            "counts": {
+                "products": 6,
+                "offerings": 0,
+                "total": 6
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Self-Discovery And Healing",
+            "label": "Self-Discovery And Healing",
+            "value": "Self-Discovery And Healing",
+            "type": "Modality",
+            "subtitle": "6 offerings",
+            "slug": "self-discovery-and-healing",
+            "search": "Self-Discovery And Healing self-discovery-and-healing",
+            "counts": {
+                "products": 6,
+                "offerings": 0,
+                "total": 6
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Card Reading",
+            "label": "Card Reading",
+            "value": "Card Reading",
+            "type": "Modality",
+            "subtitle": "5 offerings",
+            "slug": "card-reading",
+            "search": "Card Reading card-reading",
+            "counts": {
+                "products": 5,
+                "offerings": 0,
+                "total": 5
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Distance Reiki",
+            "label": "Distance Reiki",
+            "value": "Distance Reiki",
+            "type": "Modality",
+            "subtitle": "5 offerings",
+            "slug": "distance-reiki",
+            "search": "Distance Reiki distance-reiki",
+            "counts": {
+                "products": 5,
+                "offerings": 0,
+                "total": 5
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Energy Medicine",
+            "label": "Energy Medicine",
+            "value": "Energy Medicine",
+            "type": "Modality",
+            "subtitle": "5 offerings",
+            "slug": "energy-medicine",
+            "search": "Energy Medicine energy-medicine",
+            "counts": {
+                "products": 5,
+                "offerings": 0,
+                "total": 5
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Forest Bathing",
+            "label": "Forest Bathing",
+            "value": "Forest Bathing",
+            "type": "Modality",
+            "subtitle": "5 offerings",
+            "slug": "forest-bathing",
+            "search": "Forest Bathing forest-bathing",
+            "counts": {
+                "products": 5,
+                "offerings": 0,
+                "total": 5
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Kundalini Yoga",
+            "label": "Kundalini Yoga",
+            "value": "Kundalini Yoga",
+            "type": "Modality",
+            "subtitle": "5 offerings",
+            "slug": "kundalini-yoga",
+            "search": "Kundalini Yoga kundalini-yoga",
+            "counts": {
+                "products": 5,
+                "offerings": 0,
+                "total": 5
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Women's Health",
+            "label": "Women's Health",
+            "value": "Women's Health",
+            "type": "Modality",
+            "subtitle": "5 offerings",
+            "slug": "womens-health",
+            "search": "Women's Health womens-health",
+            "counts": {
+                "products": 5,
+                "offerings": 0,
+                "total": 5
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Chinese Meridian System",
+            "label": "Chinese Meridian System",
+            "value": "Chinese Meridian System",
+            "type": "Modality",
+            "subtitle": "4 offerings",
+            "slug": "chinese-meridian-system",
+            "search": "Chinese Meridian System chinese-meridian-system",
+            "counts": {
+                "products": 4,
+                "offerings": 0,
+                "total": 4
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Course",
+            "label": "Course",
+            "value": "Course",
+            "type": "Modality",
+            "subtitle": "4 offerings",
+            "slug": "course",
+            "search": "Course course",
+            "counts": {
+                "products": 4,
+                "offerings": 0,
+                "total": 4
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Facial Reflexology",
+            "label": "Facial Reflexology",
+            "value": "Facial Reflexology",
+            "type": "Modality",
+            "subtitle": "4 offerings",
+            "slug": "facial-reflexology",
+            "search": "Facial Reflexology facial-reflexology",
+            "counts": {
+                "products": 4,
+                "offerings": 0,
+                "total": 4
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Nutrition",
+            "label": "Nutrition",
+            "value": "Nutrition",
+            "type": "Modality",
+            "subtitle": "4 offerings",
+            "slug": "nutrition",
+            "search": "Nutrition nutrition",
+            "counts": {
+                "products": 4,
+                "offerings": 0,
+                "total": 4
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Qigong",
+            "label": "Qigong",
+            "value": "Qigong",
+            "type": "Modality",
+            "subtitle": "4 offerings",
+            "slug": "qigong",
+            "search": "Qigong qigong",
+            "counts": {
+                "products": 4,
+                "offerings": 0,
+                "total": 4
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Sleep",
+            "label": "Sleep",
+            "value": "Sleep",
+            "type": "Modality",
+            "subtitle": "4 offerings",
+            "slug": "sleep",
+            "search": "Sleep sleep",
+            "counts": {
+                "products": 4,
+                "offerings": 0,
+                "total": 4
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Theta Healing",
+            "label": "Theta Healing",
+            "value": "Theta Healing",
+            "type": "Modality",
+            "subtitle": "4 offerings",
+            "slug": "theta-healing",
+            "search": "Theta Healing theta-healing",
+            "counts": {
+                "products": 4,
+                "offerings": 0,
+                "total": 4
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Wellness",
+            "label": "Wellness",
+            "value": "Wellness",
+            "type": "Modality",
+            "subtitle": "4 offerings",
+            "slug": "wellness",
+            "search": "Wellness wellness",
+            "counts": {
+                "products": 4,
+                "offerings": 0,
+                "total": 4
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Acupuncture",
+            "label": "Acupuncture",
+            "value": "Acupuncture",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "acupuncture",
+            "search": "Acupuncture acupuncture",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Ayurveda",
+            "label": "Ayurveda",
+            "value": "Ayurveda",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "ayurveda",
+            "search": "Ayurveda ayurveda",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Birth Chart Reading",
+            "label": "Birth Chart Reading",
+            "value": "Birth Chart Reading",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "birth-chart-reading",
+            "search": "Birth Chart Reading birth-chart-reading",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Ceremony",
+            "label": "Ceremony",
+            "value": "Ceremony",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "ceremony",
+            "search": "Ceremony ceremony",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Gong Sound Bath",
+            "label": "Gong Sound Bath",
+            "value": "Gong Sound Bath",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "gong-sound-bath",
+            "search": "Gong Sound Bath gong-sound-bath",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Hatha Yoga",
+            "label": "Hatha Yoga",
+            "value": "Hatha Yoga",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "hatha-yoga",
+            "search": "Hatha Yoga hatha-yoga",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Incense",
+            "label": "Incense",
+            "value": "Incense",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "incense",
+            "search": "Incense incense",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Menopause",
+            "label": "Menopause",
+            "value": "Menopause",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "menopause",
+            "search": "Menopause menopause",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Past Life Regression",
+            "label": "Past Life Regression",
+            "value": "Past Life Regression",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "past-life-regression",
+            "search": "Past Life Regression past-life-regression",
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Active Resonance Technique",
+            "label": "Active Resonance Technique",
+            "value": "Active Resonance Technique",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "active-resonance-technique",
+            "search": "Active Resonance Technique active-resonance-technique",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Art For Healing",
+            "label": "Art For Healing",
+            "value": "Art For Healing",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "art-for-healing",
+            "search": "Art For Healing art-for-healing",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Astrology Reading",
+            "label": "Astrology Reading",
+            "value": "Astrology Reading",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "astrology-reading",
+            "search": "Astrology Reading astrology-reading",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Cacao Ceremony",
+            "label": "Cacao Ceremony",
+            "value": "Cacao Ceremony",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "cacao-ceremony",
+            "search": "Cacao Ceremony cacao-ceremony",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Cacao Ceremony With Sound & Healing",
+            "label": "Cacao Ceremony With Sound & Healing",
+            "value": "Cacao Ceremony With Sound & Healing",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "cacao-ceremony-with-sound-healing",
+            "search": "Cacao Ceremony With Sound & Healing cacao-ceremony-with-sound-healing",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Eft",
+            "label": "Eft",
+            "value": "Eft",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "eft",
+            "search": "Eft eft",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Emotional Freedom Techniques",
+            "label": "Emotional Freedom Techniques",
+            "value": "Emotional Freedom Techniques",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "emotional-freedom-techniques",
+            "search": "Emotional Freedom Techniques emotional-freedom-techniques",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Future Life Progression",
+            "label": "Future Life Progression",
+            "value": "Future Life Progression",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "future-life-progression",
+            "search": "Future Life Progression future-life-progression",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Homeopathy",
+            "label": "Homeopathy",
+            "value": "Homeopathy",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "homeopathy",
+            "search": "Homeopathy homeopathy",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Low-Tox Living Workshops",
+            "label": "Low-Tox Living Workshops",
+            "value": "Low-Tox Living Workshops",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "low-tox-living-workshops",
+            "search": "Low-Tox Living Workshops low-tox-living-workshops",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Movement Therapy",
+            "label": "Movement Therapy",
+            "value": "Movement Therapy",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "movement-therapy",
+            "search": "Movement Therapy movement-therapy",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Pregnancy Massage Pregnancy",
+            "label": "Pregnancy Massage Pregnancy",
+            "value": "Pregnancy Massage Pregnancy",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "pregnancy-massage-pregnancy",
+            "search": "Pregnancy Massage Pregnancy pregnancy-massage-pregnancy",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Rapid Transformation Therapy",
+            "label": "Rapid Transformation Therapy",
+            "value": "Rapid Transformation Therapy",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "rapid-transformation-therapy",
+            "search": "Rapid Transformation Therapy rapid-transformation-therapy",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Reflexology For Supporting The Menopause",
+            "label": "Reflexology For Supporting The Menopause",
+            "value": "Reflexology For Supporting The Menopause",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "reflexology-for-supporting-the-menopause",
+            "search": "Reflexology For Supporting The Menopause reflexology-for-supporting-the-menopause",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Reiki And Breathwork",
+            "label": "Reiki And Breathwork",
+            "value": "Reiki And Breathwork",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "reiki-and-breathwork",
+            "search": "Reiki And Breathwork reiki-and-breathwork",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Shadow Work",
+            "label": "Shadow Work",
+            "value": "Shadow Work",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "shadow-work",
+            "search": "Shadow Work shadow-work",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Silent Counselling",
+            "label": "Silent Counselling",
+            "value": "Silent Counselling",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "silent-counselling",
+            "search": "Silent Counselling silent-counselling",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Singing",
+            "label": "Singing",
+            "value": "Singing",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "singing",
+            "search": "Singing singing",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Swedish Massage",
+            "label": "Swedish Massage",
+            "value": "Swedish Massage",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "swedish-massage",
+            "search": "Swedish Massage swedish-massage",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Tai Chi Qigong",
+            "label": "Tai Chi Qigong",
+            "value": "Tai Chi Qigong",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "tai-chi-qigong",
+            "search": "Tai Chi Qigong tai-chi-qigong",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Wellness Workshop",
+            "label": "Wellness Workshop",
+            "value": "Wellness Workshop",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "wellness-workshop",
+            "search": "Wellness Workshop wellness-workshop",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Women's Circle",
+            "label": "Women's Circle",
+            "value": "Women's Circle",
+            "type": "Modality",
+            "subtitle": "2 offerings",
+            "slug": "womens-circle",
+            "search": "Women's Circle womens-circle",
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Akashic Reading",
+            "label": "Akashic Reading",
+            "value": "Akashic Reading",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "akashic-reading",
+            "search": "Akashic Reading akashic-reading",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Anxiety Coaching",
+            "label": "Anxiety Coaching",
+            "value": "Anxiety Coaching",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "anxiety-coaching",
+            "search": "Anxiety Coaching anxiety-coaching",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Belief Coding Adhd",
+            "label": "Belief Coding Adhd",
+            "value": "Belief Coding Adhd",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "belief-coding-adhd",
+            "search": "Belief Coding Adhd belief-coding-adhd",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Blood Chemistry Analysis",
+            "label": "Blood Chemistry Analysis",
+            "value": "Blood Chemistry Analysis",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "blood-chemistry-analysis",
+            "search": "Blood Chemistry Analysis blood-chemistry-analysis",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Bodytalk",
+            "label": "Bodytalk",
+            "value": "Bodytalk",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "bodytalk",
+            "search": "Bodytalk bodytalk",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Breathwork, Yoga & Sound Experience",
+            "label": "Breathwork, Yoga & Sound Experience",
+            "value": "Breathwork, Yoga & Sound Experience",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "breathwork-yoga-sound-experience",
+            "search": "Breathwork, Yoga & Sound Experience breathwork-yoga-sound-experience",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Camping",
+            "label": "Camping",
+            "value": "Camping",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "camping",
+            "search": "Camping camping",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Cancer Treatment Healing",
+            "label": "Cancer Treatment Healing",
+            "value": "Cancer Treatment Healing",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "cancer-treatment-healing",
+            "search": "Cancer Treatment Healing cancer-treatment-healing",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Corporate",
+            "label": "Corporate",
+            "value": "Corporate",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "corporate",
+            "search": "Corporate corporate",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Cosmetic Acupuncture",
+            "label": "Cosmetic Acupuncture",
+            "value": "Cosmetic Acupuncture",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "cosmetic-acupuncture",
+            "search": "Cosmetic Acupuncture cosmetic-acupuncture",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Domestic Survivors",
+            "label": "Domestic Survivors",
+            "value": "Domestic Survivors",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "domestic-survivors",
+            "search": "Domestic Survivors domestic-survivors",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Drum Circle",
+            "label": "Drum Circle",
+            "value": "Drum Circle",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "drum-circle",
+            "search": "Drum Circle drum-circle",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Dynamic Embodiment Session",
+            "label": "Dynamic Embodiment Session",
+            "value": "Dynamic Embodiment Session",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "dynamic-embodiment-session",
+            "search": "Dynamic Embodiment Session dynamic-embodiment-session",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Eastern Flow",
+            "label": "Eastern Flow",
+            "value": "Eastern Flow",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "eastern-flow",
+            "search": "Eastern Flow eastern-flow",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Eft And Personalised Meditation",
+            "label": "Eft And Personalised Meditation",
+            "value": "Eft And Personalised Meditation",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "eft-and-personalised-meditation",
+            "search": "Eft And Personalised Meditation eft-and-personalised-meditation",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Events",
+            "label": "Events",
+            "value": "Events",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "events",
+            "search": "Events events",
+            "counts": {
+                "products": 0,
+                "offerings": 1,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Focusing Sessions",
+            "label": "Focusing Sessions",
+            "value": "Focusing Sessions",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "focusing-sessions",
+            "search": "Focusing Sessions focusing-sessions",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Full & New Moon Holistic Health Empower Hour",
+            "label": "Full & New Moon Holistic Health Empower Hour",
+            "value": "Full & New Moon Holistic Health Empower Hour",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "full-new-moon-holistic-health-empower-hour",
+            "search": "Full & New Moon Holistic Health Empower Hour full-new-moon-holistic-health-empower-hour",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Healing Through Horses",
+            "label": "Healing Through Horses",
+            "value": "Healing Through Horses",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "healing-through-horses",
+            "search": "Healing Through Horses healing-through-horses",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Indian Head Massage & Back Neck & Shoulder Massage",
+            "label": "Indian Head Massage & Back Neck & Shoulder Massage",
+            "value": "Indian Head Massage & Back Neck & Shoulder Massage",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "indian-head-massage-back-neck-shoulder-massage",
+            "search": "Indian Head Massage & Back Neck & Shoulder Massage indian-head-massage-back-neck-shoulder-massage",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Luxury Facials",
+            "label": "Luxury Facials",
+            "value": "Luxury Facials",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "luxury-facials",
+            "search": "Luxury Facials luxury-facials",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Manual Lymphatic Drainage",
+            "label": "Manual Lymphatic Drainage",
+            "value": "Manual Lymphatic Drainage",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "manual-lymphatic-drainage",
+            "search": "Manual Lymphatic Drainage manual-lymphatic-drainage",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Mindful Wellness Workshop",
+            "label": "Mindful Wellness Workshop",
+            "value": "Mindful Wellness Workshop",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "mindful-wellness-workshop",
+            "search": "Mindful Wellness Workshop mindful-wellness-workshop",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Omni Energy Healing Sessions",
+            "label": "Omni Energy Healing Sessions",
+            "value": "Omni Energy Healing Sessions",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "omni-energy-healing-sessions",
+            "search": "Omni Energy Healing Sessions omni-energy-healing-sessions",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Pellowah Energy Session",
+            "label": "Pellowah Energy Session",
+            "value": "Pellowah Energy Session",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "pellowah-energy-session",
+            "search": "Pellowah Energy Session pellowah-energy-session",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Pilates",
+            "label": "Pilates",
+            "value": "Pilates",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "pilates",
+            "search": "Pilates pilates",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Pregnancy",
+            "label": "Pregnancy",
+            "value": "Pregnancy",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "pregnancy",
+            "search": "Pregnancy pregnancy",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Pregnancy Massage",
+            "label": "Pregnancy Massage",
+            "value": "Pregnancy Massage",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "pregnancy-massage",
+            "search": "Pregnancy Massage pregnancy-massage",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Rahanni Celestial Healing",
+            "label": "Rahanni Celestial Healing",
+            "value": "Rahanni Celestial Healing",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "rahanni-celestial-healing",
+            "search": "Rahanni Celestial Healing rahanni-celestial-healing",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Reflexology And Reiki",
+            "label": "Reflexology And Reiki",
+            "value": "Reflexology And Reiki",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "reflexology-and-reiki",
+            "search": "Reflexology And Reiki reflexology-and-reiki",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Reflexology For Pregnancy",
+            "label": "Reflexology For Pregnancy",
+            "value": "Reflexology For Pregnancy",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "reflexology-for-pregnancy",
+            "search": "Reflexology For Pregnancy reflexology-for-pregnancy",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Retreat",
+            "label": "Retreat",
+            "value": "Retreat",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "retreat",
+            "search": "Retreat retreat",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Scar Work",
+            "label": "Scar Work",
+            "value": "Scar Work",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "scar-work",
+            "search": "Scar Work scar-work",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Spiritual Journey",
+            "label": "Spiritual Journey",
+            "value": "Spiritual Journey",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "spiritual-journey",
+            "search": "Spiritual Journey spiritual-journey",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Wudang Taiji Sword",
+            "label": "Wudang Taiji Sword",
+            "value": "Wudang Taiji Sword",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "wudang-taiji-sword",
+            "search": "Wudang Taiji Sword wudang-taiji-sword",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Yang Tai Chi",
+            "label": "Yang Tai Chi",
+            "value": "Yang Tai Chi",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "yang-tai-chi",
+            "search": "Yang Tai Chi yang-tai-chi",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        }
+    ]
+}

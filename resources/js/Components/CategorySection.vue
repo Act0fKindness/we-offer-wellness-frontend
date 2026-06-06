@@ -12,7 +12,7 @@ const props = defineProps({
     <div class="container-page">
       <div class="mb-6 flex items-end justify-between">
         <div>
-          <div class="kicker">Category</div>
+          <div class="kicker">Modality</div>
           <h2>{{ category.name }}</h2>
         </div>
         <a :href="href" class="btn-wow btn-wow--outline btn-sm btn-arrow">

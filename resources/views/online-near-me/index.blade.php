@@ -5,7 +5,6 @@
   <title>{{ $seo['title'] ?? 'Online & Near Me | We Offer Wellness®' }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
   <style>
     .wow-online-near-page{
       position:relative;
@@ -55,7 +54,7 @@
       margin:0 0 10px;
       color:#344054;
       font-size:13px;
-      font-weight:700;
+      font-weight:300;
       letter-spacing:.16em;
       text-transform:uppercase;
       font-family:'Manrope', system-ui, sans-serif;
@@ -381,6 +380,14 @@
 @endpush
 
 @section('content')
+@include('partials.breadcrumbs', [
+  'crumbs' => [
+    ['label' => 'Home', 'url' => url('/')],
+    ['label' => 'Online & Near Me'],
+  ],
+  'schemaUrl' => url('/online-near-me'),
+])
+
 <main class="wow-online-near-page">
   <div class="wow-page-grid" aria-hidden="true"></div>
 

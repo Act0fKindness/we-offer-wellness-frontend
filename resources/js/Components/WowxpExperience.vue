@@ -74,16 +74,37 @@ const displayLocation = computed(() => {
   return null
 })
 
+function parseEventDateTime(dateValue, timeValue) {
+  if (!dateValue) return null
+  const raw = timeValue
+    ? `${dateValue}T${timeValue}:00`
+    : (/[T\s]/.test(dateValue) ? dateValue : `${dateValue}T00:00:00`)
+  const parsed = new Date(raw)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
 function formatDateRange(product) {
   try {
-    if (product.start_date && product.end_date) {
-      const s = new Date(product.start_date)
-      const e = new Date(product.end_date)
-      const sameYear = s.getFullYear() === e.getFullYear()
-      const sameMonth = sameYear && s.getMonth() === e.getMonth()
-      const startStr = s.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-      const endStr = e.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: sameMonth ? undefined : 'numeric' })
-      return `${startStr} – ${endStr}`
+    const startDate = product.start_date || product.date
+    const endDate = product.end_date || startDate
+    const start = parseEventDateTime(startDate, product.start_time)
+    const end = parseEventDateTime(endDate, product.end_time || product.start_time)
+    if (start && end) {
+      const sameYear = start.getFullYear() === end.getFullYear()
+      const startDateLabel = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) })
+      const endDateLabel = end.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) })
+      if (product.start_time || product.end_time) {
+        const startTimeLabel = start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+        const endTimeLabel = end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+        if (start.toDateString() === end.toDateString()) {
+          return `${startDateLabel}, ${startTimeLabel} – ${endTimeLabel}`
+        }
+        return `${startDateLabel}, ${startTimeLabel} – ${endDateLabel}, ${endTimeLabel}`
+      }
+      if (start.toDateString() === end.toDateString()) {
+        return startDateLabel
+      }
+      return `${startDateLabel} – ${endDateLabel}`
     }
     if (product.date) {
       const d = new Date(product.date)

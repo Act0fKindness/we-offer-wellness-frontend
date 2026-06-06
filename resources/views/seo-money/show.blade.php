@@ -4,17 +4,8 @@
   <title>{{ $seo['title'] ?? 'We Offer Wellness™' }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
   @php
     $pageCanonical = $seo['canonical'] ?? url()->current();
-    $breadcrumbLd = [
-      '@context' => 'https://schema.org',
-      '@type' => 'BreadcrumbList',
-      'itemListElement' => [
-        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
-        ['@type' => 'ListItem', 'position' => 2, 'name' => $page['h1'] ?? $page['title'] ?? 'Wellness', 'item' => $pageCanonical],
-      ],
-    ];
     $itemListLd = [
       '@context' => 'https://schema.org',
       '@type' => 'ItemList',
@@ -51,10 +42,19 @@
         ->values()
         ->all(),
     ];
+    $pageTitle = trim((string) ($page['title'] ?? $page['h1'] ?? 'Search'));
+    $pageBreadcrumb = trim((string) preg_replace('/\s*\|.*$/', '', $pageTitle));
+    if ($pageBreadcrumb === '') {
+      $pageBreadcrumb = trim((string) ($page['h1'] ?? 'Search'));
+    }
+    $pageCrumbs = [
+      ['label' => 'Home', 'url' => url('/')],
+      ['label' => 'Search', 'url' => $searchBreadcrumbUrl ?? url('/search')],
+      ['label' => $pageBreadcrumb],
+    ];
   @endphp
-  <script type="application/ld+json">{!! json_encode($breadcrumbLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
-  <script type="application/ld+json">{!! json_encode($itemListLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
-  <script type="application/ld+json">{!! json_encode($faqLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
+  <script type="application/ld+json">{!! json_encode($itemListLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) !!}</script>
+  <script type="application/ld+json">{!! json_encode($faqLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) !!}</script>
   <style>
     .seo-money-page{
       --ink:#101828;
@@ -381,6 +381,15 @@
   $catalogSuggestions = collect($catalogSuggestions ?? []);
 @endphp
 
+@include('partials.breadcrumbs', [
+  'crumbs' => $pageCrumbs ?? [],
+  'schemaUrl' => $pageCanonical ?? url()->current(),
+  'chips' => array_filter([
+    $page['kicker'] ?? null,
+    $products->count() . ' live listings',
+  ]),
+])
+
 <section class="seo-money-page">
   <div class="container-page">
     <div class="seo-money-grid">
@@ -559,6 +568,7 @@
   function storeResolvedLocation(payload) {
     try {
       cookieSet('wow_location', JSON.stringify(payload), 3650);
+      if (payload?.path) cookieSet('wow_location_path', String(payload.path), 3650);
       cookieSet(promptCookieName, '1', 3650);
       cookieSet('wow_geo_done', '1', 3650);
       if (payload?.city) cookieSet('wow_city', payload.city, 3650);
@@ -676,6 +686,46 @@
     return best;
   }
 
+  function readSavedLocation() {
+    let parsed = null;
+    try {
+      const raw = cookieGet('wow_location');
+      parsed = raw ? JSON.parse(raw) : null;
+    } catch {
+      parsed = null;
+    }
+
+    const saved = {
+      name: parsed?.name || '',
+      city: parsed?.city || cookieGet('wow_city') || '',
+      region: parsed?.region || cookieGet('wow_region') || '',
+      country: parsed?.country || cookieGet('wow_country') || '',
+      path: cookieGet('wow_location_path') || parsed?.path || '',
+      coords: parsed?.coords || {
+        lat: cookieGet('wow_lat') || '',
+        lng: cookieGet('wow_lng') || '',
+      },
+    };
+
+    const match = saved.path
+      ? (catalog.find((item) => String(item?.path || '') === String(saved.path)) || null)
+      : resolveCatalogLocation(saved);
+
+    if (!match && !saved.city && !saved.region && !saved.country) {
+      return null;
+    }
+
+    return {
+      ...saved,
+      match,
+      path: match?.path || saved.path || '',
+      city: saved.city || match?.city || match?.town || '',
+      region: saved.region || match?.county || match?.district || match?.region || '',
+      country: saved.country || match?.country || '',
+      name: saved.name || match?.title || match?.label || '',
+    };
+  }
+
   function setSelectionContext(item) {
     const context = Array.isArray(item?.context) ? item.context : [];
     const place = item?.text || item?.title || item?.place_name || input?.value || '';
@@ -723,10 +773,35 @@
     window.location.href = target.toString();
   }
 
+  function applyResolvedLocationToForm(savedLocation) {
+    if (!savedLocation) return false;
+    const path = String(savedLocation.path || '').replace(/^\/+/, '').replace(/^locations\/?/, '');
+    if (savedLocation.name && input) input.value = savedLocation.name;
+    if (cityInput) cityInput.value = savedLocation.city || '';
+    if (regionInput) regionInput.value = savedLocation.region || '';
+    if (countryInput) countryInput.value = savedLocation.country || '';
+    if (pathInput) pathInput.value = path;
+    if (savedLocation.coords?.lat !== undefined && latInput) latInput.value = String(savedLocation.coords.lat || '');
+    if (savedLocation.coords?.lng !== undefined && lngInput) lngInput.value = String(savedLocation.coords.lng || '');
+    return Boolean(path);
+  }
+
+  function redirectUsingSavedLocation() {
+    const savedLocation = readSavedLocation();
+    if (!savedLocation) return false;
+    const hasCanonicalPath = applyResolvedLocationToForm(savedLocation);
+    if (hasCanonicalPath && pathInput?.value) {
+      const nextPath = String(pathInput.value).replace(/^\/+/, '').replace(/^locations\/?/, '');
+      window.location.href = `${baseUrl.replace(/\/+$/, '')}/${nextPath}`;
+      return true;
+    }
+    return false;
+  }
+
   async function resolveBrowserLocationAndSubmit() {
     if (!shouldAutoLocate) return;
     if (!navigator.geolocation) return;
-    if (cookieGet('wow_geo_done') === '1') return;
+    if (redirectUsingSavedLocation()) return;
 
     navigator.geolocation.getCurrentPosition(async (position) => {
       const lat = position.coords.latitude;
@@ -777,6 +852,7 @@
         city,
         region,
         country,
+        path: resolvedPath || '',
         coords: { lat, lng },
       };
 

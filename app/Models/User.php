@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -266,6 +267,178 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Resolve the active plan key for the user.
+     */
+    public function resolvePlanKey(): string
+    {
+        $tierValue = '';
+
+        try {
+            $tierValue = (string) (
+                $this->tier?->tier
+                ?? $this->account_type
+                ?? ($this->vendorDetail?->tiers()->orderByDesc('plan_started_at')->orderByDesc('id')->value('tier'))
+                ?? ''
+            );
+        } catch (\Throwable $e) {
+            $tierValue = (string) ($this->account_type ?? '');
+        }
+
+        return $this->normalizePlanKey($tierValue);
+    }
+
+    /**
+     * Determine whether the user is on a starter plan.
+     */
+    public function isStarterPlan(): bool
+    {
+        return $this->resolvePlanKey() === 'starter';
+    }
+
+    /**
+     * Determine whether the user is on a business accelerator plan.
+     */
+    public function isBusinessAcceleratorPlan(): bool
+    {
+        return $this->resolvePlanKey() === 'business-accelerator';
+    }
+
+    /**
+     * Normalize a plan value into a stable plan key.
+     */
+    protected function normalizePlanKey(?string $value): string
+    {
+        $normalized = strtolower(trim((string) $value));
+        $normalized = str_replace(['_', ' '], '-', $normalized);
+
+        return match ($normalized) {
+            'community', 'starter', 'standard', 'free-starter', 'starter-package' => 'starter',
+            'core', 'business-accelerator', 'business-accelerator-package', 'businessaccelerator' => 'business-accelerator',
+            'premium', 'premium-accelerator', 'premiumaccelerator' => 'premium-accelerator',
+            'become-partner', 'partner' => 'become-partner',
+            default => $normalized,
+        };
+    }
+
+    /**
+     * Public display name for profile and card surfaces.
+     */
+    public function getPublicDisplayNameAttribute(): string
+    {
+        $personalName = trim((string) ($this->full_name ?: trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''))));
+        if ($personalName !== '') {
+            return $personalName;
+        }
+
+        if ($this->isAdmin()) {
+            return 'Team member';
+        }
+
+        if (! $this->isStarterPlan()) {
+            $accountName = trim((string) ($this->name ?? ''));
+            if ($accountName !== '') {
+                return $accountName;
+            }
+
+            $businessName = trim((string) ($this->vendorDetail?->vendor_name ?? ''));
+            if ($businessName !== '') {
+                return $businessName;
+            }
+        }
+
+        return $this->isAdmin() ? 'Team member' : 'Practitioner';
+    }
+
+    /**
+     * Public role label for profile and card surfaces.
+     */
+    public function getPublicRoleLabelAttribute(): string
+    {
+        if ($this->isAdmin()) {
+            return 'We Offer Wellness team';
+        }
+
+        if ($this->isStarterPlan()) {
+            return 'Wellness practitioner';
+        }
+
+        $practiceLabel = trim((string) data_get($this->settings?->settings_data, 'practice_label', ''));
+        if ($practiceLabel !== '') {
+            return $practiceLabel;
+        }
+
+        $businessName = trim((string) ($this->vendorDetail?->vendor_name ?? ''));
+        if ($businessName !== '') {
+            return $businessName;
+        }
+
+        return 'Wellness practitioner';
+    }
+
+    /**
+     * Resolve a stored media path to a public URL.
+     */
+    protected function resolveMediaUrl(?string $path): ?string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $assetHost = rtrim((string) (config('app.asset_url') ?: config('services.asset_host') ?: 'https://atease.weofferwellness.co.uk'), '/');
+
+        return $assetHost.'/storage/'.ltrim($path, '/');
+    }
+
+    /**
+     * Public URL for the profile picture.
+     */
+    public function getProfilePictureUrlAttribute(): ?string
+    {
+        return $this->resolveMediaUrl($this->profile_picture);
+    }
+
+    /**
+     * Public URL for the cover image.
+     */
+    public function getCoverImageUrlAttribute(): ?string
+    {
+        $coverImage = $this->resolveMediaUrl($this->cover_image ?? null);
+
+        return $coverImage ?: 'https://studio.weofferwellness.co.uk/storage/uploads/images/93131c74-12f2-4eaa-a2cb-747f6cc70fc4.jpg';
+    }
+
+    /**
+     * Get the public practitioner profile URL.
+     */
+    public function getPractitionerProfileUrlAttribute(): string
+    {
+        $fullName = trim((string) ($this->public_display_name ?: ''));
+        if ($fullName === '') {
+            $fullName = $this->isAdmin() ? 'Team member' : 'Practitioner';
+        }
+
+        $slug = Str::slug($fullName) ?: ($this->isAdmin() ? 'team-member' : 'practitioner');
+
+        if ($this->isAdmin()) {
+            return url('/about/team/' . $slug);
+        }
+
+        $userKey = $this->getKey();
+        if (! $userKey) {
+            return url('/practioner/' . $slug);
+        }
+
+        $shortHash = substr(hash('sha256', 'user:' . $userKey), 0, 6);
+
+        return url('/practioner/' . $slug . '-' . $shortHash);
+    }
+
+    /**
      * Get the vendor's name.
      */
     public function getVendorNameAttribute(): ?string
@@ -301,7 +474,7 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($names->contains('admin')) return 'Admin';
         if ($names->contains('provider')) return 'Provider';
         if ($names->contains('journalist')) return 'Journalist';
-        if ($names->contains('user')) return 'User';
+        if ($names->contains('client') || $names->contains('user')) return 'Client';
         return 'Unknown';
     }
 
@@ -310,7 +483,15 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasRole(string $roleName): bool
     {
-        return $this->roles()->whereRaw('LOWER(name) = ?', [strtolower($roleName)])->exists();
+        $normalized = strtolower($roleName);
+
+        if (in_array($normalized, ['user', 'client'], true)) {
+            return $this->roles()
+                ->whereIn(\DB::raw('LOWER(name)'), ['user', 'client'])
+                ->exists();
+        }
+
+        return $this->roles()->whereRaw('LOWER(name) = ?', [$normalized])->exists();
     }
 
     public function sentMessages()

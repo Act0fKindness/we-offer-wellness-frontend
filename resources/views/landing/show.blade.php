@@ -4,7 +4,6 @@
   <title>{{ $seo['title'] ?? 'We Offer Wellness™' }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
-  @if(!empty($seo['canonical']))<link rel="canonical" href="{{ $seo['canonical'] }}">@endif
   @php
     $pageCanonical = $seo['canonical'] ?? url()->current();
     $itemListLd = [
@@ -25,28 +24,23 @@
         ->values()
         ->all(),
     ];
-    $breadcrumbLd = [
-      '@context' => 'https://schema.org',
-      '@type' => 'BreadcrumbList',
-      'itemListElement' => [
-        [
-          '@type' => 'ListItem',
-          'position' => 1,
-          'name' => 'Home',
-          'item' => url('/'),
-        ],
-        [
-          '@type' => 'ListItem',
-          'position' => 2,
-          'name' => $landing['title'] ?? 'Wellness',
-          'item' => $pageCanonical,
-        ],
-      ],
-    ];
     $slug = $slug ?? request()->route('slug');
+    $landingTitle = trim((string) ($landing['title'] ?? ''));
+    $landingCategory = trim((string) \Illuminate\Support\Str::headline((string) $slug));
+    $landingCrumbs = [
+      ['label' => 'Home', 'url' => url('/')],
+      ['label' => 'Modalities', 'url' => url('/therapies')],
+    ];
+    if ($landingCategory !== '') {
+      $landingCrumbs[] = ['label' => $landingCategory, 'url' => url('/' . $slug)];
+    }
+    if ($landingTitle !== '' && strcasecmp($landingTitle, $landingCategory) !== 0) {
+      $landingCrumbs[] = ['label' => $landingTitle];
+    } elseif ($landingCategory === '' && $landingTitle !== '') {
+      $landingCrumbs[] = ['label' => $landingTitle];
+    }
   @endphp
-  <script type="application/ld+json">{!! json_encode($breadcrumbLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
-  <script type="application/ld+json">{!! json_encode($itemListLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
+  <script type="application/ld+json">{!! json_encode($itemListLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) !!}</script>
   <style>
     .landing-wow{
       --ink:#101828;
@@ -63,10 +57,7 @@
       --radius:18px;
       --shadow:0 18px 54px rgba(16,24,40,.07);
       padding:0 0 72px;
-      background:
-        radial-gradient(circle at top left, rgba(79,147,129,.08), transparent 28%),
-        radial-gradient(circle at top right, rgba(255,181,73,.09), transparent 24%),
-        #fff;
+      background:none;
     }
     .landing-wow__hero{
       padding:68px 0 24px;
@@ -315,7 +306,117 @@
 @php
   $items = $products ?? collect();
   $landing = $landing ?? [];
+  $sortValue = (string) ($filters['sort'] ?? '');
+  $formatValue = (string) ($filters['format'] ?? '');
+  $locationValue = trim((string) ($filters['location'] ?? ''));
+  $sortLabel = match ($sortValue) {
+    'price_asc' => 'Price: Low → High',
+    'price_desc' => 'Price: High → Low',
+    'rating_desc' => 'Top rated',
+    default => 'Recommended',
+  };
+  $formatLabel = match ($formatValue) {
+    'online' => 'Online',
+    'in_person' => 'Near me',
+    default => 'All',
+  };
+  $landingFilterSegments = [
+    [
+      'key' => 'sort',
+      'label' => 'Sort',
+      'value' => $sortLabel,
+      'placeholder' => 'Recommended',
+      'panelTitle' => 'Sort results',
+      'panelSubtitle' => 'Choose how results are ordered.',
+      'panelWidth' => 430,
+      'options' => [
+        [
+          'label' => 'Recommended',
+          'value' => '',
+          'subtitle' => 'Best match for this page',
+          'count' => 'Default',
+          'selected' => $sortValue === '',
+        ],
+        [
+          'label' => 'Price: Low → High',
+          'value' => 'price_asc',
+          'subtitle' => 'Cheaper options first',
+          'selected' => $sortValue === 'price_asc',
+        ],
+        [
+          'label' => 'Price: High → Low',
+          'value' => 'price_desc',
+          'subtitle' => 'Higher-priced options first',
+          'selected' => $sortValue === 'price_desc',
+        ],
+        [
+          'label' => 'Top rated',
+          'value' => 'rating_desc',
+          'subtitle' => 'Highest reviewed offerings first',
+          'selected' => $sortValue === 'rating_desc',
+        ],
+      ],
+    ],
+    [
+      'key' => 'format',
+      'label' => 'Format',
+      'value' => $formatLabel,
+      'placeholder' => 'All',
+      'panelTitle' => 'Choose format',
+      'panelSubtitle' => 'Online or in-person sessions.',
+      'panelWidth' => 430,
+      'options' => [
+        [
+          'label' => 'All',
+          'value' => '',
+          'subtitle' => 'Any format',
+          'selected' => $formatValue === '',
+        ],
+        [
+          'label' => 'Online',
+          'value' => 'online',
+          'subtitle' => 'Join from anywhere',
+          'selected' => $formatValue === 'online',
+        ],
+        [
+          'label' => 'Near me',
+          'value' => 'in_person',
+          'subtitle' => 'Physical sessions near you',
+          'selected' => $formatValue === 'in_person',
+        ],
+      ],
+    ],
+    [
+      'key' => 'location',
+      'label' => 'Location',
+      'value' => $locationValue !== '' ? $locationValue : 'Anywhere',
+      'placeholder' => 'Anywhere',
+      'panelTitle' => 'Filter by location',
+      'panelSubtitle' => 'Search by city, county, or area.',
+      'panelWidth' => 480,
+      'kind' => 'input',
+      'param' => 'location',
+      'inputLabel' => 'Location',
+      'inputValue' => $locationValue,
+      'inputPlaceholder' => 'e.g. London, Kent',
+      'buttonLabel' => 'Update location',
+    ],
+  ];
+  $landingFilterChips = array_values(array_filter([
+    $sortValue !== '' ? ['param' => 'sort', 'label' => 'Sort', 'value' => $sortLabel] : null,
+    $formatValue !== '' ? ['param' => 'format', 'label' => 'Format', 'value' => $formatLabel] : null,
+    $locationValue !== '' ? ['param' => 'location', 'label' => 'Location', 'value' => $locationValue] : null,
+  ]));
 @endphp
+
+@include('partials.breadcrumbs', [
+  'crumbs' => $landingCrumbs ?? [],
+  'schemaUrl' => $pageCanonical ?? url()->current(),
+  'chips' => array_filter([
+    $landing['kicker'] ?? null,
+    isset($items) ? $items->count() . ' live listings' : null,
+  ]),
+])
 
 <div class="landing-wow">
   <section class="landing-wow__hero">
@@ -388,37 +489,17 @@
         </div>
       </div>
 
-      <form method="get" action="{{ url('/' . $slug . '/' . ($type ?? 'therapies') . '/') }}" class="landing-wow__filters">
-        <div class="grid md:grid-cols-3 gap-3 items-end">
-          <div class="col-span-3 md:col-span-1">
-            <label class="form-label">Format</label>
-            <select class="form-control" name="format">
-              <option value="" @selected(($filters['format'] ?? '') === '')>All</option>
-              <option value="online" @selected(($filters['format'] ?? '') === 'online')>Online</option>
-              <option value="in_person" @selected(($filters['format'] ?? '') === 'in_person')>Near me</option>
-            </select>
-          </div>
-          <div class="col-span-3 md:col-span-1">
-            <label class="form-label">Location</label>
-            <input class="form-control" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="e.g. London, Kent">
-          </div>
-          <div class="col-span-3 md:col-span-1">
-            <label class="form-label">Sort</label>
-            <div class="flex gap-2">
-              <select class="form-control" name="sort">
-                <option value="" @selected(($filters['sort'] ?? '') === '')>Recommended</option>
-                <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price: Low → High</option>
-                <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price: High → Low</option>
-                <option value="rating_desc" @selected(($filters['sort'] ?? '') === 'rating_desc')>Top rated</option>
-              </select>
-              <div class="flex gap-2">
-                <button class="btn btn-primary" type="submit">Apply</button>
-                <a class="btn btn-light" href="{{ url('/' . $slug . '/' . ($type ?? 'therapies') . '/') }}">Reset</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </form>
+      @include('partials.wow-filter-bar', [
+        'action' => url('/' . $slug . '/' . ($type ?? 'therapies') . '/'),
+        'clearUrl' => url('/' . $slug . '/' . ($type ?? 'therapies') . '/'),
+        'ariaLabel' => 'Filter listings',
+        'mobileLabel' => 'Filters',
+        'resultCount' => $items->count(),
+        'resultLabel' => 'results',
+        'filters' => $filters,
+        'segments' => $landingFilterSegments,
+        'chips' => $landingFilterChips,
+      ])
 
       @if($items->count())
         <div id="landing-products" class="landing-wow__grid">

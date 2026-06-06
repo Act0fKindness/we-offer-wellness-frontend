@@ -1,4 +1,3 @@
 User-agent: *
 Disallow:
 Sitemap: https://www.weofferwellness.co.uk/sitemap.xml
-Sitemap: https://www.weofferwellness.co.uk/sitemap-pages.xml

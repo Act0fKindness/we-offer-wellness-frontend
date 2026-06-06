@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Support\EventListing;
+use App\Support\ProductRanking;
 use App\Support\ProductSearchFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -19,7 +21,7 @@ class ProductController extends Controller
             ->withAvg('reviews', 'rating')
             ->withMin('variants', 'price')
             ->withMax('variants', 'price')
-            ->with(['media', 'options.values', 'category']);
+            ->with(['media', 'options.values', 'category', 'vendor.tiers', 'vendor.user.settings']);
 
         $what = $request->string('what')->toString();
         $applySearch = function ($query) use ($what) {
@@ -126,23 +128,7 @@ class ProductController extends Controller
             });
         }
 
-        // Sorting
         $sort = $request->string('sort', 'popular')->toString();
-        if ($sort === 'newest') {
-            $query->latest('id');
-        } elseif ($sort === 'price_asc') {
-            $query->orderBy('price', 'asc');
-        } elseif ($sort === 'price_desc') {
-            $query->orderBy('price', 'desc');
-        } else {
-            // popular/favorability: rank by weighted combo of rating × log(review_count)
-            // This pushes highly rated items with many reviews to the top, and
-            // still bubbles up new items with great ratings.
-            $query->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                  ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                  ->orderByRaw('COALESCE(reviews_count, 0) DESC');
-        }
-
         // Category filter: by id or by name/slug via `category`
         if ($request->filled('category_id')) {
             $query->where('category_id', (int)$request->input('category_id'));
@@ -169,7 +155,13 @@ class ProductController extends Controller
         }
 
         $limit = (int) $request->integer('limit', 50);
-        $products = $query->limit($limit)->get();
+        $products = ProductRanking::sortCollection(
+            $query->get()
+                ->reject(fn (Product $product) => EventListing::isPast($product))
+                ->filter(fn (Product $product) => method_exists($product, 'hasDisplayableImage') ? $product->hasDisplayableImage() : true)
+                ->values(),
+            $sort
+        )->take($limit)->values();
         // Fallback: if filtering by tag + price yields nothing, retry without tag
         if ($products->isEmpty() && $tag && $request->filled('price_max')) {
             $retry = clone $base;
@@ -218,21 +210,15 @@ class ProductController extends Controller
             if ($request->filled('category_id')) {
                 $retry->where('category_id', (int)$request->input('category_id'));
             }
-            // Keep sorting consistent
             $sort = $request->string('sort', 'popular')->toString();
-            if ($sort === 'newest') {
-                $retry->latest('id');
-            } elseif ($sort === 'price_asc') {
-                $retry->orderBy('price', 'asc');
-            } elseif ($sort === 'price_desc') {
-                $retry->orderBy('price', 'desc');
-            } else {
-                $retry->orderByRaw('COALESCE(reviews_avg_rating, 0) * LOG(1 + COALESCE(reviews_count, 0)) DESC')
-                      ->orderByRaw('COALESCE(reviews_avg_rating, 0) DESC')
-                      ->orderByRaw('COALESCE(reviews_count, 0) DESC');
-            }
 
-            $products = $retry->limit($limit)->get();
+            $products = ProductRanking::sortCollection(
+                $retry->get()
+                    ->reject(fn (Product $product) => EventListing::isPast($product))
+                    ->filter(fn (Product $product) => method_exists($product, 'hasDisplayableImage') ? $product->hasDisplayableImage() : true)
+                    ->values(),
+                $sort
+            )->take($limit)->values();
         }
 
         // Transform
