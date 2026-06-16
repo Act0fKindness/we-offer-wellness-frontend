@@ -8,6 +8,7 @@ use App\Support\EventListing;
 use App\Support\ProductRanking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class TherapiesController extends Controller
 {
@@ -21,8 +22,6 @@ class TherapiesController extends Controller
             ->where(function ($q) {
                 $q->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'");
             })
-            ->get()
-            ->reject(fn ($product) => EventListing::isPast($product))
             ->count();
         $featuredOfferings = Product::query()
             ->with(['media', 'category', 'options.values', 'vendor.tiers', 'vendor.user.settings'])
@@ -35,6 +34,8 @@ class TherapiesController extends Controller
             ->where(function ($q) {
                 $q->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'");
             })
+            ->latest('updated_at')
+            ->limit(60)
             ->get()
             ->reject(fn ($product) => EventListing::isPast($product))
             ->values();
@@ -173,7 +174,29 @@ class TherapiesController extends Controller
                 return $therapy;
             }
         }
-        return null;
+
+        $category = ProductCategory::query()
+            ->get()
+            ->first(function (ProductCategory $category) use ($slug): bool {
+                return Str::slug((string) ($category->slug ?: $category->name)) === $slug;
+            });
+
+        if (! $category) {
+            return null;
+        }
+
+        $title = trim((string) ($category->name ?? ''));
+        if ($title === '') {
+            $title = Str::headline($slug);
+        }
+
+        return [
+            'key' => (string) ($category->slug ?: $slug),
+            'slug' => (string) ($category->slug ?: $slug),
+            'title' => $title,
+            'seo_title' => $title . ' | We Offer Wellness™',
+            'seo_description' => 'Explore ' . $title . ' experiences and therapies.',
+        ];
     }
 
     private function fetchOfferings(array $query): array
@@ -255,6 +278,8 @@ class TherapiesController extends Controller
                 'meta'  => [
                     'current_page' => $page,
                     'last_page'    => $lastPage,
+                    'total'        => $total,
+                    'per_page'     => $perPage,
                 ],
             ];
         });

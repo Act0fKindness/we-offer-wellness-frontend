@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\IndexNowService;
 use App\Services\SitemapService;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\Response;
@@ -11,6 +12,21 @@ use Illuminate\Support\Str;
 
 class SubmitSearchConsoleSitemap extends Command
 {
+    private const REQUIRED_SEGMENTS = [
+        'static',
+        'types',
+        'modalities',
+        'near-me',
+        'offerings',
+        'locations',
+        'online',
+        'by-need',
+        'practitioners',
+        'guides',
+    ];
+
+    private const OPTIONAL_EMPTY_SEGMENTS = [];
+
     protected $signature = 'search-console:submit-sitemap
         {--property= : Search Console property URL or sc-domain property}
         {--sitemap= : Sitemap URL to submit}
@@ -23,9 +39,15 @@ class SubmitSearchConsoleSitemap extends Command
 
     public function handle(): int
     {
+        @set_time_limit(0);
+        if (function_exists('ini_set')) {
+            @ini_set('max_execution_time', '0');
+        }
+
         try {
+            $sitemapService = app(SitemapService::class);
             $propertyUrl = trim((string) ($this->option('property') ?: config('services.search_console.property_url', '')));
-            $sitemapUrls = $this->resolveSitemapUrls(app(SitemapService::class));
+            $sitemapUrls = $this->resolveSitemapUrls($sitemapService);
             $credentials = $this->loadOAuthCredentials();
 
             if ($propertyUrl === '') {
@@ -41,6 +63,15 @@ class SubmitSearchConsoleSitemap extends Command
             if ($credentials === null) {
                 $this->error('Missing Google OAuth credentials. Set GOOGLE_SEARCH_CONSOLE_CLIENT_ID, GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET, and GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN.');
                 $this->line('Use `php artisan search-console:oauth-url` and `php artisan search-console:oauth-exchange {code}` to create a refresh token.');
+                return self::FAILURE;
+            }
+
+            $manifest = $this->loadManifest($sitemapService);
+            if ($manifest === null) {
+                return self::FAILURE;
+            }
+
+            if (!$this->validateManifest($manifest)) {
                 return self::FAILURE;
             }
 
@@ -61,6 +92,10 @@ class SubmitSearchConsoleSitemap extends Command
                 }
 
                 $this->info("Submitted {$sitemapUrl} to Search Console for {$propertyUrl}.");
+            }
+
+            if (! $this->submitIndexNowUrls($sitemapService, app(IndexNowService::class))) {
+                $success = false;
             }
 
             return $success ? self::SUCCESS : self::FAILURE;
@@ -98,6 +133,99 @@ class SubmitSearchConsoleSitemap extends Command
     }
 
     /**
+     * @return array<string, mixed>|null
+     */
+    private function loadManifest(SitemapService $service): ?array
+    {
+        $path = $service->manifestPath();
+
+        if (!File::isFile($path)) {
+            $this->error('Missing sitemap manifest. Run php artisan sitemaps:generate first.');
+            return null;
+        }
+
+        $decoded = json_decode((string) File::get($path), true);
+        if (!is_array($decoded)) {
+            $this->error('Unable to parse the sitemap manifest. Run php artisan sitemaps:generate again.');
+            return null;
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * @param array<string, mixed> $manifest
+     */
+    private function validateManifest(array $manifest): bool
+    {
+        $sitemaps = array_values(array_filter((array) data_get($manifest, 'sitemaps', []), 'is_array'));
+        $fileCount = count($sitemaps);
+        $submissionUrls = array_values(array_filter(array_map(
+            static fn ($url): string => trim((string) $url),
+            (array) data_get($manifest, 'submission_urls', [])
+        )));
+        $totalUrls = (int) data_get($manifest, 'total_urls', 0);
+
+        if ($fileCount < count(self::REQUIRED_SEGMENTS)) {
+            $this->error(sprintf(
+                'Critical sitemap failure: expected at least %d sitemap files but found %d.',
+                count(self::REQUIRED_SEGMENTS),
+                $fileCount
+            ));
+            return false;
+        }
+
+        $segments = [];
+        foreach ($sitemaps as $entry) {
+            $name = trim((string) data_get($entry, 'name', ''));
+            if ($name !== '') {
+                $segments[$name] = (int) data_get($entry, 'count', 0);
+            }
+        }
+
+        $missing = [];
+        $empty = [];
+        foreach (self::REQUIRED_SEGMENTS as $segment) {
+            if (!array_key_exists($segment, $segments)) {
+                $missing[] = $segment;
+                continue;
+            }
+
+            if ((int) ($segments[$segment] ?? 0) <= 0 && ! in_array($segment, self::OPTIONAL_EMPTY_SEGMENTS, true)) {
+                $empty[] = $segment;
+            }
+        }
+
+        if ($missing !== []) {
+            $this->error('Critical sitemap failure: missing required segment(s): ' . implode(', ', $missing));
+            return false;
+        }
+
+        if ($empty !== []) {
+            $this->error('Critical sitemap failure: empty required segment(s): ' . implode(', ', $empty));
+            return false;
+        }
+
+        if (count($submissionUrls) < (count(self::REQUIRED_SEGMENTS) + 1)) {
+            $this->error('Critical sitemap failure: submission URL list is incomplete.');
+            return false;
+        }
+
+        if ($totalUrls <= 0) {
+            $this->error('Critical sitemap failure: the sitemap manifest contains no URLs.');
+            return false;
+        }
+
+        $this->info(sprintf(
+            'Validated sitemap manifest: %d file(s), %d total URL(s).',
+            $fileCount,
+            $totalUrls
+        ));
+
+        return true;
+    }
+
+    /**
      * @return array{0:string,1:string,2:string}|null
      */
     private function loadOAuthCredentials(): ?array
@@ -121,6 +249,75 @@ class SubmitSearchConsoleSitemap extends Command
         }
 
         return [$clientId, $clientSecret, $refreshToken];
+    }
+
+    private function submitIndexNowUrls(SitemapService $service, IndexNowService $indexNow): bool
+    {
+        $urls = $service->canonicalUrls();
+
+        if ($urls === []) {
+            $this->warn('IndexNow skipped: there were no canonical URLs to submit.');
+            return true;
+        }
+
+        $host = trim($indexNow->host());
+        $key = trim($indexNow->key());
+        $keyLocation = trim($indexNow->keyLocation());
+        $endpoint = trim($indexNow->endpoint());
+
+        if ($host === '' || $key === '' || $endpoint === '') {
+            $this->error('IndexNow submission skipped: missing host, key, or endpoint configuration.');
+            return false;
+        }
+
+        $success = true;
+        $chunks = array_chunk($urls, 10000);
+
+        foreach ($chunks as $index => $chunk) {
+            try {
+                $payload = [
+                    'host' => $host,
+                    'key' => $key,
+                    'urlList' => array_values($chunk),
+                ];
+
+                if ($keyLocation !== '') {
+                    $payload['keyLocation'] = $keyLocation;
+                }
+
+                $response = Http::timeout(30)->acceptJson()->post($endpoint, $payload);
+
+                if ($response->successful()) {
+                    $this->info(sprintf(
+                        'Submitted IndexNow batch %d/%d with %d URL(s) to %s.',
+                        $index + 1,
+                        count($chunks),
+                        count($chunk),
+                        $endpoint
+                    ));
+                    continue;
+                }
+
+                $success = false;
+                $this->error(sprintf(
+                    'IndexNow rejected batch %d/%d with HTTP %d.',
+                    $index + 1,
+                    count($chunks),
+                    $response->status()
+                ));
+                $this->error($this->describeResponse($response));
+            } catch (\Throwable $e) {
+                $success = false;
+                $this->error(sprintf(
+                    'IndexNow failed for batch %d/%d: %s',
+                    $index + 1,
+                    count($chunks),
+                    $e->getMessage()
+                ));
+            }
+        }
+
+        return $success;
     }
 
     private function verifySitemapReachable(string $sitemapUrl): void

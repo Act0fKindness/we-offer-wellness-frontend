@@ -6,7 +6,7 @@
     $t = strtolower((string) $get('product_type', ''));
     $tags = strtolower((string) $get('tags_list', ''));
     $slug = \Illuminate\Support\Str::slug((string) ($get('title', $get('name', '')) ?: $get('id', '')));
-    $url = url('/offerings/' . $get('id', '') . '-' . $slug);
+    $url = app(\App\Services\SeoStructureService::class)->canonicalProductUrl($product);
 
     $image = method_exists($item, 'getFirstImageUrl')
         ? $item->getFirstImageUrl()

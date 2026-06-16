@@ -1,6 +1,6 @@
 @php
     $slug = \Illuminate\Support\Str::slug($product->title ?: (string) $product->id);
-    $url = url('/offerings/' . $product->id . '-' . $slug);
+    $url = app(\App\Services\SeoStructureService::class)->canonicalProductUrl($product);
 
     $toLower = function ($s) {
         return function_exists('mb_strtolower') ? mb_strtolower((string) $s, 'UTF-8') : strtolower((string) $s);

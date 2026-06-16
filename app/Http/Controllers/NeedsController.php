@@ -174,72 +174,93 @@ class NeedsController extends Controller
     {
         $cacheKey = 'needs:offerings:' . md5(json_encode($query));
 
-        return Cache::remember($cacheKey, now()->addMinutes(3), function () use ($query) {
-            $needKey = $query['need'] ?? null;
-            if (!$needKey) {
-                return ['items' => [], 'meta' => []];
-            }
+        try {
+            return Cache::remember($cacheKey, now()->addMinutes(3), function () use ($query) {
+                $needKey = $query['need'] ?? null;
+                if (!$needKey) {
+                    return ['items' => [], 'meta' => []];
+                }
 
-            $perPage = (int)($query['per_page'] ?? 24);
-            $page    = max(1, (int)($query['page'] ?? 1));
+                $perPage = (int)($query['per_page'] ?? 24);
+                $page    = max(1, (int)($query['page'] ?? 1));
 
-            $builder = Product::query()
-                ->with(['media', 'category', 'options.values', 'vendor.tiers', 'vendor.user.settings'])
-                ->withCount('reviews')
-                ->withAvg('reviews', 'rating')
-                ->withMin('variants', 'price')
-                ->withMax('variants', 'price')
-                ->whereJsonContains('by_need', $needKey)
-                ->where(function ($q) {
-                    $q->whereHas('status', function ($qs) {
-                        $qs->whereIn('status', ['live', 'approved']);
+                $builder = Product::query()
+                    ->with(['media', 'category', 'options.values', 'vendor.tiers', 'vendor.user.settings'])
+                    ->withCount('reviews')
+                    ->withAvg('reviews', 'rating')
+                    ->withMin('variants', 'price')
+                    ->withMax('variants', 'price')
+                    ->whereJsonContains('by_need', $needKey)
+                    ->where(function ($q) {
+                        $q->whereHas('status', function ($qs) {
+                            $qs->whereIn('status', ['live', 'approved']);
+                        });
                     });
-                });
 
-            $format = strtolower((string) ($query['format'] ?? ''));
-            if ($format === 'online') {
-                $builder->whereHas('options', function ($q) {
-                    $q->where('meta_name', 'locations')
-                        ->whereHas('values', function ($q2) {
-                            $q2->whereRaw('LOWER(value) = ?', ['online']);
-                        });
-                });
-            } elseif ($format === 'in_person') {
-                $builder->whereHas('options', function ($q) {
-                    $q->where('meta_name', 'locations')
-                        ->whereHas('values', function ($q2) {
-                            $q2->whereRaw('LOWER(value) != ?', ['online']);
-                        });
-                });
+                $format = strtolower((string) ($query['format'] ?? ''));
+                if ($format === 'online') {
+                    $builder->whereHas('options', function ($q) {
+                        $q->where('meta_name', 'locations')
+                            ->whereHas('values', function ($q2) {
+                                $q2->whereRaw('LOWER(value) = ?', ['online']);
+                            });
+                    });
+                } elseif ($format === 'in_person') {
+                    $builder->whereHas('options', function ($q) {
+                        $q->where('meta_name', 'locations')
+                            ->whereHas('values', function ($q2) {
+                                $q2->whereRaw('LOWER(value) != ?', ['online']);
+                            });
+                    });
+                }
+
+                if ($location = trim((string) ($query['location'] ?? ''))) {
+                    $builder->whereHas('options', function ($q) use ($location) {
+                        $q->where('meta_name', 'locations')
+                            ->whereHas('values', function ($q2) use ($location) {
+                                $q2->where('value', 'like', "%{$location}%");
+                            });
+                    });
+                }
+
+                $sort = $query['sort'] ?? '';
+                $items = $builder->get()
+                    ->reject(fn ($product) => EventListing::isPast($product))
+                    ->values();
+                $items = ProductRanking::sortCollection($items, $sort);
+                $total = $items->count();
+                $items = $items->forPage($page, $perPage)->values();
+
+                $lastPage = max(1, (int) ceil($total / max(1, $perPage)));
+
+                return [
+                    'items' => $items,
+                    'meta'  => [
+                        'current_page' => $page,
+                        'last_page'    => $lastPage,
+                    ],
+                ];
+            });
+        } catch (\Throwable $e) {
+            report($e);
+
+            try {
+                $cached = Cache::get($cacheKey);
+                if (is_array($cached) && array_key_exists('items', $cached)) {
+                    return $cached;
+                }
+            } catch (\Throwable $_) {
+                // Fall through to empty state.
             }
-
-            if ($location = trim((string) ($query['location'] ?? ''))) {
-                $builder->whereHas('options', function ($q) use ($location) {
-                    $q->where('meta_name', 'locations')
-                        ->whereHas('values', function ($q2) use ($location) {
-                            $q2->where('value', 'like', "%{$location}%");
-                        });
-                });
-            }
-
-            $sort = $query['sort'] ?? '';
-            $items = $builder->get()
-                ->reject(fn ($product) => EventListing::isPast($product))
-                ->values();
-            $items = ProductRanking::sortCollection($items, $sort);
-            $total = $items->count();
-            $items = $items->forPage($page, $perPage)->values();
-
-            $lastPage = max(1, (int) ceil($total / max(1, $perPage)));
 
             return [
-                'items' => $items,
-                'meta'  => [
-                    'current_page' => $page,
-                    'last_page'    => $lastPage,
+                'items' => collect(),
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
                 ],
             ];
-        });
+        }
     }
 
 }

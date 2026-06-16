@@ -1450,7 +1450,7 @@
   <div class="wow-event-body__nav-inner">
     <div class="wow-event-body__breadcrumbs">
       <a class="wow-event-body__crumb" href="{{ url('/') }}">Home</a>
-      <a class="wow-event-body__crumb" href="{{ url('/offerings') }}">Offerings</a>
+      <a class="wow-event-body__crumb" href="{{ url('/events') }}">Events</a>
       <span class="wow-event-body__crumb wow-event-body__crumb-current">{{ $eventTitle }}</span>
     </div>
 

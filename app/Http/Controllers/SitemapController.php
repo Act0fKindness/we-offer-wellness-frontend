@@ -53,11 +53,6 @@ class SitemapController extends Controller
             ]);
         }
 
-        $xml = trim($fallback());
-        if ($xml !== '') {
-            return response($xml, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
-        }
-
         abort(404);
     }
 }

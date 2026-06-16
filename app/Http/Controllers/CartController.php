@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OfferingV3;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\SeoStructureService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -165,8 +166,7 @@ class CartController extends Controller
                 }
             }
 
-            $slug = \Illuminate\Support\Str::slug($product->title ?: (string)$product->id);
-            $url = url('/offerings/'.$product->id.'-'.$slug);
+            $url = app(SeoStructureService::class)->canonicalProductUrl($product);
             $image = method_exists($product,'getFirstImageUrl') ? $product->getFirstImageUrl() : null;
             $vendorId = $product->vendor_id ?? null;
             $key = $this->cartKey($product->id, $variant?->id);
@@ -175,7 +175,7 @@ class CartController extends Controller
             $productId = (int) $offering->id;
             $vendorId = $offering->vendor_id ?? null;
             $image = method_exists($offering, 'getFirstImageUrl') ? $offering->getFirstImageUrl() : null;
-            $url = url('/offerings/'.$offering->id.'-'.Str::slug($offering->title ?: (string) $offering->id));
+            $url = app(SeoStructureService::class)->canonicalOfferingUrl($offering);
 
             $priceOptions = DB::table('offering_price_options')
                 ->where('offering_id', $offering->id)
@@ -310,7 +310,7 @@ class CartController extends Controller
             ];
         }
         session(['cart.items' => $items]);
-        $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
+        $cookie = cookie('wow_cart', $this->cartCookiePayload($items), 60*24*30);
         $count = array_sum(array_map(fn($it)=> (int)($it['qty'] ?? 0), $items));
         return response()->json(['ok'=>true,'count'=>$count,'key'=>$key])->withCookie($cookie);
     }
@@ -319,7 +319,7 @@ class CartController extends Controller
     {
         $items = $this->getCartItems();
         $id = (string) $request->input('id'); unset($items[$id]); session(['cart.items'=>$items]);
-        $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
+        $cookie = cookie('wow_cart', $this->cartCookiePayload($items), 60*24*30);
         return response()->json(['ok'=>true])->withCookie($cookie);
     }
 
@@ -330,14 +330,14 @@ class CartController extends Controller
         if(!isset($items[$id])) return response()->json(['ok'=>false],404);
         if($qty===0){ unset($items[$id]); } else { $items[$id]['qty']=$qty; }
         session(['cart.items'=>$items]);
-        $cookie = cookie('wow_cart', json_encode($items), 60*24*30);
+        $cookie = cookie('wow_cart', $this->cartCookiePayload($items), 60*24*30);
         return response()->json(['ok'=>true])->withCookie($cookie);
     }
 
     public function clear(Request $request)
     {
         session()->forget('cart.items');
-        $cookie = cookie('wow_cart', json_encode([]), 60*24*30);
+        $cookie = cookie('wow_cart', '[]', 60*24*30);
         return response()->json(['ok' => true])->withCookie($cookie);
     }
 
@@ -399,6 +399,36 @@ class CartController extends Controller
             $list[] = $line;
         }
         return $list;
+    }
+
+    protected function cartCookiePayload(array $items): string
+    {
+        $payload = [];
+        foreach ($items as $key => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $line = $this->mapLineItem($row);
+            $lineId = $line['id'] ?? (is_string($key) ? $key : null);
+            if ($lineId === null || $lineId === '') {
+                $lineId = $this->cartKey($line['product_id'] ?? $key, $line['variant_id'] ?? null);
+            }
+            $payload[] = [
+                'id' => (string) $lineId,
+                'product_id' => $line['product_id'] ?? null,
+                'variant_id' => $line['variant_id'] ?? null,
+                'variant_label' => $line['variant_label'] ?? '',
+                'title' => $line['title'] ?? '',
+                'price' => $this->formatPrice($line['price'] ?? 0),
+                'qty' => max(1, (int) ($line['qty'] ?? 1)),
+                'image' => $line['image'] ?? null,
+                'url' => $line['url'] ?? '#',
+            ];
+        }
+
+        $encoded = json_encode(array_values($payload), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        return $encoded !== false ? $encoded : '[]';
     }
 
     protected function normalizeLegacyCart(array $payload): array

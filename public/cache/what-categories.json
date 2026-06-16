@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-06-06T00:00:05+00:00",
+    "generated_at": "2026-06-16T00:00:05+00:00",
     "count": 105,
     "categories": [
         {
@@ -289,6 +289,21 @@
         },
         {
             "cat": "Modalities",
+            "title": "Life Coaching",
+            "label": "Life Coaching",
+            "value": "Life Coaching",
+            "type": "Modality",
+            "subtitle": "7 offerings",
+            "slug": "life-coaching",
+            "search": "Life Coaching life-coaching",
+            "counts": {
+                "products": 6,
+                "offerings": 1,
+                "total": 7
+            }
+        },
+        {
+            "cat": "Modalities",
             "title": "Reflexology",
             "label": "Reflexology",
             "value": "Reflexology",
@@ -299,6 +314,21 @@
             "counts": {
                 "products": 7,
                 "offerings": 0,
+                "total": 7
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Self-Discovery And Healing",
+            "label": "Self-Discovery And Healing",
+            "value": "Self-Discovery And Healing",
+            "type": "Modality",
+            "subtitle": "7 offerings",
+            "slug": "self-discovery-and-healing",
+            "search": "Self-Discovery And Healing self-discovery-and-healing",
+            "counts": {
+                "products": 6,
+                "offerings": 1,
                 "total": 7
             }
         },
@@ -326,36 +356,6 @@
             "subtitle": "6 offerings",
             "slug": "class",
             "search": "Class class",
-            "counts": {
-                "products": 6,
-                "offerings": 0,
-                "total": 6
-            }
-        },
-        {
-            "cat": "Modalities",
-            "title": "Life Coaching",
-            "label": "Life Coaching",
-            "value": "Life Coaching",
-            "type": "Modality",
-            "subtitle": "6 offerings",
-            "slug": "life-coaching",
-            "search": "Life Coaching life-coaching",
-            "counts": {
-                "products": 6,
-                "offerings": 0,
-                "total": 6
-            }
-        },
-        {
-            "cat": "Modalities",
-            "title": "Self-Discovery And Healing",
-            "label": "Self-Discovery And Healing",
-            "value": "Self-Discovery And Healing",
-            "type": "Modality",
-            "subtitle": "6 offerings",
-            "slug": "self-discovery-and-healing",
-            "search": "Self-Discovery And Healing self-discovery-and-healing",
             "counts": {
                 "products": 6,
                 "offerings": 0,

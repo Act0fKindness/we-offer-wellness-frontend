@@ -14,10 +14,13 @@ use App\Services\AvailabilityWindowService;
 use App\Support\EventListing;
 use App\Support\ProductRanking;
 use App\Support\ProductSearchFilters;
+use App\Services\SeoStructureService;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -117,6 +120,7 @@ class SearchController extends Controller
         }
 
         ProductSearchFilters::applyWhereFilter($query, $request->string('where')->toString());
+        $locationContext = $this->resolveSearchLocationContext($request);
 
         $adults = $request->has('adults') ? (int) $request->input('adults') : null;
         $groupType = $request->has('group_type') ? $request->string('group_type')->toString() : null;
@@ -187,7 +191,25 @@ class SearchController extends Controller
         $offeringItems = $offeringItems->map(fn (OfferingV3 $offering) => $this->decorateSearchOffering($offering));
 
         $items = $productItems->concat($offeringItems)->values();
-        $items = $this->sortSearchItems($items, $sort);
+
+        if ($locationContext) {
+            $items = $items->map(function ($item) use ($locationContext) {
+                $distance = $this->bestSearchDistanceFromLocation($item, $locationContext);
+
+                if ($distance !== null) {
+                    $item->setAttribute('search_distance_miles', $distance);
+                }
+
+                return $item;
+            });
+        }
+
+        $items = $this->sortSearchItems($items, $sort, $locationContext);
+
+        $ratingFilter = trim((string) $request->input('rating', ''));
+        if ($ratingFilter !== '') {
+            $items = $this->applyRatingFilter($items, $ratingFilter);
+        }
 
         $total = $items->count();
         $page = max(1, (int) $request->integer('page', 1));
@@ -200,6 +222,7 @@ class SearchController extends Controller
             $page,
             ['path' => url()->current(), 'query' => $request->query()]
         );
+        $searchMapData = $this->buildSearchMapData($products->getCollection());
 
         $seoWhat = Str::squish($what);
         $seoWhere = Str::squish((string) $request->string('where')->toString());
@@ -227,6 +250,7 @@ class SearchController extends Controller
                 'count_text' => $products->total() . ' results',
                 'grid_html' => $gridHtml,
                 'pagination_html' => $paginationHtml,
+                'map_data' => $searchMapData,
             ]);
         }
 
@@ -237,6 +261,7 @@ class SearchController extends Controller
             'perPage' => $perPage,
             'searchGridHtml' => $gridHtml,
             'searchPaginationHtml' => $paginationHtml,
+            'searchMapData' => $searchMapData,
             'seo' => [
                 'title' => $seoTitleBase . ' | We Offer Wellness®',
                 'description' => $seoDescription,
@@ -501,36 +526,259 @@ class SearchController extends Controller
         return 0;
     }
 
-    private function sortSearchItems(Collection $items, string $sort): Collection
+    private function sortSearchItems(Collection $items, string $sort, ?array $locationContext = null): Collection
     {
         $sort = strtolower(trim($sort));
 
         if (in_array($sort, ['', 'popular', 'relevance'], true)) {
+            if ($locationContext) {
+                return $items->sort(function ($left, $right) {
+                    return $this->compareSearchItemsByLocation($left, $right);
+                })->values();
+            }
+
             return $items->sort(function ($left, $right) {
-                $leftNext = $this->nextAvailabilitySortValue($left);
-                $rightNext = $this->nextAvailabilitySortValue($right);
-                if ($leftNext !== $rightNext) {
-                    return $leftNext <=> $rightNext;
-                }
-
-                foreach ([
-                    [ProductRanking::itemKindPriority($left), ProductRanking::itemKindPriority($right)],
-                    [ProductRanking::planPriority($left), ProductRanking::planPriority($right)],
-                    [ProductRanking::ratingValue($left), ProductRanking::ratingValue($right)],
-                    [ProductRanking::reviewCountValue($left), ProductRanking::reviewCountValue($right)],
-                ] as [$leftValue, $rightValue]) {
-                    if ($leftValue === $rightValue) {
-                        continue;
-                    }
-
-                    return $rightValue <=> $leftValue;
-                }
-
-                return strcasecmp(ProductRanking::titleValue($left), ProductRanking::titleValue($right));
+                return $this->compareSearchItemsByRelevance($left, $right);
             })->values();
         }
 
         return ProductRanking::sortCollection($items, $sort);
+    }
+
+    private function compareSearchItemsByRelevance(mixed $left, mixed $right): int
+    {
+        $leftNext = $this->nextAvailabilitySortValue($left);
+        $rightNext = $this->nextAvailabilitySortValue($right);
+        if ($leftNext !== $rightNext) {
+            return $leftNext <=> $rightNext;
+        }
+
+        foreach ([
+            [ProductRanking::itemKindPriority($left), ProductRanking::itemKindPriority($right)],
+            [ProductRanking::planPriority($left), ProductRanking::planPriority($right)],
+            [ProductRanking::ratingValue($left), ProductRanking::ratingValue($right)],
+            [ProductRanking::reviewCountValue($left), ProductRanking::reviewCountValue($right)],
+        ] as [$leftValue, $rightValue]) {
+            if ($leftValue === $rightValue) {
+                continue;
+            }
+
+            return $rightValue <=> $leftValue;
+        }
+
+        return strcasecmp(ProductRanking::titleValue($left), ProductRanking::titleValue($right));
+    }
+
+    private function compareSearchItemsByLocation(mixed $left, mixed $right): int
+    {
+        $leftDistance = data_get($left, 'search_distance_miles');
+        $rightDistance = data_get($right, 'search_distance_miles');
+
+        $leftHasDistance = is_numeric($leftDistance);
+        $rightHasDistance = is_numeric($rightDistance);
+
+        if ($leftHasDistance || $rightHasDistance) {
+            if ($leftHasDistance !== $rightHasDistance) {
+                return $leftHasDistance ? -1 : 1;
+            }
+
+            $leftValue = (float) $leftDistance;
+            $rightValue = (float) $rightDistance;
+            if (abs($leftValue - $rightValue) > 0.01) {
+                return $leftValue <=> $rightValue;
+            }
+        }
+
+        return $this->compareSearchItemsByRelevance($left, $right);
+    }
+
+    private function resolveSearchLocationContext(Request $request): ?array
+    {
+        $raw = trim((string) $request->string('where')->toString());
+        if ($raw === '' || $this->isOnlineSearchLocation($raw)) {
+            return null;
+        }
+
+        return $this->geocodeSearchLocation($raw);
+    }
+
+    private function isOnlineSearchLocation(string $value): bool
+    {
+        return Str::lower(trim($value)) === 'online';
+    }
+
+    private function geocodeSearchLocation(string $query): ?array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return null;
+        }
+
+        $token = trim((string) config('services.mapbox.token'));
+        if ($token === '') {
+            return null;
+        }
+
+        $cacheKey = 'wow.search.location.' . md5(Str::lower($query));
+
+        return Cache::remember($cacheKey, now()->addDays(30), function () use ($query, $token) {
+            try {
+                $response = Http::timeout(8)->get(
+                    'https://api.mapbox.com/geocoding/v5/mapbox.places/' . rawurlencode($query) . '.json',
+                    [
+                        'access_token' => $token,
+                        'limit' => 1,
+                        'autocomplete' => 'true',
+                        'types' => 'place,locality,region,postcode,country,district,neighborhood,address',
+                    ]
+                );
+
+                if (! $response->ok()) {
+                    return null;
+                }
+
+                $feature = $response->json('features.0');
+                if (! is_array($feature)) {
+                    return null;
+                }
+
+                $center = $feature['center'] ?? ($feature['geometry']['coordinates'] ?? null);
+                if (! is_array($center) || ! isset($center[0], $center[1])) {
+                    return null;
+                }
+
+                return [
+                    'label' => (string) ($feature['place_name'] ?? $query),
+                    'lat' => (float) $center[1],
+                    'lng' => (float) $center[0],
+                    'relevance' => is_numeric($feature['relevance'] ?? null) ? (float) $feature['relevance'] : null,
+                ];
+            } catch (\Throwable $e) {
+                return null;
+            }
+        });
+    }
+
+    private function bestSearchDistanceFromLocation(mixed $item, array $locationContext): ?float
+    {
+        $originLat = is_numeric($locationContext['lat'] ?? null) ? (float) $locationContext['lat'] : null;
+        $originLng = is_numeric($locationContext['lng'] ?? null) ? (float) $locationContext['lng'] : null;
+
+        if ($originLat === null || $originLng === null) {
+            return null;
+        }
+
+        $distances = [];
+        foreach ($this->searchItemLocationPoints($item) as $point) {
+            if (! is_numeric($point['lat'] ?? null) || ! is_numeric($point['lng'] ?? null)) {
+                continue;
+            }
+
+            $distances[] = $this->distanceMiles(
+                $originLat,
+                $originLng,
+                (float) $point['lat'],
+                (float) $point['lng']
+            );
+        }
+
+        if (empty($distances)) {
+            return null;
+        }
+
+        return min($distances);
+    }
+
+    private function searchItemLocationPoints(mixed $item): array
+    {
+        $points = [];
+
+        foreach ([
+            ['lat' => data_get($item, 'lat'), 'lng' => data_get($item, 'lng')],
+            ['lat' => data_get($item, 'latitude'), 'lng' => data_get($item, 'longitude')],
+            ['lat' => data_get($item, 'coords.lat'), 'lng' => data_get($item, 'coords.lng')],
+        ] as $candidate) {
+            if (is_numeric($candidate['lat'] ?? null) && is_numeric($candidate['lng'] ?? null)) {
+                $points[] = [
+                    'lat' => (float) $candidate['lat'],
+                    'lng' => (float) $candidate['lng'],
+                ];
+            }
+        }
+
+        $vendor = data_get($item, 'vendor');
+        $locations = $vendor && method_exists($vendor, 'relationLoaded') && $vendor->relationLoaded('locations')
+            ? $vendor->locations
+            : [];
+
+        foreach ($locations as $location) {
+            $lat = $location->lat ?? null;
+            $lng = $location->lng ?? null;
+            if (! is_numeric($lat) || ! is_numeric($lng)) {
+                continue;
+            }
+
+            $points[] = [
+                'lat' => (float) $lat,
+                'lng' => (float) $lng,
+            ];
+        }
+
+        $meta = data_get($item, 'meta_json', []);
+        if (is_array($meta)) {
+            $lat = $meta['lat'] ?? null;
+            $lng = $meta['lng'] ?? null;
+            if (is_numeric($lat) && is_numeric($lng)) {
+                $points[] = [
+                    'lat' => (float) $lat,
+                    'lng' => (float) $lng,
+                ];
+            }
+        }
+
+        return $points;
+    }
+
+    private function distanceMiles(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $earthRadius = 3958.7613;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
+    }
+
+    private function applyRatingFilter(Collection $items, string $ratingFilter): Collection
+    {
+        $value = strtolower(trim($ratingFilter));
+
+        if ($value === '') {
+            return $items;
+        }
+
+        if ($value === 'reviewed') {
+            return $items->filter(function ($item) {
+                $reviewCount = (int) data_get($item, 'review_count', data_get($item, 'reviews_count', 0));
+                $vendorReviewCount = (int) data_get($item, 'vendor_review_count', 0);
+
+                return ($reviewCount + $vendorReviewCount) > 0;
+            })->values();
+        }
+
+        if (! is_numeric($value)) {
+            return $items;
+        }
+
+        $threshold = (float) $value;
+
+        return $items->filter(function ($item) use ($threshold) {
+            $rating = data_get($item, 'rating', data_get($item, 'vendor_rating', data_get($item, 'reviews_avg_rating', data_get($item, 'avg_rating', null))));
+
+            return is_numeric($rating) ? (float) $rating >= $threshold : false;
+        })->values();
     }
 
     private function applyV3TypeFilter($query, ?string $type): void
@@ -650,9 +898,7 @@ class SearchController extends Controller
 
     private function offeringUrl(OfferingV3 $offering): string
     {
-        $slug = Str::slug($offering->title ?: (string) $offering->id);
-
-        return url('/offerings/' . $offering->id . '-' . $slug);
+        return app(SeoStructureService::class)->canonicalOfferingUrl($offering);
     }
 
     private function applyTypeFilter($query, ?string $type): void
@@ -691,14 +937,15 @@ class SearchController extends Controller
 
     private function decorateSearchProduct(Product $product): Product
     {
+        $seo = app(SeoStructureService::class);
         $locations = method_exists($product, 'getLocations') ? $product->getLocations() : [];
         $isOnline = in_array('Online', $locations, true);
         $physical = array_values(array_filter($locations, fn ($location) => $location !== 'Online'));
         $vendorPlan = $this->resolveVendorPlan($product->vendor);
         $meta = $product->meta_json ?? [];
-        $slug = Str::slug($product->title ?: (string) $product->id);
-
         $product->setAttribute('type', $product->product_type ?: 'experience');
+        $product->setAttribute('format', $seo->inferFormatKeyFromProduct($product));
+        $product->setAttribute('modality', $seo->inferModalitySlugFromProduct($product));
         $product->setAttribute('category', $product->category ? ['id' => $product->category->id, 'name' => $product->category->name] : null);
         $product->setAttribute('mode', $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null));
         $product->setAttribute('location', $physical[0] ?? ($isOnline ? 'Online' : null));
@@ -710,7 +957,7 @@ class SearchController extends Controller
         $product->setAttribute('review_count', (int) ($product->reviews_count ?? 0));
         $product->setAttribute('image', method_exists($product, 'getFirstImageUrl') ? $product->getFirstImageUrl() : null);
         $product->setAttribute('tags', $product->tags_list ? array_map('trim', explode(',', $product->tags_list)) : []);
-        $product->setAttribute('url', url('/offerings/' . $product->id . '-' . $slug));
+        $product->setAttribute('url', $seo->canonicalProductUrl($product));
         $product->setAttribute('vendor_name', $product->vendor?->vendor_name ?? null);
         $product->setAttribute('source_version', 'legacy');
         $product->setAttribute('plan_key', $vendorPlan['key']);
@@ -783,6 +1030,59 @@ class SearchController extends Controller
         $offering->setAttribute('is_past_event', $isEventLike && EventListing::isPast($offering));
 
         return $offering;
+    }
+
+    private function buildSearchMapData(Collection $items): array
+    {
+        $mapData = [];
+
+        foreach ($items as $item) {
+            $vendor = $item->vendor ?? null;
+            $locations = $vendor && $vendor->relationLoaded('locations') ? $vendor->locations : [];
+            $title = (string) ($item->title ?? '');
+            $url = (string) data_get($item, 'url', '');
+            $added = 0;
+
+            foreach ($locations as $location) {
+                $lat = $location->lat ?? null;
+                $lng = $location->lng ?? null;
+                if (! is_numeric($lat) || ! is_numeric($lng)) {
+                    continue;
+                }
+
+                $mapData[] = [
+                    'pid' => (string) ($item->id ?? ''),
+                    'title' => $title,
+                    'lat' => (float) $lat,
+                    'lng' => (float) $lng,
+                    'label' => trim((string) ($location->city ?? '') . ', ' . (string) ($location->address ?? '')),
+                    'url' => $url,
+                ];
+                $added++;
+            }
+
+            if ($added > 0) {
+                continue;
+            }
+
+            $meta = data_get($item, 'meta_json', []);
+            $lat = is_array($meta) ? ($meta['lat'] ?? null) : null;
+            $lng = is_array($meta) ? ($meta['lng'] ?? null) : null;
+            if (! is_numeric($lat) || ! is_numeric($lng)) {
+                continue;
+            }
+
+            $mapData[] = [
+                'pid' => (string) ($item->id ?? ''),
+                'title' => $title,
+                'lat' => (float) $lat,
+                'lng' => (float) $lng,
+                'label' => (string) data_get($item, 'category.name', 'Location'),
+                'url' => $url,
+            ];
+        }
+
+        return $mapData;
     }
 
     private function isEventLikeProduct(Product $product): bool

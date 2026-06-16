@@ -262,7 +262,7 @@ Schedule::command('categories:export-what')
     ->runInBackground();
 
 Schedule::command('sitemaps:generate')
-    ->dailyAt('00:05')
+    ->dailyAt('00:00')
     ->withoutOverlapping()
     ->runInBackground();
 

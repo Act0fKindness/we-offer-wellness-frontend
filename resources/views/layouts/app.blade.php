@@ -854,44 +854,46 @@
     var headerEl = document.querySelector('header');
     var panel = document.getElementById('mega-panel');
     if (headerEl && panel) {
-      function showMenu(key){
-        if(!key){ hideMenu(); return }
-        panel.style.display = 'block';
-        panel.setAttribute('data-active', key);
-      }
-      function hideMenu(){ panel.style.display = 'none'; panel.removeAttribute('data-active'); }
+      if (!panel.classList.contains('wow-mega-shell')) {
+        function showMenu(key){
+          if(!key){ hideMenu(); return }
+          panel.style.display = 'block';
+          panel.setAttribute('data-active', key);
+        }
+        function hideMenu(){ panel.style.display = 'none'; panel.removeAttribute('data-active'); }
 
-      // Attach to nav links via data-mega-menu attribute (e.g., data-mega-menu="need").
-      // If a link has no mega menu, hovering it will close any open panel.
-      headerEl.querySelectorAll('.nav-item > a.link-wow--nav').forEach(function(a){
-        var key = a.getAttribute('data-mega-menu');
-        a.addEventListener('mouseenter', function(){ key ? showMenu(key) : hideMenu(); });
-        a.addEventListener('focus', function(){ key ? showMenu(key) : hideMenu(); });
-      });
-      // Keep open when hovering panel; close on leaving header+panel area
-      var closeTimer;
-      function scheduleClose(){ clearTimeout(closeTimer); closeTimer = setTimeout(hideMenu, 400); }
-      function cancelClose(){ clearTimeout(closeTimer); }
-      // Only close when leaving BOTH header and panel areas
-      headerEl.addEventListener('mouseleave', function(e){
-        try { if (panel.contains(e.relatedTarget)) return; } catch(_) {}
-        scheduleClose();
-      });
-      headerEl.addEventListener('mouseenter', cancelClose);
-      panel.addEventListener('mouseenter', cancelClose);
-      panel.addEventListener('mouseleave', function(e){
-        try { if (headerEl.contains(e.relatedTarget)) return; } catch(_) {}
-        scheduleClose();
-      });
-      // Defensive: keep open on any movement within panel
-      panel.addEventListener('mousemove', cancelClose);
-      document.addEventListener('keydown', function(e){ if(e.key==='Escape') hideMenu() });
+        // Attach to nav links via data-mega-menu attribute (e.g., data-mega-menu="need").
+        // If a link has no mega menu, hovering it will close any open panel.
+        headerEl.querySelectorAll('.nav-item > a.link-wow--nav').forEach(function(a){
+          var key = a.getAttribute('data-mega-menu');
+          a.addEventListener('mouseenter', function(){ key ? showMenu(key) : hideMenu(); });
+          a.addEventListener('focus', function(){ key ? showMenu(key) : hideMenu(); });
+        });
+        // Keep open when hovering panel; close on leaving header+panel area
+        var closeTimer;
+        function scheduleClose(){ clearTimeout(closeTimer); closeTimer = setTimeout(hideMenu, 400); }
+        function cancelClose(){ clearTimeout(closeTimer); }
+        // Only close when leaving BOTH header and panel areas
+        headerEl.addEventListener('mouseleave', function(e){
+          try { if (panel.contains(e.relatedTarget)) return; } catch(_) {}
+          scheduleClose();
+        });
+        headerEl.addEventListener('mouseenter', cancelClose);
+        panel.addEventListener('mouseenter', cancelClose);
+        panel.addEventListener('mouseleave', function(e){
+          try { if (headerEl.contains(e.relatedTarget)) return; } catch(_) {}
+          scheduleClose();
+        });
+        // Defensive: keep open on any movement within panel
+        panel.addEventListener('mousemove', cancelClose);
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape') hideMenu() });
+      }
     }
   } catch {}
 
   // Mobile menu toggle
   try {
-    var burger = document.querySelector('button[aria-label="Toggle menu"]');
+    var burger = document.querySelector('[data-wow-mobile-toggle]') || document.querySelector('button[aria-label="Toggle menu"]');
     var mobile = document.getElementById('mobile-menu');
     if (burger && mobile){
       function setBodyScroll(disabled){ try{ document.body.style.overflow = disabled ? 'hidden' : ''; }catch{} }
@@ -1061,6 +1063,65 @@
     }
     return null;
   }
+
+  function compactCartEntry(entry) {
+    if (!entry) return null;
+    const meta = entry.meta && typeof entry.meta === 'object' ? entry.meta : {};
+    const id = entry.id || entry.product_id || meta.product_id || entry.variant_id || meta.variant_id;
+    if (!id) return null;
+    return {
+      id: String(id),
+      product_id: entry.product_id || meta.product_id || null,
+      variant_id: entry.variant_id || meta.variant_id || null,
+      variant_label: entry.variant_label || meta.variant_label || '',
+      title: entry.title || entry.name || '',
+      price: Number(entry.price || entry.unit || 0) || 0,
+      qty: Math.max(1, Number(entry.qty || entry.quantity || 1) || 1),
+      image: entry.image || entry.img || null,
+      url: entry.url || entry.href || '#',
+    };
+  }
+
+  function compactCartPayload(payload) {
+    const items = Array.isArray(payload)
+      ? payload
+      : (payload && Array.isArray(payload.items))
+        ? payload.items
+        : (payload && typeof payload === 'object')
+          ? Object.values(payload)
+          : [];
+    return items.map(compactCartEntry).filter(Boolean);
+  }
+
+  function rewriteCartCookieIfNeeded() {
+    try {
+      const matches = document.cookie.split(';').map(row => row.trim()).filter(row => row.startsWith('wow_cart='));
+      if (!matches.length) return;
+
+      const byId = new Map();
+      matches.forEach((cookieRow) => {
+        try {
+          const raw = decodeURIComponent(cookieRow.slice('wow_cart='.length));
+          const parsed = JSON.parse(raw);
+          compactCartPayload(parsed).forEach((item) => {
+            const id = String(item?.id || '');
+            if (!id || byId.has(id)) return;
+            byId.set(id, item);
+          });
+        } catch (_err) {}
+      });
+
+      const compact = Array.from(byId.values());
+      const next = JSON.stringify(compact);
+      document.cookie = `wow_cart=; Path=/; Max-Age=0; SameSite=Lax`;
+      document.cookie = `wow_cart=; Domain=.weofferwellness.co.uk; Path=/; Max-Age=0; SameSite=Lax`;
+      if (compact.length) {
+        document.cookie = `wow_cart=${encodeURIComponent(next)}; Domain=.weofferwellness.co.uk; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+      }
+    } catch (_err) {}
+  }
+
+  rewriteCartCookieIfNeeded();
 
   function readCartIds() {
     try {

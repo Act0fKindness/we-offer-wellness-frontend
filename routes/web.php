@@ -15,6 +15,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CheckoutResultController;
 use App\Http\Controllers\SafetyContraindicationsController;
 use App\Http\Controllers\HelpCentreController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\NeedsController;
 use App\Http\Controllers\TherapiesController;
@@ -40,6 +41,8 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\LandingRedirectsController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\SubscriberController;
+use App\Services\LocationCatalogService;
+use App\Services\IndexNowService;
 
 Route::get('/', [HomeController::class, 'index']);
 
@@ -51,40 +54,82 @@ Route::prefix('subscribe')->group(function () {
     Route::get('/resubscribe/{token}', [SubscriberController::class, 'resubscribe'])->name('subscribe.resubscribe');
 });
 
+$locationCatalog = app(LocationCatalogService::class)->load();
+$countrySlugs = array_values(array_unique(array_filter(array_map(
+    static fn ($country): string => trim((string) data_get($country, 'slug', '')),
+    (array) data_get($locationCatalog, 'countries', [])
+))));
+$countryPattern = $countrySlugs !== []
+    ? implode('|', array_map(static fn (string $slug): string => preg_quote($slug, '~'), $countrySlugs))
+    : 'united-kingdom';
+$seoSlugPattern = '[A-Za-z0-9][A-Za-z0-9\-]*';
+
 // Online & Near Me hub
 Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
+
+/** Guides */
+Route::get('/guides', [GuideController::class, 'index'])->name('guides.index');
+Route::get('/{format}/guides', [GuideController::class, 'format'])
+    ->where('format', 'therapies|classes|events|workshops|retreats')
+    ->name('guides.format');
+Route::get('/{format}/{modality}/guides', [GuideController::class, 'modality'])
+    ->where([
+        'format' => 'therapies|classes|events|workshops|retreats',
+        'modality' => $seoSlugPattern,
+    ])
+    ->name('guides.modality');
+Route::get('/{format}/{modality}/guides/{guide}', [GuideController::class, 'show'])
+    ->where([
+        'format' => 'therapies|classes|events|workshops|retreats',
+        'modality' => $seoSlugPattern,
+        'guide' => $seoSlugPattern,
+    ])
+    ->name('guides.show');
+Route::permanentRedirect('/what-is-reiki', '/therapies/reiki/guides/what-is-reiki');
+Route::permanentRedirect('/reiki-benefits', '/therapies/reiki/guides/what-is-reiki');
+Route::permanentRedirect('/what-is-reflexology', '/therapies/reflexology/guides/what-is-reflexology');
+Route::permanentRedirect('/yoga-for-back-pain', '/classes/yoga/guides/yoga-for-back-pain');
 
 /** By Need */
 Route::get('/needs', [NeedsController::class, 'index'])->name('needs.index');
 Route::get('/needs/{slug}', [NeedsController::class, 'show'])
-    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
+    ->where('slug', $seoSlugPattern)
     ->name('needs.show');
-// Back-compat: old slug variant without "and"
-Route::redirect('/needs/stress-anxiety', '/needs/stress-and-anxiety', 301);
 
 /** Therapies */
 Route::get('/therapies', [TherapiesController::class, 'index'])->name('therapies.index');
 Route::get('/therapies/{slug}', [TherapiesController::class, 'show'])
-    ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
+    ->where('slug', $seoSlugPattern)
     ->name('therapies.show');
 
 /** Events & Workshops */
-Route::redirect('/events-workshops', '/events', 301);
-Route::get('/events-workshops/{slug}', function (string $slug) {
-    return redirect('/events/'.$slug, 301);
-})->where('slug', '[A-Za-z][A-Za-z0-9\-]*');
+Route::get('/events-workshops/{slug}', [EventsController::class, 'show'])
+    ->where('slug', $seoSlugPattern)
+    ->name('events-workshops.show');
 
 /** Online */
 Route::get('/online', [OnlineController::class, 'index'])->name('online.index');
+Route::get('/online/{modality}', [OnlineController::class, 'show'])
+    ->where('modality', $seoSlugPattern)
+    ->name('online.modality');
+Route::get('/{format}/{modality}/{country}/{county?}/{town?}', [SeoMoneyPageController::class, 'showStructuredNearMe'])
+    ->where([
+        'format' => '(therapies|classes|events|workshops|retreats)',
+        'modality' => $seoSlugPattern,
+        'country' => $countryPattern,
+        'county' => $seoSlugPattern,
+        'town' => $seoSlugPattern,
+    ])
+    ->name('seo-money.structured-near-me');
 Route::get('/holistic-therapies-uk', [SeoMoneyPageController::class, 'show'])
     ->defaults('slug', 'holistic-therapies-uk')
     ->name('seo-money.holistic-therapies-uk');
 Route::get('/{category}-near-me/{country?}/{county?}/{town?}', [SeoMoneyPageController::class, 'showNearMe'])
     ->where([
-        'category' => '[A-Za-z][A-Za-z0-9\-]*',
-        'country' => '[A-Za-z][A-Za-z0-9\-]*',
-        'county' => '[A-Za-z][A-Za-z0-9\-]*',
-        'town' => '[A-Za-z][A-Za-z0-9\-]*',
+        'category' => $seoSlugPattern,
+        'country' => $seoSlugPattern,
+        'county' => $seoSlugPattern,
+        'town' => $seoSlugPattern,
     ])
     ->name('seo-money.near-me');
 
@@ -109,57 +154,12 @@ Route::get('/{prefix}/custom/{pixel}/sandbox/modern/products/{handle}', [Landing
         'pixel' => '[^/]+',
         'handle' => '[^/]+',
     ]);
-Route::redirect('/collections', '/offerings', 301);
 Route::get('/collections/{slug?}', [LandingRedirectsController::class, 'shopifyCollection'])
     ->where('slug', '[^/]*');
 Route::get('/pages/{path}', [LandingRedirectsController::class, 'shopifyPage'])
     ->where('path', '.*');
 Route::get('/account/login', [LandingRedirectsController::class, 'shopifyAccountLogin']);
-Route::get('/{therapy}/{location}', function (Request $request, string $therapy, string $location) {
-    $therapySlug = Str::slug($therapy);
-    $locationSlug = Str::slug($location);
-
-    $allowedTherapies = [
-        'reiki',
-        'sound-healing',
-        'reflexology',
-        'breathwork',
-        'acupuncture',
-        'massage',
-        'hypnotherapy',
-        'somatic-experiencing',
-        'meditation',
-        'corporate-wellness',
-    ];
-
-    if (!in_array($therapySlug, $allowedTherapies, true)) {
-        abort(404);
-    }
-
-    if ($locationSlug === '' || in_array($locationSlug, ['online', 'therapies', 'events', 'workshops', 'classes', 'retreats', 'gifts'], true)) {
-        abort(404);
-    }
-
-    $catalog = app(\App\Services\LocationCatalogService::class)->load();
-    $match = collect((array) data_get($catalog, 'flat', []))->first(function (array $node) use ($locationSlug): bool {
-        $nodeSlug = Str::slug((string) ($node['slug'] ?? ''));
-        $nodeTitle = Str::slug((string) ($node['title'] ?? ''));
-
-        return $locationSlug === $nodeSlug || $locationSlug === $nodeTitle;
-    });
-
-    if ($match !== null && !empty($match['path'])) {
-        return redirect()->to(url((string) $match['path']), 301);
-    }
-
-    abort(404);
-})->where([
-    'therapy' => '(?:reiki|sound-healing|reflexology|breathwork|acupuncture|massage|hypnotherapy|somatic-experiencing|meditation|corporate-wellness)',
-    'location' => '[A-Za-z][A-Za-z0-9\-]*',
-]);
-
-// Misc redirects for broken/legacy links
-Route::redirect('/help/which-therapy', '/plan', 301);
+// Misc redirects are handled by the backend redirect table.
 
 // V3 holding page
 Route::get('/v3', function () {
@@ -174,10 +174,12 @@ Route::get('/v3', function () {
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 // Stripe Checkout session (web POST with CSRF)
-Route::get('/checkout/session', fn() => redirect('/cart', 302))->name('checkout.session.get');
+Route::get('/checkout/session', [CartController::class, 'page'])->name('checkout.session.get');
 Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
 
-Route::redirect('/dashboard', '/account', 301)->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [CustomerAccountController::class, 'dashboard'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::prefix('account')->group(function () {
@@ -193,10 +195,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
 
-    // Legacy /profile URL support → redirect into /account/profile
-    Route::get('/profile', function () {
-        return redirect()->route('profile.edit');
-    })->name('profile.legacy');
+    // Legacy /profile URL support.
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.legacy');
 
     // Admin utilities: backup and clear Pages with confirmation token
     Route::get('/admin/pages/backup', [\App\Http\Controllers\Admin\PagesAdminController::class, 'backup'])
@@ -219,7 +219,6 @@ Route::get('/events', [EventsController::class, 'index'])->name('events.index');
 Route::get('/events/{slug}', [EventsController::class, 'show'])
     ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('events.show');
-Route::get('/offerings', [OfferingsHubController::class, 'index'])->name('offerings.index');
 Route::get('/giftcards', [GiftCardsController::class, 'index'])->name('giftcards.index');
 Route::get('/workshops', [SeoLandingController::class, 'show'])
     ->defaults('type', 'workshops')
@@ -234,23 +233,46 @@ Route::get('/gifts', [SeoLandingController::class, 'show'])
     ->defaults('type', 'gifts')
     ->name('gifts.index');
 
-// Canonical category-first landing pages
-Route::get('/offerings/{offering}', [LandingController::class, 'offeringCanonical'])
-    ->where('offering', '\d+-[A-Za-z0-9\-]+')
-    ->name('offerings.show');
-Route::get('/{category}/{type}', [LandingController::class, 'categoryType'])
+// Canonical format/modality landing pages
+Route::get('/online/{modality}/{offering}', [LandingController::class, 'onlineOffering'])
     ->where([
-        'category' => '[A-Za-z][A-Za-z0-9\-]*',
-        'type' => 'therapies|events|workshops|classes|retreats|gifts',
+        'modality' => $seoSlugPattern,
+        'offering' => '[A-Za-z0-9][A-Za-z0-9\-]*',
     ])
-    ->name('landing.category-type');
-Route::get('/{category}/{type}/{location}', [LandingController::class, 'categoryTypeLocation'])
+    ->name('online.modality-offering');
+Route::get('/{format}/{modality}/{country}/{county}/{town}/{offering}', [LandingController::class, 'offeringLocation'])
     ->where([
-        'category' => '[A-Za-z][A-Za-z0-9\-]*',
-        'type' => 'therapies|events|workshops|classes|retreats|gifts',
-        'location' => '[A-Za-z][A-Za-z0-9\-]*',
+        'format' => 'therapies|events|workshops|classes|retreats|gifts',
+        'modality' => $seoSlugPattern,
+        'country' => $seoSlugPattern,
+        'county' => $seoSlugPattern,
+        'town' => $seoSlugPattern,
+        'offering' => '[A-Za-z0-9][A-Za-z0-9\-]*',
     ])
-    ->name('landing.category-type-location');
+    ->name('landing.format-modality-location-offering');
+Route::get('/{format}/{modality}/{country}/{county}/{town}', [LandingController::class, 'formatModalityLocation'])
+    ->where([
+        'format' => 'therapies|events|workshops|classes|retreats|gifts',
+        'modality' => $seoSlugPattern,
+        'country' => $seoSlugPattern,
+        'county' => $seoSlugPattern,
+        'town' => $seoSlugPattern,
+    ])
+    ->name('landing.format-modality-location');
+Route::get('/{format}/{modality}/{offering}', [LandingController::class, 'offering'])
+    ->where([
+        'format' => 'therapies|events|workshops|classes|retreats|gifts',
+        'modality' => $seoSlugPattern,
+        'offering' => '[A-Za-z0-9][A-Za-z0-9\-]*',
+    ])
+    ->name('landing.format-modality-offering');
+Route::get('/{format}/{modality}', [LandingController::class, 'formatModality'])
+    ->where([
+        'format' => 'therapies|events|workshops|classes|retreats|gifts',
+        'modality' => $seoSlugPattern,
+    ])
+    ->name('landing.format-modality');
+// Legacy redirects are handled by the backend redirect table.
 // Keep one-segment public pages from being swallowed by the generic category hub.
 $reservedCategorySlugs = [
     'about',
@@ -305,38 +327,11 @@ Route::get('/{category}', [LandingController::class, 'categoryHub'])
     ->where('category', '(?!(?:' . $reservedCategoryPattern . ')$)[A-Za-z][A-Za-z0-9\-]*')
     ->name('landing.category');
 
-// Legacy hubs -> canonical pages
-Route::redirect('/events-and-workshops', '/events', 301);
+// Legacy hubs are handled by the backend redirect table.
 // Pain-point landing pages
 Route::get('/need/{need}', [LandingController::class, 'need']);
 // Quiz plan results page
 Route::get('/plan', [LandingController::class, 'plan']);
-
-// Singular → plural 301 redirects for hubs
-Route::get('/therapy', fn() => redirect('/therapies', 301));
-Route::get('/event', fn() => redirect('/events', 301));
-Route::get('/workshop', fn() => redirect('/workshops', 301));
-Route::get('/class', fn() => redirect('/classes', 301));
-Route::get('/retreat', fn() => redirect('/retreats', 301));
-Route::get('/gift', fn() => redirect('/gifts', 301));
-
-// Singular → plural 301 redirects for legacy category paths
-Route::get('/therapy/{category}', fn(string $category) => redirect('/' . $category . '/therapies/', 301));
-Route::get('/event/{category}', fn(string $category) => redirect('/' . $category . '/events/', 301));
-Route::get('/workshop/{category}', fn(string $category) => redirect('/' . $category . '/workshops/', 301));
-Route::get('/class/{category}', fn(string $category) => redirect('/' . $category . '/classes/', 301));
-Route::get('/retreat/{category}', fn(string $category) => redirect('/' . $category . '/retreats/', 301));
-Route::get('/gift/{category}', fn(string $category) => redirect('/' . $category . '/gifts/', 301));
-
-// Old offering routes redirect to the canonical /offerings/{id}-{slug}
-Route::get('/{type}/{offering}', function (string $type, string $offering) {
-    return redirect('/offerings/' . $offering, 301);
-})
-    ->where(['type' => 'therapies|events|workshops|classes|retreats|gifts', 'offering' => '\\d+-[A-Za-z0-9\-]+' ]);
-
-// Legacy offering route support: /{type}/o/{handle} → 301 to /{type}/{id}-{slug}
-Route::get('/{type}/o/{handle}', [LandingRedirectsController::class, 'offeringHandle'])
-    ->where('type', 'therapies|events|workshops|classes|retreats|gifts');
 
 // Removed universal category catch-all to avoid conflicts with Blade routes
 
@@ -344,21 +339,15 @@ Route::get('/{type}/o/{handle}', [LandingRedirectsController::class, 'offeringHa
 $cities = implode('|', [
     'london','manchester','birmingham','leeds','bristol','brighton','liverpool','glasgow','edinburgh','cardiff','kent',
 ]);
-Route::get('/{city}', function (string $city) {
-    return redirect('/locations/'.$city, 301);
-})->where('city', $cities);
-Route::get('/{city}/{type}/{category}', function (string $city, string $type, string $category) {
-    return redirect('/locations/'.$city, 301);
-})->where(['city' => $cities, 'type' => 'therapies|events|workshops|classes']);
+Route::get('/{city}/{type}/{category}', [LocationsController::class, 'cityCategory'])
+    ->where(['city' => $cities, 'type' => 'therapies|events|workshops|classes'])
+    ->name('locations.city-category');
 
-// Legacy experiences → 301 redirects
+// Legacy experiences routes remain controller-backed for compatibility.
 Route::get('/experiences', [LandingRedirectsController::class, 'experiencesIndex']);
 Route::get('/experience', [LandingRedirectsController::class, 'experienceIndex']);
 Route::get('/experience/{slug}', [LandingRedirectsController::class, 'experienceSlug']);
 Route::get('/experiences/{slug}', [LandingRedirectsController::class, 'experiencesSlug']);
-
-Route::redirect('/corporate-wellbeing', '/corporate-wellness', 301);
-Route::redirect('/gift-vouchers', '/gift-cards', 301);
 
 Route::get('/reviews', [ReviewsController::class, 'index'])->name('reviews.index');
 if (config('wow.enable_static_pages')) {
@@ -434,9 +423,6 @@ Route::get('/corporate/{slug}', function (string $slug) {
         'page' => $pages[$slug],
     ]);
 });
-// Back-compat redirects for old legal paths
-Route::redirect('/legal/privacy', '/privacy', 301);
-Route::redirect('/legal/terms', '/terms', 301);
 Route::view('/404', 'app');
 }
 
@@ -444,7 +430,7 @@ Route::view('/404', 'app');
 Route::get('/cart', [CartController::class, 'page']);
 
 // Checkout routes
-Route::get('/checkout', fn() => redirect('/cart', 302))->name('checkout.index');
+Route::get('/checkout', [CartController::class, 'page'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'create']);
 Route::get('/checkout/success', [CheckoutResultController::class, 'success'])->name('checkout.success');
 Route::get('/checkout/cancel', [CheckoutResultController::class, 'cancel'])->name('checkout.cancel');
@@ -462,7 +448,9 @@ Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
 Route::get('/sitemap-index.xml', [SitemapController::class, 'indexFile']);
 Route::get('/sitemaps/{segment}.xml', [SitemapController::class, 'segment'])
     ->where('segment', '[A-Za-z0-9\-]+');
-Route::get('/sitemap', fn() => redirect('/sitemap.xml', 301));
+Route::get('/indexnow.txt', function (IndexNowService $indexNow) {
+    return response($indexNow->key(), 200)->header('Content-Type', 'text/plain; charset=utf-8');
+});
 Route::get('/search-console/oauth/callback', function (Request $request) {
     $code = trim((string) $request->query('code', ''));
     $error = trim((string) $request->query('error', ''));
@@ -510,9 +498,7 @@ Route::get('/practioner/{slug}', [ProvidersController::class, 'show']);
 Route::post('/practioner/{slug}/reviews', [ProvidersController::class, 'storeReview'])
     ->middleware('auth')
     ->name('practioner.reviews.store');
-Route::get('/provider/{slug}', function (string $slug) {
-    return redirect('/practioner/' . $slug, 301);
-});
+Route::get('/provider/{slug}', [ProvidersController::class, 'show']);
 
 // Contact
 Route::get('/contact', [ContactController::class, 'index']);

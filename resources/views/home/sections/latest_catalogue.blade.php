@@ -1,13 +1,13 @@
 @include('partials.product_showcase_section', [
-    'section' => [
+        'section' => [
         'id' => 'home-latest-catalogue',
         'section_class' => 'section',
         'kicker' => 'Freshly added',
         'title' => 'Just landed on WOW',
         'description' => 'Freshly published listings lead the rail, followed by the newest live favourites in one seamless flow.',
         'cta' => [
-            'label' => 'Browse all offerings',
-            'href' => '/offerings',
+            'label' => 'Browse therapies',
+            'href' => '/therapies',
         ],
         'loading' => true,
         'loading_count' => 4,

@@ -71,7 +71,8 @@
     try { localStorage.removeItem('wow_cart'); } catch (_) {}
     try { localStorage.removeItem('wow_cart_v1'); } catch (_) {}
     try {
-      document.cookie = 'wow_cart=%5B%5D; Path=/; Max-Age=0; SameSite=Lax';
+      document.cookie = 'wow_cart=; Path=/; Max-Age=0; SameSite=Lax';
+      document.cookie = 'wow_cart=; Domain=.weofferwellness.co.uk; Path=/; Max-Age=0; SameSite=Lax';
     } catch (_) {}
     try {
       window.dispatchEvent(new CustomEvent('wow:cart:change', { detail: { items: [], count: 0, source: 'order:success' } }));

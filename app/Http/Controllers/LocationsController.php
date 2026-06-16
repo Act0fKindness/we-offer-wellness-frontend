@@ -6,6 +6,7 @@ use App\Models\OfferingV3;
 use App\Models\Product;
 use App\Models\VendorLocation;
 use App\Services\LocationCatalogService;
+use App\Services\SeoStructureService;
 use App\Support\ProductRanking;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -768,11 +769,11 @@ class LocationsController extends Controller
 
     private function decorateProduct(Product $product, array $locationTerms = []): Product
     {
+        $seo = app(SeoStructureService::class);
         $locations = method_exists($product, 'getLocations') ? $product->getLocations() : [];
         $isOnline = in_array('Online', $locations, true);
         $physical = array_values(array_filter($locations, fn ($l) => $l !== 'Online'));
         $meta = $product->meta_json ?? [];
-        $slug = Str::slug($product->title ?: (string) $product->id);
         [$lat, $lng, $markerTitle] = $this->resolvePrimaryCoordinates($product->vendor?->locations ?? collect(), $locationTerms);
 
         $product->setAttribute('type', $product->product_type ?: 'experience');
@@ -790,14 +791,14 @@ class LocationsController extends Controller
         $product->setAttribute('review_count', (int) ($product->reviews_count ?? 0));
         $product->setAttribute('image', method_exists($product, 'getFirstImageUrl') ? $product->getFirstImageUrl() : null);
         $product->setAttribute('tags', $product->tags_list ? array_map('trim', explode(',', $product->tags_list)) : []);
-        $product->setAttribute('url', url('/offerings/' . $product->id . '-' . $slug));
+        $product->setAttribute('url', $seo->canonicalProductUrl($product));
 
         return $product;
     }
 
     private function decorateOffering(OfferingV3 $offering, array $locationTerms = []): OfferingV3
     {
-        $slug = Str::slug($offering->title ?: (string) $offering->id);
+        $seo = app(SeoStructureService::class);
         [$lat, $lng, $markerTitle] = $this->resolvePrimaryCoordinates($offering->vendor?->locations ?? collect(), $locationTerms);
 
         $offering->setAttribute('product_type', (string) ($offering->type?->name ?? $offering->category?->name ?? 'experience'));
@@ -810,7 +811,7 @@ class LocationsController extends Controller
         $offering->setAttribute('variants_min_price', $offering->price);
         $offering->setAttribute('reviews_avg_rating', null);
         $offering->setAttribute('reviews_count', 0);
-        $offering->setAttribute('url', url('/offerings/' . $offering->id . '-' . $slug));
+        $offering->setAttribute('url', $seo->canonicalOfferingUrl($offering));
         $offering->setAttribute('image', $offering->getFirstImageUrl());
         $offering->setAttribute('locations', $offering->getLocations());
         $offering->setAttribute('mode', $this->offeringMode($offering));

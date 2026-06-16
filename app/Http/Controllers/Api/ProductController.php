@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Support\EventListing;
 use App\Support\ProductRanking;
 use App\Support\ProductSearchFilters;
+use App\Services\SeoStructureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -223,6 +224,7 @@ class ProductController extends Controller
 
         // Transform
         $items = $products->map(function (Product $p) {
+            $seo = app(SeoStructureService::class);
             $locations = $p->getLocations();
             $isOnline = in_array('Online', $locations, true);
             $physicalLocations = array_values(array_filter($locations, fn($l) => $l !== 'Online'));
@@ -237,7 +239,6 @@ class ProductController extends Controller
             // Map type to URL segment
             $t = strtolower((string) $p->product_type);
             $tags = strtolower((string) $p->tags_list);
-            $slug = Str::slug($p->title ?: (string)$p->id);
             // Normalize prices (always GBP pounds)
             $norm = function($v){ if(!is_numeric($v)) return null; $n = (float)$v; if($n >= 1000) $n = $n/100; return $n; };
             $pPrice = $norm($p->price ?? null);
@@ -269,7 +270,7 @@ class ProductController extends Controller
                 'review_count' => (int)($p->reviews_count ?? 0),
                 'image' => $p->getFirstImageUrl(),
                 'tags' => $p->tags_list ? array_map('trim', explode(',', $p->tags_list)) : [],
-                'url' => url('/offerings/' . $p->id . '-' . $slug),
+                'url' => $seo->canonicalProductUrl($p),
             ];
         });
 

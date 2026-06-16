@@ -122,12 +122,12 @@
             <div class="col">
                 <div class="title">Popular searches</div>
                 <ul>
-                    <li><a href="/reiki-near-me">Reiki near me</a></li>
-                    <li><a href="/sound-healing-near-me">Sound healing near me</a></li>
-                    <li><a href="/holistic-therapy-near-me">Holistic therapy near me</a></li>
-                    <li><a href="/wellness-classes-near-me">Wellness classes near me</a></li>
+                    <li><a href="/therapies/reiki">Reiki</a></li>
+                    <li><a href="/therapies/sound-healing">Sound healing</a></li>
+                    <li><a href="/therapies">Holistic therapy</a></li>
+                    <li><a href="/classes">Wellness classes</a></li>
                     <li><a href="/holistic-therapies-uk">Holistic therapies UK</a></li>
-                    <li><a href="/offerings">Browse all categories</a></li>
+                    <li><a href="/therapies">Browse therapies</a></li>
                 </ul>
             </div>
         </div>

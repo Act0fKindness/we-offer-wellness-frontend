@@ -219,6 +219,10 @@ function itemKindPriority(item) {
   return 0;
 }
 
+function isStructuredOffering(item) {
+  return lower(item?.source_version) === 'v3' || lower(item?.source_type) === 'offering';
+}
+
 function titleValue(item) {
   return lower(item?.title || '');
 }
@@ -732,14 +736,78 @@ function eventLocationLabelFor(item) {
   return 'In-person';
 }
 
+function slugify(value) {
+  return toStr(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function inferFormatKey(item) {
+  const raw = lower(
+    item?.format
+    || item?.format_key
+    || item?.type_key
+    || item?.type?.format
+    || item?.type?.slug
+    || item?.type?.name
+    || item?.type
+    || item?.product_type
+    || '',
+  )
+
+  if (raw.includes('class')) return 'classes'
+  if (raw.includes('event')) return 'events'
+  if (raw.includes('workshop')) return 'workshops'
+  if (raw.includes('retreat')) return 'retreats'
+  if (raw.includes('gift')) return 'gifts'
+  return 'therapies'
+}
+
+function inferModalityKey(item) {
+  const candidates = [
+    item?.modality,
+    item?.category?.slug,
+    item?.category?.name,
+    item?.category_name,
+    item?.category_label,
+    item?.type?.slug,
+    item?.type?.name,
+    item?.type_name,
+  ]
+
+  for (const candidate of candidates) {
+    const value = slugify(candidate)
+    if (value) return value
+  }
+
+  return slugify(item?.slug || item?.title || item?.handle || item?.id || '')
+}
+
+function buildSeoUrl(item) {
+  const slug = slugify(item?.slug || item?.handle || item?.title || item?.name || item?.id || '')
+  const format = inferFormatKey(item)
+  const modality = inferModalityKey(item)
+  const structured = isStructuredOffering(item)
+
+  if (format && modality && slug) {
+    return `/${format}/${modality}/${slug}`
+  }
+
+  if (format && slug) {
+    return `/${format}/${slug}`
+  }
+
+  return `/${slug || 'offerings'}`
+}
+
 export function renderOfferingCard(item) {
   if (!item || typeof item !== 'object') return '';
   const giftCard = isGiftCard(item);
 
   const id = item.id;
   const sourceVersion = item.source_version || item.sourceType || item.source_type || 'v1-v2';
-  const slug = item.slug || '';
-  const url = `/offerings/${id}-${slug}`;
+  const url = item.url || buildSeoUrl(item);
   const title = titleCase(item.title || 'Untitled');
   const provider = item?.vendor_details?.name || item?.vendor?.name || item?.vendor_name || '';
   const providerFormatted = provider ? titleCase(provider) : '';

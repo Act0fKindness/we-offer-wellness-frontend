@@ -456,10 +456,22 @@ function imageFor(p) {
 
 function urlFor(p) {
   if (p?.url) return p.url
-  const id = p?.id
-  if (!id) return '#'
-  const slug = String(p?.title || p?.name || id).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-  return `/offerings/${id}-${slug}`
+  const format = String(p?.format || p?.type || '').toLowerCase()
+  const modality = String(
+    p?.modality
+    || p?.category?.slug
+    || p?.category?.name
+    || p?.category_name
+    || p?.category
+    || '',
+  ).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  const slug = String(p?.slug || p?.handle || p?.title || p?.name || p?.id || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  if (format && modality && slug) return `/${format}/${modality}/${slug}`
+  if (format && slug) return `/${format}/${slug}`
+  return `/${slug || 'offerings'}`
 }
 
 function defaultAvailabilityDays(p) {
@@ -1054,6 +1066,7 @@ function reviewLabel(count) {
 .wow-therapy-card-scope .therapy-card{
   display:flex;
   flex-direction:column;
+  max-width:280px !important;
   min-height:492px;
   overflow:visible;
   background:#fff;

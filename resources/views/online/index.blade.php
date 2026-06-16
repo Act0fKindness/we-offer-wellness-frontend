@@ -12,9 +12,9 @@
 @include('partials.breadcrumbs', [
   'crumbs' => [
     ['label' => 'Home', 'url' => url('/')],
-    ['label' => 'Online'],
+    ['label' => $modalityLabel ?? 'Online', 'url' => $pageUrl ?? url('/online')],
   ],
-  'schemaUrl' => url('/online'),
+  'schemaUrl' => $pageUrl ?? url('/online'),
 ])
 
 @php
@@ -73,15 +73,25 @@
   <div class="container-page">
     <div class="mb-4">
       <div class="kicker">Browse</div>
-      <h1>Online</h1>
+      <h1>{{ $modalityLabel ?? 'Online' }}</h1>
       <p class="text-ink-600 mt-2" style="max-width:70ch;">
-        Online wellness therapies you can join from anywhere — calm, convenient, and actually enjoyable.
+        @if(!empty($modality))
+          Online {{ strtolower((string) $modalityLabel) }} experiences you can join from anywhere — calm, convenient, and actually enjoyable.
+        @else
+          Online wellness therapies you can join from anywhere — calm, convenient, and actually enjoyable.
+        @endif
       </p>
     </div>
 
+    @if(!empty($modality))
+      @include('partials.guide_panel', [
+        'guidePanelModality' => $modality,
+      ])
+    @endif
+
     @include('partials.wow-filter-bar', [
-      'action' => url('/online'),
-      'clearUrl' => url('/online'),
+      'action' => $pageUrl ?? url('/online'),
+      'clearUrl' => $pageUrl ?? url('/online'),
       'ariaLabel' => 'Filter online experiences',
       'mobileLabel' => 'Filters',
       'resultCount' => $items->count(),

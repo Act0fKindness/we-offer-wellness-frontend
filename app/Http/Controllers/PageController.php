@@ -41,7 +41,16 @@ class PageController extends Controller
             report($e);
         }
         if ($redir) {
-            return redirect()->to($redir->to_path, $redir->http_code ?? 301);
+            $target = $this->normalizeRedirectTarget((string) $redir->to_path);
+            if ($target !== $path) {
+                $query = trim((string) $request->getQueryString());
+                if ($query !== '') {
+                    $target .= str_contains($target, '?') ? '&' : '?';
+                    $target .= $query;
+                }
+
+                return redirect()->to($target, $redir->http_code ?? 301);
+            }
         }
 
         $page = null;
@@ -222,5 +231,24 @@ class PageController extends Controller
         } catch (\Throwable $e) {
             report($e);
         }
+    }
+
+    private function normalizeRedirectTarget(string $target): string
+    {
+        $target = trim(rawurldecode($target));
+
+        if ($target === '') {
+            return '/';
+        }
+
+        $parts = parse_url($target);
+        if (is_array($parts) && isset($parts['scheme']) && isset($parts['host'])) {
+            $path = (string) ($parts['path'] ?? '/');
+            $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+
+            return ($path !== '' ? $path : '/') . $query;
+        }
+
+        return str_starts_with($target, '/') ? $target : '/' . $target;
     }
 }

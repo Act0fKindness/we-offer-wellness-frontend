@@ -568,7 +568,6 @@
     'sku' => isset($p['id']) ? (string) $p['id'] : null,
     'offers' => $schemaOffers,
     'aggregateRating' => $schemaAggregate,
-    'review' => $schemaReviews ?: null,
   ], static fn ($value) => $value !== null && $value !== '' && $value !== []);
 
   $schemaService = array_filter([
@@ -587,7 +586,6 @@
     'hoursAvailable' => $schemaHoursAvailable ?: null,
     'offers' => $schemaOffers,
     'aggregateRating' => $schemaAggregate,
-    'review' => $schemaReviews ?: null,
     'sku' => isset($p['id']) ? (string) $p['id'] : null,
   ], static fn ($value) => $value !== null && $value !== '' && $value !== []);
 
@@ -948,7 +946,6 @@
         ],
         'performer' => $schemaEventPerformers ?: null,
         'aggregateRating' => $schemaEventAggregate,
-        'review' => $schemaEventReviews ?: null,
         'keywords' => array_values(array_filter([
           trim((string) ($type !== '' ? $type : 'event')),
           trim((string) (data_get($p, 'category.name') ?: '')),
@@ -971,6 +968,15 @@
   $schemaJsonLd = $isEventOffering
     ? $schemaEventGraph
     : $schemaLocalBusiness;
+  $schemaFormatSlug = strtolower(trim((string) ($p['format'] ?? ($isEventOffering ? 'events' : 'therapies'))));
+  if (! in_array($schemaFormatSlug, ['therapies', 'classes', 'events', 'workshops', 'retreats', 'gifts'], true)) {
+    $schemaFormatSlug = $isEventOffering ? 'events' : 'therapies';
+  }
+  $schemaFormatLabel = \Illuminate\Support\Str::headline($schemaFormatSlug);
+  $schemaModalityLabel = trim((string) (data_get($p, 'category.name') ?: data_get($p, 'modality') ?: ''));
+  $schemaModalitySlug = \Illuminate\Support\Str::slug($schemaModalityLabel);
+  $schemaFormatUrl = url('/' . $schemaFormatSlug);
+  $schemaModalityUrl = $schemaModalitySlug !== '' ? url('/' . $schemaFormatSlug . '/' . $schemaModalitySlug) : $schemaFormatUrl;
 @endphp
 
 @push('head')
@@ -986,12 +992,12 @@
   'crumbs' => [
     ['label' => 'Home', 'url' => url('/')],
     [
-      'label' => $isEventOffering ? 'Events' : 'Offerings',
-      'url' => $isEventOffering ? url('/events') : url('/offerings'),
+      'label' => $schemaFormatLabel,
+      'url' => $schemaFormatUrl,
     ],
     [
-      'label' => trim((string) (data_get($p, 'category.name') ?: ucfirst($type))),
-      'url' => url('/' . \Illuminate\Support\Str::slug((string) (data_get($p, 'category.name') ?: ucfirst($type)))),
+      'label' => $schemaModalityLabel !== '' ? $schemaModalityLabel : $schemaFormatLabel,
+      'url' => $schemaModalityUrl,
     ],
     ['label' => $title],
   ],
@@ -1037,6 +1043,8 @@
     @elseif($isV3Offering)
       @include('offering.partials.v3_body_template', ['product' => $p, 'type' => $type])
     @else
+      @include('offering.partials.v3_body_template', ['product' => $p, 'type' => $type])
+      @if(false)
       <div class="row g-4 align-items-start">
         <div class="col-12 col-lg-8">
           <div class="mb-3">
@@ -1114,6 +1122,7 @@
           @endif
         </div>
       </div>
+      @endif
     @endif
   </div>
 </section>

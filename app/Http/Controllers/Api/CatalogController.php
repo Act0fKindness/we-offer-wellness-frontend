@@ -9,6 +9,7 @@ use App\Models\ProductCategory;
 use App\Models\VendorDetail;
 use App\Support\EventListing;
 use App\Support\ProductRanking;
+use App\Services\SeoStructureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -31,6 +32,7 @@ class CatalogController extends Controller
             ->get();
 
         $transformProduct = function (Product $p) {
+            $seo = app(SeoStructureService::class);
             $locations = $p->getLocations();
             $isOnline = in_array('Online', $locations, true);
             $physicalLocations = array_values(array_filter($locations, fn($l) => $l !== 'Online'));
@@ -60,14 +62,13 @@ class CatalogController extends Controller
                 'review_count' => (int)($p->reviews_count ?? 0),
                 'image' => $p->getFirstImageUrl(),
                 'tags' => $p->tags_list ? array_map('trim', explode(',', $p->tags_list)) : [],
-                'url' => url('/offerings/' . $p->id . '-' . $slug),
+                'url' => $seo->canonicalProductUrl($p),
             ];
         };
 
         $transformOffering = function (OfferingV3 $offering) {
+            $seo = app(SeoStructureService::class);
             $vendorPlan = $this->resolveVendorPlan($offering->vendor);
-            $type = strtolower((string) ($offering->type?->name ?? $offering->category?->name ?? 'therapies'));
-            $slug = Str::slug($offering->title ?: (string) $offering->id);
 
             return [
                 'id' => $offering->id,
@@ -93,7 +94,7 @@ class CatalogController extends Controller
                     $offering->type?->name ?? null,
                     $offering->category?->name ?? null,
                 ])),
-                'url' => url('/offerings/' . $offering->id . '-' . $slug),
+                'url' => $seo->canonicalOfferingUrl($offering),
             ];
         };
 

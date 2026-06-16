@@ -1,13 +1,13 @@
 {
-    "generated_at": "2026-06-06T00:00:05+00:00",
+    "generated_at": "2026-06-16T00:00:06+00:00",
     "stats": {
         "countries": 8,
         "counties": 52,
         "towns": 159,
         "products": 588,
-        "offerings": 5,
+        "offerings": 7,
         "online_products": 288,
-        "online_offerings": 3
+        "online_offerings": 5
     },
     "countries": [
         {
@@ -19,8 +19,8 @@
             "online": true,
             "counts": {
                 "products": 288,
-                "offerings": 3,
-                "total": 291
+                "offerings": 5,
+                "total": 293
             },
             "counties": []
         },
@@ -416,8 +416,8 @@
             "online": false,
             "counts": {
                 "products": 846,
-                "offerings": 13,
-                "total": 859
+                "offerings": 15,
+                "total": 861
             },
             "counties": [
                 {
@@ -1986,8 +1986,8 @@
                             "town": "Romsey",
                             "path": "/locations/united-kingdom/hampshire/romsey",
                             "online": false,
-                            "lat": 51.0170514,
-                            "lng": -1.5828772,
+                            "lat": 50.98893,
+                            "lng": -1.49658,
                             "counts": {
                                 "products": 7,
                                 "offerings": 0,
@@ -1996,7 +1996,7 @@
                             "locations": [
                                 "Romsey, Hampshire, United Kingdom"
                             ],
-                            "source": "Gambledown Ln | Romsey | Hampshire | United Kingdom"
+                            "source": "Romsey | Hampshire | United Kingdom"
                         }
                     ]
                 },
@@ -3106,8 +3106,8 @@
                     "region": null,
                     "counts": {
                         "products": 161,
-                        "offerings": 0,
-                        "total": 161
+                        "offerings": 2,
+                        "total": 163
                     },
                     "towns": [
                         {
@@ -3160,7 +3160,7 @@
                             "locations": [
                                 "Kingston Upon Thames, London, United Kingdom"
                             ],
-                            "source": "Kingston upon Thames | Greater London | United Kingdom"
+                            "source": "London | Kingston upon Thames | Greater London | United Kingdom"
                         },
                         {
                             "key": "united-kingdom/london",
@@ -3428,8 +3428,8 @@
                             "town": "Maidstone",
                             "path": "/locations/united-kingdom/maidstone",
                             "online": false,
-                            "lat": 0,
-                            "lng": 0,
+                            "lat": null,
+                            "lng": null,
                             "counts": {
                                 "products": 0,
                                 "offerings": 0,
@@ -4252,7 +4252,7 @@
                             "locations": [
                                 "Esher, Surrey, United Kingdom"
                             ],
-                            "source": "Claremont Landscape Gardens NT | Esher | National Trust - Claremont Landscape Garden | Portsmouth Rd | Surrey | United Kingdom"
+                            "source": "Claremont Landscape Gardens NT | Esher | Surrey | National Trust - Claremont Landscape Garden | Portsmouth Rd | United Kingdom"
                         },
                         {
                             "key": "united-kingdom/surrey/godalming",
@@ -5217,8 +5217,8 @@
             "lng": null,
             "counts": {
                 "products": 288,
-                "offerings": 3,
-                "total": 291
+                "offerings": 5,
+                "total": 293
             },
             "locations": []
         },
@@ -5470,8 +5470,8 @@
             "town": "Romsey",
             "path": "/locations/united-kingdom/hampshire/romsey",
             "online": false,
-            "lat": 51.0170514,
-            "lng": -1.5828772,
+            "lat": 50.98893,
+            "lng": -1.49658,
             "counts": {
                 "products": 7,
                 "offerings": 0,
@@ -5480,7 +5480,7 @@
             "locations": [
                 "Romsey, Hampshire, United Kingdom"
             ],
-            "source": "Gambledown Ln | Romsey | Hampshire | United Kingdom"
+            "source": "Romsey | Hampshire | United Kingdom"
         },
         {
             "key": "united-kingdom/surrey",
@@ -5922,7 +5922,7 @@
             "locations": [
                 "Esher, Surrey, United Kingdom"
             ],
-            "source": "Claremont Landscape Gardens NT | Esher | National Trust - Claremont Landscape Garden | Portsmouth Rd | Surrey | United Kingdom"
+            "source": "Claremont Landscape Gardens NT | Esher | Surrey | National Trust - Claremont Landscape Garden | Portsmouth Rd | United Kingdom"
         },
         {
             "key": "united-kingdom/kent/gillingham",
@@ -6026,7 +6026,7 @@
             "locations": [
                 "Kingston Upon Thames, London, United Kingdom"
             ],
-            "source": "Kingston upon Thames | Greater London | United Kingdom"
+            "source": "London | Kingston upon Thames | Greater London | United Kingdom"
         },
         {
             "key": "united-kingdom/wiltshire/lake",
@@ -9292,8 +9292,8 @@
             "town": "Maidstone",
             "path": "/locations/united-kingdom/maidstone",
             "online": false,
-            "lat": 0,
-            "lng": 0,
+            "lat": null,
+            "lng": null,
             "counts": {
                 "products": 0,
                 "offerings": 0,
@@ -9374,8 +9374,8 @@
             "lng": null,
             "counts": {
                 "products": 288,
-                "offerings": 3,
-                "total": 291
+                "offerings": 5,
+                "total": 293
             },
             "locations": []
         },

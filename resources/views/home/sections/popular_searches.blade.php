@@ -14,7 +14,7 @@
 
             return [
                 'title' => $human,
-                'href' => '/' . $slug . '-near-me',
+                'href' => '/therapies/' . $slug,
                 'count' => $total,
                 'subtitle' => $total === 1 ? '1 live listing' : $total . ' live listings',
             ];
@@ -24,11 +24,11 @@
         ->values();
 
     $featuredPages = [
-        ['href' => '/reiki-near-me', 'title' => 'Reiki near me', 'subtitle' => 'Trusted Reiki practitioners and distance sessions.'],
-        ['href' => '/sound-healing-near-me', 'title' => 'Sound healing near me', 'subtitle' => 'Sound baths, workshops and live sessions.'],
-        ['href' => '/holistic-therapy-near-me', 'title' => 'Holistic therapy near me', 'subtitle' => 'Broad wellness search across trusted therapies.'],
-        ['href' => '/wellness-classes-near-me', 'title' => 'Wellness classes near me', 'subtitle' => 'Yoga, meditation, breathwork and group sessions.'],
-        ['href' => '/holistic-therapies-uk', 'title' => 'Holistic therapies UK', 'subtitle' => 'UK-wide hub for online and in-person listings.'],
+        ['href' => '/therapies/reiki', 'title' => 'Reiki', 'subtitle' => 'Trusted Reiki practitioners and distance sessions.'],
+        ['href' => '/therapies/sound-healing', 'title' => 'Sound healing', 'subtitle' => 'Sound baths, workshops and live sessions.'],
+        ['href' => '/therapies', 'title' => 'Holistic therapy', 'subtitle' => 'Broad wellness search across trusted therapies.'],
+        ['href' => '/classes', 'title' => 'Wellness classes', 'subtitle' => 'Yoga, meditation, breathwork and group sessions.'],
+        ['href' => '/therapies', 'title' => 'Holistic therapies UK', 'subtitle' => 'UK-wide hub for online and in-person listings.'],
     ];
 @endphp
 
@@ -53,13 +53,13 @@
 
                 <div class="wow-popular-searches__subhead">
                     <h3>All live category pages</h3>
-                    <a href="/offerings">Browse all categories</a>
+                    <a href="/therapies">Browse therapies</a>
                 </div>
 
                 <div class="wow-popular-searches__grid wow-popular-searches__grid--categories">
                     @forelse ($dynamicCategories as $category)
                         <a class="wow-popular-searches__card wow-popular-searches__card--category" href="{{ $category['href'] }}">
-                            <strong>{{ $category['title'] }} near me</strong>
+                            <strong>{{ $category['title'] }}</strong>
                             <span>{{ $category['subtitle'] }}</span>
                         </a>
                     @empty

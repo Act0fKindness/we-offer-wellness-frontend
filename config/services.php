@@ -104,19 +104,26 @@ return [
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/static.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/modalities.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/types.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/offerings.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/locations.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/near-me.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/modality-location.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/type-location.xml',
-                rtrim(env('APP_URL', ''), '/') . '/sitemaps/offerings.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/events.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/online.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/by-need.xml',
                 rtrim(env('APP_URL', ''), '/') . '/sitemaps/practitioners.xml',
+                rtrim(env('APP_URL', ''), '/') . '/sitemaps/guides.xml',
             ]))
         ),
         'client_id' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET'),
         'client_credentials_file' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_CREDENTIALS_FILE'),
         'refresh_token' => env('GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN'),
+    ],
+
+    'indexnow' => [
+        'key' => env('INDEXNOW_KEY'),
     ],
 
 ];

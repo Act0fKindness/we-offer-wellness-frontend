@@ -292,15 +292,16 @@
                     <!-- END: WOW Logo -->
                 </span>
             </a>
-                <nav class="hidden md:flex items-center gap-1">
+                <nav class="hidden md:flex items-center gap-1 wow-desktop-nav" id="desktopNav" aria-label="Main navigation">
                     <div class="nav-item"><a class="link-wow--nav" data-mega-menu="need" tabindex="0" href="/needs">By Need</a></div>
                     <div class="nav-item"><a class="link-wow--nav" data-mega-menu="therapies" tabindex="0" href="/therapies">Therapies</a>
                     </div>
                     <div class="nav-item"><a class="link-wow--nav" data-mega-menu="events" tabindex="0" href="/events">Classes &amp; Events</a></div>
-                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/locations">Locations</a></div>
-                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="/online">Online</a></div>
-                    <div class="nav-item"><a class="link-wow--nav" tabindex="0" href="https://times.weofferwellness.co.uk">Mindful
+                    <div class="nav-item"><a class="link-wow--nav" data-mega-menu="locations" tabindex="0" href="/locations">Locations</a></div>
+                    <div class="nav-item"><a class="link-wow--nav" data-no-mega="true" tabindex="0" href="/online">Online</a></div>
+                    <div class="nav-item"><a class="link-wow--nav" data-no-mega="true" tabindex="0" href="https://times.weofferwellness.co.uk">Mindful
                         Times</a></div>
+                    <span class="wow-nav-underline" id="navUnderline" aria-hidden="true"></span>
                 </nav>
             </div>
             <div class="hidden md:flex items-center gap-2 position-relative">
@@ -413,142 +414,169 @@
                 <button
                     type="button"
                     class="inline-flex items-center justify-center p-2 rounded-md text-ink-700 hamburger"
+                    data-wow-mobile-toggle
                     aria-label="Toggle menu" aria-expanded="false">
                     <span aria-hidden="true"></span>
                 </button>
             </div>
         </div><!----><!---->
-        <!-- Static mega panel (desktop) -->
-        <div id="mega-panel" class="mega-panel" style="display:none">
-            <div class="container-page py-4">
-                <!-- By Need -->
-                <div data-menu="need" class="grid md:grid-cols-3 gap-6">
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">How are you feeling?</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/needs/stress-and-anxiety">Stress &amp; anxiety</a></li>
-                            <li><a class="menu-link" href="/needs/sleep-issues">Sleep issues</a></li>
-                            <li><a class="menu-link" href="/needs/low-mood-burnout">Low mood &amp; burnout</a></li>
-                            <li><a class="menu-link" href="/needs/overwhelm">Overwhelm &amp; frazzled feelings</a></li>
-                            <li><a class="menu-link" href="/needs/worry">Worry &amp; racing thoughts</a></li>
-                            <li><a class="menu-link" href="/needs/pain-management">Pain, tension &amp; tightness</a></li>
-                        </ul>
-                    </div>
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">What do you want?</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            <li><a class="menu-link" href="/needs/mens-wellbeing">Men’s wellbeing</a></li>
-                            <li><a class="menu-link" href="/needs/digestive-health">Gut health &amp; digestion</a></li>
-                            <li><a class="menu-link" href="/needs/fertility-pregnancy">Fertility &amp; pregnancy support</a></li>
-                            <li><a class="menu-link" href="/needs/pain-management">Pain relief &amp; tension release</a></li>
-                            <li><a class="menu-link" href="/needs/nervous-system">Nervous system &amp; trauma support</a></li>
-                        </ul>
-                    </div>
-                    <div class="menu-col menu-col--foryou">
-                        <div class="mega-kicker mb-2">For you</div>
-                        <div data-need-default-block>
-                            <p class="mega-label">Popular this week</p>
-                            <ul class="list-unstyled m-0 p-0" data-need-default-popular></ul>
-                            <p class="mega-label">Trending online</p>
-                            <ul class="list-unstyled m-0 p-0" data-need-default-trending></ul>
-                        </div>
-                        <div data-need-personalized-block hidden aria-hidden="true">
-                            <p class="mega-label">Continue browsing</p>
-                            <ul class="list-unstyled m-0 p-0" data-need-continue></ul>
-                            <p class="mega-label">Recommended next</p>
-                            <ul class="list-unstyled m-0 p-0" data-need-recommended></ul>
-                        </div>
-                        <div class="mega-quick-links mt-3">
-                            <p class="mega-label">Quick links</p>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="/online">Book online</a></li>
-                                <li><a class="menu-link" href="/locations">Find locations</a></li>
-                                <li><a class="menu-link" href="/gifts">View gift options</a></li>
-                            </ul>
-                        </div>
+        <div class="wow-mega-layer" id="megaLayer">
+            <div id="mega-panel" class="mega-panel wow-mega-shell" aria-hidden="true">
+                <span class="wow-mega-arrow" id="megaArrow"></span>
+                <div class="wow-mega-viewport">
+                    <div class="wow-mega-track" id="megaTrack">
+                        <section class="wow-mega-pane" data-menu="need">
+                            <div class="wow-mega-grid wow-mega-grid--3">
+                                <div class="wow-mega-col">
+                                    <p class="mega-kicker">How are you feeling?</p>
+                                    <div class="wow-menu-list">
+                                        <a class="menu-link" href="/needs/stress-and-anxiety"><strong>Stress &amp; anxiety</strong><span>Calming therapies for an overloaded nervous system.</span></a>
+                                        <a class="menu-link" href="/needs/sleep-issues"><strong>Sleep issues</strong><span>Gentle support for deeper rest and better routines.</span></a>
+                                        <a class="menu-link" href="/needs/low-mood-burnout"><strong>Low mood &amp; burnout</strong><span>Reset your energy without pretending everything is fine.</span></a>
+                                        <a class="menu-link" href="/needs/pain-management"><strong>Pain, tension &amp; tightness</strong><span>Body-based support for aches, stress and physical tension.</span></a>
+                                    </div>
+                                </div>
+                                <div class="wow-mega-col">
+                                    <p class="mega-kicker">What do you want?</p>
+                                    <div class="wow-menu-list">
+                                        <a class="menu-link" href="/needs/digestive-health"><strong>Gut health &amp; digestion</strong><span>Support for bloating, digestion and feeling human again.</span></a>
+                                        <a class="menu-link" href="/needs/mens-wellbeing"><strong>Men’s wellbeing</strong><span>Practical sessions for stress, strength and emotional health.</span></a>
+                                        <a class="menu-link" href="/needs/fertility-pregnancy"><strong>Pregnancy support</strong><span>Therapies for fertility, pregnancy and postnatal wellbeing.</span></a>
+                                        <a class="menu-link" href="/needs/nervous-system"><strong>Nervous system support</strong><span>Grounding experiences for overwhelm and trauma support.</span></a>
+                                    </div>
+                                </div>
+                                <div class="wow-mega-col wow-mega-col--divider">
+                                    <p class="mega-kicker">For you</p>
+                                    <div class="wow-soft-panel wow-soft-panel--green">
+                                        <p class="mega-label">Recommended next</p>
+                                        <h3>Not sure where to start?</h3>
+                                        <p>Answer a few quick questions and browse therapies that match how you feel today.</p>
+                                        <div class="wow-button-row">
+                                            <a href="/needs" class="wow-mini-btn wow-mini-btn--primary">Browse needs</a>
+                                            <a href="/therapies" class="wow-mini-btn">View therapies</a>
+                                        </div>
+                                    </div>
+                                    <div class="wow-for-you-card" data-need-default-block>
+                                        <p class="mega-label">Popular this week</p>
+                                        <ul class="list-unstyled m-0 p-0" data-need-default-popular></ul>
+                                        <p class="mega-label">Trending online</p>
+                                        <ul class="list-unstyled m-0 p-0" data-need-default-trending></ul>
+                                    </div>
+                                    <div class="wow-for-you-card" data-need-personalized-block hidden aria-hidden="true">
+                                        <p class="mega-label">Continue browsing</p>
+                                        <ul class="list-unstyled m-0 p-0" data-need-continue></ul>
+                                        <p class="mega-label">Recommended next</p>
+                                        <ul class="list-unstyled m-0 p-0" data-need-recommended></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="wow-mega-pane" data-menu="therapies">
+                            <div class="wow-mega-grid wow-mega-grid--3">
+                                <div class="wow-mega-col wow-mega-col--wide">
+                                    <div class="wow-mega-row">
+                                        <p class="mega-kicker">Featured therapies</p>
+                                        <a href="/therapies" class="wow-mini-btn">View all therapies</a>
+                                    </div>
+                                    <div class="wow-image-card-grid">
+                                        <a href="/therapies/reiki" class="wow-image-card wow-image-card--reiki"><div><h3>Reiki</h3><p>Energy-led support for calm and balance.</p></div></a>
+                                        <a href="/therapies/massage" class="wow-image-card wow-image-card--massage"><div><h3>Massage</h3><p>Relax, release and ease physical tension.</p></div></a>
+                                        <a href="/therapies/sound-healing" class="wow-image-card wow-image-card--sound"><div><h3>Sound healing</h3><p>Immersive calm through vibration and sound.</p></div></a>
+                                        <a href="/therapies/breathwork" class="wow-image-card wow-image-card--breath"><div><h3>Breathwork</h3><p>Guided sessions for reset and emotional release.</p></div></a>
+                                    </div>
+                                </div>
+                                <div class="wow-mega-col wow-mega-col--divider">
+                                    <p class="mega-kicker">Browse by format</p>
+                                    <div class="wow-menu-list">
+                                        @foreach($therapyFormatLinks as $link)
+                                            <a class="menu-link" href="{{ $link['href'] }}"><strong>{{ $link['label'] }}</strong><span>Explore {{ strtolower($link['label']) }} on We Offer Wellness®.</span></a>
+                                        @endforeach
+                                    </div>
+                                    <div class="wow-for-you-card" data-therapy-default-block>
+                                        <p class="mega-label">Popular this week</p>
+                                        <ul class="list-unstyled m-0 p-0" data-therapy-default-popular></ul>
+                                    </div>
+                                    <div class="wow-for-you-card" data-therapy-personalized-block hidden aria-hidden="true">
+                                        <p class="mega-label">Recently viewed</p>
+                                        <ul class="list-unstyled m-0 p-0" data-therapy-recent></ul>
+                                        <p class="mega-label">Saved therapies</p>
+                                        <ul class="list-unstyled m-0 p-0" data-therapy-saved></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="wow-mega-pane" data-menu="events">
+                            <div class="wow-mega-grid wow-mega-grid--2">
+                                <a href="/events" class="wow-feature-card">
+                                    <h3>OUR VIBE Festival 2026</h3>
+                                    <p>Sound healing, meditation, talks, workshops and chilled wellbeing at Bilsington Priory Estate.</p>
+                                    <span class="wow-mini-btn wow-mini-btn--primary">Explore event</span>
+                                </a>
+                                <div class="wow-mega-grid wow-mega-grid--2 wow-mega-grid--nested">
+                                    <div class="wow-mega-col">
+                                        <p class="mega-kicker">Browse by format</p>
+                                        <div class="wow-menu-list">
+                                            @if($eventsMenuLinks['events'] ?? false)<a class="menu-link" href="/events"><strong>Events</strong><span>Live wellbeing experiences and gatherings.</span></a>@endif
+                                            @if($eventsMenuLinks['classes'] ?? false)<a class="menu-link" href="/classes"><strong>Classes</strong><span>Yoga, meditation, breathwork and more.</span></a>@endif
+                                            @if($eventsMenuLinks['workshops'] ?? false)<a class="menu-link" href="/workshops"><strong>Workshops</strong><span>Learn, reset and take something useful away.</span></a>@endif
+                                            <a class="menu-link" href="/retreats"><strong>Retreats</strong><span>Longer escapes for deeper rest.</span></a>
+                                        </div>
+                                    </div>
+                                    <div class="wow-mega-col">
+                                        <p class="mega-kicker">Explore</p>
+                                        <div class="wow-menu-list">
+                                            <a class="menu-link" href="/locations"><strong>Near you</strong><span>Local classes and events.</span></a>
+                                            <a class="menu-link" href="/online"><strong>Online</strong><span>Join from wherever you are.</span></a>
+                                            <a class="menu-link" href="/gifts"><strong>Gift experiences</strong><span>Thoughtful wellbeing gifts.</span></a>
+                                            <a class="menu-link" href="https://times.weofferwellness.co.uk"><strong>Mindful Times</strong><span>Guides, stories and wellness reads.</span></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="wow-mega-pane" data-menu="locations">
+                            <div class="wow-mega-grid wow-mega-grid--2">
+                                <div class="wow-map-card">
+                                    <div class="wow-map-pin"></div>
+                                    <div>
+                                        <p class="mega-label">Find wellness near you</p>
+                                        <h3>Explore trusted therapies by location.</h3>
+                                        <div class="wow-button-row">
+                                            <a href="/locations" class="wow-mini-btn wow-mini-btn--primary">View all locations</a>
+                                            <a href="/online" class="wow-mini-btn">Online sessions</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="wow-mega-grid wow-mega-grid--2 wow-mega-grid--nested">
+                                    <div class="wow-mega-col">
+                                        <p class="mega-kicker">Popular locations</p>
+                                        <div class="wow-menu-list">
+                                            <a class="menu-link" href="/locations/kent"><strong>Kent</strong><span>Local therapies across Kent.</span></a>
+                                            <a class="menu-link" href="/locations/london"><strong>London</strong><span>Wellbeing sessions across the capital.</span></a>
+                                            <a class="menu-link" href="/locations/bristol"><strong>Bristol</strong><span>Alternative therapies and classes.</span></a>
+                                            <a class="menu-link" href="/locations/manchester"><strong>Manchester</strong><span>Urban wellness and events.</span></a>
+                                        </div>
+                                    </div>
+                                    <div class="wow-mega-col">
+                                        <p class="mega-kicker">Quick searches</p>
+                                        <div class="wow-pill-row">
+                                            <a href="/therapies/massage" class="wow-pill">Massage near me</a>
+                                            <a href="/therapies/reiki" class="wow-pill">Reiki near me</a>
+                                            <a href="/therapies/sound-healing" class="wow-pill">Sound healing near me</a>
+                                            <a href="/therapies/meditation" class="wow-pill">Meditation near me</a>
+                                            <a href="/therapies/reflexology" class="wow-pill">Reflexology near me</a>
+                                            <a href="/therapies/breathwork" class="wow-pill">Breathwork near me</a>
+                                        </div>
+                                        <div class="wow-soft-panel">
+                                            <h3>Online also available</h3>
+                                            <p>When local options are limited, online therapies still give visitors a route to book.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
                 </div>
-                <!-- Therapies -->
-                <div data-menu="therapies" class="grid md:grid-cols-3 gap-6">
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">Modality</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            @foreach($therapyCategoryLinks as $link)
-                                <li><a class="menu-link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <div class="menu-col">
-                        <div class="mega-kicker mb-2">Browse by format</div>
-                        <ul class="list-unstyled m-0 p-0">
-                            @foreach($therapyFormatLinks as $link)
-                                <li><a class="menu-link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <div class="menu-col menu-col--foryou">
-                        <div class="mega-kicker mb-2">For you</div>
-                        <div data-therapy-default-block>
-                            <p class="mega-label">Popular this week</p>
-                            <ul class="list-unstyled m-0 p-0" data-therapy-default-popular></ul>
-                            <p class="mega-label">Browse local or online</p>
-                            <ul class="list-unstyled m-0 p-0">
-                                @foreach($localLinks as $link)
-                                    <li><a class="menu-link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
-                                @endforeach
-                                <li><a class="menu-link" href="/help">Help centre</a></li>
-                            </ul>
-                        </div>
-                        <div data-therapy-personalized-block hidden aria-hidden="true">
-                            <p class="mega-label">Recently viewed</p>
-                            <ul class="list-unstyled m-0 p-0" data-therapy-recent></ul>
-                            <p class="mega-label">Saved therapies</p>
-                            <ul class="list-unstyled m-0 p-0" data-therapy-saved></ul>
-                        </div>
-                    </div>
-                </div>
-                @if($eventsMenuVisible)
-                    <!-- Events & Workshops -->
-                    <div data-menu="events" class="grid md:grid-cols-3 gap-6">
-                        <div class="menu-col">
-                            <div class="mega-kicker mb-2">Browse by format</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                @if($eventsMenuLinks['events'] ?? false)
-                                    <li><a class="menu-link" href="/events">Events</a></li>
-                                @endif
-                                @if($eventsMenuLinks['classes'] ?? false)
-                                    <li><a class="menu-link" href="/classes">Classes</a></li>
-                                @endif
-                                @if($eventsMenuLinks['workshops'] ?? false)
-                                    <li><a class="menu-link" href="/workshops">Workshops</a></li>
-                                @endif
-                                <li><a class="menu-link" href="/retreats">Retreats</a></li>
-                            </ul>
-                        </div>
-                        @php
-                            $hasExploreLinks = ($eventsMenuLinks['online'] ?? false)
-                                || ($eventsMenuLinks['near_me'] ?? false)
-                                || ($eventsMenuLinks['this_week'] ?? false)
-                                || ($eventsMenuLinks['this_month'] ?? false);
-                        @endphp
-                        <div class="menu-col">
-                            <div class="mega-kicker mb-2">Explore</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                @foreach($localLinks as $link)
-                                    <li><a class="menu-link" href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
-                                @endforeach
-                                <li><a class="menu-link" href="/gifts">Gift cards</a></li>
-                            </ul>
-                        </div>
-                        <div class="menu-col">
-                            <div class="mega-kicker mb-2">Guides</div>
-                            <ul class="list-unstyled m-0 p-0">
-                                <li><a class="menu-link" href="https://times.weofferwellness.co.uk">Mindful Times</a></li>
-                                <li><a class="menu-link" href="/help">Help centre</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
     </nav>
@@ -751,6 +779,400 @@
     #mega-panel [data-menu="need"] .menu-col--foryou,
     #mega-panel [data-menu="therapies"] .menu-col + .menu-col{ border-left:0; border-top:1px solid rgba(15,23,42,.08); }
 }
+
+.wow-desktop-nav{
+    position:relative;
+    height:100%;
+    align-items:center;
+}
+.wow-desktop-nav .nav-item > a.link-wow--nav{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:13px 18px;
+    border-radius:18px;
+    color:#172033;
+    font-size:18px;
+    line-height:1;
+    transition:background 220ms ease, color 220ms ease, transform 220ms ease;
+}
+.wow-desktop-nav .nav-item > a.link-wow--nav::after{ content:none !important; }
+.wow-desktop-nav .nav-item > a.link-wow--nav:hover,
+.wow-desktop-nav .nav-item > a.link-wow--nav:focus-visible,
+.wow-desktop-nav .nav-item > a.link-wow--nav.is-active{
+    background:#f1f2f4;
+    color:#111827;
+    outline:none;
+}
+.wow-nav-underline{
+    position:absolute;
+    left:0;
+    bottom:7px;
+    width:0;
+    height:4px;
+    border-radius:999px;
+    background:#549483;
+    opacity:0;
+    transform:translateX(0);
+    transition:transform 360ms cubic-bezier(.2,.9,.2,1), width 360ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+    pointer-events:none;
+}
+.wow-mega-layer{
+    --mega-max-width:1160px;
+    --mega-edge-gap:18px;
+    position:fixed;
+    inset:0 0 auto;
+    top:var(--wow-header-offset, 88px);
+    z-index:990;
+    pointer-events:none;
+}
+#mega-panel.wow-mega-shell{
+    display:block !important;
+    position:absolute !important;
+    top:14px !important;
+    left:50% !important;
+    right:auto !important;
+    width:min(var(--mega-max-width), calc(100vw - 36px)) !important;
+    min-height:420px;
+    max-width:none !important;
+    background:rgba(255,255,255,.98);
+    border:1px solid rgba(229,231,235,.95);
+    border-radius:22px !important;
+    box-shadow:0 24px 70px rgba(17,24,39,.16);
+    overflow:visible;
+    opacity:0;
+    transform:translate3d(-50%, -10px, 0) scale(.985) !important;
+    transform-origin:top center;
+    transition:height 430ms cubic-bezier(.18,.95,.2,1), opacity 180ms ease, transform 260ms cubic-bezier(.18,.95,.2,1);
+    pointer-events:none;
+    will-change:height, transform;
+}
+#mega-panel.wow-mega-shell::before{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    top:-28px;
+    height:28px;
+    background:transparent;
+}
+#mega-panel.wow-mega-shell.is-open{
+    opacity:1;
+    transform:translate3d(-50%, 0, 0) scale(1) !important;
+    pointer-events:auto;
+}
+.wow-mega-arrow{
+    position:absolute;
+    top:-7px;
+    left:50%;
+    width:16px;
+    height:16px;
+    background:#fff;
+    border-left:1px solid rgba(229,231,235,.95);
+    border-top:1px solid rgba(229,231,235,.95);
+    transform:translateX(-50%) rotate(45deg);
+    transition:left 430ms cubic-bezier(.18,.95,.2,1);
+    z-index:2;
+}
+.wow-mega-viewport{
+    position:relative;
+    height:100%;
+    overflow:hidden;
+    border-radius:inherit;
+    background:rgba(255,255,255,.98);
+}
+.wow-mega-track{
+    display:flex;
+    height:100%;
+    transition:transform 460ms cubic-bezier(.18,.95,.2,1);
+    will-change:transform;
+}
+#mega-panel .wow-mega-pane[data-menu]{
+    display:block !important;
+    flex:0 0 100%;
+    min-width:100%;
+    padding:42px 46px;
+}
+.wow-mega-grid{
+    display:grid;
+    gap:34px;
+}
+.wow-mega-grid--3{ grid-template-columns:1.1fr 1.1fr .9fr; }
+.wow-mega-grid--2{ grid-template-columns:.95fr 1.05fr; }
+.wow-mega-grid--nested{ gap:30px; }
+.wow-mega-col{ min-width:0; }
+.wow-mega-col--wide{ grid-column:span 2; }
+.wow-mega-col--divider{
+    padding-left:34px;
+    border-left:1px solid #e5e7eb;
+}
+#mega-panel.wow-mega-shell .mega-kicker{
+    margin:0 0 24px;
+    color:#126c45;
+    font-size:14px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+}
+#mega-panel.wow-mega-shell .mega-label{
+    margin:0 0 14px;
+    color:#524a40;
+    font-size:12px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+}
+.wow-menu-list{
+    display:grid;
+    gap:9px;
+}
+#mega-panel.wow-mega-shell .menu-link{
+    display:block;
+    padding:12px;
+    margin-left:-12px;
+    border-radius:14px;
+    color:#273142;
+    text-decoration:none;
+    transition:background 180ms ease, transform 180ms ease;
+}
+#mega-panel.wow-mega-shell .menu-link strong{
+    display:block;
+    color:#273142;
+    font-size:20px;
+    line-height:1.25;
+    font-weight:700;
+    letter-spacing:-.03em;
+}
+#mega-panel.wow-mega-shell .menu-link span{
+    display:block;
+    margin-top:4px;
+    color:#6b7280;
+    font-size:14px;
+    line-height:1.4;
+}
+#mega-panel.wow-mega-shell .menu-link:hover,
+#mega-panel.wow-mega-shell .menu-link:focus-visible{
+    background:#f6f8f7;
+    transform:translateX(4px);
+    box-shadow:none;
+    outline:none;
+}
+.wow-soft-panel{
+    margin-top:24px;
+    background:#f6f8f7;
+    border:1px solid #e5e7eb;
+    border-radius:20px;
+    padding:22px;
+}
+.wow-soft-panel--green{
+    margin-top:0;
+    background:#edf6f3;
+    border-color:rgba(84,148,131,.25);
+}
+.wow-soft-panel h3,
+.wow-image-card h3,
+.wow-feature-card h3,
+.wow-map-card h3{
+    margin:0;
+    color:#273142;
+    font-size:20px;
+    line-height:1.2;
+    letter-spacing:-.035em;
+}
+.wow-soft-panel p,
+.wow-image-card p,
+.wow-feature-card p{
+    margin:8px 0 0;
+    color:#6b7280;
+    font-size:14px;
+    line-height:1.55;
+}
+.wow-button-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:18px;
+}
+.wow-mini-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:40px;
+    padding:0 14px;
+    border-radius:999px;
+    border:1px solid #e5e7eb;
+    background:#fff;
+    color:#273142;
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none;
+    transition:background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+.wow-mini-btn:hover{
+    transform:translateY(-1px);
+    border-color:rgba(84,148,131,.45);
+}
+.wow-mini-btn--primary{
+    background:#549483;
+    color:#fff;
+    border-color:#549483;
+}
+.wow-for-you-card{
+    display:grid;
+    gap:8px;
+    margin-top:18px;
+}
+.wow-for-you-card .menu-link{
+    margin-left:0 !important;
+    padding:9px 0 !important;
+    border-bottom:1px solid #e5e7eb;
+}
+.wow-mega-row{
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+    align-items:center;
+    margin-bottom:24px;
+}
+.wow-mega-row .mega-kicker{ margin:0 !important; }
+.wow-image-card-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:14px;
+}
+.wow-image-card,
+.wow-feature-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:20px;
+    background:#dfe8e5;
+    isolation:isolate;
+    padding:18px;
+    display:flex;
+    align-items:flex-end;
+    min-height:154px;
+    text-decoration:none;
+    transition:transform 220ms ease, box-shadow 220ms ease;
+}
+.wow-image-card:hover,
+.wow-feature-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 18px 40px rgba(17,24,39,.14);
+}
+.wow-image-card::before,
+.wow-feature-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-size:cover;
+    background-position:center;
+    z-index:-2;
+    transform:scale(1.02);
+    transition:transform 300ms ease;
+}
+.wow-image-card:hover::before{ transform:scale(1.08); }
+.wow-image-card::after,
+.wow-feature-card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.58));
+    z-index:-1;
+}
+.wow-image-card h3,
+.wow-image-card p,
+.wow-feature-card h3,
+.wow-feature-card p{
+    color:#fff;
+    text-shadow:0 1px 20px rgba(0,0,0,.34);
+}
+.wow-image-card--reiki::before,
+.wow-image-card--breath::before{ background-image:url("https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=900&q=80"); }
+.wow-image-card--massage::before{ background-image:url("https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=900&q=80"); }
+.wow-image-card--sound::before{ background-image:url("https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=900&q=80"); }
+.wow-feature-card{
+    min-height:330px;
+    border-radius:24px;
+    padding:26px;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:flex-start;
+}
+.wow-feature-card::before{ background-image:url("https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1100&q=80"); }
+.wow-feature-card::after{ background:linear-gradient(180deg, rgba(17,24,39,.02), rgba(17,24,39,.72)); }
+.wow-feature-card h3{ font-size:28px; }
+.wow-pill-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+.wow-pill{
+    display:inline-flex;
+    align-items:center;
+    min-height:38px;
+    padding:0 14px;
+    border:1px solid #e5e7eb;
+    border-radius:999px;
+    color:#273142;
+    background:#fff;
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none;
+    transition:background 180ms ease, transform 180ms ease;
+}
+.wow-pill:hover{
+    background:#edf6f3;
+    transform:translateY(-1px);
+}
+.wow-map-card{
+    position:relative;
+    min-height:330px;
+    border-radius:24px;
+    overflow:hidden;
+    background:radial-gradient(circle at 30% 35%, rgba(84,148,131,.5), transparent 16%), radial-gradient(circle at 54% 56%, rgba(84,148,131,.38), transparent 13%), radial-gradient(circle at 66% 28%, rgba(84,148,131,.3), transparent 11%), #e9f1ef;
+    border:1px solid rgba(84,148,131,.22);
+    padding:26px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+.wow-map-card::before{
+    content:"";
+    position:absolute;
+    inset:22px;
+    border-radius:20px;
+    border:1px dashed rgba(50,111,97,.35);
+    pointer-events:none;
+}
+.wow-map-card h3{
+    max-width:360px;
+    font-size:30px;
+    line-height:1.05;
+    letter-spacing:-.055em;
+}
+.wow-map-pin{
+    width:42px;
+    height:42px;
+    border-radius:50% 50% 50% 0;
+    background:#549483;
+    transform:rotate(-45deg);
+    box-shadow:0 12px 30px rgba(84,148,131,.36);
+}
+.wow-map-pin::after{
+    content:"";
+    position:absolute;
+    inset:12px;
+    border-radius:50%;
+    background:#fff;
+}
+@media (max-width: 1080px){
+    .wow-mega-layer{ display:none !important; }
+    .wow-nav-underline{ display:none; }
+}
 </style>
 
 
@@ -937,7 +1359,7 @@
                 const triggers = document.querySelectorAll('[data-mobile-search-trigger]');
                 const modal = document.getElementById('mobile-search-drawer');
                 const mobileMenu = document.getElementById('mobile-menu');
-                const burger = document.querySelector('button[aria-label="Toggle menu"]');
+                const burger = document.querySelector('[data-wow-mobile-toggle]');
                 if (!triggers.length || !modal) return;
 
                 const syncTriggerState = (isOpen) => {

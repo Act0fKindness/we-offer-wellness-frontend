@@ -270,6 +270,177 @@
   <title>{{ $seo['title'] ?? 'Therapies | We Offer Wellness™' }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
+  @php
+    $schemaUrl = url('/therapies');
+    $schemaTitle = 'Therapies';
+    $schemaDescription = trim((string) ($seo['description'] ?? 'Explore holistic therapies and modalities, from sound healing and breathwork to massage and Reiki.'));
+    $schemaTherapies = collect($therapies ?? [])->values();
+    $schemaFeatured = collect($featuredOfferings ?? [])->values();
+    $seoService = app(\App\Services\SeoStructureService::class);
+    $cleanText = static function ($value): string {
+      $text = trim((string) preg_replace('/\s+/', ' ', strip_tags((string) ($value ?? ''))));
+      return $text;
+    };
+
+    $schemaModalityItems = $schemaTherapies
+      ->map(function (array $therapy, int $index) use ($cleanText) {
+        $url = url('/therapies/' . ($therapy['slug'] ?? ''));
+        $title = trim((string) ($therapy['title'] ?? 'Therapy'));
+        $description = trim((string) ($therapy['seo_description'] ?? ''));
+
+        $schemaItem = array_filter([
+          '@type' => 'DefinedTerm',
+          '@id' => $url . '#modality',
+          'name' => $title,
+          'url' => $url,
+          'termCode' => (string) ($therapy['slug'] ?? ''),
+          'description' => $cleanText($description) !== '' ? $cleanText($description) : null,
+          'inDefinedTermSet' => 'Wellness Modalities',
+        ], static fn ($value) => $value !== null && $value !== '');
+
+        return [
+          '@type' => 'ListItem',
+          'position' => $index + 1,
+          'url' => $url,
+          'item' => $schemaItem,
+        ];
+      })
+      ->values()
+      ->all();
+
+    $schemaFeaturedItems = $schemaFeatured
+      ->map(function ($product, $index) use ($seoService, $cleanText) {
+        $url = $seoService->canonicalProductUrl($product);
+        $title = trim((string) data_get($product, 'title', ''));
+        $image = method_exists($product, 'getFirstImageUrl') ? trim((string) $product->getFirstImageUrl()) : '';
+        $hasImage = method_exists($product, 'hasDisplayableImage')
+          ? (bool) $product->hasDisplayableImage()
+          : ($image !== '' && ! str_contains($image, 'no-product-image.jpg'));
+        $benefitText = data_get($product, 'benefit', data_get($product, 'summary', null));
+        $providerName = trim((string) (
+          data_get($product, 'vendor.vendor_name')
+          ?? data_get($product, 'vendor_name')
+          ?? ''
+        ));
+        $price = data_get($product, 'variants_min_price', data_get($product, 'price', null));
+        if (is_numeric($price) && (float) $price > 1000 && ((float) $price % 100) === 0.0) {
+          $price = (float) $price / 100;
+        }
+
+        $schemaItem = array_filter([
+          '@type' => 'Service',
+          '@id' => $url . '#service',
+          'name' => $title !== '' ? $title : 'Untitled',
+          'url' => $url,
+          'serviceType' => 'Therapy Offering',
+          'image' => $hasImage && $image !== '' ? [$image] : null,
+          'description' => $cleanText($benefitText) !== '' ? $cleanText($benefitText) : null,
+          'provider' => $providerName !== '' ? [
+            '@type' => 'Organization',
+            'name' => $providerName,
+          ] : null,
+          'offers' => is_numeric($price) && (float) $price > 0 ? [
+            '@type' => 'Offer',
+            'url' => $url,
+            'price' => number_format((float) $price, 2, '.', ''),
+            'priceCurrency' => 'GBP',
+            'availability' => 'https://schema.org/InStock',
+          ] : null,
+        ], static fn ($value) => $value !== null && $value !== '');
+
+        return [
+          '@type' => 'ListItem',
+          'position' => $index + 1,
+          'url' => $url,
+          'item' => $schemaItem,
+        ];
+      })
+      ->values()
+      ->all();
+
+    $schemaJsonLd = [
+      '@context' => 'https://schema.org',
+      '@graph' => [
+        [
+          '@type' => 'Organization',
+          '@id' => url('/') . '#organization',
+          'name' => 'We Offer Wellness®',
+          'url' => url('/'),
+          'logo' => [
+            '@type' => 'ImageObject',
+            'url' => 'https://www.weofferwellness.co.uk/cdn/shop/files/logo-google-icon_05080e3a-98e5-42cd-b479-3b443028308c.png',
+          ],
+          'sameAs' => [
+            'https://www.instagram.com/weofferwellness',
+            'https://www.tiktok.com/@weofferwellness',
+            'https://www.linkedin.com/company/weofferwellness',
+            'https://www.facebook.com/WeOfferWellness',
+          ],
+        ],
+        [
+          '@type' => 'WebSite',
+          '@id' => url('/') . '#website',
+          'url' => url('/'),
+          'name' => 'We Offer Wellness®',
+          'publisher' => [
+            '@id' => url('/') . '#organization',
+          ],
+        ],
+        [
+          '@type' => 'CollectionPage',
+          '@id' => $schemaUrl . '#webpage',
+          'url' => $schemaUrl,
+          'name' => $schemaTitle . ' | We Offer Wellness™',
+          'description' => $schemaDescription,
+          'isPartOf' => [
+            '@id' => url('/') . '#website',
+          ],
+          'publisher' => [
+            '@id' => url('/') . '#organization',
+          ],
+          'about' => [
+            '@id' => $schemaUrl . '#format',
+          ],
+          'mainEntity' => [
+            '@id' => $schemaUrl . '#modality-list',
+          ],
+          'hasPart' => [
+            '@id' => $schemaUrl . '#featured-offerings',
+          ],
+          'breadcrumb' => [
+            '@id' => $schemaUrl . '#breadcrumb',
+          ],
+          'inLanguage' => 'en-GB',
+        ],
+        [
+          '@type' => 'DefinedTerm',
+          '@id' => $schemaUrl . '#format',
+          'name' => $schemaTitle,
+          'termCode' => 'therapies',
+          'inDefinedTermSet' => 'Wellness Formats',
+        ],
+        [
+          '@type' => 'ItemList',
+          '@id' => $schemaUrl . '#modality-list',
+          'name' => 'Therapy modalities',
+          'numberOfItems' => $schemaTherapies->count(),
+          'itemListOrder' => 'https://schema.org/ItemListOrderAscending',
+          'itemListElement' => $schemaModalityItems,
+        ],
+        [
+          '@type' => 'ItemList',
+          '@id' => $schemaUrl . '#featured-offerings',
+          'name' => 'Featured therapy offerings',
+          'numberOfItems' => $schemaFeatured->count(),
+          'itemListOrder' => 'https://schema.org/ItemListOrderAscending',
+          'itemListElement' => $schemaFeaturedItems,
+        ],
+      ],
+    ];
+  @endphp
+  @once
+    <script type="application/ld+json">{!! json_encode($schemaJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}</script>
+  @endonce
 @endpush
 
 @section('content')
@@ -284,7 +455,7 @@
 @include('partials.breadcrumbs', [
   'crumbs' => [
     ['label' => 'Home', 'url' => url('/')],
-    ['label' => 'Modalities'],
+    ['label' => 'Therapies'],
   ],
   'schemaUrl' => url('/therapies'),
   'chips' => array_filter([

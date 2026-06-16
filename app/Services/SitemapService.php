@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use App\Models\OfferingV3;
+use App\Models\PageRedirect;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\WowEventsFeed;
 use App\Services\WhatCategoryCacheService;
 use Carbon\Carbon;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -16,17 +19,45 @@ class SitemapService
 {
     private const MAX_URLS_PER_FILE = 50000;
 
+    private const CANONICAL_FORMATS = [
+        'therapies',
+        'classes',
+        'events',
+        'workshops',
+        'retreats',
+    ];
+
     private const GROUP_ORDER = [
         'static',
-        'modalities',
         'types',
-        'locations',
+        'modalities',
         'near-me',
-        'modality-location',
-        'type-location',
         'offerings',
-        'events',
+        'locations',
+        'online',
+        'by-need',
         'practitioners',
+        'guides',
+    ];
+
+    private const ALWAYS_EMIT_EMPTY_SEGMENTS = [
+        'guides',
+    ];
+
+    private const NEED_SLUGS = [
+        'stress-and-anxiety',
+        'sleep-issues',
+        'low-mood-burnout',
+        'overwhelm',
+        'worry',
+        'pain-management',
+        'mens-wellbeing',
+        'digestive-health',
+        'fertility-pregnancy',
+        'nervous-system',
+        'breathwork',
+        'guided-meditation',
+        'corporate-wellbeing',
     ];
 
     private const RESERVED_CATEGORY_SLUGS = [
@@ -76,11 +107,36 @@ class SitemapService
         'needs',
     ];
 
+    private const LEGACY_CITIES = [
+        'london',
+        'manchester',
+        'birmingham',
+        'leeds',
+        'bristol',
+        'brighton',
+        'liverpool',
+        'glasgow',
+        'edinburgh',
+        'cardiff',
+        'kent',
+    ];
+
+    private const LEGACY_TYPES = [
+        'therapies',
+        'events',
+        'workshops',
+        'classes',
+        'retreats',
+        'gifts',
+    ];
+
     private ?Collection $liveProducts = null;
 
     private ?Collection $liveOfferings = null;
 
     private ?array $locationCatalog = null;
+
+    private ?array $locationPathIndex = null;
 
     private ?array $whatCategories = null;
 
@@ -91,6 +147,14 @@ class SitemapService
     private ?array $manifestEntriesCache = null;
 
     private ?array $submissionUrlsCache = null;
+
+    private ?array $redirectPathMatchers = null;
+
+    private ?array $redirectExactPaths = null;
+
+    private ?array $redirectSourcePatterns = null;
+
+    private ?array $sitemapRouteCache = null;
 
     public function outputDirectory(): string
     {
@@ -109,6 +173,22 @@ class SitemapService
         File::ensureDirectoryExists(dirname($this->manifestPath()));
 
         $files = $this->buildSitemapFiles();
+
+        $expectedFilenames = array_values(array_unique(array_map(
+            static fn (array $file): string => (string) ($file['filename'] ?? ''),
+            $files
+        )));
+
+        foreach (File::files($outputDirectory) as $existingFile) {
+            if (strtolower((string) $existingFile->getExtension()) !== 'xml') {
+                continue;
+            }
+
+            if (!in_array($existingFile->getFilename(), $expectedFilenames, true)) {
+                File::delete($existingFile->getPathname());
+            }
+        }
+
         foreach ($files as $file) {
             File::put($outputDirectory . '/' . $file['filename'], $file['xml']);
         }
@@ -127,6 +207,11 @@ class SitemapService
             'index_url' => url('/sitemap.xml'),
             'submission_urls' => $this->submissionUrlsFromFiles($files),
             'sitemaps' => $this->manifestEntries(),
+            'file_count' => count($files),
+            'total_urls' => array_sum(array_map(
+                static fn (array $file): int => (int) ($file['count'] ?? 0),
+                $files
+            )),
         ];
 
         File::put(
@@ -143,19 +228,19 @@ class SitemapService
 
     public function buildIndexXml(): string
     {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-
+        $lines = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ];
         foreach ($this->manifestEntries() as $entry) {
-            $xml .= '<sitemap>'
-                . '<loc>' . $this->escapeXml((string) ($entry['url'] ?? '')) . '</loc>'
-                . '<lastmod>' . $this->escapeXml((string) ($entry['lastmod'] ?? now()->toAtomString())) . '</lastmod>'
-                . '</sitemap>';
+            $lines[] = '  <sitemap>';
+            $lines[] = '    <loc>' . $this->escapeXml((string) ($entry['url'] ?? '')) . '</loc>';
+            $lines[] = '    <lastmod>' . $this->escapeXml((string) ($entry['lastmod'] ?? now()->toAtomString())) . '</lastmod>';
+            $lines[] = '  </sitemap>';
         }
+        $lines[] = '</sitemapindex>';
 
-        $xml .= '</sitemapindex>';
-
-        return $xml;
+        return implode("\n", $lines);
     }
 
     public function buildSegmentXml(string $segment): ?string
@@ -222,11 +307,11 @@ class SitemapService
         $files = [];
         foreach ($this->buildSegmentGroups() as $segment => $entries) {
             $entries = $this->normalizeEntries($entries);
-            if ($entries === []) {
+            if ($entries === [] && ! in_array($segment, self::ALWAYS_EMIT_EMPTY_SEGMENTS, true)) {
                 continue;
             }
 
-            $chunks = array_chunk($entries, self::MAX_URLS_PER_FILE);
+            $chunks = $entries === [] ? [[]] : array_chunk($entries, self::MAX_URLS_PER_FILE);
             foreach ($chunks as $index => $chunk) {
                 $filename = $this->segmentFilename($segment, $index);
                 $files[] = [
@@ -267,21 +352,44 @@ class SitemapService
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function canonicalUrls(): array
+    {
+        $urls = [];
+
+        foreach ($this->buildSegmentGroups() as $entries) {
+            foreach ($this->normalizeEntries($entries) as $entry) {
+                $loc = trim((string) ($entry['loc'] ?? ''));
+                if ($loc === '') {
+                    continue;
+                }
+
+                $urls[$loc] = true;
+            }
+        }
+
+        ksort($urls);
+
+        return array_keys($urls);
+    }
+
+    /**
      * @return array<string, array<int, array{loc:string,lastmod:string}>>
      */
     private function buildSegmentGroups(): array
     {
         return [
             'static' => $this->buildStaticEntries(),
-            'modalities' => $this->buildModalityEntries(),
             'types' => $this->buildTypeEntries(),
-            'locations' => $this->buildLocationEntries(),
+            'modalities' => $this->buildModalityEntries(),
             'near-me' => $this->buildNearMeEntries(),
-            'modality-location' => $this->buildModalityLocationEntries(),
-            'type-location' => $this->buildTypeLocationEntries(),
             'offerings' => $this->buildOfferingEntries(),
-            'events' => $this->buildEventsEntries(),
+            'locations' => $this->buildLocationEntries(),
+            'online' => $this->buildOnlineEntries(),
+            'by-need' => $this->buildByNeedEntries(),
             'practitioners' => $this->buildPractitionerEntries(),
+            'guides' => $this->buildGuideEntries(),
         ];
     }
 
@@ -300,12 +408,10 @@ class SitemapService
             '/help',
             '/help/faq',
             '/help/gift-cards',
-            '/offerings',
             '/giftcards',
             '/mindful-times',
             '/partners',
             '/plan',
-            '/needs',
             '/reviews',
             '/privacy',
             '/terms',
@@ -333,57 +439,53 @@ class SitemapService
     private function buildModalityEntries(): array
     {
         $entries = [];
+        $latestByUrl = [];
+        $seo = app(SeoStructureService::class);
 
-        $latestBySlug = [];
-        $rememberLatest = function (string $slug, mixed $value) use (&$latestBySlug): void {
+        $rememberLatest = function (string $url, mixed $value) use (&$latestByUrl): void {
             $atom = $this->dateToAtom($value);
 
-            if (!isset($latestBySlug[$slug])) {
-                $latestBySlug[$slug] = $atom;
+            if (!isset($latestByUrl[$url])) {
+                $latestByUrl[$url] = $atom;
                 return;
             }
 
             try {
-                $current = Carbon::parse($latestBySlug[$slug])->getTimestamp();
+                $current = Carbon::parse($latestByUrl[$url])->getTimestamp();
                 $candidate = Carbon::parse($atom)->getTimestamp();
 
                 if ($candidate > $current) {
-                    $latestBySlug[$slug] = $atom;
+                    $latestByUrl[$url] = $atom;
                 }
             } catch (\Throwable $e) {
-                $latestBySlug[$slug] = $atom;
+                $latestByUrl[$url] = $atom;
             }
         };
 
         foreach ($this->liveProducts()->filter(fn (Product $product): bool => $product->category !== null) as $product) {
-            $slug = $this->categorySlug($product->category?->name);
-            if ($slug === '' || $this->isReservedCategorySlug($slug)) {
+            $format = $seo->inferFormatKeyFromProduct($product);
+            $modality = $seo->inferModalitySlugFromProduct($product);
+            if ($modality === '') {
                 continue;
             }
 
-            $rememberLatest($slug, $product->updated_at ?? null);
+            $url = $seo->modalityPageUrl($format, $modality);
+            $rememberLatest($url, $product->updated_at ?? null);
         }
 
         foreach ($this->liveOfferings()->filter(fn (OfferingV3 $offering): bool => $offering->category !== null) as $offering) {
-            $slug = $this->categorySlug($offering->category?->name);
-            if ($slug === '' || $this->isReservedCategorySlug($slug)) {
+            $format = $seo->inferFormatKeyFromOffering($offering);
+            $modality = $seo->inferModalitySlugFromOffering($offering);
+            if ($modality === '') {
                 continue;
             }
 
-            $rememberLatest($slug, $offering->updated_at ?? null);
+            $url = $seo->modalityPageUrl($format, $modality);
+            $rememberLatest($url, $offering->updated_at ?? null);
         }
 
-        foreach ((array) data_get(app(WhatCategoryCacheService::class)->load(), 'categories', []) as $category) {
-            $slug = $this->categorySlug((string) ($category['slug'] ?? ''));
-            if ($slug === '' || $this->isReservedCategorySlug($slug)) {
-                continue;
-            }
-
-            if ((int) data_get($category, 'counts.total', 0) <= 0) {
-                continue;
-            }
-
-            $this->addEntry($entries, url('/' . $slug), $latestBySlug[$slug] ?? now()->toAtomString());
+        foreach ($latestByUrl as $url => $lastmod) {
+            $this->addEntry($entries, $url, $lastmod);
         }
 
         return array_values($entries);
@@ -395,32 +497,41 @@ class SitemapService
     private function buildTypeEntries(): array
     {
         $entries = [];
-        $now = now()->toAtomString();
+        $latestByUrl = [];
+        $seo = app(SeoStructureService::class);
 
-        foreach ([
-            '/therapies',
-            '/online',
-            '/events',
-            '/workshops',
-            '/classes',
-            '/retreats',
-            '/gifts',
-        ] as $path) {
-            $this->addEntry($entries, url($path), $now);
-        }
+        $rememberLatest = function (string $url, mixed $value) use (&$latestByUrl): void {
+            $atom = $this->dateToAtom($value);
 
-        foreach ($this->liveProducts()->filter(fn (Product $product): bool => $product->category !== null) as $product) {
-            $categorySlug = $this->categorySlug($product->category?->name);
-            if ($categorySlug === '' || $this->isReservedCategorySlug($categorySlug)) {
-                continue;
+            if (!isset($latestByUrl[$url])) {
+                $latestByUrl[$url] = $atom;
+                return;
             }
 
-            $typeSegment = $this->typeSegmentFromProduct($product);
-            $this->addEntry(
-                $entries,
-                url('/' . $categorySlug . '/' . $typeSegment),
-                $this->dateToAtom($product->updated_at ?? null)
-            );
+            try {
+                $current = Carbon::parse($latestByUrl[$url])->getTimestamp();
+                $candidate = Carbon::parse($atom)->getTimestamp();
+
+                if ($candidate > $current) {
+                    $latestByUrl[$url] = $atom;
+                }
+            } catch (\Throwable $e) {
+                $latestByUrl[$url] = $atom;
+            }
+        };
+
+        foreach ($this->liveProducts()->filter(fn (Product $product): bool => $product->category !== null) as $product) {
+            $format = $seo->inferFormatKeyFromProduct($product);
+            $rememberLatest($seo->formatPageUrl($format), $product->updated_at ?? null);
+        }
+
+        foreach ($this->liveOfferings()->filter(fn (OfferingV3 $offering): bool => $offering->category !== null) as $offering) {
+            $format = $seo->inferFormatKeyFromOffering($offering);
+            $rememberLatest($seo->formatPageUrl($format), $offering->updated_at ?? null);
+        }
+
+        foreach ($latestByUrl as $url => $lastmod) {
+            $this->addEntry($entries, $url, $lastmod);
         }
 
         return array_values($entries);
@@ -467,70 +578,181 @@ class SitemapService
     private function buildNearMeEntries(): array
     {
         $entries = [];
-        $now = now()->toAtomString();
+        $latestByUrl = [];
+        $seo = app(SeoStructureService::class);
 
-        foreach ([
-            '/near-me',
-            '/online-near-me',
-            '/reiki-near-me',
-            '/sound-healing-near-me',
-            '/holistic-therapy-near-me',
-            '/wellness-classes-near-me',
-        ] as $path) {
-            $this->addEntry($entries, url($path), $now);
-        }
+        $rememberLatest = function (string $url, mixed $value) use (&$latestByUrl): void {
+            $atom = $this->dateToAtom($value);
 
-        foreach ($this->nearMeCategorySlugs() as $slug) {
-            $this->addEntry($entries, url('/' . $slug . '-near-me'), $now);
-        }
-
-        return array_values($entries);
-    }
-
-    /**
-     * @return array<int, array{loc:string,lastmod:string}>
-     */
-    private function buildModalityLocationEntries(): array
-    {
-        $entries = [];
-        $catalog = $this->locationCatalog();
-        $locationPaths = $this->canonicalLocationPaths($catalog);
-
-        foreach ($this->nearMeCategorySlugs() as $slug) {
-            foreach ($locationPaths as $locationPath) {
-                $suffix = Str::after($locationPath, '/locations');
-                if ($suffix === $locationPath) {
-                    continue;
-                }
-
-                $this->addEntry($entries, url('/' . $slug . '-near-me' . $suffix), now()->toAtomString());
+            if (!isset($latestByUrl[$url])) {
+                $latestByUrl[$url] = $atom;
+                return;
             }
-        }
 
-        return array_values($entries);
-    }
+            try {
+                $current = Carbon::parse($latestByUrl[$url])->getTimestamp();
+                $candidate = Carbon::parse($atom)->getTimestamp();
 
-    /**
-     * @return array<int, array{loc:string,lastmod:string}>
-     */
-    private function buildTypeLocationEntries(): array
-    {
-        $entries = [];
+                if ($candidate > $current) {
+                    $latestByUrl[$url] = $atom;
+                }
+            } catch (\Throwable $e) {
+                $latestByUrl[$url] = $atom;
+            }
+        };
 
         foreach ($this->liveProducts()->filter(fn (Product $product): bool => $product->category !== null) as $product) {
-            $categorySlug = $this->categorySlug($product->category?->name);
-            if ($categorySlug === '' || $this->isReservedCategorySlug($categorySlug)) {
+            $format = $seo->inferFormatKeyFromProduct($product);
+            $modality = $seo->inferModalitySlugFromProduct($product);
+            if ($modality === '') {
                 continue;
             }
 
-            $typeSegment = $this->typeSegmentFromProduct($product);
-            foreach ($this->productLocationSlugs($product) as $locationSlug) {
-                $this->addEntry(
-                    $entries,
-                    url('/' . $categorySlug . '/' . $typeSegment . '/' . $locationSlug),
-                    $this->dateToAtom($product->updated_at ?? null)
-                );
+            $base = $seo->modalityPageUrl($format, $modality);
+            foreach ($this->locationPathsForItem($product) as $locationPath) {
+                $suffix = Str::after($locationPath, '/locations');
+                $rememberLatest($base . $suffix, $product->updated_at ?? null);
             }
+        }
+
+        foreach ($this->liveOfferings()->filter(fn (OfferingV3 $offering): bool => $offering->category !== null) as $offering) {
+            $format = $seo->inferFormatKeyFromOffering($offering);
+            $modality = $seo->inferModalitySlugFromOffering($offering);
+            if ($modality === '') {
+                continue;
+            }
+
+            $base = $seo->modalityPageUrl($format, $modality);
+            foreach ($this->locationPathsForItem($offering) as $locationPath) {
+                $suffix = Str::after($locationPath, '/locations');
+                $rememberLatest($base . $suffix, $offering->updated_at ?? null);
+            }
+        }
+
+        foreach ($latestByUrl as $url => $lastmod) {
+            $this->addEntry($entries, $url, $lastmod);
+        }
+
+        return array_values($entries);
+    }
+
+    /**
+     * @return array<int, array{loc:string,lastmod:string}>
+     */
+    private function buildOnlineEntries(): array
+    {
+        $entries = [];
+        $latestByUrl = [];
+        $seo = app(SeoStructureService::class);
+
+        $rememberLatest = function (string $url, mixed $value) use (&$latestByUrl): void {
+            $atom = $this->dateToAtom($value);
+
+            if (!isset($latestByUrl[$url])) {
+                $latestByUrl[$url] = $atom;
+                return;
+            }
+
+            try {
+                $current = Carbon::parse($latestByUrl[$url])->getTimestamp();
+                $candidate = Carbon::parse($atom)->getTimestamp();
+
+                if ($candidate > $current) {
+                    $latestByUrl[$url] = $atom;
+                }
+            } catch (\Throwable $e) {
+                $latestByUrl[$url] = $atom;
+            }
+        };
+
+        $rememberLatest(url('/online'), now()->toAtomString());
+
+        foreach ($this->liveProducts()->filter(fn (Product $product): bool => $product->category !== null) as $product) {
+            $locations = method_exists($product, 'getLocations') ? (array) $product->getLocations() : [];
+            $hasOnline = in_array('Online', $locations, true) || in_array('online', array_map('strtolower', $locations), true);
+            if (!$hasOnline) {
+                continue;
+            }
+
+            $modality = $seo->inferModalitySlugFromProduct($product);
+            if ($modality === '') {
+                continue;
+            }
+
+            $rememberLatest(url('/online/' . $modality), $product->updated_at ?? null);
+        }
+
+        foreach ($this->liveOfferings()->filter(fn (OfferingV3 $offering): bool => $offering->category !== null) as $offering) {
+            $locations = method_exists($offering, 'getLocations') ? (array) $offering->getLocations() : [];
+            $hasOnline = in_array('Online', $locations, true) || in_array('online', array_map('strtolower', $locations), true);
+            if (!$hasOnline) {
+                continue;
+            }
+
+            $modality = $seo->inferModalitySlugFromOffering($offering);
+            if ($modality !== '') {
+                $rememberLatest(url('/online/' . $modality), $offering->updated_at ?? null);
+            }
+
+            $canonical = $seo->canonicalOfferingUrl($offering);
+            if (str_starts_with($this->normalizeSitemapPath($canonical), '/online/')) {
+                $rememberLatest($canonical, $offering->updated_at ?? null);
+            }
+        }
+
+        foreach ($latestByUrl as $url => $lastmod) {
+            $this->addEntry($entries, $url, $lastmod);
+        }
+
+        return array_values($entries);
+    }
+
+    /**
+     * @return array<int, array{loc:string,lastmod:string}>
+     */
+    private function buildByNeedEntries(): array
+    {
+        $entries = [];
+        $latestByUrl = [];
+        $needHits = array_fill_keys(self::NEED_SLUGS, now()->toAtomString());
+
+        foreach ($this->liveProducts() as $product) {
+            $needs = array_values(array_filter(array_map(
+                static fn ($value): string => trim((string) $value),
+                (array) data_get($product, 'by_need', [])
+            )));
+
+            if ($needs === []) {
+                continue;
+            }
+
+            $updated = $this->dateToAtom($product->updated_at ?? null);
+            foreach ($needs as $needSlug) {
+                if (!isset($needHits[$needSlug])) {
+                    continue;
+                }
+
+                try {
+                    $current = Carbon::parse($needHits[$needSlug])->getTimestamp();
+                    $candidate = Carbon::parse($updated)->getTimestamp();
+
+                    if ($candidate > $current) {
+                        $needHits[$needSlug] = $updated;
+                    }
+                } catch (\Throwable $e) {
+                    $needHits[$needSlug] = $updated;
+                }
+            }
+        }
+
+        $latestByUrl[url('/needs')] = now()->toAtomString();
+
+        foreach ($needHits as $slug => $lastmod) {
+            $latestByUrl[url('/needs/' . $slug)] = $lastmod;
+        }
+
+        foreach ($latestByUrl as $url => $lastmod) {
+            $this->addEntry($entries, $url, $lastmod);
         }
 
         return array_values($entries);
@@ -542,23 +764,39 @@ class SitemapService
     private function buildOfferingEntries(): array
     {
         $entries = [];
+        $latestByUrl = [];
+        $seo = app(SeoStructureService::class);
+
+        $rememberLatest = function (string $url, mixed $value) use (&$latestByUrl): void {
+            $atom = $this->dateToAtom($value);
+
+            if (!isset($latestByUrl[$url])) {
+                $latestByUrl[$url] = $atom;
+                return;
+            }
+
+            try {
+                $current = Carbon::parse($latestByUrl[$url])->getTimestamp();
+                $candidate = Carbon::parse($atom)->getTimestamp();
+
+                if ($candidate > $current) {
+                    $latestByUrl[$url] = $atom;
+                }
+            } catch (\Throwable $e) {
+                $latestByUrl[$url] = $atom;
+            }
+        };
 
         foreach ($this->liveProducts() as $product) {
-            $slug = Str::slug((string) ($product->title ?? '')) ?: (string) $product->id;
-            $this->addEntry(
-                $entries,
-                url('/offerings/' . $product->id . '-' . $slug),
-                $this->dateToAtom($product->updated_at ?? null)
-            );
+            $rememberLatest($seo->canonicalProductUrl($product), $product->updated_at ?? null);
         }
 
         foreach ($this->liveOfferings() as $offering) {
-            $slug = Str::slug((string) ($offering->title ?? '')) ?: (string) $offering->id;
-            $this->addEntry(
-                $entries,
-                url('/offerings/' . $offering->id . '-' . $slug),
-                $this->dateToAtom($offering->updated_at ?? null)
-            );
+            $rememberLatest($seo->canonicalOfferingUrl($offering), $offering->updated_at ?? null);
+        }
+
+        foreach ($latestByUrl as $url => $lastmod) {
+            $this->addEntry($entries, $url, $lastmod);
         }
 
         return array_values($entries);
@@ -597,7 +835,7 @@ class SitemapService
 
         foreach ($this->publicProfiles() as $user) {
             $url = trim((string) ($user->practitioner_profile_url ?? ''));
-            if ($url === '') {
+            if ($url === '' || ! str_starts_with($this->normalizeSitemapPath($url), '/practioner/')) {
                 continue;
             }
 
@@ -605,6 +843,14 @@ class SitemapService
         }
 
         return array_values($entries);
+    }
+
+    /**
+     * @return array<int, array{loc:string,lastmod:string}>
+     */
+    private function buildGuideEntries(): array
+    {
+        return array_values(app(GuideRegistryService::class)->publishedGuideEntries());
     }
 
     /**
@@ -617,10 +863,11 @@ class SitemapService
         }
 
         return $this->liveProducts = Product::query()
-            ->select(['id', 'title', 'product_type', 'tags_list', 'updated_at', 'category_id', 'product_status_id'])
+            ->select(['id', 'title', 'product_type', 'tags_list', 'updated_at', 'category_id', 'product_status_id', 'vendor_id'])
             ->with([
                 'category:id,name',
                 'options.values',
+                'vendor.locations',
             ])
             ->where(function ($query): void {
                 $query->whereHas('status', function ($status): void {
@@ -640,8 +887,8 @@ class SitemapService
         }
 
         return $this->liveOfferings = OfferingV3::query()
-            ->select(['id', 'title', 'updated_at', 'status', 'category_id', 'type_id'])
-            ->with(['category:id,name'])
+            ->select(['id', 'title', 'updated_at', 'status', 'category_id', 'type_id', 'vendor_id'])
+            ->with(['category:id,name', 'vendor.locations'])
             ->whereIn('status', ['live', 'approved'])
             ->get();
     }
@@ -687,6 +934,157 @@ class SitemapService
         sort($categories);
 
         return $this->whatCategories = array_values(array_unique($categories));
+    }
+
+    private function inferFormatFromSlug(string $slug): string
+    {
+        $slug = strtolower(trim($slug));
+        if ($slug === '') {
+            return 'therapies';
+        }
+
+        if (str_contains($slug, 'class') || str_contains($slug, 'yoga') || str_contains($slug, 'pilates')) {
+            return 'classes';
+        }
+
+        if (str_contains($slug, 'workshop')) {
+            return 'workshops';
+        }
+
+        if (str_contains($slug, 'retreat')) {
+            return 'retreats';
+        }
+
+        if (
+            str_contains($slug, 'event')
+            || str_contains($slug, 'festival')
+            || str_contains($slug, 'gong')
+            || str_contains($slug, 'bath')
+            || str_contains($slug, 'circle')
+            || str_contains($slug, 'ceremony')
+        ) {
+            return 'events';
+        }
+
+        return 'therapies';
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function locationPathsForItem(mixed $item): array
+    {
+        $paths = [];
+        $index = $this->locationPathIndex();
+
+        $vendorLocations = collect(data_get($item, 'vendor.locations', []));
+        foreach ($vendorLocations as $location) {
+            $countrySlug = $this->normalizeCountrySlug((string) data_get($location, 'country', 'United Kingdom'));
+            $countySlug = $this->normalizeLocationSegment((string) (data_get($location, 'county') ?: data_get($location, 'region') ?: ''));
+            $townSlug = $this->normalizeLocationSegment((string) data_get($location, 'city', ''));
+
+            foreach ([
+                $countrySlug . '|' . $countySlug . '|' . $townSlug,
+                $countrySlug . '|' . $countySlug . '|',
+                $countrySlug . '||',
+            ] as $key) {
+                $path = $index[$key] ?? null;
+                if (!is_string($path) || $path === '') {
+                    continue;
+                }
+
+                $paths[] = $path;
+                foreach ($this->ancestorLocationPaths($path) as $ancestorPath) {
+                    $paths[] = $ancestorPath;
+                }
+            }
+        }
+
+        $paths = array_values(array_filter(array_unique($paths), static fn (string $path): bool => str_starts_with($path, '/locations/')));
+        sort($paths);
+
+        return $paths;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function locationPathIndex(): array
+    {
+        if ($this->locationPathIndex !== null) {
+            return $this->locationPathIndex;
+        }
+
+        $index = [];
+        foreach ((array) data_get($this->locationCatalog(), 'countries', []) as $country) {
+            $countrySlug = $this->normalizeLocationSegment((string) data_get($country, 'slug', ''));
+            if ($countrySlug !== '' && !empty($country['path'])) {
+                $index[$countrySlug . '||'] = (string) $country['path'];
+            }
+
+            foreach ((array) data_get($country, 'counties', []) as $county) {
+                $countySlug = $this->normalizeLocationSegment((string) data_get($county, 'slug', ''));
+                if ($countrySlug !== '' && $countySlug !== '' && !empty($county['path'])) {
+                    $index[$countrySlug . '|' . $countySlug . '|'] = (string) $county['path'];
+                }
+
+                foreach ((array) data_get($county, 'towns', []) as $town) {
+                    $path = (string) data_get($town, 'path', '');
+                    if ($path === '') {
+                        continue;
+                    }
+
+                    $segments = explode('/', trim(str_replace('/locations/', '', $path), '/'));
+                    $townCountry = $this->normalizeLocationSegment((string) ($segments[0] ?? ''));
+                    $townCounty = $this->normalizeLocationSegment((string) ($segments[1] ?? ''));
+                    $townSlug = $this->normalizeLocationSegment((string) ($segments[2] ?? ''));
+                    if ($townCountry !== '' && $townCounty !== '' && $townSlug !== '') {
+                        $index[$townCountry . '|' . $townCounty . '|' . $townSlug] = $path;
+                    }
+                }
+            }
+        }
+
+        return $this->locationPathIndex = $index;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function ancestorLocationPaths(string $path): array
+    {
+        $path = trim($path);
+        if (!str_starts_with($path, '/locations/')) {
+            return [];
+        }
+
+        $segments = array_values(array_filter(explode('/', trim(Str::after($path, '/locations/'), '/'))));
+        $paths = [];
+
+        if (count($segments) >= 3) {
+            $paths[] = '/locations/' . $segments[0] . '/' . $segments[1];
+        }
+
+        if (count($segments) >= 2) {
+            $paths[] = '/locations/' . $segments[0];
+        }
+
+        return array_values(array_unique($paths));
+    }
+
+    private function normalizeCountrySlug(string $country): string
+    {
+        $country = strtolower(trim($country));
+        if ($country === '' || in_array($country, ['uk', 'u.k.', 'united kingdom', 'great britain', 'england', 'scotland', 'wales', 'northern ireland'], true)) {
+            return 'united-kingdom';
+        }
+
+        return Str::slug($country);
+    }
+
+    private function normalizeLocationSegment(string $value): string
+    {
+        return Str::slug(trim($value));
     }
 
     /**
@@ -780,7 +1178,7 @@ class SitemapService
         $normalised = [];
         foreach ($entries as $entry) {
             $loc = trim((string) ($entry['loc'] ?? ''));
-            if ($loc === '') {
+            if (! $this->shouldIncludeUrl($loc)) {
                 continue;
             }
 
@@ -800,19 +1198,19 @@ class SitemapService
      */
     private function renderUrlsetXml(array $entries): string
     {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-
+        $lines = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ];
         foreach ($entries as $entry) {
-            $xml .= '<url>'
-                . '<loc>' . $this->escapeXml((string) ($entry['loc'] ?? '')) . '</loc>'
-                . '<lastmod>' . $this->escapeXml((string) ($entry['lastmod'] ?? now()->toAtomString())) . '</lastmod>'
-                . '</url>';
+            $lines[] = '  <url>';
+            $lines[] = '    <loc>' . $this->escapeXml((string) ($entry['loc'] ?? '')) . '</loc>';
+            $lines[] = '    <lastmod>' . $this->escapeXml((string) ($entry['lastmod'] ?? now()->toAtomString())) . '</lastmod>';
+            $lines[] = '  </url>';
         }
+        $lines[] = '</urlset>';
 
-        $xml .= '</urlset>';
-
-        return $xml;
+        return implode("\n", $lines);
     }
 
     private function segmentFilename(string $segment, int $chunkIndex): string
@@ -827,7 +1225,7 @@ class SitemapService
     private function addEntry(array &$entries, string $loc, ?string $lastmod = null): void
     {
         $loc = trim($loc);
-        if ($loc === '') {
+        if (! $this->shouldIncludeUrl($loc)) {
             return;
         }
 
@@ -875,6 +1273,183 @@ class SitemapService
             return Carbon::parse($value)->toAtomString();
         } catch (\Throwable $e) {
             return now()->toAtomString();
+        }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function redirectPathMatchers(): array
+    {
+        if ($this->redirectSourcePatterns !== null) {
+            return $this->redirectSourcePatterns;
+        }
+
+        $patterns = PageRedirect::query()
+            ->where('is_active', true)
+            ->pluck('from_path')
+            ->map(fn ($path): string => $this->normalizeSitemapPath((string) $path))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $exactPaths = [];
+        foreach ($patterns as $pattern) {
+            if (! str_contains($pattern, '{')) {
+                $exactPaths[$pattern] = true;
+            }
+        }
+
+        $this->redirectExactPaths = $exactPaths;
+
+        return $this->redirectSourcePatterns = $patterns;
+    }
+
+    private function redirectPatternMatchesPath(string $path, string $pattern): bool
+    {
+        $path = $this->normalizeSitemapPath($path);
+        $pattern = $this->normalizeSitemapPath($pattern);
+
+        if ($path === '' || $pattern === '') {
+            return false;
+        }
+
+        if (! str_contains($pattern, '{')) {
+            return $path === $pattern;
+        }
+
+        $quoted = preg_quote($pattern, '~');
+        $regex = preg_replace('~\\\\\{([A-Za-z0-9_]+)\\\\\}~', '(?P<$1>[^/]+)', $quoted);
+        if (! is_string($regex) || $regex === '') {
+            return false;
+        }
+
+        if (! preg_match('~^' . $regex . '/?$~i', $path, $matches)) {
+            return false;
+        }
+
+        if (isset($matches['city']) && ! in_array(strtolower((string) $matches['city']), self::LEGACY_CITIES, true)) {
+            return false;
+        }
+
+        if (isset($matches['type']) && ! in_array(strtolower((string) $matches['type']), self::LEGACY_TYPES, true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function normalizeSitemapPath(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        $path = parse_url($value, PHP_URL_PATH);
+        $path = $path !== null && $path !== false ? trim((string) $path) : trim($value);
+
+        if ($path === '') {
+            return '';
+        }
+
+        if (! str_starts_with($path, '/')) {
+            $path = '/' . ltrim($path, '/');
+        }
+
+        return rtrim($path, '/') ?: '/';
+    }
+
+    private function shouldIncludeUrl(string $loc): bool
+    {
+        $loc = trim($loc);
+        if ($loc === '' || str_contains($loc, '?') || str_contains($loc, '#')) {
+            return false;
+        }
+
+        $path = $this->normalizeSitemapPath($loc);
+        if ($path === '') {
+            return false;
+        }
+
+        if ($this->redirectExactPaths === null && $this->redirectPathMatchers === null) {
+            $this->redirectPathMatchers();
+        }
+
+        if (isset($this->redirectExactPaths[$path])) {
+            return false;
+        }
+
+        foreach ($this->redirectPathMatchers() as $pattern) {
+            if ($this->redirectPatternMatchesPath($path, (string) $pattern)) {
+                return false;
+            }
+        }
+
+        if (! $this->routeResolves($path)) {
+            return false;
+        }
+
+        if (! $this->routeReturnsNon404($path)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function routeResolves(string $path): bool
+    {
+        $path = $this->normalizeSitemapPath($path);
+        if ($path === '') {
+            return false;
+        }
+
+        if ($this->sitemapRouteCache === null) {
+            $this->sitemapRouteCache = [];
+        }
+
+        if ($this->sitemapRouteCache !== null && array_key_exists($path, $this->sitemapRouteCache)) {
+            return (bool) $this->sitemapRouteCache[$path];
+        }
+
+        try {
+            app('router')->getRoutes()->match(Request::create($path, 'GET'));
+            return $this->sitemapRouteCache[$path] = true;
+        } catch (\Throwable $e) {
+            return $this->sitemapRouteCache[$path] = false;
+        }
+    }
+
+    private function routeReturnsNon404(string $path): bool
+    {
+        $path = $this->normalizeSitemapPath($path);
+        if ($path === '') {
+            return false;
+        }
+
+        if ($this->sitemapRouteCache === null) {
+            $this->sitemapRouteCache = [];
+        }
+
+        if ($this->sitemapRouteCache !== null && array_key_exists('status:' . $path, $this->sitemapRouteCache)) {
+            return (bool) $this->sitemapRouteCache['status:' . $path];
+        }
+
+        $request = Request::create($path, 'GET');
+
+        try {
+            $kernel = app(HttpKernel::class);
+            $response = $kernel->handle($request);
+            $status = (int) $response->getStatusCode();
+
+            if (method_exists($kernel, 'terminate')) {
+                $kernel->terminate($request, $response);
+            }
+
+            return $this->sitemapRouteCache['status:' . $path] = $status >= 200 && $status < 300;
+        } catch (\Throwable $e) {
+            return $this->sitemapRouteCache['status:' . $path] = false;
         }
     }
 

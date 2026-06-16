@@ -24,6 +24,7 @@
   $mobileCurrent = trim((string) ($mobileCurrent ?? ($breadcrumbItems->last()['label'] ?? '')));
   $mobileBackUrl = trim((string) ($mobileBackUrl ?? ($breadcrumbItems->count() > 1 ? ($breadcrumbItems->slice(-2, 1)->first()['url'] ?? '') : '')));
   $mobileBackLabel = trim((string) ($mobileBackLabel ?? 'Back'));
+  $renderVisual = $renderVisual ?? true;
 
   $schemaJsonLd = null;
   $schemaList = [];
@@ -232,15 +233,15 @@
   @endpush
 @endonce
 
-@if($breadcrumbItems->count() > 1)
-  @if($schemaEnabled && !empty($schemaList))
-    @push('head')
-      @once
-        <script type="application/ld+json">{!! json_encode($schemaJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}</script>
-      @endonce
-    @endpush
-  @endif
+@if($schemaEnabled && !empty($schemaList))
+  @push('head')
+    @once
+      <script type="application/ld+json">{!! json_encode($schemaJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}</script>
+    @endonce
+  @endpush
+@endif
 
+@if($renderVisual && $breadcrumbItems->count() > 1)
   <div class="container mt-3">
     <nav class="wow-breadcrumbs" aria-label="Breadcrumb">
       <div class="wow-breadcrumbs__inner">

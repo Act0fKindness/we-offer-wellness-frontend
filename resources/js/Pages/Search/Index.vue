@@ -17,6 +17,20 @@ const loadError = ref(false)
 const filters = ref(paramsFromUrl())
 const view = ref('list-map') // 'list' | 'list-map'
 const userLoc = ref(readUserLocation())
+const mobileQuery = '(max-width: 767.98px)'
+const isMobile = ref(typeof window !== 'undefined' ? window.matchMedia(mobileQuery).matches : false)
+
+function syncViewportState() {
+  if (typeof window === 'undefined') return
+  try {
+    isMobile.value = window.matchMedia(mobileQuery).matches
+  } catch {
+    isMobile.value = false
+  }
+}
+
+const showMap = computed(() => view.value === 'list-map' && !isMobile.value)
+const showMapControls = computed(() => !isMobile.value)
 
 function paramsFromUrl() {
   const u = new URLSearchParams(window.location.search || '')
@@ -72,11 +86,14 @@ function handlePopstate() {
 }
 
 onMounted(() => {
+  syncViewportState()
+  window.addEventListener('resize', syncViewportState, { passive: true })
   load()
   window.addEventListener('popstate', handlePopstate)
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', syncViewportState)
   window.removeEventListener('popstate', handlePopstate)
 })
 </script>
@@ -89,58 +106,286 @@ onBeforeUnmount(() => {
     <meta property="og:description" content="Find therapies, classes and events that match how you feel." />
   </Head>
   <SiteLayout>
-    <!-- Search bar under the nav bar -->
-    <section class="pt-4 pb-2 bg-transparent">
-      <div class="container-page">
-        <UltraSearchBar id-prefix="search-top" />
-      </div>
-    </section>
+    <div class="wow-search-results-page">
+      <section class="wow-search-results-top">
+        <div class="container-page">
+          <UltraSearchBar id-prefix="search-top" :compact="true" :mobile-top-offset="80" />
+        </div>
+      </section>
 
-    <section class="py-6 md:py-10">
-      <div class="container-page space-y-6">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
-          <div>
+      <section v-if="isMobile" class="wow-search-results-mobile" aria-label="Search results">
+        <div class="container-page wow-search-results-mobile-content">
+          <div class="wow-search-results-heading wow-search-results-heading--mobile">
             <div class="kicker mb-1 text-ink-600 uppercase tracking-[0.2em]">Search results</div>
-            <h1 class="text-ink-900" style="font-size:1.75rem;font-weight:700;">{{ resultCount }} therapies for {{ headline }}</h1>
+            <h1 class="wow-search-results-title">{{ resultCount }} therapies for {{ headline }}</h1>
           </div>
-          <div class="d-flex flex-wrap align-items-center gap-2">
-            <div v-if="filterTags.length" class="d-flex flex-wrap gap-2 me-3">
-              <span v-for="tag in filterTags" :key="tag" class="chip">{{ tag }}</span>
-            </div>
-            <div class="btn-group" role="group" aria-label="View mode">
-              <button type="button" class="btn-wow btn-wow--ghost is-square btn-sm" :class="{ 'btn-wow--secondary': view==='list' }" @click="view='list'">List</button>
-              <button type="button" class="btn-wow btn-wow--ghost is-square btn-sm" :class="{ 'btn-wow--secondary': view==='list-map' }" @click="view='list-map'">List + Map</button>
-            </div>
+
+          <div v-if="filterTags.length" class="wow-search-results-tags wow-search-results-tags--mobile" aria-label="Applied filters">
+            <span v-for="tag in filterTags" :key="tag" class="chip">{{ tag }}</span>
           </div>
-        </div>
 
-        <div v-if="userLoc" class="alert alert-info card p-3">
-          Click a pin to calculate your travel time.
-        </div>
-
-        <div class="row g-3">
-          <div :class="['col-12', view==='list-map' ? 'col-lg-6' : 'col-lg-12']">
-            <div v-if="loading" class="card p-8 text-ink-600 text-center text-lg">Loading results…</div>
-            <div v-else-if="loadError" class="card p-8 text-ink-600 text-center text-lg">
+          <div class="wow-search-results-list">
+            <div v-if="loading" class="wow-search-results-state">Loading results…</div>
+            <div v-else-if="loadError" class="wow-search-results-state">
               We’re having trouble loading results right now. Please refresh or adjust your filters.
             </div>
-            <div v-else-if="products.length === 0" class="card p-8 text-ink-600 text-center text-lg">
+            <div v-else-if="products.length === 0" class="wow-search-results-state">
               No results matched your filters. Try widening your search.
             </div>
-            <div v-else class="row g-3">
-              <div v-for="(p, i) in products" :key="p.id ?? i" :class="['col-12','col-sm-6', view==='list-map' ? 'col-lg-6' : 'col-lg-3']">
-                <ProductCard :product="p" :fluid="true" />
-              </div>
-            </div>
-          </div>
-          <div v-if="view==='list-map'" class="col-12 col-lg-6">
-            <div style="position: sticky; top: 88px;">
-              <MapPanel :api-key="props.mapsKey" :products="products" :user-location="userLoc" />
-            </div>
-            <!-- Optional: show a collapsed map toggle on small screens only -->
+            <ProductCard v-else v-for="(p, i) in products" :key="p.id ?? i" :product="p" :fluid="true" />
           </div>
         </div>
+      </section>
+
+      <div v-else class="wow-search-results-stage" :class="{ 'is-list-only': !showMap }">
+        <div v-if="showMap" class="wow-search-results-map" aria-hidden="true">
+          <MapPanel :api-key="props.mapsKey" :products="products" :user-location="userLoc" />
+        </div>
+
+        <section class="wow-search-results-overlay" aria-label="Search results">
+          <div class="container-page wow-search-results-content">
+            <div class="wow-search-results-hero">
+              <div class="wow-search-results-heading">
+                <div class="kicker mb-1 text-ink-600 uppercase tracking-[0.2em]">Search results</div>
+                <h1 class="wow-search-results-title">{{ resultCount }} therapies for {{ headline }}</h1>
+              </div>
+
+              <div class="wow-search-results-hero-tools">
+                <div v-if="filterTags.length" class="wow-search-results-tags" aria-label="Applied filters">
+                  <span v-for="tag in filterTags" :key="tag" class="chip">{{ tag }}</span>
+                </div>
+
+                <div v-if="showMapControls" class="btn-group wow-search-results-toggle" role="group" aria-label="View mode">
+                  <button type="button" class="btn-wow btn-wow--ghost is-square btn-sm" :class="{ 'btn-wow--secondary': view==='list' }" @click="view='list'">List</button>
+                  <button type="button" class="btn-wow btn-wow--ghost is-square btn-sm" :class="{ 'btn-wow--secondary': view==='list-map' }" @click="view='list-map'">List + Map</button>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="userLoc && showMap" class="wow-search-results-note alert alert-info card p-3">
+              Click a pin to calculate your travel time.
+            </div>
+
+            <div class="wow-search-results-list">
+              <div v-if="loading" class="wow-search-results-state">Loading results…</div>
+              <div v-else-if="loadError" class="wow-search-results-state">
+                We’re having trouble loading results right now. Please refresh or adjust your filters.
+              </div>
+              <div v-else-if="products.length === 0" class="wow-search-results-state">
+                No results matched your filters. Try widening your search.
+              </div>
+              <ProductCard v-else v-for="(p, i) in products" :key="p.id ?? i" :product="p" :fluid="true" />
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   </SiteLayout>
 </template>
+
+<style>
+.wow-search-results-page{
+  position:relative;
+  isolation:isolate;
+  min-height:100vh;
+}
+
+.wow-search-results-top{
+  position:sticky;
+  top:var(--wow-header-offset, 0px);
+  z-index:240;
+  padding:12px 0 10px;
+  background:linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.82) 100%);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+
+.wow-search-results-stage{
+  position:relative;
+  isolation:isolate;
+  min-height:calc(100vh - var(--wow-header-offset, 0px));
+}
+
+.wow-search-results-map{
+  position:fixed;
+  top:var(--wow-header-offset, 0px);
+  right:0;
+  bottom:0;
+  width:min(46vw, 760px);
+  z-index:0;
+  overflow:hidden;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.72);
+}
+
+.wow-search-results-map .maps-panel{
+  width:100%;
+  height:100%;
+  min-height:0;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+
+.wow-search-results-overlay{
+  position:relative;
+  z-index:2;
+  min-height:calc(100vh - var(--wow-header-offset, 0px));
+  background:linear-gradient(90deg, rgba(248,250,252,.98) 0%, rgba(248,250,252,.95) 62%, rgba(248,250,252,.42) 100%);
+}
+
+.wow-search-results-content{
+  padding-top:22px;
+  padding-bottom:120px;
+  padding-right:min(46vw, 760px);
+}
+
+.wow-search-results-hero{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.wow-search-results-heading{
+  min-width:0;
+}
+
+.wow-search-results-title{
+  margin:0;
+  color:#111827;
+  font-size:clamp(32px, 4.2vw, 68px);
+  font-weight:850;
+  line-height:.96;
+  letter-spacing:-.065em;
+}
+
+.wow-search-results-hero-tools{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+}
+
+.wow-search-results-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.wow-search-results-note{
+  margin-top:18px;
+}
+
+.wow-search-results-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:16px;
+  margin-top:18px;
+}
+
+.wow-search-results-state{
+  grid-column:1 / -1;
+  min-height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #e5ebf2;
+  border-radius:28px;
+  background:rgba(255,255,255,.95);
+  box-shadow:0 16px 42px rgba(16,24,40,.055);
+  padding:clamp(24px, 4vw, 40px);
+  color:#667085;
+  font-size:18px;
+  font-weight:650;
+  text-align:center;
+}
+
+.wow-search-results-stage.is-list-only .wow-search-results-content{
+  padding-right:0;
+}
+
+.wow-search-results-stage.is-list-only .wow-search-results-map{
+  display:none;
+}
+
+.wow-search-results-stage.is-list-only .wow-search-results-overlay{
+  background:linear-gradient(180deg, rgba(248,250,252,.98) 0%, rgba(248,250,252,.98) 100%);
+}
+
+.wow-search-results-mobile{
+  position:relative;
+  z-index:2;
+  padding-bottom:80px;
+  background:linear-gradient(180deg, rgba(248,250,252,.98) 0%, rgba(248,250,252,.95) 100%);
+}
+
+.wow-search-results-mobile-content{
+  padding-top:14px;
+  padding-bottom:0;
+}
+
+.wow-search-results-heading--mobile{
+  margin-bottom:12px;
+}
+
+.wow-search-results-tags--mobile{
+  margin-bottom:18px;
+}
+
+@media (max-width: 1040px){
+  .wow-search-results-top{
+    padding:10px 0 8px;
+  }
+
+  .wow-search-results-overlay{
+    background:linear-gradient(180deg, rgba(248,250,252,.96) 0%, rgba(248,250,252,.90) 26%, rgba(248,250,252,.78) 100%);
+  }
+
+  .wow-search-results-content{
+    padding-right:0;
+    padding-top:16px;
+  }
+
+  .wow-search-results-hero{
+    align-items:flex-start;
+  }
+
+  .wow-search-results-title{
+    font-size:clamp(26px, 8vw, 38px);
+  }
+
+  .wow-search-results-hero-tools{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .wow-search-results-list{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width: 767.98px){
+  .wow-search-results-stage{
+    min-height:auto;
+  }
+
+  .wow-search-results-content{
+    padding-top:14px;
+    padding-bottom:80px;
+  }
+
+  .wow-search-results-hero{
+    align-items:flex-start;
+  }
+
+  .wow-search-results-title{
+    font-size:clamp(26px, 8vw, 38px);
+  }
+
+  .wow-search-results-list{
+    grid-template-columns:1fr;
+  }
+}
+</style>

@@ -30,6 +30,22 @@ class SeoMoneyPageController extends Controller
 
     public function showNearMe(Request $request, string $category, ?string $country = null, ?string $county = null, ?string $town = null)
     {
+        $routeLocationContext = $this->routeLocationContext($country, $county, $town);
+        $canonicalPath = $this->buildStructuredNearMePath($this->inferNearMeFormat($category), $category, $routeLocationContext);
+        $queryString = (string) $request->getQueryString();
+
+        return redirect()->to(
+            url($canonicalPath) . ($queryString !== '' ? '?' . $queryString : ''),
+            301
+        );
+    }
+
+    public function showStructuredNearMe(Request $request, string $format, string $modality, ?string $country = null, ?string $county = null, ?string $town = null)
+    {
+        $seo = app(\App\Services\SeoStructureService::class);
+        $requestedModality = $modality;
+        $format = $seo->canonicalFormatKey($format);
+        $modality = $this->normalizeNearMeSlug($seo->categorySlug($modality));
         $isFiltered = $request->hasAny(['place', 'postcode', 'city', 'region', 'county', 'country', 'lat', 'lng']);
         $routeLocationContext = $this->routeLocationContext($country, $county, $town);
         $locationContext = $this->activeLocationContext($request, $routeLocationContext);
@@ -38,10 +54,18 @@ class SeoMoneyPageController extends Controller
             || trim((string) data_get($locationContext, 'label', '')) !== ''
             || $isFiltered;
         $specialPages = $this->specialNearMePages();
-        $page = $specialPages[$category] ?? $this->genericNearMePage($category);
+        $page = $specialPages[$modality] ?? $this->genericNearMePage($modality);
         $strictLocation = $routeLocationContext !== []
             || trim((string) data_get($locationContext, 'path', '')) !== ''
             || $isFiltered;
+
+        $page['mode'] = (string) ($page['mode'] ?? ($format === 'therapies' ? 'therapy' : 'class'));
+        $page['format'] = $format;
+        $page['modality'] = $modality;
+        $page['schema_item_type'] = 'Service';
+        $page['schema_term_label'] = $seo->categoryLabel($modality);
+        $page['schema_format_label'] = $seo->typeDefinition($format)['page_label'] ?? Str::headline($format);
+        $page['breadcrumb_trail'] = $this->buildStructuredBreadcrumbTrail($format, $modality, $locationContext);
 
         $products = $this->queryListings($page, $locationContext, $strictLocation)
             ->take(12)
@@ -53,8 +77,8 @@ class SeoMoneyPageController extends Controller
 
         $products = ProductRanking::sortCollection($products)->values();
 
-        if ($products->isEmpty() && !$hasExplicitLocation) {
-            $products = $this->queryListings($page)
+        if ($products->isEmpty()) {
+            $fallbackProducts = $this->queryListings($page)
                 ->take(12)
                 ->values()
                 ->map(function ($product) {
@@ -62,27 +86,49 @@ class SeoMoneyPageController extends Controller
                     return $product;
                 });
 
-            $products = ProductRanking::sortCollection($products)->values();
+            $fallbackProducts = ProductRanking::sortCollection($fallbackProducts)->values();
+
+            if ($fallbackProducts->isNotEmpty()) {
+                $products = $fallbackProducts;
+            }
         }
 
-        if ($products->isEmpty()) {
-            abort(404);
-        }
-
-        $canonicalPath = $this->buildNearMePath($category, $locationContext);
+        $canonicalPath = $this->buildStructuredNearMePath($format, $modality, $locationContext);
         $queryKeys = array_values(array_diff(array_keys($request->query()), ['place', 'postcode', 'city', 'region', 'county', 'country', 'lat', 'lng']));
+        $queryString = (string) $request->getQueryString();
+        $locationLabel = $this->structuredNearMeLocationLabel($locationContext);
+
+        $page = $this->applyStructuredNearMeCopy($page, $format, $modality, $locationLabel, $products->isNotEmpty());
+
+        if ($requestedModality !== $modality) {
+            return redirect()->to(
+                url($canonicalPath) . ($queryString !== '' ? '?' . $queryString : ''),
+                301
+            );
+        }
 
         if ($routeLocationContext === [] && !empty($locationContext['path'] ?? '') && $queryKeys === []) {
             return redirect()->to(url($canonicalPath), 301);
         }
 
-        return $this->renderPage($request, $category . '-near-me', $page, $products, $locationContext, $isFiltered, $canonicalPath);
+        return $this->renderPage(
+            $request,
+            $format . '/' . $modality,
+            $page,
+            $products,
+            $locationContext,
+            $isFiltered,
+            $canonicalPath,
+            url($canonicalPath),
+            $page['breadcrumb_trail'] ?? []
+        );
     }
 
-    private function renderPage(Request $request, string $slug, array $page, Collection $products, array $locationContext = [], bool $isFiltered = false, ?string $canonicalPath = null)
+    private function renderPage(Request $request, string $slug, array $page, Collection $products, array $locationContext = [], bool $isFiltered = false, ?string $canonicalPath = null, ?string $searchAction = null, array $crumbs = [])
     {
         $locationLabel = trim((string) data_get($locationContext, 'label', ''));
-        if ($locationLabel !== '') {
+        $preserveTitle = filter_var($page['seo_preserve_title'] ?? false, FILTER_VALIDATE_BOOL);
+        if ($locationLabel !== '' && ! $preserveTitle) {
             $page = $this->applyLocationToPage($page, $locationLabel);
         }
 
@@ -103,9 +149,100 @@ class SeoMoneyPageController extends Controller
             'catalogSuggestions' => data_get($catalog, 'flat', []),
             'savedLocation' => $locationContext,
             'searchBreadcrumbUrl' => $this->buildSearchBreadcrumbUrl($page, $locationContext),
-            'searchAction' => url('/' . $slug),
+            'searchAction' => $searchAction ?: url('/' . $slug),
+            'pageCrumbs' => $crumbs,
             'request' => $request,
         ]);
+    }
+
+    private function inferNearMeFormat(string $category): string
+    {
+        $slug = $this->humanizeSlug($this->normalizeNearMeSlug($category));
+        $slug = strtolower(str_replace(' ', '-', $slug));
+
+        return match (true) {
+            str_contains($slug, 'class'),
+            str_contains($slug, 'yoga'),
+            str_contains($slug, 'pilates') => 'classes',
+            str_contains($slug, 'workshop'),
+            str_contains($slug, 'circle'),
+            str_contains($slug, 'ceremony'),
+            str_contains($slug, 'festival'),
+            str_contains($slug, 'gong-bath'),
+            str_contains($slug, 'gong-baths'),
+            str_contains($slug, 'sound-bath') => 'events',
+            str_contains($slug, 'retreat') => 'retreats',
+            default => 'therapies',
+        };
+    }
+
+    private function buildStructuredNearMePath(string $format, string $slug, array $locationContext = []): string
+    {
+        $seo = app(\App\Services\SeoStructureService::class);
+        $format = $seo->canonicalFormatKey($format);
+        $slug = $seo->categorySlug($slug);
+        $base = '/' . $format . '/' . $slug;
+        $path = trim((string) data_get($locationContext, 'path', ''));
+
+        if ($path === '') {
+            return $base;
+        }
+
+        if (str_starts_with($path, '/locations/')) {
+            return $base . Str::after($path, '/locations');
+        }
+
+        return $base;
+    }
+
+    private function buildStructuredBreadcrumbTrail(string $format, string $modality, array $locationContext = []): array
+    {
+        $seo = app(\App\Services\SeoStructureService::class);
+        $format = $seo->canonicalFormatKey($format);
+        $modalitySlug = $seo->categorySlug($modality);
+        $formatLabel = $seo->typeDefinition($format)['page_label'] ?? Str::headline($format);
+        $modalityLabel = $seo->categoryLabel($modalitySlug) ?: Str::headline(str_replace('-', ' ', $modalitySlug));
+
+        $crumbs = [
+            ['label' => 'Home', 'url' => url('/')],
+            ['label' => $formatLabel, 'url' => url('/' . $format)],
+            ['label' => $modalityLabel, 'url' => url('/' . $format . '/' . $modalitySlug)],
+        ];
+
+        $path = trim((string) data_get($locationContext, 'path', ''));
+        if ($path === '') {
+            return $crumbs;
+        }
+
+        $suffix = trim(Str::after($path, '/locations'), '/');
+        if ($suffix === '') {
+            return $crumbs;
+        }
+
+        $segments = array_values(array_filter(explode('/', $suffix)));
+        if ($segments === []) {
+            return $crumbs;
+        }
+
+        $base = '/' . $format . '/' . $modalitySlug;
+        $running = [];
+        foreach ($segments as $segment) {
+            $running[] = $segment;
+            $crumbs[] = [
+                'label' => Str::headline(str_replace('-', ' ', $segment)),
+                'url' => $base . '/' . implode('/', $running),
+            ];
+        }
+
+        return $crumbs;
+    }
+
+    private function normalizeNearMeSlug(string $value): string
+    {
+        $value = strtolower(trim($value));
+        $value = preg_replace('/-near-me$/', '', $value) ?? $value;
+
+        return trim($value);
     }
 
     private function specialNearMePages(): array
@@ -140,7 +277,7 @@ class SeoMoneyPageController extends Controller
                 ],
                 'related_links' => [
                     ['label' => 'Reiki sessions', 'href' => '/therapies/reiki'],
-                    ['label' => 'Holistic therapy near me', 'href' => '/holistic-therapy-near-me'],
+                    ['label' => 'Holistic therapy near me', 'href' => '/therapies'],
                     ['label' => 'Holistic therapies UK', 'href' => '/holistic-therapies-uk'],
                 ],
                 'faqs' => [
@@ -187,7 +324,7 @@ class SeoMoneyPageController extends Controller
                 ],
                 'related_links' => [
                     ['label' => 'Sound healing sessions', 'href' => '/therapies/sound-healing'],
-                    ['label' => 'Wellness classes near me', 'href' => '/wellness-classes-near-me'],
+                    ['label' => 'Wellness classes near me', 'href' => '/classes'],
                     ['label' => 'Holistic therapies UK', 'href' => '/holistic-therapies-uk'],
                 ],
                 'faqs' => [
@@ -233,8 +370,8 @@ class SeoMoneyPageController extends Controller
                     '/locations/united-kingdom/shire',
                 ],
                 'related_links' => [
-                    ['label' => 'Reiki near me', 'href' => '/reiki-near-me'],
-                    ['label' => 'Sound healing near me', 'href' => '/sound-healing-near-me'],
+                    ['label' => 'Reiki near me', 'href' => '/therapies/reiki'],
+                    ['label' => 'Sound healing near me', 'href' => '/therapies/sound-healing'],
                     ['label' => 'Holistic therapies UK', 'href' => '/holistic-therapies-uk'],
                 ],
                 'faqs' => [
@@ -280,8 +417,8 @@ class SeoMoneyPageController extends Controller
                     '/locations/united-kingdom/greater-london',
                 ],
                 'related_links' => [
-                    ['label' => 'Sound healing near me', 'href' => '/sound-healing-near-me'],
-                    ['label' => 'Holistic therapy near me', 'href' => '/holistic-therapy-near-me'],
+                    ['label' => 'Sound healing near me', 'href' => '/therapies/sound-healing'],
+                    ['label' => 'Holistic therapy near me', 'href' => '/therapies'],
                     ['label' => 'Therapies', 'href' => '/therapies'],
                 ],
                 'faqs' => [
@@ -332,9 +469,9 @@ class SeoMoneyPageController extends Controller
                 '/locations/united-kingdom/greater-manchester',
             ],
             'related_links' => [
-                ['label' => 'Reiki near me', 'href' => '/reiki-near-me'],
-                ['label' => 'Sound healing near me', 'href' => '/sound-healing-near-me'],
-                ['label' => 'Wellness classes near me', 'href' => '/wellness-classes-near-me'],
+                ['label' => 'Reiki near me', 'href' => '/therapies/reiki'],
+                ['label' => 'Sound healing near me', 'href' => '/therapies/sound-healing'],
+                ['label' => 'Wellness classes near me', 'href' => '/classes'],
             ],
             'faqs' => [
                 [
@@ -385,7 +522,7 @@ class SeoMoneyPageController extends Controller
                 '/locations/united-kingdom/manchester',
             ],
             'related_links' => [
-                ['label' => 'Holistic therapy near me', 'href' => '/holistic-therapy-near-me'],
+                ['label' => 'Holistic therapy near me', 'href' => '/therapies'],
                 ['label' => 'Holistic therapies UK', 'href' => '/holistic-therapies-uk'],
                 ['label' => 'Therapies', 'href' => '/therapies'],
             ],
@@ -953,6 +1090,134 @@ class SeoMoneyPageController extends Controller
         }
 
         return $page;
+    }
+
+    private function applyStructuredNearMeCopy(array $page, string $format, string $modality, string $locationLabel, bool $hasListings): array
+    {
+        $seo = app(\App\Services\SeoStructureService::class);
+        $modalityLabel = trim((string) ($page['schema_term_label'] ?? ''));
+        if ($modalityLabel === '') {
+            $modalityLabel = $seo->categoryLabel($modality) ?: $this->humanizeSlug($modality);
+        }
+
+        $formatLabel = $seo->typeDefinition($format)['page_label'] ?? Str::headline($format);
+        $titleTail = match ($format) {
+            'classes' => 'Local & Online Classes',
+            'events' => 'Local Wellness Events',
+            'workshops' => 'Local & Online Workshops',
+            'retreats' => 'Wellness Retreats',
+            default => 'Local & Online Therapies',
+        };
+
+        $titlePrefix = match ($format) {
+            'classes' => $modalityLabel . ' Classes Near Me in ' . $locationLabel,
+            'workshops' => $modalityLabel . ' Workshops Near Me in ' . $locationLabel,
+            'retreats' => $modalityLabel . ' Retreats Near Me in ' . $locationLabel,
+            default => $modalityLabel . ' Near Me in ' . $locationLabel,
+        };
+
+        $descriptionLocation = $locationLabel;
+        $descriptionPrefix = match (true) {
+            $locationLabel === 'the United Kingdom' => 'Find ' . $modalityLabel . ' across the United Kingdom',
+            default => 'Find ' . $modalityLabel . ' near ' . $descriptionLocation,
+        };
+
+        $noun = match ($format) {
+            'classes' => 'classes',
+            'events' => 'wellness events',
+            'workshops' => 'workshops',
+            'retreats' => 'wellness retreats',
+            default => 'therapy sessions',
+        };
+
+        $page['title'] = $titlePrefix . ' | ' . $titleTail . ' | We Offer Wellness®';
+        $page['description'] = $descriptionPrefix . ' with We Offer Wellness®. Browse local, nearby and online ' . $noun . ' from trusted practitioners.';
+        $page['h1'] = $modalityLabel . ' in ' . $locationLabel;
+        $page['intro'] = $hasListings
+            ? 'Looking for ' . $modalityLabel . ' near ' . $locationLabel . '? Discover local and nearby options from trusted practitioners on We Offer Wellness®, plus online sessions where available.'
+            : 'We do not currently have in-person ' . $modalityLabel . ' sessions listed directly in ' . $locationLabel . ', but you can browse online options, nearby locations and related wellbeing experiences from trusted practitioners on We Offer Wellness®.';
+        $page['highlights'] = $hasListings
+            ? [
+                'Local listings where available',
+                'Nearby towns and county pages',
+                'Online options for the same modality',
+            ]
+            : [
+                'Online options for the same modality',
+                'Nearby towns and county pages',
+                'Related wellbeing experiences',
+            ];
+        $page['search_helper'] = $hasListings
+            ? 'Enter a town, county or postcode to see what is available nearby.'
+            : 'Enter a town, county or postcode to see nearby and online options for this modality.';
+        $page['result_label'] = $hasListings ? 'Live listings' : 'Online & nearby options';
+        $page['result_intro'] = $hasListings
+            ? 'Browse the strongest matches available now.'
+            : 'Browse online options, nearby locations and related wellbeing experiences from trusted practitioners.';
+        $page['empty_state'] = $hasListings
+            ? 'No live listings matched this search yet. Use the therapy pages and location links above to keep browsing the current live catalogue.'
+            : 'We do not currently have direct local listings for this exact search, so start with online options, nearby towns and related format pages above.';
+        $page['related_links'] = [
+            ['label' => $formatLabel, 'href' => '/' . $format],
+            ['label' => $modalityLabel . ' pages', 'href' => '/' . $format . '/' . $modality],
+            ['label' => 'Online ' . $modalityLabel, 'href' => '/online/' . $modality],
+        ];
+        $page['faqs'] = $this->structuredNearMeFaqs($format, $modalityLabel, $locationLabel, $hasListings);
+        $page['seo_preserve_title'] = true;
+
+        return $page;
+    }
+
+    private function structuredNearMeFaqs(string $format, string $modalityLabel, string $locationLabel, bool $hasListings): array
+    {
+        $formatLabel = app(\App\Services\SeoStructureService::class)->typeDefinition($format)['page_label'] ?? Str::headline($format);
+        $opening = $hasListings
+            ? 'Yes. This page helps you browse ' . $modalityLabel . ' connected to ' . $locationLabel . ', including local listings where available, nearby sessions and online options.'
+            : 'This page still helps you browse ' . $modalityLabel . ' connected to ' . $locationLabel . ', including nearby sessions, online options and related wellbeing experiences.';
+
+        return [
+            [
+                'q' => 'Can I find ' . $modalityLabel . ' near ' . $locationLabel . '?',
+                'a' => $opening,
+            ],
+            [
+                'q' => 'What if there are no ' . $modalityLabel . ' sessions directly in ' . $locationLabel . '?',
+                'a' => 'If there are no in-person sessions listed directly in ' . $locationLabel . ', you can browse nearby locations, online sessions and related ' . strtolower($formatLabel) . ' from trusted practitioners.',
+            ],
+            [
+                'q' => 'Can I book ' . $modalityLabel . ' online?',
+                'a' => 'Many practitioners offer online sessions. Where online options are available, they appear alongside local and nearby listings.',
+            ],
+            [
+                'q' => 'How do I choose a ' . $modalityLabel . ' practitioner?',
+                'a' => 'Compare the session description, practitioner profile, format, price, availability and suitability notes. If you have health concerns, check suitability before booking.',
+            ],
+        ];
+    }
+
+    private function structuredNearMeLocationLabel(array $locationContext): string
+    {
+        $city = trim((string) ($locationContext['city'] ?? ''));
+        if ($city !== '') {
+            return $city;
+        }
+
+        $region = trim((string) ($locationContext['region'] ?? ''));
+        if ($region !== '') {
+            return $region;
+        }
+
+        $country = trim((string) ($locationContext['country'] ?? ''));
+        if ($country !== '') {
+            return strcasecmp($country, 'united kingdom') === 0 ? 'the United Kingdom' : $country;
+        }
+
+        $label = trim((string) ($locationContext['label'] ?? ''));
+        if ($label !== '') {
+            return $label;
+        }
+
+        return 'the United Kingdom';
     }
 
     private function locationContextByPath(array $catalog, string $path): ?array

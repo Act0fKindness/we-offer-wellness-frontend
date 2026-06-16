@@ -308,7 +308,7 @@ class WowEventsFeed
         }
         $summary = self::plainTextExcerpt((string) ($product->summary ?? $product->description ?? $product->body_html ?? ''), 160);
         $price = self::moneyValue($product->price ?? null);
-        $url = url('/offerings/' . $canonicalSlug);
+        $url = app(\App\Services\SeoStructureService::class)->canonicalProductUrl($product);
         $availability = $endAt && $endAt->lt(Carbon::now($timezone))
             ? 'https://schema.org/OutOfStock'
             : 'https://schema.org/InStock';
@@ -454,7 +454,7 @@ class WowEventsFeed
         }
         $summary = self::plainTextExcerpt((string) ($offering->summary ?? $bodySource), 160);
         $price = self::moneyValue($offering->price ?? null);
-        $url = url('/offerings/' . $canonicalSlug);
+        $url = app(\App\Services\SeoStructureService::class)->canonicalOfferingUrl($offering);
         $availability = $endAt && $endAt->lt(Carbon::now($timezone))
             ? 'https://schema.org/OutOfStock'
             : 'https://schema.org/InStock';

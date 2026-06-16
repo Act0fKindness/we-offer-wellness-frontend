@@ -9,36 +9,18 @@ use App\Support\ProductRanking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class OnlineController extends Controller
 {
     public function index(Request $request)
     {
-        $filters = [
-            'format'   => 'online',
-            'sort'     => (string) $request->query('sort', ''),
-            'page'     => max(1, (int) $request->query('page', 1)),
-            'per_page' => min(48, max(8, (int) $request->query('per_page', 24))),
-        ];
+        return $this->renderOnlinePage($request, '');
+    }
 
-        $results = $this->fetchOfferings($filters);
-
-        $hasFacets = (bool) (
-            $filters['sort'] ||
-            $request->has('page') ||
-            $request->has('per_page')
-        );
-
-        return view('online.index', [
-            'seo' => [
-                'title' => 'Online Experiences | We Offer Wellness™',
-                'description' => 'Join online wellness experiences from trusted practitioners — calming, convenient, and ready wherever you are.',
-                'robots' => $hasFacets ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/online'),
-            ],
-            'filters' => $filters,
-            'results' => $results,
-        ]);
+    public function show(Request $request, string $modality)
+    {
+        return $this->renderOnlinePage($request, Str::slug($modality));
     }
 
     private function fetchOfferings(array $query): array
@@ -52,7 +34,7 @@ class OnlineController extends Controller
 
     private function buildOfferingsPage(array $query): array
     {
-        $items = $this->localOnlineItems();
+        $items = $this->localOnlineItems((string) ($query['modality'] ?? ''));
         $sorted = ProductRanking::sortCollection($items, (string) ($query['sort'] ?? 'popular'))->values();
 
         $perPage = max(8, min((int) ($query['per_page'] ?? 24), 48));
@@ -77,7 +59,7 @@ class OnlineController extends Controller
         ];
     }
 
-    private function localOnlineItems(): Collection
+    private function localOnlineItems(string $modality = ''): Collection
     {
         $products = Product::query()
             ->withCount('reviews')
@@ -107,6 +89,9 @@ class OnlineController extends Controller
                 $product->source_version = 'v1-v2';
                 return $product;
             })
+            ->when($modality !== '', function (Collection $items) use ($modality) {
+                return $items->filter(fn (Product $product): bool => $this->matchesModality($product, $modality))->values();
+            })
             ->values();
 
         $offerings = OfferingV3::query()
@@ -129,9 +114,76 @@ class OnlineController extends Controller
                 $offering->source_version = 'v3';
                 return $offering;
             })
+            ->when($modality !== '', function (Collection $items) use ($modality) {
+                return $items->filter(fn (OfferingV3 $offering): bool => $this->matchesModality($offering, $modality))->values();
+            })
             ->values();
 
         return $products->concat($offerings)->values();
+    }
+
+    private function renderOnlinePage(Request $request, string $modality): \Illuminate\View\View
+    {
+        $modality = Str::slug($modality);
+        $filters = [
+            'format' => 'online',
+            'modality' => $modality,
+            'sort' => (string) $request->query('sort', ''),
+            'page' => max(1, (int) $request->query('page', 1)),
+            'per_page' => min(48, max(8, (int) $request->query('per_page', 24))),
+        ];
+
+        $results = $this->fetchOfferings($filters);
+        $label = $modality !== '' ? Str::headline(str_replace('-', ' ', $modality)) : 'Online';
+        $hasFacets = (bool) (
+            $filters['sort'] ||
+            $request->has('page') ||
+            $request->has('per_page')
+        );
+
+        return view('online.index', [
+            'seo' => [
+                'title' => ($modality !== '' ? $label . ' Online' : 'Online Experiences') . ' | We Offer Wellness™',
+                'description' => $modality !== ''
+                    ? 'Browse online ' . strtolower($label) . ' experiences from trusted practitioners — calm, convenient, and ready wherever you are.'
+                    : 'Join online wellness experiences from trusted practitioners — calming, convenient, and ready wherever you are.',
+                'robots' => $hasFacets ? 'noindex,follow' : 'index,follow',
+                'canonical' => $modality !== '' ? url('/online/' . $modality) : url('/online'),
+            ],
+            'filters' => $filters,
+            'results' => $results,
+            'modality' => $modality,
+            'modalityLabel' => $modality !== '' ? $label : 'Online',
+            'pageUrl' => $modality !== '' ? url('/online/' . $modality) : url('/online'),
+        ]);
+    }
+
+    private function matchesModality(mixed $item, string $modality): bool
+    {
+        $modality = Str::slug($modality);
+        if ($modality === '') {
+            return true;
+        }
+
+        $candidates = array_filter([
+            (string) data_get($item, 'category.slug', ''),
+            (string) data_get($item, 'category.name', ''),
+            (string) data_get($item, 'type.name', ''),
+            (string) data_get($item, 'product_type', ''),
+        ]);
+
+        foreach ($candidates as $candidate) {
+            $candidate = Str::slug((string) $candidate);
+            if ($candidate === '') {
+                continue;
+            }
+
+            if ($candidate === $modality || str_contains($candidate, $modality) || str_contains($modality, $candidate)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function rememberSafely(string $key, mixed $ttl, callable $callback): mixed

@@ -5,6 +5,144 @@
   <title>{{ $seo['title'] ?? (($therapy['title'] ?? 'Therapy').' | We Offer Wellness™') }}</title>
   @if(!empty($seo['description']))<meta name="description" content="{{ $seo['description'] }}">@endif
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
+  @php
+    $items = $results['items'] ?? collect();
+    if (!($items instanceof \Illuminate\Support\Collection)) {
+      $items = collect($items ?? []);
+    }
+    $schemaUrl = url('/therapies/' . ($therapy['slug'] ?? request()->route('slug')));
+    $schemaTitle = trim((string) ($therapy['title'] ?? 'Therapy'));
+    $schemaDescription = trim((string) ($seo['description'] ?? ('Browse ' . $schemaTitle . ' experiences and therapies.')));
+    $schemaTotalItems = (int) data_get($results, 'meta.total', 0);
+    $seoService = app(\App\Services\SeoStructureService::class);
+    $cleanText = static function ($value): string {
+      $text = trim((string) preg_replace('/\s+/', ' ', strip_tags((string) ($value ?? ''))));
+      return $text;
+    };
+
+    $schemaItemList = $items
+      ->values()
+      ->map(function ($product, $index) use ($seoService, $cleanText, $schemaTitle) {
+        $url = $seoService->canonicalProductUrl($product);
+        $title = trim((string) data_get($product, 'title', ''));
+        $image = method_exists($product, 'getFirstImageUrl') ? trim((string) $product->getFirstImageUrl()) : '';
+        $hasImage = method_exists($product, 'hasDisplayableImage')
+          ? (bool) $product->hasDisplayableImage()
+          : ($image !== '' && ! str_contains($image, 'no-product-image.jpg'));
+        $benefitText = data_get($product, 'benefit', data_get($product, 'summary', null));
+        $providerName = trim((string) (
+          data_get($product, 'vendor.vendor_name')
+          ?? data_get($product, 'vendor_name')
+          ?? ''
+        ));
+        $price = data_get($product, 'variants_min_price', data_get($product, 'price', null));
+        if (is_numeric($price) && (float) $price > 1000 && ((float) $price % 100) === 0.0) {
+          $price = (float) $price / 100;
+        }
+
+        $schemaItem = array_filter([
+          '@type' => 'Service',
+          '@id' => $url . '#service',
+          'name' => $title !== '' ? $title : 'Untitled',
+          'url' => $url,
+          'serviceType' => $schemaTitle,
+          'image' => $hasImage && $image !== '' ? [$image] : null,
+          'description' => $cleanText($benefitText) !== '' ? $cleanText($benefitText) : null,
+          'provider' => $providerName !== '' ? [
+            '@type' => 'Organization',
+            'name' => $providerName,
+          ] : null,
+          'offers' => is_numeric($price) && (float) $price > 0 ? [
+            '@type' => 'Offer',
+            'url' => $url,
+            'price' => number_format((float) $price, 2, '.', ''),
+            'priceCurrency' => 'GBP',
+            'availability' => 'https://schema.org/InStock',
+          ] : null,
+        ], static fn ($value) => $value !== null && $value !== '');
+
+        return [
+          '@type' => 'ListItem',
+          'position' => $index + 1,
+          'url' => $url,
+          'item' => $schemaItem,
+        ];
+      })
+      ->values()
+      ->all();
+
+    $schemaJsonLd = [
+      '@context' => 'https://schema.org',
+      '@graph' => [
+        [
+          '@type' => 'Organization',
+          '@id' => url('/') . '#organization',
+          'name' => 'We Offer Wellness®',
+          'url' => url('/'),
+          'logo' => [
+            '@type' => 'ImageObject',
+            'url' => 'https://www.weofferwellness.co.uk/cdn/shop/files/logo-google-icon_05080e3a-98e5-42cd-b479-3b443028308c.png',
+          ],
+          'sameAs' => [
+            'https://www.instagram.com/weofferwellness',
+            'https://www.tiktok.com/@weofferwellness',
+            'https://www.linkedin.com/company/weofferwellness',
+            'https://www.facebook.com/WeOfferWellness',
+          ],
+        ],
+        [
+          '@type' => 'WebSite',
+          '@id' => url('/') . '#website',
+          'url' => url('/'),
+          'name' => 'We Offer Wellness®',
+          'publisher' => [
+            '@id' => url('/') . '#organization',
+          ],
+        ],
+        [
+          '@type' => 'CollectionPage',
+          '@id' => $schemaUrl . '#webpage',
+          'url' => $schemaUrl,
+          'name' => $schemaTitle . ' | We Offer Wellness™',
+          'description' => $schemaDescription,
+          'isPartOf' => [
+            '@id' => url('/') . '#website',
+          ],
+          'publisher' => [
+            '@id' => url('/') . '#organization',
+          ],
+          'about' => [
+            '@id' => $schemaUrl . '#modality',
+          ],
+          'mainEntity' => [
+            '@id' => $schemaUrl . '#itemlist',
+          ],
+          'breadcrumb' => [
+            '@id' => $schemaUrl . '#breadcrumb',
+          ],
+          'inLanguage' => 'en-GB',
+        ],
+        [
+          '@type' => 'DefinedTerm',
+          '@id' => $schemaUrl . '#modality',
+          'name' => $schemaTitle,
+          'termCode' => ($therapy['slug'] ?? request()->route('slug')),
+          'inDefinedTermSet' => 'Wellness Modalities',
+        ],
+        [
+          '@type' => 'ItemList',
+          '@id' => $schemaUrl . '#itemlist',
+          'name' => $schemaTitle . ' therapy sessions',
+          'numberOfItems' => $schemaTotalItems > 0 ? $schemaTotalItems : count($schemaItemList),
+          'itemListOrder' => 'https://schema.org/ItemListOrderAscending',
+          'itemListElement' => $schemaItemList,
+        ],
+      ],
+    ];
+  @endphp
+  @once
+    <script type="application/ld+json">{!! json_encode($schemaJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}</script>
+  @endonce
 @endpush
 
 @section('content')
@@ -120,7 +258,7 @@
 @include('partials.breadcrumbs', [
   'crumbs' => [
     ['label' => 'Home', 'url' => url('/')],
-    ['label' => 'Modalities', 'url' => url('/therapies')],
+    ['label' => 'Therapies', 'url' => url('/therapies')],
     ['label' => $therapy['title'] ?? 'Therapy'],
   ],
   'schemaUrl' => url('/therapies/' . $slug),
@@ -140,6 +278,11 @@
         <a href="{{ route('therapies.index') }}" class="btn btn-light">All therapies</a>
       </div>
     </div>
+
+    @include('partials.guide_panel', [
+      'guidePanelModality' => $slug,
+      'guidePanelFormat' => 'therapies',
+    ])
 
     @include('partials.wow-filter-bar', [
       'action' => url('/therapies/' . $slug),

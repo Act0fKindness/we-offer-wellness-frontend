@@ -25,12 +25,13 @@
         ->all(),
     ];
     $slug = $slug ?? request()->route('slug');
-    $landingTitle = trim((string) ($landing['title'] ?? ''));
-    $landingCategory = trim((string) \Illuminate\Support\Str::headline((string) $slug));
-    $landingCrumbs = [
+  $landingTitle = trim((string) ($landing['title'] ?? ''));
+  $landingCategory = trim((string) \Illuminate\Support\Str::headline((string) $slug));
+  $landingSectionLabel = trim((string) \Illuminate\Support\Str::headline((string) ($type ?? 'therapies')));
+  $landingCrumbs = [
       ['label' => 'Home', 'url' => url('/')],
-      ['label' => 'Modalities', 'url' => url('/therapies')],
-    ];
+      ['label' => $landingSectionLabel !== '' ? $landingSectionLabel : 'Therapies', 'url' => url('/' . ($type ?? 'therapies'))],
+  ];
     if ($landingCategory !== '') {
       $landingCrumbs[] = ['label' => $landingCategory, 'url' => url('/' . $slug)];
     }
@@ -306,6 +307,7 @@
 @php
   $items = $products ?? collect();
   $landing = $landing ?? [];
+  $filters = is_array($filters ?? null) ? $filters : request()->query();
   $sortValue = (string) ($filters['sort'] ?? '');
   $formatValue = (string) ($filters['format'] ?? '');
   $locationValue = trim((string) ($filters['location'] ?? ''));
@@ -476,6 +478,11 @@
           @endif
         </div>
       </div>
+
+      @include('partials.guide_panel', [
+        'guidePanelModality' => request()->route('modality'),
+        'guidePanelFormat' => $type ?? null,
+      ])
     </div>
   </section>
 

@@ -8,9 +8,17 @@
 /* Desktop split: page scrolls the list; map stays sticky */
 @media (min-width: 992px){
   .results-scroll{ padding-right: 6px; }
-  .map-wrap{ position: relative; }
+  .map-wrap{ position: relative; border-radius: 13px; overflow: hidden; }
   /* Adjust height to account for header + search bar */
   .map{ width: 100%; height: calc(100vh - 80px - 67px); border: 1px solid var(--ink-200); border-radius: 3px; overflow: hidden; }
+}
+.search-page-shell{
+  position:relative;
+  overflow:visible;
+}
+.search-content-wrapper{
+  position:relative;
+  overflow:visible;
 }
 /* Segmented controls (search controls only) */
 .search-controls .seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
@@ -29,7 +37,7 @@
     border-radius: 19px;
     border:3px solid rgba(0,0,0,0.1);
     position: fixed;
-    top: 202px;
+    top: 126px;
     z-index: 30;
     left: 50%;
     transform: translateX(-50%);
@@ -83,6 +91,10 @@
 }
 /* Hide/show columns for list/map view at all widths */
 .search-layout.sr-list-only .col-map{ display:none; }
+.search-layout.sr-list-only .col-results{
+  flex: 0 0 100%;
+  max-width: 100%;
+}
 /* Toggle which card is shown per view */
 .search-layout .result-view-map{ display:block; }
 .search-layout .result-view-list{ display:none; }
@@ -127,13 +139,37 @@
 }
 /* Search-only card sizing */
 .search-layout .result-view-map .wow-card.md{
-  width: 100%;
-  max-width: none;
+  width: 280px;
+  max-width: 280px;
+  margin-inline: auto;
+}
+.search-layout .result-view-map .therapy-card{
+  width: 280px;
+}
+.search-layout .result-view-map .product-v4-ghost-card-scope .wow-card.md{
+  width: 280px;
+  max-width: 280px;
+  flex: 0 0 280px;
+  margin-inline: auto;
+}
+.search-layout .result-view-map .product-v4-ghost-card-scope .product-v4-ghost-card{
+  width: 280px;
 }
 .search-layout .result-view-list .wow-card.md{
   --card-h: 530px;
-  width: auto;
-  max-width: 309px;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+.search-layout .result-view-list .therapy-card{
+  width: 100%;
+}
+@media (min-width: 1600px){
+  /* Ultra-wide map view: 3 columns only above xxl */
+  .search-layout:not(.sr-list-only) .results-scroll .row > div{
+    flex:0 0 33.333333%;
+    max-width:33.333333%;
+  }
 }
 /* Search result tags styled like product badges */
 #sr-tags{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -163,6 +199,31 @@
 }
 .wow-ultra .pane.narrow::-webkit-scrollbar{ width:0; height:0 }
 .wow-ultra #search-top-who-pane .listy{ max-height: none; overflow: visible; }
+
+.wow-search-mobile-shell{
+  display:none;
+}
+
+@media (max-width: 1040px){
+  .wow-search-page-hero,
+  .wow-breadcrumbs{
+    display:none !important;
+  }
+
+  .wow-search-mobile-shell{
+    display:block;
+  }
+
+  .wow-search-desktop-shell{
+    display:none !important;
+  }
+}
+
+@media (min-width: 1041px){
+  .wow-search-mobile-shell{
+    display:none !important;
+  }
+}
 </style>
 
 @section('content')
@@ -179,45 +240,32 @@
   }
 @endphp
 
-@include('partials.breadcrumbs', [
-  'crumbs' => [
-    ['label' => 'Home', 'url' => url('/')],
-    ['label' => 'Search', 'url' => url('/search')],
-    ['label' => $searchBreadcrumb],
-  ],
-  'schemaUrl' => url()->full(),
-  'chips' => array_filter([
-    isset($resultCount) ? $resultCount . ' results' : null,
-    'Live listings',
-  ]),
-])
+<div class="search-page-shell pt-4 pb-2 bg-transparent">
+  <x-searchbar-v4 id-prefix="search-v4" :result-count="$resultCount" mobile-top-offset="80" />
 
-<section class="pt-4 pb-2 bg-transparent">
-  <div class="container-page">
-    <x-ultra-search-bar prefix="search-top" :show-seven-day-chip="true" />
-      <!-- Controls moved under search bar -->
-      <div class="search-controls d-flex align-items-center justify-content-between gap-2 mb-3 mt-2">
-        <div class="d-flex align-items-center gap-2">
-          <span class="font-semibold text-ink-800">View</span>
-          <div class="seg-group" role="tablist" aria-label="List or Map">
-              <button class="seg active" role="tab" aria-selected="true" data-view="map">Map</button>
-              <button class="seg" role="tab" aria-selected="false" data-view="list">List</button>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="font-semibold text-ink-800">Mode</span>
-          <div class="seg-group" role="tablist" aria-label="Map Mode">
-            <button class="seg" role="tab" aria-selected="false" data-mode="2d">2D</button>
-            <button class="seg active" role="tab" aria-selected="true" data-mode="3d">3D</button>
-          </div>
-        </div>
+  <div class="wow-search-mobile-shell">
+    @include('search.partials.mobile')
+  </div>
+
+  @include('partials.breadcrumbs', [
+    'crumbs' => [
+      ['label' => 'Home', 'url' => url('/')],
+      ['label' => 'Search', 'url' => url('/search')],
+      ['label' => $searchBreadcrumb],
+    ],
+    'schemaUrl' => url()->full(),
+    'renderVisual' => false,
+    'chips' => array_filter([
+      isset($resultCount) ? $resultCount . ' results' : null,
+      'Live listings',
+    ]),
+  ])
+
+  <div class="search-content-wrapper">
+      <div class="wow-search-desktop-shell">
+        @include('search.partials.desktop')
       </div>
   </div>
-</section>
-
-
-<div class="search-content-wrapper">
-    @include('search.partials.desktop')
 </div>
 
 @endsection

@@ -197,7 +197,7 @@
                 ? 'Online & studio'
                 : ($hasOnline ? 'Exclusively online' : (! empty($physicalLocations) ? 'Studio' : 'Session')),
             'filters' => array_values(array_unique($filters)),
-            'url' => url('/offerings/' . $product->id . '-' . Str::slug($title ?: (string) $product->id)),
+            'url' => app(\App\Services\SeoStructureService::class)->canonicalProductUrl($product),
             'badge' => $hasOnline && ! empty($physicalLocations)
                 ? 'Online & studio'
                 : ($hasOnline ? 'Exclusively online' : (empty($physicalLocations) ? 'Session' : 'Studio')),

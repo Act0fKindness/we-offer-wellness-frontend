@@ -10,6 +10,7 @@
     $mode = trim((string) ($offering['mode'] ?? ''));
     $bookingFlow = strtolower(trim((string) ($offering['booking_flow'] ?? 'flexible')));
     $sourceVersion = strtolower(trim((string) ($offering['source_version'] ?? '')));
+    $usesLegacyBuybox = false;
     $currency = strtoupper(trim((string) ($offering['currency'] ?? 'GBP')));
     $price = is_numeric($offering['price'] ?? null) ? (float) $offering['price'] : 0.0;
     $priceMin = is_numeric($offering['price_min'] ?? null) ? (float) $offering['price_min'] : $price;
@@ -290,6 +291,36 @@
             'price_option_id' => null,
         ];
     }
+    $sessionCountForLabel = static function (string $label): int {
+        if (preg_match('/(\d+)/', $label, $matches)) {
+            return max(1, (int) $matches[1]);
+        }
+
+        return 1;
+    };
+    $bestVariantIndex = null;
+    $bestVariantUnit = null;
+    foreach ($variantCards as $variantIndex => $variantCard) {
+        $sessionText = trim((string) ($variantCard['label'] ?? ''));
+        foreach (($variantCard['selection'] ?? []) as $selectionValue) {
+            $selectionValue = trim((string) $selectionValue);
+            if (preg_match('/session/i', $selectionValue) || preg_match('/^\d+$/', $selectionValue)) {
+                $sessionText = $selectionValue;
+                break;
+            }
+        }
+        $sessionCount = $sessionCountForLabel($sessionText);
+        $variantCards[$variantIndex]['session_count'] = $sessionCount;
+        $unitPrice = $sessionCount > 0 ? ((float) ($variantCard['price'] ?? 0) / $sessionCount) : (float) ($variantCard['price'] ?? 0);
+        $variantCards[$variantIndex]['unit_price'] = $unitPrice;
+        if ($bestVariantUnit === null || $unitPrice < $bestVariantUnit || ($unitPrice === $bestVariantUnit && $sessionCount > (int) ($variantCards[$bestVariantIndex]['session_count'] ?? 0))) {
+            $bestVariantUnit = $unitPrice;
+            $bestVariantIndex = $variantIndex;
+        }
+    }
+    if ($bestVariantIndex !== null && isset($variantCards[$bestVariantIndex])) {
+        $variantCards[$bestVariantIndex]['is_best_value'] = true;
+    }
 
     $selectedVariantId = (string) ($offering['selectedVariantId'] ?? ($variantCards[0]['id'] ?? ''));
     $selectedVariantCard = null;
@@ -372,6 +403,38 @@
         $safetyNotes,
         $contraindications,
     ]));
+    $guidePanel = null;
+    try {
+        $guideService = app(\App\Services\GuideRegistryService::class);
+        $seoService = app(\App\Services\SeoStructureService::class);
+        $guideModalityCandidates = array_values(array_filter(array_map('trim', [
+            (string) ($offering['modality'] ?? ''),
+            (string) data_get($offering, 'category.slug', ''),
+            (string) data_get($offering, 'category.name', ''),
+        ])));
+        $guideFormat = $seoService->canonicalFormatKey((string) ($offering['format'] ?? $type ?? $formatLabel ?? 'therapies'));
+        foreach ($guideModalityCandidates as $guideModalityCandidate) {
+            $guideHub = $guideService->modalityHub($guideFormat, $guideModalityCandidate);
+            if (! empty($guideHub)) {
+                $guidePanel = [
+                    'title' => (string) ($guideHub['h1'] ?? $guideHub['title'] ?? 'Related guides'),
+                    'eyebrow' => 'Explore guides',
+                    'summary' => (string) ($guideHub['intro'] ?? ''),
+                    'hub_url' => (string) data_get($guideHub, 'seo.canonical', ''),
+                    'hub_label' => 'Browse all guides',
+                    'links' => array_values((array) ($guideHub['popular_guides'] ?? [])),
+                ];
+                break;
+            }
+
+            $guidePanel = $guideService->modalityGuidePanel($guideModalityCandidate, $guideFormat);
+            if (! empty($guidePanel)) {
+                break;
+            }
+        }
+    } catch (\Throwable $e) {
+        $guidePanel = null;
+    }
     $offeringConfig = [
         'id' => (int) ($offering['id'] ?? 0),
         'title' => $title,
@@ -396,7 +459,8 @@
         'selectedVariantPrice' => $selectedVariantPrice,
         'selectedVariantPriceOptionId' => $selectedVariantPriceOptionId,
         'practitioner' => $practitioner,
-        'bookingEndpoint' => url('/api/booking/offering/' . (int) ($offering['id'] ?? 0)),
+        'sourceVersion' => $sourceVersion !== '' ? $sourceVersion : 'legacy',
+        'bookingEndpoint' => url('/api/booking/' . ($sourceVersion === 'v3' ? 'offering' : 'product') . '/' . (int) ($offering['id'] ?? 0)),
         'cartAddEndpoint' => url('/api/cart/add'),
         'cartUrl' => url('/cart'),
         'reservationHoldEndpoint' => url('/api/reservations/hold'),
@@ -627,6 +691,25 @@
         border: 1px solid var(--line);
         box-shadow: 0 22px 60px rgba(2, 18, 32, 0.22);
     }
+    .wow-v3-offering-page .legacy-buybox-shell {
+        align-self: end;
+        min-width: 0;
+    }
+    .wow-v3-offering-page .legacy-buybox-shell .container-wrap {
+        padding: 0 !important;
+    }
+    .wow-v3-offering-page .legacy-buybox-shell .buybox {
+        position: relative;
+        top: auto;
+        max-width: 380px;
+        margin-left: auto;
+    }
+    .wow-v3-offering-page .legacy-buybox-shell .buybox .card {
+        max-width: 380px;
+        border-radius: var(--radius);
+        border-color: var(--line);
+        box-shadow: 0 22px 60px rgba(2, 18, 32, 0.22);
+    }
     .wow-v3-offering-page .booking-top {
         display: flex;
         justify-content: space-between;
@@ -804,6 +887,18 @@
     .wow-v3-offering-page .custom-select-option.is-selected { background: var(--soft); }
     .wow-v3-offering-page .custom-select-option strong { font-weight: 400; font-size: 14px; }
     .wow-v3-offering-page .custom-select-option span { color: var(--muted); font-size: 12px; }
+    .wow-v3-offering-page .best-value-badge {
+        display: inline-flex;
+        width: fit-content;
+        margin-top: 5px;
+        padding: 4px 7px;
+        border-radius: var(--radius);
+        background: var(--green-soft);
+        border: 1px solid #cbe5da;
+        color: var(--green-dark);
+        font-size: 11px;
+        line-height: 1;
+    }
     .wow-v3-offering-page .availability-mode {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1229,6 +1324,39 @@
         padding: 0;
         background: transparent;
         color: inherit;
+    }
+    .wow-v3-offering-page .guide-card-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .wow-v3-offering-page .guide-card {
+        display: block;
+        min-height: 148px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--soft);
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .wow-v3-offering-page .guide-card:hover {
+        transform: translateY(-1px);
+        border-color: #cbe5da;
+        box-shadow: var(--shadow-soft);
+    }
+    .wow-v3-offering-page .guide-card strong {
+        display: block;
+        color: var(--ink);
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 500;
+    }
+    .wow-v3-offering-page .guide-card span {
+        display: block;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
     }
     .wow-v3-offering-page .map-section-layout {
         display: grid;
@@ -1876,6 +2004,7 @@
         .wow-v3-offering-page .quick-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .wow-v3-offering-page .gallery,
         .wow-v3-offering-page .split,
+        .wow-v3-offering-page .guide-card-grid,
         .wow-v3-offering-page .map-section-layout,
         .wow-v3-offering-page .location-modal-layout { grid-template-columns: 1fr; }
     }
@@ -2058,125 +2187,141 @@
                     </div>
                 </div>
 
-                <aside class="booking-panel" id="booking">
-                    <div class="booking-top">
-                        <div>
-                            <div class="price-label">From</div>
-                            <div class="price" id="panelPrice">{{ $priceSummary }}</div>
-                        </div>
-                        <span class="status-dot" id="statusDot">{{ $bookingSummaryLabel }}</span>
+                @if($usesLegacyBuybox)
+                    <div class="legacy-buybox-shell">
+                        @include('offering.partials.advanced_buybox')
                     </div>
-
-                    <button class="btn checkout-button mobile-panel-pick" type="button" data-open-booking>
-                        Choose location &amp; date
-                    </button>
-
-                    <div class="booking-fields" id="bookingFields">
-                        <label class="field-label">Location</label>
-
-                        <div class="selected-location-card">
+                @else
+                    <aside class="booking-panel" id="booking">
+                        <div class="booking-top">
                             <div>
-                                <strong id="selectedLocationTitle">{{ $selectedLocationLabel }}</strong>
-                                <span id="selectedLocationAddress">{{ $selectedLocationAddress }}</span>
+                                <div class="price-label">From</div>
+                                <div class="price" id="panelPrice">{{ $priceSummary }}</div>
                             </div>
-                            <button class="location-change-btn" type="button" data-open-locations>
-                                Change
-                            </button>
+                            <span class="status-dot" id="statusDot">{{ $bookingSummaryLabel }}</span>
                         </div>
 
-                        <div class="location-strip" aria-label="Available locations">
-                            @foreach($locations as $location)
-                                <button
-                                    class="location-chip {{ ($location['id'] ?? '') === $selectedLocationId ? 'is-active' : '' }}"
-                                    type="button"
-                                    data-location-chip="{{ $location['id'] }}"
-                                    data-location-label="{{ $location['label'] }}"
-                                >
-                                    {{ $location['label'] }}
+                        <button class="btn checkout-button mobile-panel-pick" type="button" data-open-booking>
+                            Choose location &amp; date
+                        </button>
+
+                        <div class="booking-fields" id="bookingFields">
+                            <label class="field-label">Location</label>
+
+                            <div class="selected-location-card">
+                                <div>
+                                    <strong id="selectedLocationTitle">{{ $selectedLocationLabel }}</strong>
+                                    <span id="selectedLocationAddress">{{ $selectedLocationAddress }}</span>
+                                </div>
+                                <button class="location-change-btn" type="button" data-open-locations>
+                                    Change
                                 </button>
-                            @endforeach
-                        </div>
+                            </div>
 
-                        <label class="field-label">Pick session</label>
-
-                        <div class="custom-select" id="sessionSelect">
-                            <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
-                                <span class="custom-select-value">
-                                    <strong id="sessionSelectTitle">{{ $selectedVariantLabel }}</strong>
-                                    <span id="sessionSelectMeta">{{ $variantCards[0]['meta'] ?? $selectedVariantLabel }} · {{ $priceSummary }}</span>
-                                </span>
-                                <span class="custom-select-arrow" aria-hidden="true"></span>
-                            </button>
-
-                            <div class="custom-select-list" role="listbox">
-                                @foreach($variantCards as $variantCard)
+                            <div class="location-strip" aria-label="Available locations">
+                                @foreach($locations as $location)
                                     <button
-                                        class="custom-select-option {{ $variantCard['id'] === $selectedVariantId ? 'is-selected' : '' }}"
+                                        class="location-chip {{ ($location['id'] ?? '') === $selectedLocationId ? 'is-active' : '' }}"
                                         type="button"
-                                        data-value="{{ $variantCard['id'] }}"
-                                        data-title="{{ $variantCard['label'] }}"
-                                        data-meta="{{ $variantCard['meta'] }}"
-                                        data-price="{{ $variantCard['price'] }}"
-                                        data-price-option-id="{{ $variantCard['price_option_id'] ?? '' }}"
-                                        data-selection="{{ implode('|', $variantCard['selection'] ?? []) }}"
+                                        data-location-chip="{{ $location['id'] }}"
+                                        data-location-label="{{ $location['label'] }}"
                                     >
-                                        <strong>{{ $variantCard['label'] }}</strong>
-                                        <span>{{ $variantCard['meta'] }} · {{ '£' . number_format((float) $variantCard['price'], 2) }}</span>
+                                        {{ $location['label'] }}
                                     </button>
                                 @endforeach
                             </div>
-                        </div>
 
-                        <label class="field-label">Availability</label>
+                            <label class="field-label">Pick session</label>
 
-                        <div class="availability-mode">
-                            <button class="availability-card is-selected" type="button" data-availability-mode="confirm">
-                                Confirm later
-                                <span>{{ $bookingFlow === 'live' ? 'Book now, confirm date later' : 'Book now and arrange after checkout' }}</span>
-                            </button>
-                            <button class="availability-card" type="button" data-availability-mode="pick">
-                                Pick Date &amp; Time
-                                <span>{{ $bookingFlow === 'live' ? 'Open calendar' : 'No live slots yet' }}</span>
-                            </button>
-                        </div>
+                            <div class="custom-select" id="sessionSelect">
+                                <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="custom-select-value">
+                                        <strong id="sessionSelectTitle">{{ $selectedVariantLabel }}</strong>
+                                        <span id="sessionSelectMeta">{{ $variantCards[0]['meta'] ?? $selectedVariantLabel }} · {{ $priceSummary }}</span>
+                                    </span>
+                                    <span class="custom-select-arrow" aria-hidden="true"></span>
+                                </button>
 
-                        <div class="selected-summary">
-                            <div class="selected-summary-row"><span>Location</span><strong id="summaryLocation">{{ $selectedLocationLabel }}</strong></div>
-                            <div class="selected-summary-row"><span>Session</span><strong id="summarySession">{{ $selectedVariantLabel }}</strong></div>
-                            <div class="selected-summary-row"><span>Date &amp; time</span><strong id="summaryDate">Confirm later</strong></div>
-                            <div class="selected-summary-row"><span>Confirmation</span><strong>Email confirmation</strong></div>
-                        </div>
-
-                        <div class="hold-banner" id="holdBanner">
-                            <span class="hourglass" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none">
-                                    <path d="M7 3h10M7 21h10M8 3v5c0 1.3.7 2.5 1.8 3.2L12 12.5l2.2-1.3C15.3 10.5 16 9.3 16 8V3M8 21v-5c0-1.3.7-2.5 1.8-3.2L12 11.5l2.2 1.3C15.3 13.5 16 14.7 16 16v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span>Held for <span id="holdTimer">10:00</span></span>
-                        </div>
-
-                        <div class="ticket-control">
-                            <div>
-                                <strong>Quantity</strong>
-                                <small>Instant email confirmation</small>
+                                <div class="custom-select-list" role="listbox">
+                                    @foreach($variantCards as $variantCard)
+                                        <button
+                                            class="custom-select-option {{ $variantCard['id'] === $selectedVariantId ? 'is-selected' : '' }}"
+                                            type="button"
+                                            data-value="{{ $variantCard['id'] }}"
+                                            data-title="{{ $variantCard['label'] }}"
+                                            data-meta="{{ $variantCard['meta'] }}"
+                                        data-price="{{ $variantCard['price'] }}"
+                                        data-price-option-id="{{ $variantCard['price_option_id'] ?? '' }}"
+                                        data-selection="{{ implode('|', $variantCard['selection'] ?? []) }}"
+                                        data-best-value="{{ ! empty($variantCard['is_best_value']) ? '1' : '0' }}"
+                                        data-unit-price="{{ $variantCard['unit_price'] ?? '' }}"
+                                    >
+                                        <strong>{{ $variantCard['label'] }}</strong>
+                                        <span>
+                                            {{ $variantCard['meta'] }} · {{ '£' . number_format((float) $variantCard['price'], 2) }}
+                                            @if(($variantCard['session_count'] ?? 1) > 1)
+                                                · {{ '£' . number_format((float) ($variantCard['unit_price'] ?? 0), 2) }}/session
+                                            @endif
+                                        </span>
+                                        @if(! empty($variantCard['is_best_value']))
+                                            <em class="best-value-badge">Best value</em>
+                                        @endif
+                                    </button>
+                                @endforeach
+                                </div>
                             </div>
 
-                            <div class="qty" aria-label="Quantity">
-                                <button type="button" id="minusQty">−</button>
-                                <span id="qtyValue">1</span>
-                                <button type="button" id="plusQty">+</button>
+                            <label class="field-label" id="availabilityFieldLabel">Availability</label>
+
+                            <div class="availability-mode">
+                                <button class="availability-card is-selected" type="button" data-availability-mode="confirm">
+                                    Confirm later
+                                    <span id="confirmAvailabilityCopy">Book now, confirm date later</span>
+                                </button>
+                                <button class="availability-card" type="button" data-availability-mode="pick">
+                                    <span id="pickAvailabilityTitle">Pick Date &amp; Time</span>
+                                    <span id="pickAvailabilityCopy">Open calendar</span>
+                                </button>
+                            </div>
+
+                            <div class="selected-summary">
+                                <div class="selected-summary-row"><span>Location</span><strong id="summaryLocation">{{ $selectedLocationLabel }}</strong></div>
+                                <div class="selected-summary-row"><span>Session</span><strong id="summarySession">{{ $selectedVariantLabel }}</strong></div>
+                                <div class="selected-summary-row"><span>Date &amp; time</span><strong id="summaryDate">Confirm later</strong></div>
+                                <div class="selected-summary-row"><span>Confirmation</span><strong>Email confirmation</strong></div>
+                            </div>
+
+                            <div class="hold-banner" id="holdBanner">
+                                <span class="hourglass" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M7 3h10M7 21h10M8 3v5c0 1.3.7 2.5 1.8 3.2L12 12.5l2.2-1.3C15.3 10.5 16 9.3 16 8V3M8 21v-5c0-1.3.7-2.5 1.8-3.2L12 11.5l2.2 1.3C15.3 13.5 16 14.7 16 16v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span>Held for <span id="holdTimer">10:00</span></span>
+                            </div>
+
+                            <div class="ticket-control">
+                                <div>
+                                    <strong>Quantity</strong>
+                                    <small>Instant email confirmation</small>
+                                </div>
+
+                                <div class="qty" aria-label="Quantity">
+                                    <button type="button" id="minusQty">−</button>
+                                    <span id="qtyValue">1</span>
+                                    <button type="button" id="plusQty">+</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="desktop-booking-buttons">
-                        <button class="btn secondary-checkout" type="button" id="desktopSecondaryAction">Add to basket</button>
-                        <button class="btn checkout-button" type="button" id="desktopPrimaryAction">Book now</button>
-                    </div>
+                        <div class="desktop-booking-buttons">
+                            <button class="btn secondary-checkout" type="button" id="desktopSecondaryAction">Add to basket</button>
+                            <button class="btn checkout-button" type="button" id="desktopPrimaryAction">Book now</button>
+                        </div>
 
-                    <p class="secure-note">Secure checkout. Email confirmation. Live booking support where available.</p>
-                </aside>
+                        <p class="secure-note">Secure checkout. Email confirmation. Live booking support where available.</p>
+                    </aside>
+                @endif
             </div>
         </section>
     </header>
@@ -2256,18 +2401,48 @@
                 </div>
             </section>
 
-            <section class="section">
-                <div class="split">
-                    <article class="info-panel">
-                        <h3>What’s included</h3>
-                        {!! $renderRichHtml($included ?: ('Your booking includes a ' . $durationLabel . ' session with email confirmation after checkout.')) !!}
-                    </article>
-                    <article class="info-panel">
-                        <h3>What to expect</h3>
-                        {!! $renderRichHtml($whatToExpect ?: 'Further details will be confirmed with the practitioner after checkout.') !!}
-                    </article>
-                </div>
-            </section>
+            @if(!empty($guidePanel))
+                <section class="section" id="related-guides">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">{{ $guidePanel['eyebrow'] ?? 'Explore guides' }}</p>
+                            <h2>{{ $guidePanel['title'] ?? 'Related guides' }}</h2>
+                            @if(!empty($guidePanel['summary']))
+                                <p class="section-intro">{{ $guidePanel['summary'] }}</p>
+                            @endif
+                        </div>
+                        @if(!empty($guidePanel['hub_url']))
+                            <a class="btn btn-primary" href="{{ $guidePanel['hub_url'] }}">{{ $guidePanel['hub_label'] ?? 'Browse guides' }}</a>
+                        @endif
+                    </div>
+
+                    @if(!empty($guidePanel['links']))
+                        <div class="guide-card-grid">
+                            @foreach($guidePanel['links'] as $guideLink)
+                                <a class="guide-card" href="{{ $guideLink['url'] ?? '#' }}">
+                                    <strong>{{ $guideLink['title'] ?? $guideLink['label'] ?? 'Guide' }}</strong>
+                                    @if(!empty($guideLink['summary']))
+                                        <span>{{ $guideLink['summary'] }}</span>
+                                    @endif
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </section>
+            @else
+                <section class="section">
+                    <div class="split">
+                        <article class="info-panel">
+                            <h3>What’s included</h3>
+                            {!! $renderRichHtml($included ?: ('Your booking includes a ' . $durationLabel . ' session with email confirmation after checkout.')) !!}
+                        </article>
+                        <article class="info-panel">
+                            <h3>What to expect</h3>
+                            {!! $renderRichHtml($whatToExpect ?: 'Further details will be confirmed with the practitioner after checkout.') !!}
+                        </article>
+                    </div>
+                </section>
+            @endif
 
             <section class="section" id="locations">
                 <div class="section-heading">
@@ -2379,7 +2554,7 @@
                     </div>
                 @endif
 
-                <a class="btn btn-primary practitioner-profile-link" href="{{ $practitionerProfileUrl !== '' ? $practitionerProfileUrl : url('/offerings') }}">
+                <a class="btn btn-primary practitioner-profile-link" href="{{ $practitionerProfileUrl !== '' ? $practitionerProfileUrl : url('/therapies') }}">
                     View profile
                 </a>
             </div>
@@ -2406,6 +2581,7 @@
         </aside>
     </div>
 
+    @if(! $usesLegacyBuybox)
     <div class="mobile-ticket-bar" id="mobileTicketBar">
         <div>
             <strong id="mobilePrice">{{ $priceSummary }}</strong>
@@ -2534,8 +2710,10 @@
             <button class="btn checkout-button" type="button" id="confirmLocationModal">Use selected location</button>
         </div>
     </section>
+    @endif
 </div>
 
+@if(! $usesLegacyBuybox)
 @push('scripts')
 <script data-cfasync="false" src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
 <script>
@@ -2643,10 +2821,15 @@
     const desktopMapBox = page.querySelector('#desktopMapBox');
     const desktopMapEl = page.querySelector('#desktopMap');
     const onlineVideo = page.querySelector('#desktopOnlineVideo');
+    const availabilityFieldLabel = page.querySelector('#availabilityFieldLabel');
+    const pickAvailabilityTitle = page.querySelector('#pickAvailabilityTitle');
+    const pickAvailabilityCopy = page.querySelector('#pickAvailabilityCopy');
+    const confirmAvailabilityCopy = page.querySelector('#confirmAvailabilityCopy');
     const mobileMapBarVisibleClass = 'wow-v3-mobile-ticket-visible';
 
     const locations = Array.isArray(config.locations) ? config.locations : [];
     const variants = Array.isArray(config.variants) ? config.variants : [];
+    const sourceVersion = config.sourceVersion || 'legacy';
 
     let selectedLocationId = config.selectedLocationId || (locations[0] && locations[0].id) || 'loc-online';
     let pendingLocationId = selectedLocationId;
@@ -2674,6 +2857,7 @@
     let bookingPayload = null;
     let slotsByDay = {};
     let reservationHolds = {};
+    let requestMode = false;
     let bookingTimezone = 'Europe/London';
     let bookingDurationMinutes = Number(config.durationMinutes || 60) || 60;
     let desktopMap = null;
@@ -2709,6 +2893,64 @@
 
     function pad(num) {
         return String(num).padStart(2, '0');
+    }
+
+    function dateKeyFromDate(date) {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    function hasAnySlots(slotMap) {
+        return Object.values(slotMap || {}).some(day => Array.isArray(day?.slots) && day.slots.length > 0);
+    }
+
+    function generateRequestSlots() {
+        const generated = {};
+        const earliest = new Date(Date.now() + (72 * 60 * 60 * 1000));
+        const cursor = new Date(earliest);
+        cursor.setHours(0, 0, 0, 0);
+        const end = new Date(cursor);
+        end.setDate(end.getDate() + 56);
+
+        while (cursor <= end) {
+            const day = cursor.getDay();
+            if (day >= 1 && day <= 5) {
+                const dateKey = dateKeyFromDate(cursor);
+                const slots = [];
+                for (let hour = 9; hour <= 17; hour += 1) {
+                    const slotDate = new Date(cursor);
+                    slotDate.setHours(hour, 0, 0, 0);
+                    if (slotDate.getTime() < earliest.getTime()) {
+                        continue;
+                    }
+                    slots.push({
+                        start: `${pad(hour)}:00`,
+                        iso: slotDate.toISOString(),
+                        request: true,
+                    });
+                }
+                if (slots.length) {
+                    generated[dateKey] = { slots };
+                }
+            }
+            cursor.setDate(cursor.getDate() + 1);
+        }
+
+        return generated;
+    }
+
+    function syncAvailabilityCopy() {
+        if (availabilityFieldLabel) {
+            availabilityFieldLabel.textContent = requestMode ? 'Request day/time' : 'Availability';
+        }
+        if (confirmAvailabilityCopy) {
+            confirmAvailabilityCopy.textContent = 'Book now, confirm date later';
+        }
+        if (pickAvailabilityTitle) {
+            pickAvailabilityTitle.textContent = requestMode ? 'Request Date' : 'Pick Date & Time';
+        }
+        if (pickAvailabilityCopy) {
+            pickAvailabilityCopy.textContent = requestMode ? 'Weekdays, 9am-5pm' : 'Open calendar';
+        }
     }
 
     function formatDateLabel(dateKey) {
@@ -2776,30 +3018,28 @@
             localStorage.setItem('wow_cart_v1', JSON.stringify(nextBag));
         } catch (e) {}
 
-        const cookieBag = {};
-        items.forEach(item => {
-            cookieBag[String(item.id)] = {
-                id: item.id,
-                product_id: item.product_id || null,
-                variant_id: item.variant_id || null,
-                variant_label: item.variant_label || '',
-                title: item.title || '',
-                price: Number(item.price) || 0,
-                qty: Number(item.qty) || 1,
-                image: item.image || null,
-                url: item.url || '#',
-                meta: item.meta || {},
-                booking: item.booking || {},
-                selected: Array.isArray(item.selected) ? item.selected : [],
-                group_count: item.group_count ?? null,
-                reservation_id: item.reservation_id ?? null,
-                hold_expires_at: item.hold_expires_at ?? null,
-                location: item.location || null,
-                options: Array.isArray(item.options) ? item.options : [],
-                source_version: item.source_version || null,
-            };
-        });
-        cookieSet('wow_cart', JSON.stringify(cookieBag), 60 * 60 * 24 * 30);
+        const cookieItems = items.map(item => ({
+            id: String(item.id),
+            product_id: item.product_id || null,
+            variant_id: item.variant_id || null,
+            variant_label: item.variant_label || '',
+            title: item.title || '',
+            price: Number(item.price) || 0,
+            qty: Number(item.qty) || 1,
+            image: item.image || null,
+            url: item.url || '#',
+        }));
+        if (cookieItems.length) {
+            try {
+                document.cookie = 'wow_cart=; Path=/; Max-Age=0; SameSite=Lax';
+                document.cookie = 'wow_cart=' + encodeURIComponent(JSON.stringify(cookieItems)) + '; Domain=.weofferwellness.co.uk; Path=/; Max-Age=' + (60 * 60 * 24 * 30) + '; SameSite=Lax';
+            } catch (e) {}
+        } else {
+            try {
+                document.cookie = 'wow_cart=; Path=/; Max-Age=0; SameSite=Lax';
+                document.cookie = 'wow_cart=; Domain=.weofferwellness.co.uk; Path=/; Max-Age=0; SameSite=Lax';
+            } catch (e) {}
+        }
         try {
             window.dispatchEvent(new CustomEvent('wow:cart:change', { detail: { items, count: items.reduce((sum, it) => sum + (Number(it.qty) || 0), 0), source: 'v3-offering' } }));
         } catch (e) {}
@@ -3013,7 +3253,13 @@
             option.classList.toggle('is-selected', isSelected);
         });
         if (sessionTitle) sessionTitle.textContent = selectedVariantLabel;
-        if (sessionMeta) sessionMeta.textContent = `${selectedVariant?.meta || selectedVariantLabel} · ${money(selectedVariantPrice)}`;
+        if (sessionMeta) {
+            const unitPrice = Number(selectedVariant?.unit_price || 0);
+            const sessionCount = Number(selectedVariant?.session_count || 1);
+            const suffix = sessionCount > 1 && unitPrice > 0 ? ` · ${money(unitPrice)}/session` : '';
+            const best = selectedVariant?.is_best_value ? ' · Best value' : '';
+            sessionMeta.textContent = `${selectedVariant?.meta || selectedVariantLabel} · ${money(selectedVariantPrice)}${suffix}${best}`;
+        }
     }
 
     function dateIsInRange(dateKey) {
@@ -3106,17 +3352,17 @@
             placeholder.style.cursor = 'default';
             placeholder.textContent = bookingPayload?.slotsByDay && Object.keys(bookingPayload.slotsByDay).length
                 ? 'No slots on this date'
-                : 'No live slots';
+                : (requestMode ? 'No request times on this date' : 'No live slots');
             timeOptions.appendChild(placeholder);
             if (dateTimeHelper) {
                 dateTimeHelper.textContent = bookingPayload?.slotsByDay && Object.keys(bookingPayload.slotsByDay).length
                     ? 'Pick another date.'
-                    : 'No live slots are currently published. Confirm later if you want to book now.';
+                    : (requestMode ? 'Choose another weekday request time.' : 'No live slots are currently published. Confirm later if you want to book now.');
             }
             if (dateTimeFooterNote) {
                 dateTimeFooterNote.textContent = bookingPayload?.slotsByDay && Object.keys(bookingPayload.slotsByDay).length
                     ? 'Pick another date.'
-                    : 'No live slots are currently published.';
+                    : (requestMode ? 'Choose another weekday request time.' : 'No live slots are currently published.');
             }
             return;
         }
@@ -3150,21 +3396,21 @@
         });
 
         if (dateTimeHelper) {
-            dateTimeHelper.textContent = selectedDateKey ? `${formatDateLabel(dateKey)} — select a time` : 'Pick a date, then choose a time.';
+            dateTimeHelper.textContent = selectedDateKey ? `${formatDateLabel(dateKey)} — select a time` : (requestMode ? 'Pick a weekday, then choose a preferred time.' : 'Pick a date, then choose a time.');
         }
         if (dateTimeFooterNote) {
-            dateTimeFooterNote.textContent = selectedDateKey ? `${formatDateLabel(dateKey)} — select a time` : 'Pick a date, then choose a time.';
+            dateTimeFooterNote.textContent = selectedDateKey ? `${formatDateLabel(dateKey)} — select a time` : (requestMode ? 'Pick a weekday, then choose a preferred time.' : 'Pick a date, then choose a time.');
         }
     }
 
     function renderDateTimeModalState() {
         if (!selectedDateKey) {
             dateTimeHelper.textContent = bookingPayload?.slotsByDay && Object.keys(bookingPayload.slotsByDay).length
-                ? 'Pick a date, then choose a time.'
-                : 'No live slots are currently published.';
+                ? (requestMode ? 'Pick a weekday, then choose a preferred time.' : 'Pick a date, then choose a time.')
+                : (requestMode ? 'Pick a weekday, then choose a preferred time.' : 'No live slots are currently published.');
             dateTimeFooterNote.textContent = bookingPayload?.slotsByDay && Object.keys(bookingPayload.slotsByDay).length
-                ? 'Pick a date, then choose a time.'
-                : 'No live slots are currently published.';
+                ? (requestMode ? 'Pick a weekday, then choose a preferred time.' : 'Pick a date, then choose a time.')
+                : (requestMode ? 'Pick a weekday, then choose a preferred time.' : 'No live slots are currently published.');
             confirmDateTime.disabled = true;
             renderCalendarMonth();
             return;
@@ -3229,6 +3475,11 @@
             bookingPayload = json.bookingPayload || null;
             slotsByDay = bookingPayload?.slotsByDay || {};
             reservationHolds = bookingPayload?.reservationHolds || {};
+            requestMode = !hasAnySlots(slotsByDay);
+            if (requestMode) {
+                slotsByDay = generateRequestSlots();
+                reservationHolds = {};
+            }
             bookingTimezone = bookingPayload?.availabilitySettings?.timezone || 'Europe/London';
             bookingDurationMinutes = Number(bookingPayload?.duration || config.durationMinutes || 60) || 60;
             const keys = Object.keys(slotsByDay).sort();
@@ -3239,11 +3490,17 @@
             slotsByDay = {};
             reservationHolds = {};
             bookingPayload = null;
+            requestMode = true;
+            slotsByDay = generateRequestSlots();
             minAvailableDate = null;
             maxAvailableDate = null;
-            bookingMonth = new Date();
+            const keys = Object.keys(slotsByDay).sort();
+            minAvailableDate = keys[0] || null;
+            maxAvailableDate = keys[keys.length - 1] || null;
+            bookingMonth = minAvailableDate ? parseDateKey(minAvailableDate) : new Date();
         }
 
+        syncAvailabilityCopy();
         renderCalendarMonth();
         renderTimeOptions(selectedDateKey || minAvailableDate || '');
         renderDateTimeModalState();
@@ -3315,6 +3572,7 @@
             booking: {
                 mode: selectedAvailabilityMode,
                 booking_flow: config.bookingFlow || 'flexible',
+                request_mode: requestMode,
                 date: selectedDateKey,
                 time: selectedTime,
                 date_label: selectedDateKey ? formatDateLabel(selectedDateKey) : null,
@@ -3332,7 +3590,7 @@
             hold_expires_at: holdExpiresAt,
             location: selectedLocationId,
             meta: {
-                source_version: 'v3',
+                source_version: sourceVersion,
                 product_id: offeringId,
                 variant_id: selectedVariantId || null,
                 variant_label: selectedVariantLabel,
@@ -3340,6 +3598,7 @@
                 booking: {
                     mode: selectedAvailabilityMode,
                     booking_flow: config.bookingFlow || 'flexible',
+                    request_mode: requestMode,
                     date: selectedDateKey,
                     time: selectedTime,
                     date_label: selectedDateKey ? formatDateLabel(selectedDateKey) : null,
@@ -3360,7 +3619,7 @@
                 duration: config.durationLabel || '',
                 title: config.title || '',
             },
-            source_version: 'v3',
+            source_version: sourceVersion,
         };
     }
 
@@ -3386,7 +3645,7 @@
                     qty: lineItem.qty,
                     variant_id: lineItem.variant_id,
                     variant_label: lineItem.variant_label,
-                    source_version: 'v3',
+                    source_version: sourceVersion,
                     product_id: offeringId,
                     title: lineItem.title,
                     price: lineItem.price,
@@ -3408,6 +3667,11 @@
     async function reserveSelectedSlot() {
         if (selectedAvailabilityMode !== 'pick' || !selectedDateKey || !selectedTime) {
             return false;
+        }
+
+        if (requestMode) {
+            clearHoldState();
+            return true;
         }
 
         if (reservationId || holdActive) {
@@ -3930,3 +4194,4 @@
 })();
 </script>
 @endpush
+@endif

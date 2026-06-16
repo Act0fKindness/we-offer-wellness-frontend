@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 
 class SeoStructureService
 {
+    private const CANONICAL_FORMATS = ['therapies', 'classes', 'events', 'workshops', 'retreats'];
+
     private const TYPE_DEFINITIONS = [
         'therapies' => [
             'singular' => 'therapy',
@@ -301,6 +303,93 @@ class SeoStructureService
         };
     }
 
+    public function canonicalFormatKey(string $format): string
+    {
+        $format = $this->canonicalTypeKey($format);
+
+        return in_array($format, self::CANONICAL_FORMATS, true) ? $format : 'therapies';
+    }
+
+    public function formatPageUrl(string $format): string
+    {
+        return url('/' . $this->canonicalFormatKey($format));
+    }
+
+    public function modalityPageUrl(string $format, string $modality): string
+    {
+        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality));
+    }
+
+    public function modalityLocationPageUrl(string $format, string $modality, string $country, string $county, string $town): string
+    {
+        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/' . implode('/', array_map(
+            fn (string $segment): string => $this->locationSlugSegment($segment),
+            [$country, $county, $town]
+        )));
+    }
+
+    public function onlineModalityOfferingUrl(string $modality, string $offeringSlug): string
+    {
+        return url('/online/' . $this->categorySlug($modality) . '/' . $this->slugify($offeringSlug));
+    }
+
+    public function modalityOfferingUrl(string $format, string $modality, string $offeringSlug): string
+    {
+        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/' . $this->slugify($offeringSlug));
+    }
+
+    public function modalityOfferingLocationUrl(string $format, string $modality, string $country, string $county, string $town, string $offeringSlug): string
+    {
+        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/' . implode('/', array_map(
+            fn (string $segment): string => $this->locationSlugSegment($segment),
+            [$country, $county, $town]
+        )) . '/' . $this->slugify($offeringSlug));
+    }
+
+    public function canonicalProductUrl(mixed $product): string
+    {
+        if ($product instanceof OfferingV3) {
+            return $this->canonicalOfferingUrl($product);
+        }
+
+        $format = $this->inferFormatKeyFromProduct($product);
+        $modality = $this->inferModalitySlugFromProduct($product);
+        $slug = $this->offeringSlugFromProduct($product);
+
+        // Product and offering detail canonicals always use the public
+        // format/modality path. /online/... remains a legacy redirect source.
+        return $this->modalityOfferingUrl($format, $modality, $slug);
+    }
+
+    public function canonicalOfferingUrl(OfferingV3 $offering): string
+    {
+        $format = $this->inferFormatKeyFromOffering($offering);
+        $modality = $this->inferModalitySlugFromOffering($offering);
+        $slug = $this->offeringSlugFromOffering($offering);
+
+        return $this->modalityOfferingUrl($format, $modality, $slug);
+    }
+
+    public function guidesIndexUrl(): string
+    {
+        return url('/guides');
+    }
+
+    public function formatGuidesUrl(string $format): string
+    {
+        return url('/' . $this->canonicalFormatKey($format) . '/guides');
+    }
+
+    public function modalityGuidesUrl(string $format, string $modality): string
+    {
+        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/guides');
+    }
+
+    public function guideUrl(string $format, string $modality, string $guideSlug): string
+    {
+        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/guides/' . $this->slugify($guideSlug));
+    }
+
     public function typePageCopy(string $type): array
     {
         $definition = $this->typeDefinition($type);
@@ -348,6 +437,13 @@ class SeoStructureService
     public function categorySlug(string $category): string
     {
         return Str::slug(str_replace(['_', '+'], '-', trim($category)));
+    }
+
+    public function slugify(string $value): string
+    {
+        $value = Str::slug(trim($value));
+
+        return $value !== '' ? $value : 'item';
     }
 
     public function categoryNoun(string $type, string $category): string
@@ -448,12 +544,12 @@ class SeoStructureService
         return 'therapies';
     }
 
-    public function inferTypeKeyFromProduct(Product $product): string
+    public function inferTypeKeyFromProduct(mixed $product): string
     {
         return $this->inferTypeKeyFromText(implode(' ', array_filter([
-            (string) ($product->product_type ?? ''),
-            (string) ($product->tags_list ?? ''),
-            (string) optional($product->category)->name,
+            (string) data_get($product, 'product_type', ''),
+            (string) data_get($product, 'tags_list', ''),
+            (string) data_get($product, 'category.name', ''),
             (string) data_get($product, 'meta_json.therapy_slug', ''),
         ])));
     }
@@ -466,5 +562,91 @@ class SeoStructureService
             (string) ($offering->title ?? ''),
             (string) ($offering->summary ?? ''),
         ])));
+    }
+
+    public function inferFormatKeyFromProduct(mixed $product): string
+    {
+        return $this->canonicalFormatKey($this->inferTypeKeyFromProduct($product));
+    }
+
+    public function inferFormatKeyFromOffering(OfferingV3 $offering): string
+    {
+        return $this->canonicalFormatKey($this->inferTypeKeyFromOffering($offering));
+    }
+
+    public function inferModalitySlugFromProduct(mixed $product): string
+    {
+        $category = trim((string) data_get($product, 'category.slug', ''));
+        if ($category !== '') {
+            return $this->categorySlug($category);
+        }
+
+        $categoryName = trim((string) data_get($product, 'category.name', ''));
+        if ($categoryName !== '') {
+            return $this->categorySlug($categoryName);
+        }
+
+        $therapySlug = trim((string) data_get($product, 'meta_json.therapy_slug', ''));
+        if ($therapySlug !== '') {
+            return $this->categorySlug($therapySlug);
+        }
+
+        return $this->categorySlug((string) (data_get($product, 'handle') ?: data_get($product, 'title') ?: data_get($product, 'id')));
+    }
+
+    public function inferModalitySlugFromOffering(OfferingV3 $offering): string
+    {
+        $category = trim((string) optional($offering->category)->slug);
+        if ($category !== '') {
+            return $this->categorySlug($category);
+        }
+
+        $categoryName = trim((string) optional($offering->category)->name);
+        if ($categoryName !== '') {
+            return $this->categorySlug($categoryName);
+        }
+
+        return $this->categorySlug((string) ($offering->slug ?: $offering->title ?: $offering->id));
+    }
+
+    public function offeringSlugFromProduct(mixed $product): string
+    {
+        return $this->slugify((string) (data_get($product, 'title') ?: data_get($product, 'handle') ?: data_get($product, 'id')));
+    }
+
+    public function offeringSlugFromOffering(OfferingV3 $offering): string
+    {
+        return $this->slugify((string) ($offering->slug ?: $offering->title ?: $offering->id));
+    }
+
+    public function isOnlineOnlyProduct(mixed $product): bool
+    {
+        $locations = method_exists($product, 'getLocations') ? (array) $product->getLocations() : (array) data_get($product, 'locations', []);
+        if ($locations === []) {
+            return false;
+        }
+
+        $hasOnline = in_array('Online', $locations, true);
+        $physical = array_values(array_filter($locations, fn ($location): bool => strtolower(trim((string) $location)) !== 'online' && trim((string) $location) !== ''));
+
+        return $hasOnline && $physical === [];
+    }
+
+    public function isOnlineOnlyOffering(OfferingV3 $offering): bool
+    {
+        $locations = method_exists($offering, 'getLocations') ? (array) $offering->getLocations() : [];
+        if ($locations === []) {
+            return false;
+        }
+
+        $hasOnline = in_array('Online', $locations, true);
+        $physical = array_values(array_filter($locations, fn ($location): bool => strtolower(trim((string) $location)) !== 'online' && trim((string) $location) !== ''));
+
+        return $hasOnline && $physical === [];
+    }
+
+    private function locationSlugSegment(string $segment): string
+    {
+        return $this->categorySlug($segment);
     }
 }

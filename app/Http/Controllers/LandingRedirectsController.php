@@ -6,6 +6,7 @@ use App\Models\OfferingV3;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Services\LocationCatalogService;
+use App\Services\SeoStructureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -15,7 +16,7 @@ class LandingRedirectsController extends Controller
     {
         $target = $this->resolveLegacyProductTarget($handle);
         if ($target === null) {
-            return redirect('/offerings', 301);
+            return redirect('/therapies', 301);
         }
 
         return redirect()->to($target, 301);
@@ -30,7 +31,7 @@ class LandingRedirectsController extends Controller
     {
         $slug = trim(rawurldecode((string) $slug));
         if ($slug === '') {
-            return redirect('/offerings', 301);
+            return redirect('/therapies', 301);
         }
 
         $target = $this->resolveLegacyCollectionTarget($slug);
@@ -38,14 +39,14 @@ class LandingRedirectsController extends Controller
             return redirect()->to($target, 301);
         }
 
-        return redirect('/offerings', 301);
+        return redirect('/therapies', 301);
     }
 
     public function shopifyPage(Request $request, string $path)
     {
         $path = trim(rawurldecode($path), '/');
         if ($path === '') {
-            return redirect('/offerings', 301);
+            return redirect('/therapies', 301);
         }
 
         $segments = array_values(array_filter(explode('/', $path), static fn ($segment) => trim((string) $segment) !== ''));
@@ -76,7 +77,7 @@ class LandingRedirectsController extends Controller
             }
         }
 
-        return redirect('/offerings', 301);
+        return redirect('/therapies', 301);
     }
 
     public function shopifyAccountLogin(Request $request)
@@ -103,8 +104,7 @@ class LandingRedirectsController extends Controller
             ->orWhere(fn($q)=>$q->where('id', is_numeric($handle) ? (int)$handle : 0))
             ->first();
         if (!$p) abort(404);
-        $slug = Str::slug($p->title ?: (string)$p->id);
-        return redirect('/offerings/'.$p->id.'-'.$slug, 301);
+        return redirect()->to(app(SeoStructureService::class)->canonicalProductUrl($p), 301);
     }
 
     public function experiencesIndex()
@@ -195,12 +195,12 @@ class LandingRedirectsController extends Controller
         }
 
         $special = [
-            'all' => '/offerings',
-            'experiences' => '/offerings',
-            'discover-wellness' => '/offerings',
-            'new-in' => '/offerings',
-            'new-in-experiences' => '/offerings',
-            'our-newest-experiences' => '/offerings',
+            'all' => '/therapies',
+            'experiences' => '/therapies',
+            'discover-wellness' => '/therapies',
+            'new-in' => '/therapies',
+            'new-in-experiences' => '/therapies',
+            'our-newest-experiences' => '/therapies',
             'gift-finder' => '/gifts',
             'gift-cards' => '/giftcards',
             'gifts-under-50' => '/gifts',
@@ -260,7 +260,7 @@ class LandingRedirectsController extends Controller
             return '/classes';
         }
 
-        return '/offerings';
+        return '/therapies';
     }
 
     private function resolveLegacyProviderTarget(string $slug): ?string
@@ -448,27 +448,12 @@ class LandingRedirectsController extends Controller
 
     private function canonicalProductRedirect(Product $product): string
     {
-        $slug = Str::slug((string) ($product->title ?: $product->handle ?: $product->id));
-        $target = '/offerings/' . $product->id . '-' . $slug;
-
-        $variantId = null;
-        try {
-            $variantId = $product->variants()->orderBy('id')->value('id');
-        } catch (\Throwable $e) {
-            $variantId = null;
-        }
-
-        if (! empty($variantId)) {
-            $target .= '?variant=' . (int) $variantId;
-        }
-
-        return $target;
+        return app(SeoStructureService::class)->canonicalProductUrl($product);
     }
 
     private function canonicalOfferingRedirect(OfferingV3 $offering): string
     {
-        $slug = Str::slug((string) ($offering->title ?: $offering->slug ?: $offering->id));
-        return '/offerings/' . $offering->id . '-' . $slug;
+        return app(SeoStructureService::class)->canonicalOfferingUrl($offering);
     }
 
     private function normalizeLegacyKey(string $value): string

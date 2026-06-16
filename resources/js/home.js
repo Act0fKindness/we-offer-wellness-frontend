@@ -3,6 +3,7 @@ import { createApp } from 'vue';
 import ui from '@nuxt/ui/vue-plugin';
 import { initSubscriberForms } from './lib/subscriber-forms';
 import SearchRangeCalendar from './Components/SearchRangeCalendar.vue';
+import SearchBarV4 from './Components/SearchBarV4.vue';
 import { fetchWhatCategories } from './services/whatCategories';
 
 function runIdle(fn) {
@@ -86,190 +87,206 @@ function setupHamburgerController(button){
 }
 
 function initMegaMenu() {
-  const header = document.querySelector('header');
-  const panel = document.getElementById('mega-panel');
+  const nav = document.getElementById('desktopNav');
+  const layer = document.getElementById('megaLayer');
+  const shell = document.getElementById('mega-panel');
+  const arrow = document.getElementById('megaArrow');
+  const track = document.getElementById('megaTrack');
+  const underline = document.getElementById('navUnderline');
   const overlay = document.getElementById('mega-overlay');
-  if (!header || !panel) return;
+  if (!nav || !layer || !shell || !arrow || !track) return;
 
+  const navItems = Array.from(nav.querySelectorAll('.link-wow--nav'));
+  const dropdownItems = navItems.filter((item) => item.dataset.megaMenu);
+  const panes = Array.from(shell.querySelectorAll('.wow-mega-pane[data-menu]'));
+  const menuOrder = panes.map((pane) => pane.dataset.menu);
   const focusableSelector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
-  const delayOpen = 320;
-  const delayClose = 200;
-  let openTimer = null;
+
+  let activeMenu = null;
+  let activeTrigger = null;
   let closeTimer = null;
-  let activeMenu = '';
-  let lastTrigger = null;
+  let hasOpenedOnce = false;
 
-  const escapeKey = (key) => {
-    if (!key) return '';
-    try {
-      return typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(key) : key;
-    } catch (_) {
-      return key;
-    }
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+  const getPane = (name) => panes.find((pane) => pane.dataset.menu === name);
+  const getTrigger = (name) => dropdownItems.find((item) => item.dataset.megaMenu === name);
+
+  const getMegaWidth = () => {
+    const maxWidth = parseFloat(window.getComputedStyle(layer).getPropertyValue('--mega-max-width')) || 1160;
+    const edgeGap = parseFloat(window.getComputedStyle(layer).getPropertyValue('--mega-edge-gap')) || 18;
+    return Math.min(maxWidth, window.innerWidth - edgeGap * 2);
   };
 
-  const getMenuBlock = (key) => {
-    if (!key) return null;
-    return panel.querySelector(`[data-menu="${escapeKey(key)}"]`);
+  const clearActiveItems = () => {
+    navItems.forEach((item) => {
+      item.classList.remove('is-active');
+      item.setAttribute('aria-expanded', 'false');
+    });
   };
 
-  const showPanel = (key) => {
-    activeMenu = key;
-    panel.setAttribute('data-active', key || '');
-    panel.style.display = 'block';
-    if (overlay) overlay.style.display = 'block';
-    if (lastTrigger) {
-      try { lastTrigger.setAttribute('aria-expanded', 'true'); } catch (_) {}
-    }
+  const updateUnderline = (item) => {
+    if (!underline || !item) return;
+    const navRect = nav.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    underline.style.opacity = '1';
+    underline.style.width = `${Math.max(0, itemRect.width - 28)}px`;
+    underline.style.transform = `translateX(${itemRect.left - navRect.left + 14}px)`;
   };
 
-  const hidePanel = (focusTrigger = false) => {
-    activeMenu = '';
-    panel.removeAttribute('data-active');
-    panel.style.display = 'none';
-    if (overlay) overlay.style.display = 'none';
-    if (lastTrigger) {
-      try { lastTrigger.setAttribute('aria-expanded', 'false'); } catch (_) {}
-    }
-    if (focusTrigger && lastTrigger) {
-      try { lastTrigger.focus(); } catch (_) {}
-    }
+  const hideUnderline = () => {
+    if (!underline) return;
+    underline.style.opacity = '0';
+    underline.style.width = '0';
   };
 
-  const clearTimers = () => {
-    if (openTimer) { window.clearTimeout(openTimer); openTimer = null; }
-    if (closeTimer) { window.clearTimeout(closeTimer); closeTimer = null; }
+  const positionArrow = (item) => {
+    const width = getMegaWidth();
+    const itemRect = item.getBoundingClientRect();
+    const shellLeft = (window.innerWidth - width) / 2;
+    const itemCenter = itemRect.left + itemRect.width / 2;
+    shell.style.width = `${width}px`;
+    arrow.style.left = `${clamp(itemCenter - shellLeft, 32, width - 32)}px`;
   };
 
-  const scheduleClose = (immediate = false) => {
-    clearTimers();
-    if (immediate) {
-      hidePanel();
+  const updateHeight = (pane) => {
+    const styles = window.getComputedStyle(shell);
+    const borderTop = parseFloat(styles.borderTopWidth) || 0;
+    const borderBottom = parseFloat(styles.borderBottomWidth) || 0;
+    shell.style.height = `${pane.scrollHeight + borderTop + borderBottom}px`;
+  };
+
+  const openMega = (menuName, focusContent = false) => {
+    const trigger = getTrigger(menuName);
+    const pane = getPane(menuName);
+    if (!trigger || !pane) return;
+
+    window.clearTimeout(closeTimer);
+    clearActiveItems();
+    trigger.classList.add('is-active');
+    trigger.setAttribute('aria-expanded', 'true');
+    activeTrigger = trigger;
+
+    updateUnderline(trigger);
+    positionArrow(trigger);
+    updateHeight(pane);
+
+    const index = menuOrder.indexOf(menuName);
+    if (!hasOpenedOnce) {
+      track.style.transition = 'none';
+      track.style.transform = `translateX(-${index * 100}%)`;
+      window.requestAnimationFrame(() => {
+        track.style.transition = '';
+      });
     } else {
-      closeTimer = window.setTimeout(() => hidePanel(), delayClose);
+      track.style.transform = `translateX(-${index * 100}%)`;
+    }
+
+    activeMenu = menuName;
+    hasOpenedOnce = true;
+    shell.classList.add('is-open');
+    shell.setAttribute('aria-hidden', 'false');
+    if (overlay) overlay.style.display = 'block';
+
+    if (focusContent) {
+      const first = pane.querySelector(focusableSelector);
+      if (first) first.focus();
     }
   };
 
-  const focusFirstItem = (key) => {
-    const block = getMenuBlock(key);
-    if (!block) return;
-    const target = block.querySelector(focusableSelector);
-    if (target) {
-      try { target.focus(); } catch (_) {}
-    }
-  };
-
-  const openMenu = (key, trigger, { immediate = false, focusContent = false } = {}) => {
-    const block = getMenuBlock(key);
-    if (!block) return;
-    lastTrigger = trigger || lastTrigger;
-    clearTimers();
+  const closeMega = (immediate = false, focusTrigger = false) => {
     const run = () => {
-      showPanel(key);
-      if (focusContent) {
-        focusFirstItem(key);
-      }
+      activeMenu = null;
+      clearActiveItems();
+      hideUnderline();
+      shell.classList.remove('is-open');
+      shell.setAttribute('aria-hidden', 'true');
+      if (overlay) overlay.style.display = 'none';
+      hasOpenedOnce = false;
+      if (focusTrigger && activeTrigger) activeTrigger.focus();
     };
+    window.clearTimeout(closeTimer);
     if (immediate) {
       run();
     } else {
-      openTimer = window.setTimeout(run, delayOpen);
+      closeTimer = window.setTimeout(run, 140);
     }
   };
 
-  const navLinks = header.querySelectorAll('[data-mega-menu]');
-  navLinks.forEach((link) => {
-    const key = link.getAttribute('data-mega-menu');
-    if (!getMenuBlock(key)) return;
+  const cancelClose = () => window.clearTimeout(closeTimer);
 
-    link.setAttribute('aria-haspopup', 'true');
-    link.setAttribute('aria-expanded', 'false');
-
-    link.addEventListener('mouseenter', () => openMenu(key, link));
-    link.addEventListener('focus', () => openMenu(key, link, { immediate: true }));
-    link.addEventListener('mouseleave', () => scheduleClose());
-
-    link.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
+  navItems.forEach((item, index) => {
+    const menuName = item.dataset.megaMenu;
+    item.setAttribute('aria-haspopup', menuName ? 'true' : 'false');
+    item.setAttribute('aria-expanded', 'false');
+    item.addEventListener('mouseenter', () => menuName ? openMega(menuName) : closeMega(true));
+    item.addEventListener('focus', () => menuName ? openMega(menuName) : closeMega(true));
+    item.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
         event.preventDefault();
-        openMenu(key, link, { immediate: true, focusContent: true });
-      } else if (event.key === 'ArrowDown') {
+        const nextIndex = event.key === 'ArrowRight'
+          ? (index + 1) % navItems.length
+          : (index - 1 + navItems.length) % navItems.length;
+        navItems[nextIndex]?.focus();
+      } else if ((event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') && menuName) {
         event.preventDefault();
-        openMenu(key, link, { immediate: true, focusContent: true });
+        openMega(menuName, true);
       } else if (event.key === 'Escape') {
         event.preventDefault();
-        clearTimers();
-        hidePanel(true);
+        closeMega(true, true);
       }
     });
   });
 
-  // Links without a mega menu should not trigger the frosted overlay.
-  try {
-    const simpleLinks = header.querySelectorAll('.nav-item > a:not([data-mega-menu])');
-    simpleLinks.forEach((a) => {
-      a.addEventListener('mouseenter', () => scheduleClose(true));
-      a.addEventListener('focus', () => scheduleClose(true));
-    });
-  } catch (_) {}
+  nav.addEventListener('mouseenter', cancelClose);
+  nav.addEventListener('mouseleave', () => closeMega());
+  layer.addEventListener('mouseenter', cancelClose);
+  layer.addEventListener('mouseleave', () => closeMega());
 
-  const panelKeyHandler = (event) => {
+  shell.addEventListener('keydown', (event) => {
     if (!activeMenu) return;
     if (event.key === 'Escape') {
       event.preventDefault();
-      clearTimers();
-      hidePanel(true);
+      closeMega(true, true);
       return;
     }
-    if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
-      return;
-    }
-    const block = getMenuBlock(activeMenu);
-    if (!block) return;
-    const focusable = Array.from(block.querySelectorAll(focusableSelector));
+    if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const pane = getPane(activeMenu);
+    const focusable = pane ? Array.from(pane.querySelectorAll(focusableSelector)) : [];
     if (!focusable.length) return;
     const currentIndex = focusable.indexOf(document.activeElement);
     let nextIndex = currentIndex;
-    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
-      nextIndex = currentIndex + 1;
-    } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
-      nextIndex = currentIndex - 1;
-    } else if (event.key === 'Home') {
-      nextIndex = 0;
-    } else if (event.key === 'End') {
-      nextIndex = focusable.length - 1;
-    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') nextIndex += 1;
+    if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') nextIndex -= 1;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = focusable.length - 1;
     if (nextIndex < 0) nextIndex = focusable.length - 1;
     if (nextIndex >= focusable.length) nextIndex = 0;
-    const target = focusable[nextIndex];
-    if (target) {
-      event.preventDefault();
-      try { target.focus(); } catch (_) {}
-    }
-  };
-
-  panel.addEventListener('mouseenter', () => {
-    if (closeTimer) { window.clearTimeout(closeTimer); closeTimer = null; }
+    event.preventDefault();
+    focusable[nextIndex]?.focus();
   });
-  panel.addEventListener('mouseleave', () => scheduleClose());
-  panel.addEventListener('keydown', panelKeyHandler);
 
-  header.addEventListener('mouseleave', () => scheduleClose());
-  document.addEventListener('click', (e) => {
-    if (!header.contains(e.target)) {
-      scheduleClose(true);
-    }
+  window.addEventListener('resize', () => {
+    if (!activeMenu) return;
+    const trigger = getTrigger(activeMenu);
+    const pane = getPane(activeMenu);
+    if (!trigger || !pane) return;
+    positionArrow(trigger);
+    updateHeight(pane);
+    updateUnderline(trigger);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!activeMenu) return;
+    if (nav.contains(event.target) || shell.contains(event.target)) return;
+    closeMega(true);
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && activeMenu) {
-      clearTimers();
-      hidePanel(true);
-    }
+    if (event.key === 'Escape' && activeMenu) closeMega(true, true);
   });
 }
 
 function initMobileMenu() {
-  const toggle = document.querySelector('header button[aria-label="Toggle menu"]');
+  const toggle = document.querySelector('[data-wow-mobile-toggle]') || document.querySelector('header button[aria-label="Toggle menu"]');
   if (!toggle) return;
   setupHamburgerController(toggle);
 }
@@ -624,11 +641,45 @@ function mountSearchRangeCalendars() {
   }
 }
 
+function mountSearchBarV4() {
+  try {
+    document.querySelectorAll('[data-wow-searchbar-v4]').forEach((el) => {
+      if (!el || el.dataset.wowMounted === '1') return;
+      el.dataset.wowMounted = '1';
+
+      let initialQuery = {};
+      try {
+        initialQuery = JSON.parse(el.dataset.initialQuery || '{}') || {};
+      } catch (_err) {
+        initialQuery = {};
+      }
+
+      const props = {
+        idPrefix: el.dataset.idPrefix || 'search-v4',
+        searchUrl: el.dataset.searchUrl || '/search',
+        resultCount: Number(el.dataset.resultCount || 0),
+        mobileTopOffset: el.dataset.mobileTopOffset || 12,
+        initialQuery,
+      };
+
+      try {
+        createApp(SearchBarV4, props).use(ui).mount(el);
+      } catch (err) {
+        el.dataset.wowMounted = '0';
+        console.warn('[WOW] search bar v4 mount failed', err);
+      }
+    });
+  } catch (err) {
+    console.warn('[WOW] search bar v4 bootstrap skipped', err);
+  }
+}
+
 onDocumentReady(() => {
   runIdle(() => { try { initMegaMenu(); } catch (e) {} });
   runIdle(() => { try { initMobileMenu(); } catch (e) {} });
   runIdle(() => { try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {} });
   runIdle(() => { try { mountSearchRangeCalendars(); } catch (e) {} });
+  try { mountSearchBarV4(); } catch (e) {}
   runIdle(() => { try { initAccountDropdown(); } catch (e) {} });
   runIdle(() => { try { initSubscriberForms(); } catch (e) {} });
 
@@ -721,21 +772,29 @@ onDocumentReady(() => {
         localStorage.setItem('wow_cart', JSON.stringify(bag));
       }catch(_){ }
       try {
-        var cookieObj = {};
+        var cookieItems = [];
         (items||[]).forEach(function(it){
           if(!it || typeof it.id === 'undefined') return;
-          var id = String(it.id);
-          cookieObj[id] = {
-            id: it.id,
+          cookieItems.push({
+            id: String(it.id),
+            product_id: it.product_id || null,
+            variant_id: it.variant_id || null,
+            variant_label: it.variant_label || '',
             title: it.title || '',
             price: Number(it.price || it.unit || 0),
             qty: Number(it.qty || 1) || 1,
             image: it.image || it.img || '',
-            url: it.url || '#',
-            variant_label: it.variant_label || ''
-          };
+            url: it.url || '#'
+          });
         });
-        document.cookie = 'wow_cart=' + encodeURIComponent(JSON.stringify(cookieObj)) + '; Path=/; Max-Age=' + (60*60*24*30) + '; SameSite=Lax';
+        if (cookieItems.length) {
+          var encoded = encodeURIComponent(JSON.stringify(cookieItems));
+          document.cookie = 'wow_cart=; Path=/; Max-Age=0; SameSite=Lax';
+          document.cookie = 'wow_cart=' + encoded + '; Domain=.weofferwellness.co.uk; Path=/; Max-Age=' + (60*60*24*30) + '; SameSite=Lax';
+        } else {
+          document.cookie = 'wow_cart=; Path=/; Max-Age=0; SameSite=Lax';
+          document.cookie = 'wow_cart=; Domain=.weofferwellness.co.uk; Path=/; Max-Age=0; SameSite=Lax';
+        }
       } catch(_){ }
       try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items||[], source:'header:write' } })); } catch(_){ }
     }
@@ -815,6 +874,37 @@ onDocumentReady(() => {
           return el;
         }catch(_){ return null; }
       }
+      function slugifySegment(value){
+        return String(value || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+      function buildUpsellUrl(item){
+        if (item && item.url) return item.url;
+        var formatSource = item && (
+          item.format
+          || (item.type && (item.type.slug || item.type.name))
+          || item.type
+          || 'therapies'
+        );
+        var modalitySource = item && (
+          item.modality
+          || (item.category && (item.category.slug || item.category.name))
+          || item.category_name
+          || item.category_label
+          || (item.type && (item.type.modality || item.type.slug || item.type.name))
+          || ''
+        );
+        var format = slugifySegment(formatSource);
+        var modality = slugifySegment(modalitySource);
+        var slug = slugifySegment(item && (item.slug || item.handle || item.title || item.name || item.id || ''));
+        var sourceVersion = String((item && item.source_version) || (item && item.sourceType) || (item && item.source_type) || '').toLowerCase();
+        var isStructuredOffering = sourceVersion === 'v3' || sourceVersion === 'offering';
+        if (format && modality && slug) return '/' + format + '/' + modality + '/' + slug;
+        if (format && slug) return '/' + format + '/' + slug;
+        return '/' + (slug || 'offerings');
+      }
       function sliceAndRender(pool){
         // rotate 3 items each time
         if (!Array.isArray(pool) || !pool.length) { renderUpsell([]); return; }
@@ -834,7 +924,7 @@ onDocumentReady(() => {
           wrapU.innerHTML = list.map(function(it){
             var p = Number(it.price_min ?? it.price ?? 0); if(p>=1000) p=p/100;
             var img = it.image || (it.images && it.images[0]) || '';
-            var url = it.url || ('/offerings/'+it.id);
+            var url = buildUpsellUrl(it);
             var title = esc(it.title||'');
             return '<div class="upsell-item">'
               + (img?('<img src="'+img+'" alt="">'):'<div style="width:46px;height:46px;border-radius:8px;background:#f3f5f7;border:1px solid #eceff3"></div>')

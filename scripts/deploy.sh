@@ -154,22 +154,35 @@ if [[ "$INSTALL_CRON" == "true" ]]; then
   echo "==> Ensuring Laravel scheduler cron is installed"
   if command -v crontab >/dev/null 2>&1; then
     PROJECT_DIR="$(pwd)"
+    PROJECT_ROOT="$(cd "${PROJECT_DIR}/.." && pwd)"
     PHP_BIN="${PHP_BIN:-$(command -v php)}"
-    SCHEDULER_LINE="* * * * * cd ${PROJECT_DIR} && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1"
+    SHARED_SCHEDULER="${PROJECT_ROOT}/scripts/run-combined-schedulers.sh"
+    SHARED_SCHEDULER_LINE="* * * * * ${SHARED_SCHEDULER} >> /dev/null 2>&1"
+    LOCAL_SCHEDULER_LINE="* * * * * cd ${PROJECT_DIR} && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1"
     CURRENT_CRONTAB="$(crontab -l 2>/dev/null || true)"
 
-    if printf '%s\n' "$CURRENT_CRONTAB" | grep -Fq "artisan schedule:run"; then
+    if printf '%s\n' "$CURRENT_CRONTAB" | grep -Fq "$SHARED_SCHEDULER"; then
+      echo "==> Shared scheduler cron already present"
+    elif printf '%s\n' "$CURRENT_CRONTAB" | grep -Fq "artisan schedule:run"; then
       echo "==> Laravel scheduler cron already present"
     else
-      {
-        printf '%s\n' "$CURRENT_CRONTAB"
-        printf '%s\n' "$SCHEDULER_LINE"
-      } | crontab -
-      echo "==> Installed Laravel scheduler cron"
+      if [[ -x "$SHARED_SCHEDULER" ]]; then
+        {
+          printf '%s\n' "$CURRENT_CRONTAB"
+          printf '%s\n' "$SHARED_SCHEDULER_LINE"
+        } | crontab -
+        echo "==> Installed shared scheduler cron"
+      else
+        {
+          printf '%s\n' "$CURRENT_CRONTAB"
+          printf '%s\n' "$LOCAL_SCHEDULER_LINE"
+        } | crontab -
+        echo "==> Installed Laravel scheduler cron"
+      fi
     fi
   else
     echo "!! crontab not available; install the following on the server:" >&2
-    echo "* * * * * cd $(pwd) && $(command -v php) artisan schedule:run >> /dev/null 2>&1" >&2
+    echo "* * * * * /var/www/html/WeOfferWellness/scripts/run-combined-schedulers.sh >> /dev/null 2>&1" >&2
   fi
 else
   echo "==> Skipping cron install (INSTALL_CRON=false)"

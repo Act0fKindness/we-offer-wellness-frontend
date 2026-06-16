@@ -1,17 +1,9 @@
 <section class="py-6 md:py-10">
-  <div class="container-page space-y-4">
-    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
-      <div>
-        <div class="kicker mb-1 text-ink-600">{{ $resultsHeading ?? 'Search results' }}</div>
-        <h1 id="searchResultsCount" class="text-ink-900" style="font-size:1.75rem;font-weight:700;">{{ $resultCount }} results</h1>
-      </div>
-      <div class="d-flex flex-wrap align-items-center gap-2" id="sr-tags"></div>
-    </div>
-
+  <div class="search-results-shell container-fluid space-y-4">
     <div class="row gx-4 search-layout">
-      <div class="col-12 col-lg-7 col-results">
+      <div class="col-12 col-lg-6 col-results">
         <div class="results-scroll" id="searchResultsScroll" aria-live="polite">
-          <div class="row g-3" id="searchResultsGrid" data-ghost-count="{{ max(2, min(6, (int) ($products->count() ?: 4))) }}">
+    <div class="row g-3" id="searchResultsGrid" data-ghost-count="3">
             @include('search.partials.results_cards', ['products' => $products])
           </div>
 
@@ -22,7 +14,7 @@
           </div>
         </div>
       </div>
-      <div class="col-12 col-lg-5 col-map">
+      <div class="col-12 col-lg-6 col-map">
         <div class="map-wrap">
           <div id="search-map" class="map"></div>
         </div>
@@ -36,10 +28,10 @@
 </div>
 
 <template id="searchResultsGhostTemplate">
-  <div class="col-12">
+  <div class="col-12 col-md-6">
     <div class="wow-card-sm-wrap">
       <div class="result-view-map">
-        @include('partials.product_card_search_ghost')
+        @include('partials.product_card_v4_ghost')
       </div>
       <div class="result-view-list">
         @include('partials.product_card_v4_ghost')
@@ -57,7 +49,7 @@
     top: 127px;
     align-self: flex-start;
   }
-  .map-wrap{ position: relative; }
+  .map-wrap{ position: relative; border-radius: 13px; overflow: hidden; }
   /* Adjust height to account for header + search bar */
   .map{ width: 100%; height: calc(100vh - 80px - 67px); border: 1px solid var(--ink-200); border-radius: 3px; overflow: hidden; }
 }
@@ -99,7 +91,7 @@
     border-radius: 19px;
     border:3px solid rgba(0,0,0,0.1);
     position: fixed;
-    top: 202px;
+    top: 126px;
     z-index: 30;
     left: 50%; transform: translateX(-50%);
     width: min(1200px, calc(100vw - 32px));
@@ -159,7 +151,11 @@
 }
 /* Hide/show columns for list/map view at all widths */
 /* Map view shows both columns; List view hides map */
-.search-layout.sr-list-only .col-map{ display:none; }
+  .search-layout.sr-list-only .col-map{ display:none; }
+  .search-layout.sr-list-only .col-results{
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 /* Toggle which card is shown per view */
 .search-layout .result-view-map{ display:block; }
 .search-layout .result-view-list{ display:none; }
@@ -209,13 +205,40 @@
 }
 /* Search-only card sizing */
 .search-layout .result-view-map .wow-card.md{
-  width: 100%;
-  max-width: none;
+  width: 280px;
+  max-width: 280px;
+  margin-inline: auto;
+}
+.search-layout .result-view-map .therapy-card{
+  width: 280px;
+}
+.search-layout .result-view-map .product-v4-ghost-card-scope .wow-card.md{
+  width: 280px;
+  max-width: 280px;
+  flex: 0 0 280px;
+  margin-inline: auto;
+}
+.search-layout .result-view-map .product-v4-ghost-card-scope .product-v4-ghost-card{
+  width: 280px;
 }
 .search-layout .result-view-list .wow-card.md{
   --card-h: 530px;
-  width: auto;
-  max-width: 309px;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+.search-layout .result-view-list .therapy-card{
+  width: 100%;
+}
+.search-layout.sr-list-only .result-view-list .product-v4-ghost-card-scope .product-v4-ghost-card{
+  width: 100%;
+}
+@media (min-width: 1600px){
+  /* Ultra-wide map view: 3 columns only above xxl */
+  .search-layout:not(.sr-list-only) .results-scroll .row > div{
+    flex:0 0 33.333333%;
+    max-width:33.333333%;
+  }
 }
 /* Search result tags styled like product badges */
 #sr-tags{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -422,517 +445,564 @@
 </style>
 
 <script>
-(function initSearchTopBar(){
+(function initSearchPage() {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSearchTopBar, { once: true });
+    document.addEventListener('DOMContentLoaded', initSearchPage, { once: true });
     return;
   }
-  try { (window.setupUltraSearchBar||function(){})('search-top') } catch(e){}
-  // Mobile-specific search bar behavior
-  try{
-    var mq = window.matchMedia('(max-width: 991.98px)');
-    function initMobileBar(){
-      if (!mq.matches) return;
-      // Ensure the What suggestions panel is closed by default on mobile
-      try{
-        var what = document.getElementById('search-top-what');
-        var pane = document.getElementById('search-top-what-pane');
-        if (what) what.setAttribute('aria-expanded','false');
-        if (pane) pane.classList.add('d-none');
-      }catch(_e){}
-      // Default Where to Online if empty
-      var whereEd = document.getElementById('search-top-where-editor');
-      var whereInp = document.getElementById('search-top-where');
-      var cur = (whereEd && whereEd.textContent || '').trim();
-      if (whereEd && whereInp && cur === ''){
-        whereEd.textContent = 'Online';
-        whereInp.value = 'Online';
-      }
-    }
-    initMobileBar();
-    // Re-evaluate on viewport changes
-    try{ mq.addEventListener ? mq.addEventListener('change', initMobileBar) : mq.addListener(initMobileBar); }catch(e){}
-    // Close What pane on outside click (mobile)
-    try{
-      document.addEventListener('click', function(e){
-        if (!mq.matches) return;
-        var seg = document.getElementById('search-top-seg-what');
-        var pane = document.getElementById('search-top-what-pane');
-        var input = document.getElementById('search-top-what');
-        if (!seg || !pane) return;
-        if (!seg.contains(e.target)){
-          // click outside -> close
-          pane.classList.add('d-none');
-          if (input) input.setAttribute('aria-expanded','false');
-        }
-      });
-      // The shared initializer controls typed category suggestions; keep focus closed until matches exist.
-      var input = document.getElementById('search-top-what');
-      var pane = document.getElementById('search-top-what-pane');
-      if (input && pane){
-        input.addEventListener('focus', function(){
-          if (!mq.matches) return;
-          if (!(input.value || '').trim()) {
-            pane.classList.add('d-none');
-            input.setAttribute('aria-expanded','false');
-          }
-        });
-      }
-    }catch(_e){}
-  }catch(e){}
-  // Compact desktop search bar once the page is scrolled
-  try{
-    var root = document.documentElement;
-    function onScroll(){
-      if (window.matchMedia('(min-width: 992px)').matches) {
-        if (window.scrollY > 5) root.classList.add('search-compact');
-        else root.classList.remove('search-compact');
-      } else {
-        root.classList.remove('search-compact');
-      }
-    }
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-  }catch(_e){}
-  // Tags from query for visual context
-  try{
-    var tagsEl = document.getElementById('sr-tags');
-    function esc(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
-    var p = new URLSearchParams(window.location.search||'');
-    var tags = [];
-    var where = (p.get('where')||'').trim();
-    var mode = (p.get('mode')||'').trim().toLowerCase();
-    // Prefer a single "Online only" badge when mode=online, avoid duplicate with where=Online
-    if (mode === 'online') {
-      tags.push('Online only');
-    } else if (where) {
-      tags.push(where);
-    }
-    if (p.get('type')) tags.push(p.get('type'));
-    if (p.get('tag')) tags.push('#' + p.get('tag'));
-    if (p.get('price_max')) tags.push('Under £' + p.get('price_max'));
-    // Dedupe ignoring case
-    var seen = new Set();
-    tags = tags.filter(function(t){ var k = String(t).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
-    if (tagsEl) tagsEl.innerHTML = tags.map(function(t){ return '<span class="badge badge--cool">'+esc(t)+'</span>'; }).join('');
-  }catch{}
 
-  // Apply query params into What/Where/When/Who fields so state is retained on load
-  try{
-    var qp = new URLSearchParams(window.location.search||'');
-    var qWhat = qp.get('what');
-    var qWhere = qp.get('where');
-    var qWhen = qp.get('when');
-    var qWhenStart = qp.get('when_start');
-    var qWhenEnd = qp.get('when_end');
-    var qGroup = (qp.get('group_type')||'').toLowerCase(); // solo|couple|group
-    var qAdults = qp.get('adults');
+  if (window.matchMedia && window.matchMedia('(max-width: 1040px)').matches) {
+    return;
+  }
 
-    var elWhat = document.getElementById('search-top-what');
-    if (elWhat && qWhat) elWhat.value = qWhat;
-    var edWhere = document.getElementById('search-top-where-editor');
-    var hidWhere = document.getElementById('search-top-where');
-    if (qWhere && (edWhere||hidWhere)){
-      if (edWhere) edWhere.textContent = qWhere;
-      if (hidWhere) hidWhere.value = qWhere;
-    }
-    var elWhen = document.getElementById('search-top-when');
-    if (elWhen && qWhen) {
-      elWhen.value = qWhen;
-      if (qWhenStart) elWhen.dataset.rangeStart = qWhenStart;
-      if (qWhenEnd) elWhen.dataset.rangeEnd = qWhenEnd;
-    }
-
-    // Sync Who (adults + group type)
-    (function(){
-      var adultsEl = document.getElementById('search-top-adults-val');
-      var groupList = document.getElementById('search-top-group-type-list');
-      var summaryEl = document.getElementById('search-top-who-summary');
-      function selectGroup(name){
-        if(!groupList) return;
-        Array.from(groupList.querySelectorAll('[data-group]')).forEach(function(btn){ btn.setAttribute('aria-selected', String(btn.getAttribute('data-group')===name)); });
-      }
-      function updateSummary(n){ if(!summaryEl) return; var label = n<=1?'Solo':(n===2?'Couple':'Group'); summaryEl.textContent = (n + ' ' + (n===1?'adult':'adults') + ' · ' + label); }
-      var n = null;
-      if (qAdults && isFinite(Number(qAdults))) n = Math.max(1, parseInt(qAdults,10));
-      else if (qGroup==='solo') n = 1; else if (qGroup==='couple') n = 2; else if (qGroup==='group') n = 3;
-      if (n != null){ if (adultsEl) adultsEl.textContent = String(n); selectGroup(n<=1?'Solo':(n===2?'Couple':'Group')); updateSummary(n); }
-    })();
-  }catch(_e){}
-
-  // Map (Mapbox GL JS with 3D buildings)
-  try {
-    @php
-      $mapData = [];
-      foreach (($products ?? collect()) as $p) {
-          $t = strtolower((string) ($p->product_type ?? ''));
-          $tags = strtolower((string) ($p->tags_list ?? ''));
-          $seg = 'therapies';
-          if (str_contains($t, 'workshop')) $seg = 'workshops';
-          elseif (str_contains($t, 'event')) $seg = 'events';
-          elseif (str_contains($t, 'class')) $seg = 'classes';
-          elseif (str_contains($t, 'retreat')) $seg = 'retreats';
-          elseif (str_contains($t, 'gift') || str_contains($tags, 'gift')) $seg = 'gifts';
-
-          // Prefer vendor locations (multiple pins)
-          $vendor = $p->vendor ?? null;
-          $locs = $vendor && $vendor->relationLoaded('locations') ? $vendor->locations : [];
-          $count = 0;
-          foreach ($locs as $vl) {
-              $lat = $vl->lat ?? null; $lng = $vl->lng ?? null;
-              if (is_numeric($lat) && is_numeric($lng)) {
-                  $mapData[] = [
-                      'pid' => $p->id,
-                      'title' => $p->title,
-                      'lat' => (float) $lat,
-                      'lng' => (float) $lng,
-                      'label' => trim(($vl->city ?? '') . ', ' . ($vl->address ?? '')),
-                      'url' => url('/'.$seg.'/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
-                  ];
-                  $count++;
-              }
-          }
-          // Fallback to single meta lat/lng if no vendor pins
-          if ($count === 0) {
-              $m = $p->meta_json ?? [];
-              $lat = $m['lat'] ?? null; $lng = $m['lng'] ?? null;
-              if (is_numeric($lat) && is_numeric($lng)) {
-                  $mapData[] = [
-                      'pid' => $p->id,
-                      'title' => $p->title,
-                      'lat' => (float) $lat,
-                      'lng' => (float) $lng,
-                      'label' => $p->category->name ?? 'Location',
-                      'url' => url('/'.$seg.'/'.$p->id.'-'.\Illuminate\Support\Str::slug($p->title ?: (string)$p->id)),
-                  ];
-              }
-          }
-      }
-      $mapboxKey = config('services.mapbox.token');
-    @endphp
-    var data = @json($mapData);
-    var token = @json($mapboxKey) || window.WOW_MAPS_KEY || '';
-    var mapEl = document.getElementById('search-map');
-    if (mapEl && !token) {
-      try { mapEl.innerHTML = '<div style="padding:12px;color:#334155;font-size:14px;">Map unavailable: missing MAPBOX_API_KEY. Set it in .env.</div>'; } catch(e){}
-    }
-    if (mapEl && token) {
-      function initMapbox(){
-        try{
-          mapboxgl.accessToken = token;
-          var center = data.length ? [Number(data[0].lng), Number(data[0].lat)] : [-0.1276, 51.5072];
-          var map = new mapboxgl.Map({
-            container: mapEl,
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: center,
-            zoom: 13,
-            pitch: 0,
-            bearing: 0,
-            antialias: true,
-            fadeDuration: 0
-          });
-          map.on('load', function(){
-            // 3D buildings layer
-            var layers = map.getStyle().layers;
-            var labelLayerId;
-            for (var i = 0; i < layers.length; i++) {
-              if (layers[i].type === 'symbol' && layers[i].layout['text-field']) { labelLayerId = layers[i].id; break; }
-            }
-            map.addLayer({
-              'id': '3d-buildings',
-              'source': 'composite',
-              'source-layer': 'building',
-              'filter': ['==', 'extrude', 'true'],
-              'type': 'fill-extrusion',
-              'minzoom': 15,
-              'paint': {
-                'fill-extrusion-color': '#aaa',
-                'fill-extrusion-height': ['get', 'height'],
-                'fill-extrusion-base': ['get', 'min_height'],
-                'fill-extrusion-opacity': 0.6
-              }
-            }, labelLayerId);
-            // Markers (grouped by product id for hover effects and navigation)
-            window.__wowMarkersByPid = {};
-            var bounds = new mapboxgl.LngLatBounds();
-            var added = 0;
-            data.forEach(function(p){
-              var el = document.createElement('div');
-              el.className = 'wow-marker';
-              el.title = p.title || '';
-              try{ el.style.zIndex = '5'; el.style.cursor = 'pointer'; }catch(_e){}
-              var marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([Number(p.lng), Number(p.lat)]).setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML('<div style="font-weight:600">'+(p.title||'')+'</div>')).addTo(map);
-              var pid = String(p.pid||p.id||'');
-              (window.__wowMarkersByPid[pid] = window.__wowMarkersByPid[pid] || []).push({ marker: marker, el: el });
-              // Click marker -> scroll to corresponding list item and lightly zoom
-              try {
-                el.addEventListener('click', function(e){
-                  try{ e.stopPropagation(); }catch(_e){}
-                  var item = document.querySelector('[data-pid="'+pid+'"]');
-                  if (item) {
-                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    // Optional: add a transient highlight
-                    item.classList.add('is-active');
-                    setTimeout(function(){ try{ item.classList.remove('is-active'); }catch(_){ } }, 1200);
-                  }
-                  try{ map.easeTo({ center: [Number(p.lng), Number(p.lat)], zoom: Math.max(map.getZoom(), 14), duration: 500 }); }catch(_e){}
-                  try {
-                    // Toggle marker active state
-                    Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){
-                      (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===pid); });
-                    });
-                  } catch(_e){}
-                });
-              } catch(_e){}
-              try { bounds.extend([Number(p.lng), Number(p.lat)]); added++; } catch(e){}
-            });
-            // Expose map so other handlers can reference it
-            window.__wowMap = map;
-            // Helper: center map on pid's first marker
-            function centerOnPid(pid, opts){
-              try{
-                var group = (window.__wowMarkersByPid||{})[String(pid)]||[];
-                if (!group.length) return;
-                var ll = group[0].marker.getLngLat();
-                map.easeTo({ center: [ll.lng, ll.lat], zoom: Math.max(map.getZoom(), (opts&&opts.zoom)||14), duration: (opts&&opts.duration)||500 });
-                // toggle active state
-                Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){
-                  (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===String(pid)); });
-                });
-              }catch(_e){}
-            }
-            try {
-              if (added > 1) {
-                map.fitBounds(bounds, { padding: 100, maxZoom: 13, duration: 500 });
-              } else if (added === 1) {
-                var only = data[0];
-                map.setCenter([Number(only.lng), Number(only.lat)]);
-                map.setZoom(14);
-              }
-            } catch(e){}
-            // After markers are added, center near the first product in the list
-            try{
-              var firstItem = document.querySelector('.results-scroll [data-pid]');
-              if (firstItem) { centerOnPid(firstItem.getAttribute('data-pid'), { zoom: 14, duration: 300 }); }
-            }catch(_e){}
-
-          });
-          // Mode toggle (2D/3D)
-          document.querySelectorAll('[data-mode]')?.forEach(function(btn){
-            btn.addEventListener('click', function(){
-              document.querySelectorAll('[data-mode]')?.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false') })
-              btn.classList.add('active'); btn.setAttribute('aria-selected','true')
-              var mode = btn.getAttribute('data-mode');
-              if (mode === '3d') { map.easeTo({ pitch: 60, bearing: -17, duration: 600 }) }
-              else { map.easeTo({ pitch: 0, bearing: 0, duration: 600 }) }
-            })
-          })
-          // Ensure initial UI reflects 2D default
-          try {
-            var btn3d = document.querySelector('[data-mode="3d"]');
-            var btn2d = document.querySelector('[data-mode="2d"]');
-            if (btn3d && btn2d) {
-              btn3d.classList.remove('active'); btn3d.setAttribute('aria-selected','false');
-              btn2d.classList.add('active'); btn2d.setAttribute('aria-selected','true');
-            }
-          } catch(e){}
-        }catch(e){ console.warn('mapbox init failed', e) }
-      }
-      // Ensure Mapbox CSS is present, then load/init JS
-      (function ensureCssThenInit(){
-        var hasCss = !!document.querySelector('link[href*="mapbox-gl.css"]');
-        if (!hasCss) {
-          var l = document.createElement('link'); l.rel='stylesheet'; l.href='https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css'; document.head.appendChild(l)
-        }
-        if (!window.mapboxgl) {
-          var s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js'; s.async=true; s.defer=true; s.onload=initMapbox; document.head.appendChild(s)
-        } else { initMapbox() }
-      })();
-    }
-  } catch (e) { console.warn('map skipped', e) }
-
-  // List/Map toggle + disable mode when list
   try {
     var layout = document.querySelector('.search-layout');
-    var modeButtons = Array.from(document.querySelectorAll('[data-mode]'));
-    var resultsCol = document.querySelector('.search-layout .col-results');
-    var mapCol = document.querySelector('.search-layout .col-map');
-    function setModeEnabled(enabled){
-      modeButtons.forEach(function(b){
-        if (enabled) { b.removeAttribute('disabled'); b.setAttribute('aria-disabled','false'); }
-        else { b.setAttribute('disabled','disabled'); b.setAttribute('aria-disabled','true'); }
+    var resultsShell = document.querySelector('.search-results-shell');
+    var resultsScroll = document.getElementById('searchResultsScroll');
+    var grid = document.getElementById('searchResultsGrid');
+    var countEl = document.getElementById('searchResultsCount');
+    var paginationEl = document.getElementById('searchResultsPagination');
+    var template = document.getElementById('searchResultsGhostTemplate');
+    var tagsEl = document.getElementById('sr-tags');
+    var mapEl = document.getElementById('search-map');
+
+    var initialMapData = @json($searchMapData ?? []);
+    var mapboxToken = @json(config('services.mapbox.token'));
+    var fallbackMapToken = @json($mapsKey ?? '');
+
+    var currentView = 'map';
+    var currentMapMode = '2d';
+    var currentRequestId = 0;
+    var activeAbortController = null;
+    var lastGridHtml = grid ? grid.innerHTML : '';
+    var lastPaginationHtml = paginationEl ? paginationEl.innerHTML : '';
+    var lastCountText = countEl ? countEl.textContent : '';
+    var initialGhostHtml = '';
+
+    var mapState = {
+      map: null,
+      ready: false,
+      pendingData: Array.isArray(initialMapData) ? initialMapData.slice() : [],
+      markersByPid: {},
+    };
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, function (char) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+        })[char] || char;
       });
     }
-    function setColsForView(view){
+
+    function normalizeText(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+
+    function currentUrlParams(url) {
+      try {
+        return new URL(url || window.location.href, window.location.origin).searchParams;
+      } catch (_err) {
+        return new URLSearchParams(window.location.search || '');
+      }
+    }
+
+    function syncHistory(url) {
+      try {
+        window.history.replaceState({}, '', url);
+      } catch (_err) {}
+    }
+
+    function renderTagsFromUrl(url) {
+      if (!tagsEl) return;
+      var params = currentUrlParams(url);
+      var tags = [];
+      var seen = new Set();
+      var what = (params.get('what') || '').trim();
+      var where = (params.get('where') || '').trim();
+      var mode = (params.get('mode') || '').trim().toLowerCase();
+      var groupType = (params.get('group_type') || '').trim();
+      var adults = (params.get('adults') || '').trim();
+      var when = (params.get('when') || '').trim();
+      var sort = (params.get('sort') || '').trim();
+      var priceMax = (params.get('price_max') || '').trim();
+      var rating = (params.get('rating') || '').trim();
+      var type = (params.get('type') || '').trim();
+      var anytime = (params.get('anytime') || '').trim();
+
+      if (what) tags.push(what);
+      if (mode === 'online') {
+        tags.push('Online only');
+      } else if (where) {
+        tags.push(where);
+      }
+      if (when) tags.push(when);
+      if (groupType) tags.push(groupType.charAt(0).toUpperCase() + groupType.slice(1));
+      if (adults && Number(adults) > 1) tags.push(adults + ' guests');
+      if (sort && sort !== 'popular') {
+        if (sort === 'rating_desc') tags.push('Highest rated');
+        else if (sort === 'price_asc') tags.push('Price: low to high');
+        else if (sort === 'price_desc') tags.push('Price: high to low');
+        else if (sort === 'newest') tags.push('Newest');
+        else tags.push(sort);
+      }
+      if (priceMax) tags.push('Under £' + priceMax);
+      if (rating) {
+        if (rating === 'reviewed') tags.push('Reviewed only');
+        else tags.push(rating + '+ stars');
+      }
+      if (type) {
+        tags.push(type);
+      }
+      if (anytime) {
+        tags.push('Anytime');
+      }
+
+      tags = tags.filter(function (tag) {
+        var key = normalizeText(tag);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      tagsEl.innerHTML = tags.map(function (tag) {
+        return '<span class="badge badge--cool">' + escapeHtml(tag) + '</span>';
+      }).join('');
+    }
+
+    function setResultsShellView(view) {
+      if (!resultsShell) return;
+      var isList = view === 'list';
+      resultsShell.classList.toggle('container', isList);
+      resultsShell.classList.toggle('container-fluid', !isList);
+    }
+
+    function setColsForView(view) {
+      if (!layout) return;
+      var resultsCol = layout.querySelector('.col-results');
+      var mapCol = layout.querySelector('.col-map');
+
       if (!resultsCol || !mapCol) return;
+
       if (view === 'list') {
-        // results full width
-        resultsCol.classList.remove('col-lg-7');
+        resultsCol.classList.remove('col-lg-6');
         resultsCol.classList.add('col-lg-12');
+        mapCol.classList.remove('col-lg-6');
+        mapCol.classList.add('col-lg-12');
       } else {
-        // side by side: 7/5 split
         resultsCol.classList.remove('col-lg-12');
-        resultsCol.classList.add('col-lg-7');
+        resultsCol.classList.add('col-lg-6');
+        mapCol.classList.remove('col-lg-12');
+        mapCol.classList.add('col-lg-6');
       }
     }
-    function setItemCols(view){
-      var items = document.querySelectorAll('.results-scroll .row > div');
-      items.forEach(function(it){
+
+    function setItemCols(view) {
+      if (!grid) return;
+      var items = Array.from(grid.children || []).filter(function (child) {
+        if (!child || !child.tagName) return false;
+        if (child.hasAttribute('data-pid')) return true;
+        return !!child.querySelector('.wow-card-sm-wrap');
+      });
+
+      items.forEach(function (item) {
         if (view === 'list') {
-          it.classList.remove('col-12');
-          it.classList.add('col-sm-6','col-lg-3');
+          item.classList.remove('col-12', 'col-md-6', 'col-lg-4', 'col-xl-4', 'col-xxl-4');
+          item.classList.add('col-md-6', 'col-sm-6', 'col-lg-3');
         } else {
-          it.classList.remove('col-sm-6','col-lg-3');
-          it.classList.add('col-12');
+          item.classList.remove('col-sm-6', 'col-md-6', 'col-lg-3', 'col-lg-4', 'col-xl-4', 'col-xxl-4');
+          item.classList.add('col-12', 'col-md-6');
         }
       });
     }
-    // Hover markers when hovering product items
-    function bindHover(){
-      var container = document.querySelector('.results-scroll');
-      if(!container) return;
-      container.addEventListener('mouseover', function(e){
-        var item = e.target.closest('[data-pid]');
-        if(!item) return;
-        var pid = item.getAttribute('data-pid');
-        var group = (window.__wowMarkersByPid||{})[String(pid)]||[];
-        group.forEach(function(m){ m.el.classList.add('is-active'); });
-        // Center map on hovered product's marker
-        try{
-          var map = window.__wowMap;
-          if (map && group.length){
-            var ll = group[0].marker.getLngLat();
-            map.easeTo({ center: [ll.lng, ll.lat], zoom: Math.max(map.getZoom(), 13), duration: 300 });
-          }
-        }catch(_e){}
-      });
-      container.addEventListener('mouseout', function(e){
-        var item = e.target.closest('[data-pid]');
-        if(!item) return;
-        var pid = item.getAttribute('data-pid');
-        var group = (window.__wowMarkersByPid||{})[String(pid)]||[];
-        group.forEach(function(m){ m.el.classList.remove('is-active'); });
-      });
-    }
-    // Ensure map view buttons work and don't bubble to any parent click areas
-    try{
-      document.addEventListener('click', function(e){
-        var add = e.target.closest('.result-view-map .js-add-to-cart');
-        if (add) { try{ e.stopPropagation(); }catch(_e){} }
-        var buy = e.target.closest('.result-view-map .js-buy-now');
-        if (buy) {
-          try{ e.stopPropagation(); }catch(_e){}
-          var url = buy.getAttribute('data-url');
-          if (url) { window.location.href = url; }
-        }
-      }, true);
-    }catch(_e){}
-    // Track scroll: keep map focused on product at top of list
-    function bindScrollTracking(){
-      var cont = document.querySelector('.results-scroll');
-      if (!cont) return;
-      var ticking = false, lastPid = null;
-      function onScroll(){
-        if (ticking) return; ticking = true;
-        requestAnimationFrame(function(){
-          try{
-            var rect = cont.getBoundingClientRect();
-            var items = Array.from(cont.querySelectorAll('[data-pid]'));
-            var topItem = null; var topDelta = Infinity;
-            items.forEach(function(it){
-              var r = it.getBoundingClientRect();
-              var d = Math.abs(r.top - rect.top);
-              if (d < topDelta){ topDelta = d; topItem = it; }
-            });
-            if (topItem){
-              var pid = String(topItem.getAttribute('data-pid'));
-              if (pid !== lastPid){
-                lastPid = pid;
-                // Center map on this pid and mark active
-                try{ (window.centerOnPid||window.__centerOnPid||function(){
-                  var group=(window.__wowMarkersByPid||{})[pid]||[]; if(!group.length) return; var ll=group[0].marker.getLngLat(); var map=window.__wowMap; if(map){ map.easeTo({ center:[ll.lng,ll.lat], zoom: Math.max(map.getZoom(), 13), duration: 400 }); } Object.keys(window.__wowMarkersByPid||{}).forEach(function(k){ (window.__wowMarkersByPid[k]||[]).forEach(function(m){ m.el.classList.toggle('is-active', k===pid); }); });
-                })(); }catch(_e){}
 
-              }
-            }
-          }catch(_e){}
-          ticking = false;
-        });
+    function setViewMode(view, options) {
+      options = options || {};
+      currentView = view === 'list' ? 'list' : 'map';
+      if (layout) {
+        layout.classList.toggle('sr-list-only', currentView === 'list');
       }
-      cont.addEventListener('scroll', onScroll, { passive: true });
-      // Run once to sync
-      try{ onScroll(); }catch(_e){}
-    }
-    // Initial state: Map active -> enable mode, show both columns
-    setModeEnabled(true);
-    setColsForView('map');
-    setItemCols('map');
-    // Ensure buttons reflect Map active
-    try{
-      var viewBtns = document.querySelectorAll('[data-view]');
-      viewBtns.forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
-      var mapBtn = document.querySelector('[data-view="map"]');
-      if(mapBtn){ mapBtn.classList.add('active'); mapBtn.setAttribute('aria-selected','true'); }
-      layout.classList.remove('sr-list-only');
-    }catch(e){}
-    document.querySelectorAll('[data-view]')?.forEach(function(btn){
-      btn.addEventListener('click', function(){
-        document.querySelectorAll('[data-view]')?.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false') })
-        btn.classList.add('active'); btn.setAttribute('aria-selected','true')
-        var v = btn.getAttribute('data-view');
-        if (!layout) return;
-        layout.classList.remove('sr-list-only');
-        if (v === 'map') {
-          // Map view: show both columns
-          setModeEnabled(true);
-          setColsForView('map');
-          setItemCols('map');
-        } else {
-          // List view: hide map column
-          layout.classList.add('sr-list-only');
-          setModeEnabled(false);
-          setColsForView('list');
-          setItemCols('list');
-        }
-      })
-    })
-    bindHover();
-    bindScrollTracking();
+      setResultsShellView(currentView);
+      setColsForView(currentView);
+      setItemCols(currentView);
 
-    (function hydrateSearchResults(){
-      var grid = document.getElementById('searchResultsGrid');
-      var countEl = document.getElementById('searchResultsCount');
-      var paginationEl = document.getElementById('searchResultsPagination');
-      var template = document.getElementById('searchResultsGhostTemplate');
+      if (options.updateMapMode !== false) {
+        if (currentView === 'list') {
+          // keep the hidden map quiet but preserve the pitch state
+        }
+      }
+    }
+
+    function setMapMode(mode) {
+      currentMapMode = mode === '3d' ? '3d' : '2d';
+      if (!mapState.map) return;
+
+      try {
+        mapState.map.easeTo({
+          pitch: currentMapMode === '3d' ? 60 : 0,
+          bearing: currentMapMode === '3d' ? -17 : 0,
+          duration: 600,
+        });
+      } catch (_err) {}
+    }
+
+    function updateCount(count, countText) {
+      if (countEl) {
+        if (typeof countText === 'string' && countText.trim() !== '') {
+          countEl.textContent = countText;
+        } else if (typeof count === 'number') {
+          countEl.textContent = count + ' results';
+        }
+      }
+
+      lastCountText = countEl ? countEl.textContent : '';
+
+      try {
+        window.dispatchEvent(new CustomEvent('wow:searchbar-v4:results-updated', {
+          detail: {
+            count: typeof count === 'number' ? count : null,
+            countText: typeof countText === 'string' ? countText : lastCountText,
+          },
+        }));
+      } catch (_err) {}
+    }
+
+    function buildGhostHtml() {
+      if (!template || !template.innerHTML) return '';
+      var ghostCount = Math.max(2, Math.min(6, parseInt(grid?.dataset?.ghostCount || '4', 10) || 4));
+      return Array.from({ length: ghostCount }, function () {
+        return template.innerHTML.trim();
+      }).join('');
+    }
+
+    function setLoadingState(isLoading) {
       if (!grid) return;
 
-      var initialGridHtml = grid.innerHTML;
-      var initialCountText = countEl ? countEl.textContent : '';
-      var initialPaginationHtml = paginationEl ? paginationEl.innerHTML : '';
-      var ghostCount = Math.max(2, Math.min(6, parseInt(grid.dataset.ghostCount || '4', 10) || 4));
-      var ghostHtml = '';
-
-      if (template && template.innerHTML) {
-        ghostHtml = Array.from({ length: ghostCount }, function () {
-          return template.innerHTML.trim();
-        }).join('');
-      }
-
-      if (ghostHtml) {
-        grid.innerHTML = ghostHtml;
+      if (isLoading) {
+        if (!initialGhostHtml) {
+          initialGhostHtml = buildGhostHtml();
+        }
+        if (initialGhostHtml) {
+          grid.innerHTML = initialGhostHtml;
+          setItemCols(currentView);
+        }
         grid.setAttribute('aria-busy', 'true');
+        if (paginationEl) paginationEl.setAttribute('aria-busy', 'true');
+        return;
       }
 
-      if (paginationEl) {
-        paginationEl.setAttribute('aria-busy', 'true');
+      grid.removeAttribute('aria-busy');
+      if (paginationEl) paginationEl.removeAttribute('aria-busy');
+    }
+
+    function renderGridHtml(html) {
+      if (!grid || typeof html !== 'string') return;
+      grid.innerHTML = html;
+      setItemCols(currentView);
+    }
+
+    function renderPaginationHtml(html) {
+      if (!paginationEl || typeof html !== 'string') return;
+      paginationEl.innerHTML = html;
+    }
+
+    function clearMarkers() {
+      Object.keys(mapState.markersByPid || {}).forEach(function (pid) {
+        var group = mapState.markersByPid[pid] || [];
+        group.forEach(function (markerEntry) {
+          try {
+            markerEntry.marker.remove();
+          } catch (_err) {}
+        });
+      });
+      mapState.markersByPid = {};
+      window.__wowMarkersByPid = mapState.markersByPid;
+    }
+
+    function highlightPid(pid) {
+      Object.keys(mapState.markersByPid || {}).forEach(function (key) {
+        (mapState.markersByPid[key] || []).forEach(function (markerEntry) {
+          markerEntry.el.classList.toggle('is-active', String(key) === String(pid));
+        });
+      });
+    }
+
+    function centerOnPid(pid, options) {
+      options = options || {};
+      if (!mapState.map) return;
+
+      var group = (mapState.markersByPid || {})[String(pid)] || [];
+      if (!group.length) return;
+
+      try {
+        var ll = group[0].marker.getLngLat();
+        mapState.map.easeTo({
+          center: [ll.lng, ll.lat],
+          zoom: Math.max(mapState.map.getZoom(), options.zoom || 14),
+          duration: options.duration || 450,
+        });
+        highlightPid(pid);
+      } catch (_err) {}
+    }
+
+    function bindHoverTracking() {
+      if (!resultsScroll) return;
+
+      resultsScroll.addEventListener('mouseover', function (event) {
+        var item = event.target.closest('[data-pid]');
+        if (!item) return;
+        var pid = item.getAttribute('data-pid');
+        if (!pid) return;
+        highlightPid(pid);
+        if (currentView === 'map') {
+          centerOnPid(pid, { zoom: 13, duration: 300 });
+        }
+      });
+
+      resultsScroll.addEventListener('mouseout', function (event) {
+        var item = event.target.closest('[data-pid]');
+        if (!item) return;
+        var pid = item.getAttribute('data-pid');
+        if (!pid) return;
+        highlightPid('');
+      });
+
+      resultsScroll.addEventListener('scroll', function () {
+        if (currentView !== 'map') return;
+        if (!mapState.map) return;
+
+        var containerRect = resultsScroll.getBoundingClientRect();
+        var items = Array.from(resultsScroll.querySelectorAll('[data-pid]'));
+        if (!items.length) return;
+
+        var closest = null;
+        var bestDelta = Infinity;
+        items.forEach(function (item) {
+          var rect = item.getBoundingClientRect();
+          var delta = Math.abs(rect.top - containerRect.top);
+          if (delta < bestDelta) {
+            bestDelta = delta;
+            closest = item;
+          }
+        });
+
+        if (!closest) return;
+        var pid = String(closest.getAttribute('data-pid') || '');
+        if (!pid) return;
+        centerOnPid(pid, { zoom: 13, duration: 250 });
+      }, { passive: true });
+    }
+
+    function buildMarkerEntry(item, map) {
+      var el = document.createElement('div');
+      el.className = 'wow-marker';
+      el.title = item.title || '';
+      el.style.zIndex = '5';
+      el.style.cursor = 'pointer';
+
+      var marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([Number(item.lng), Number(item.lat)])
+        .setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML('<div style="font-weight:600">' + escapeHtml(item.title || '') + '</div>'))
+        .addTo(map);
+
+      var pid = String(item.pid || item.id || '');
+      if (!mapState.markersByPid[pid]) {
+        mapState.markersByPid[pid] = [];
+      }
+      mapState.markersByPid[pid].push({ marker: marker, el: el });
+
+      el.addEventListener('click', function (event) {
+        try { event.stopPropagation(); } catch (_err) {}
+        var itemEl = document.querySelector('[data-pid="' + pid + '"]');
+        if (itemEl) {
+          itemEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          itemEl.classList.add('is-active');
+          setTimeout(function () {
+            try { itemEl.classList.remove('is-active'); } catch (_err) {}
+          }, 1200);
+        }
+        centerOnPid(pid, { zoom: 14, duration: 500 });
+      });
+
+      return { marker: marker, el: el };
+    }
+
+    function renderMapData(data) {
+      mapState.pendingData = Array.isArray(data) ? data.slice() : [];
+      if (!mapState.map || !mapState.ready) return;
+
+      clearMarkers();
+
+      if (!Array.isArray(mapState.pendingData) || mapState.pendingData.length === 0) {
+        return;
       }
 
-      fetch(window.location.href, {
+      var bounds = new mapboxgl.LngLatBounds();
+      var added = 0;
+
+      mapState.pendingData.forEach(function (item) {
+        if (!isFinite(Number(item.lat)) || !isFinite(Number(item.lng))) return;
+        buildMarkerEntry(item, mapState.map);
+        bounds.extend([Number(item.lng), Number(item.lat)]);
+        added += 1;
+      });
+
+      window.__wowMarkersByPid = mapState.markersByPid;
+
+      if (added > 1) {
+        try {
+          mapState.map.fitBounds(bounds, { padding: 100, maxZoom: 13, duration: 500 });
+        } catch (_err) {}
+      } else if (added === 1) {
+        var only = mapState.pendingData[0];
+        try {
+          mapState.map.setCenter([Number(only.lng), Number(only.lat)]);
+          mapState.map.setZoom(14);
+        } catch (_err) {}
+      }
+
+      try {
+        var firstItem = document.querySelector('.results-scroll [data-pid]');
+        if (firstItem) {
+          centerOnPid(firstItem.getAttribute('data-pid'), { zoom: 14, duration: 300 });
+        }
+      } catch (_err) {}
+    }
+
+    function initMapbox(token) {
+      if (!mapEl) return;
+      if (!token) {
+        try {
+          mapEl.innerHTML = '<div style="padding:12px;color:#334155;font-size:14px;">Map unavailable: missing MAPBOX_API_KEY. Set it in .env.</div>';
+        } catch (_err) {}
+        return;
+      }
+
+      mapboxgl.accessToken = token;
+
+      var center = mapState.pendingData.length
+        ? [Number(mapState.pendingData[0].lng), Number(mapState.pendingData[0].lat)]
+        : [-0.1276, 51.5072];
+
+      var map = new mapboxgl.Map({
+        container: mapEl,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: center,
+        zoom: 13,
+        pitch: 0,
+        bearing: 0,
+        antialias: true,
+        fadeDuration: 0,
+      });
+
+      map.on('load', function () {
+        var layers = map.getStyle().layers || [];
+        var labelLayerId = null;
+
+        for (var i = 0; i < layers.length; i += 1) {
+          if (layers[i].type === 'symbol' && layers[i].layout && layers[i].layout['text-field']) {
+            labelLayerId = layers[i].id;
+            break;
+          }
+        }
+
+        try {
+          map.addLayer({
+            id: '3d-buildings',
+            source: 'composite',
+            'source-layer': 'building',
+            filter: ['==', 'extrude', 'true'],
+            type: 'fill-extrusion',
+            minzoom: 15,
+            paint: {
+              'fill-extrusion-color': '#aaa',
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'min_height'],
+              'fill-extrusion-opacity': 0.6,
+            },
+          }, labelLayerId || undefined);
+        } catch (_err) {}
+
+        mapState.map = map;
+        mapState.ready = true;
+        window.__wowMap = map;
+        window.__centerOnPid = centerOnPid;
+        window.__wowSetMapData = renderMapData;
+        window.__wowSetMapMode = setMapMode;
+
+        renderMapData(mapState.pendingData);
+        setMapMode(currentMapMode);
+      });
+    }
+
+    function ensureMapboxAssets(token) {
+      if (!mapEl) return;
+
+      var hasCss = !!document.querySelector('link[href*="mapbox-gl.css"]');
+      if (!hasCss) {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css';
+        document.head.appendChild(link);
+      }
+
+      if (!window.mapboxgl) {
+        var script = document.createElement('script');
+        script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js';
+        script.async = true;
+        script.defer = true;
+        script.onload = function () {
+          initMapbox(token);
+        };
+        document.head.appendChild(script);
+      } else {
+        initMapbox(token);
+      }
+    }
+
+    function applyUrlState(url) {
+      var params = currentUrlParams(url);
+      setViewMode(params.get('view') === 'list' ? 'list' : 'map');
+      setMapMode(params.get('map_mode') === '3d' ? '3d' : '2d');
+      renderTagsFromUrl(url);
+    }
+
+    function fetchSearchResults(url, options) {
+      options = options || {};
+      if (!grid) return;
+
+      var nextUrl = String(url || window.location.href);
+      var requestId = ++currentRequestId;
+
+      if (activeAbortController) {
+        try { activeAbortController.abort(); } catch (_err) {}
+      }
+      activeAbortController = new AbortController();
+
+      lastGridHtml = grid.innerHTML;
+      lastPaginationHtml = paginationEl ? paginationEl.innerHTML : lastPaginationHtml;
+      lastCountText = countEl ? countEl.textContent : lastCountText;
+
+      setViewMode(options.viewMode || currentView);
+      setMapMode(options.mapMode || currentMapMode);
+      syncHistory(nextUrl);
+      renderTagsFromUrl(nextUrl);
+      setLoadingState(true);
+
+      fetch(nextUrl, {
         cache: 'no-store',
         credentials: 'same-origin',
+        signal: activeAbortController.signal,
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
         },
       })
@@ -940,39 +1010,126 @@
           if (!response.ok) {
             throw new Error('Search API request failed: ' + response.status);
           }
-
           return response.json();
         })
         .then(function (payload) {
+          if (requestId !== currentRequestId) return;
+
           if (payload && typeof payload.grid_html === 'string') {
-            grid.innerHTML = payload.grid_html;
+            renderGridHtml(payload.grid_html);
+            lastGridHtml = grid.innerHTML;
           }
 
-          if (countEl && typeof payload.count_text === 'string') {
-            countEl.textContent = payload.count_text;
+          if (payload && typeof payload.pagination_html === 'string') {
+            renderPaginationHtml(payload.pagination_html);
+            lastPaginationHtml = paginationEl ? paginationEl.innerHTML : lastPaginationHtml;
           }
 
-          if (paginationEl && typeof payload.pagination_html === 'string') {
-            paginationEl.innerHTML = payload.pagination_html;
+          if (payload) {
+            updateCount(
+              typeof payload.count === 'number' ? payload.count : null,
+              typeof payload.count_text === 'string' ? payload.count_text : null
+            );
+          }
+
+          if (payload && Array.isArray(payload.map_data)) {
+            renderMapData(payload.map_data);
+          } else {
+            renderMapData([]);
+          }
+
+          if (payload && typeof payload.url === 'string') {
+            renderTagsFromUrl(payload.url);
           }
         })
         .catch(function (error) {
-          console.warn('[search] api hydration failed', error);
-          grid.innerHTML = initialGridHtml;
-          if (countEl) {
-            countEl.textContent = initialCountText;
-          }
-          if (paginationEl) {
-            paginationEl.innerHTML = initialPaginationHtml;
-          }
+          if (error && error.name === 'AbortError') return;
+          console.warn('[search] api refresh failed', error);
+          if (grid) grid.innerHTML = lastGridHtml;
+          if (paginationEl) paginationEl.innerHTML = lastPaginationHtml;
+          if (countEl) countEl.textContent = lastCountText;
+          setItemCols(currentView);
         })
         .finally(function () {
-          grid.removeAttribute('aria-busy');
-          if (paginationEl) {
-            paginationEl.removeAttribute('aria-busy');
-          }
+          if (requestId !== currentRequestId) return;
+          setLoadingState(false);
         });
-    })();
-  } catch {}
+    }
+
+    function handleQueryChange(event) {
+      var detail = event && event.detail ? event.detail : {};
+      if (!detail.url) return;
+      var params = currentUrlParams(detail.url);
+      applyUrlState(detail.url);
+      fetchSearchResults(detail.url, {
+        viewMode: params.get('view') === 'list' ? 'list' : 'map',
+        mapMode: params.get('map_mode') === '3d' ? '3d' : '2d',
+      });
+    }
+
+    function handleLayoutChange(event) {
+      var detail = event && event.detail ? event.detail : {};
+      if (!detail.url) return;
+      applyUrlState(detail.url);
+      syncHistory(detail.url);
+      if (detail.state && detail.state.mapMode) {
+        setMapMode(detail.state.mapMode);
+      }
+      if (detail.state && detail.state.viewMode) {
+        setViewMode(detail.state.viewMode);
+      }
+      renderTagsFromUrl(detail.url);
+    }
+
+    function handlePopState() {
+      var url = window.location.href;
+      applyUrlState(url);
+      fetchSearchResults(url, {
+        viewMode: currentView,
+        mapMode: currentMapMode,
+      });
+    }
+
+    function bindUtilityClicks() {
+      document.addEventListener('click', function (event) {
+        var add = event.target.closest('.result-view-map .js-add-to-cart');
+        if (add) {
+          try { event.stopPropagation(); } catch (_err) {}
+        }
+
+        var buy = event.target.closest('.result-view-map .js-buy-now');
+        if (buy) {
+          try { event.stopPropagation(); } catch (_err) {}
+          var url = buy.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        }
+      }, true);
+    }
+
+    function ensureSearchBarStateFromUrl() {
+      applyUrlState(window.location.href);
+      renderTagsFromUrl(window.location.href);
+      setItemCols(currentView);
+    }
+
+    function boot() {
+      ensureSearchBarStateFromUrl();
+      bindHoverTracking();
+      bindUtilityClicks();
+
+      var token = mapboxToken || window.WOW_MAPS_KEY || fallbackMapToken || '';
+      ensureMapboxAssets(token);
+
+      window.addEventListener('wow:searchbar-v4:query-change', handleQueryChange);
+      window.addEventListener('wow:searchbar-v4:layout-change', handleLayoutChange);
+      window.addEventListener('popstate', handlePopState);
+    }
+
+    boot();
+  } catch (error) {
+    console.warn('[search] bootstrap failed', error);
+  }
 })();
 </script>

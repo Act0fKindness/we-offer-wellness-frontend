@@ -15,35 +15,116 @@ function readCookie(name){
   } catch { return '' }
 }
 
-function mapToItems(obj){
+function extractStoredItems(obj){
   if (!obj) return []
-  if (Array.isArray(obj)) return obj.map(normalizeItemSafely)
-  if (typeof obj === 'object') return Object.values(obj).map(normalizeItemSafely)
+  if (Array.isArray(obj)) return obj
+  if (typeof obj === 'object' && Array.isArray(obj.items)) return obj.items
+  if (typeof obj === 'object') return Object.values(obj)
   return []
+}
+
+function dedupeItems(items){
+  const seen = new Set()
+  return (items || []).filter(item => {
+    const id = String(item?.id ?? '')
+    if (!id || seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
+}
+
+function mapToItems(obj){
+  return extractStoredItems(obj).map(normalizeItemSafely).filter(Boolean)
 }
 
 function normalizeItemSafely(it){
   try { return normalizeItem(it) } catch { return null }
 }
 
-function load() {
-  // Prefer server-synced cookie (wow_cart) if present
+function readCookieItems(name){
   try {
-    const cookieRaw = readCookie(COOKIE_KEY)
-    if (cookieRaw) {
-      const parsed = JSON.parse(cookieRaw)
-      const items = mapToItems(parsed).filter(Boolean)
-      if (items.length) return { items }
-    }
-  } catch {}
-  // Fallback to legacy localStorage format
+    const prefix = `${name}=`
+    const matches = document.cookie
+      .split(';')
+      .map(r => r.trim())
+      .filter(r => r.startsWith(prefix))
+    if (!matches.length) return []
+    const items = []
+    matches.forEach((row) => {
+      try {
+        const raw = decodeURIComponent(row.slice(prefix.length))
+        const parsed = JSON.parse(raw)
+        items.push(...mapToItems(parsed))
+      } catch {}
+    })
+    return items
+  } catch {
+    return []
+  }
+}
+
+function readLocalStorageItems(){
   try {
     const raw = localStorage.getItem(LS_KEY)
-    if (!raw) return { items: [] }
-    const obj = JSON.parse(raw)
-    if (!Array.isArray(obj.items)) return { items: [] }
-    return { items: obj.items }
-  } catch { return { items: [] } }
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      const items = mapToItems(parsed)
+      if (items.length) return items
+    }
+  } catch {}
+  try {
+    const raw = localStorage.getItem(LEGACY_LS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return mapToItems(parsed)
+  } catch {
+    return []
+  }
+}
+
+function mergeCartItems(primary, fallback){
+  const fallbackById = new Map((fallback || []).map(it => [String(it?.id ?? ''), it]).filter(([id]) => id))
+  return (primary || []).map(item => {
+    const rich = fallbackById.get(String(item?.id ?? ''))
+    if (!rich) return item
+    const meta = {
+      ...(rich.meta && typeof rich.meta === 'object' ? rich.meta : {}),
+      ...(item.meta && typeof item.meta === 'object' ? item.meta : {}),
+    }
+    return {
+      ...rich,
+      ...item,
+      title: item.title || rich.title || '',
+      price: Number(item.price ?? rich.price ?? 0) || 0,
+      qty: Number(item.qty ?? rich.qty ?? 1) > 0 ? Number(item.qty ?? rich.qty ?? 1) : 1,
+      image: item.image || rich.image || null,
+      url: item.url || rich.url || '#',
+      meta,
+    }
+  })
+}
+
+function compactCookieItem(item){
+  if (!item?.id) return null
+  const meta = (item.meta && typeof item.meta === 'object') ? item.meta : {}
+  return {
+    id: String(item.id),
+    product_id: item.product_id || meta.product_id || null,
+    variant_id: item.variant_id || meta.variant_id || null,
+    variant_label: item.variant_label || meta.variant_label || '',
+    title: item.title || '',
+    price: Number(item.price || 0) || 0,
+    qty: Math.max(1, Number(item.qty || 1) || 1),
+    image: item.image || null,
+    url: item.url || '#',
+  }
+}
+
+function load() {
+  const localItems = readLocalStorageItems()
+  const cookieItems = dedupeItems(readCookieItems(COOKIE_KEY))
+  if (cookieItems.length) return { items: mergeCartItems(cookieItems, localItems) }
+  return { items: localItems }
 }
 
 const state = reactive(load())
@@ -60,33 +141,16 @@ function persist(){
   } catch {}
   if (typeof document === 'undefined') return
   try {
-    const payload = {}
-    state.items.forEach(it => {
-      if (!it?.id) return
-      const meta = (it?.meta && typeof it.meta === 'object') ? it.meta : {}
-      payload[String(it.id)] = {
-        id: it.id,
-        product_id: it.product_id || meta.product_id || null,
-        variant_id: it.variant_id || meta.variant_id || null,
-        variant_label: it.variant_label || meta.variant_label || '',
-        title: it.title || '',
-        price: Number(it.price) || 0,
-        qty: Number(it.qty) || 1,
-        image: it.image || null,
-        url: it.url || '#',
-        meta,
-        booking: meta.booking || {},
-        selected: Array.isArray(meta.selected) ? meta.selected : [],
-        groupCount: meta.groupCount ?? meta.group_count ?? null,
-        reservationId: meta.reservationId ?? meta.reservation_id ?? null,
-        holdExpiresAt: meta.holdExpiresAt ?? meta.hold_expires_at ?? null,
-        location: meta.location || null,
-        options: Array.isArray(meta.variant_options) ? meta.variant_options : [],
-        source_version: meta.source_version || null,
-      }
-    })
+    const payload = state.items.map(compactCookieItem).filter(Boolean)
     const maxAge = 30 * 24 * 60 * 60
-    document.cookie = `${COOKIE_KEY}=${encodeURIComponent(JSON.stringify(payload))}; Path=/; Max-Age=${maxAge}; SameSite=Lax`
+    if (payload.length) {
+      const encoded = encodeURIComponent(JSON.stringify(payload))
+      document.cookie = `${COOKIE_KEY}=; Path=/; Max-Age=0; SameSite=Lax`
+      document.cookie = `${COOKIE_KEY}=${encoded}; Domain=.weofferwellness.co.uk; Path=/; Max-Age=${maxAge}; SameSite=Lax`
+    } else {
+      document.cookie = `${COOKIE_KEY}=; Path=/; Max-Age=0; SameSite=Lax`
+      document.cookie = `${COOKIE_KEY}=; Domain=.weofferwellness.co.uk; Path=/; Max-Age=0; SameSite=Lax`
+    }
   } catch {}
 }
 

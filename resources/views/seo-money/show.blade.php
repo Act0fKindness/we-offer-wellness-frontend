@@ -6,55 +6,246 @@
   @if(!empty($seo['robots']))<meta name="robots" content="{{ $seo['robots'] }}">@endif
   @php
     $pageCanonical = $seo['canonical'] ?? url()->current();
-    $itemListLd = [
-      '@context' => 'https://schema.org',
-      '@type' => 'ItemList',
-      'itemListElement' => collect($products ?? [])
-        ->values()
-        ->take(12)
-        ->map(function ($product, $index) {
-            $slug = \Illuminate\Support\Str::slug((string) ($product->title ?? $product->name ?? $product->id));
-            return [
-                '@type' => 'ListItem',
-                'position' => $index + 1,
-                'url' => url('/offerings/' . $product->id . '-' . $slug),
-                'name' => (string) ($product->title ?? $product->name ?? 'Offering'),
-            ];
-        })
-        ->values()
-        ->all(),
-    ];
-    $faqLd = [
-      '@context' => 'https://schema.org',
-      '@type' => 'FAQPage',
-      'mainEntity' => collect($page['faqs'] ?? [])
-        ->map(function (array $faq) {
-            return [
-                '@type' => 'Question',
-                'name' => (string) ($faq['q'] ?? ''),
-                'acceptedAnswer' => [
-                    '@type' => 'Answer',
-                    'text' => (string) ($faq['a'] ?? ''),
-                ],
-            ];
-        })
-        ->filter(fn (array $faq) => $faq['name'] !== '' && trim((string) data_get($faq, 'acceptedAnswer.text', '')) !== '')
-        ->values()
-        ->all(),
-    ];
-    $pageTitle = trim((string) ($page['title'] ?? $page['h1'] ?? 'Search'));
-    $pageBreadcrumb = trim((string) preg_replace('/\s*\|.*$/', '', $pageTitle));
-    if ($pageBreadcrumb === '') {
-      $pageBreadcrumb = trim((string) ($page['h1'] ?? 'Search'));
+    $seoService = app(\App\Services\SeoStructureService::class);
+    $schemaFormat = $seoService->canonicalFormatKey((string) data_get($page, 'format', 'therapies'));
+    $schemaModality = $seoService->categorySlug((string) data_get($page, 'modality', data_get($page, 'category_slug', '')));
+    $schemaModalityLabel = trim((string) data_get($page, 'schema_term_label', ''));
+    if ($schemaModalityLabel === '') {
+      $schemaModalityLabel = $seoService->categoryLabel($schemaModality);
     }
-    $pageCrumbs = [
-      ['label' => 'Home', 'url' => url('/')],
-      ['label' => 'Search', 'url' => $searchBreadcrumbUrl ?? url('/search')],
-      ['label' => $pageBreadcrumb],
+    $schemaPageTitle = trim((string) ($page['title'] ?? $page['h1'] ?? 'Search'));
+    $schemaDescription = trim((string) ($seo['description'] ?? ($page['description'] ?? '')));
+    $schemaLocation = collect($savedLocation ?? []);
+    $schemaLocationLabel = trim((string) ($schemaLocation['label'] ?? ''));
+    if ($schemaLocationLabel === '') {
+      $schemaLocationLabel = trim(implode(', ', array_filter([
+        trim((string) ($schemaLocation['city'] ?? '')),
+        trim((string) ($schemaLocation['region'] ?? '')),
+        trim((string) ($schemaLocation['country'] ?? '')),
+      ])));
+    }
+    $schemaOrganizationId = url('/') . '#organization';
+    $schemaWebsiteId = url('/') . '#website';
+    $schemaLogoUrl = 'https://studio.weofferwellness.co.uk/storage/uploads/images/e9dc87f9-01bf-4ffd-be8f-e1f49a85bf41.png';
+    $schemaLocationPath = trim((string) data_get($schemaLocation, 'path', ''));
+    $schemaLocationPlaceId = $schemaLocationPath !== '' ? url($schemaLocationPath) . '#place' : $pageCanonical . '#place';
+    $schemaLocationCountry = trim((string) data_get($schemaLocation, 'country', ''));
+    $schemaLocationCountryCode = $schemaLocationCountry !== '' && preg_match('/^(united kingdom|uk|u\.k\.|great britain|gb|england|scotland|wales|northern ireland)$/i', $schemaLocationCountry)
+      ? 'GB'
+      : $schemaLocationCountry;
+    $schemaItemType = trim((string) data_get($page, 'schema_item_type', 'Service'));
+    if (!in_array($schemaItemType, ['Service', 'Event'], true)) {
+      $schemaItemType = 'Service';
+    }
+    $schemaFaqItems = collect($page['faqs'] ?? [])
+      ->map(function (array $faq) {
+        return [
+          'q' => trim((string) ($faq['q'] ?? '')),
+          'a' => trim((string) ($faq['a'] ?? '')),
+        ];
+      })
+      ->filter(fn (array $faq) => $faq['q'] !== '' && $faq['a'] !== '')
+      ->values()
+      ->all();
+
+    $schemaBreadcrumbCrumbs = collect($pageCrumbs ?? [])
+      ->map(function ($crumb) {
+        return [
+          'label' => trim((string) data_get($crumb, 'label', '')),
+          'url' => trim((string) data_get($crumb, 'url', '')),
+        ];
+      })
+      ->filter(fn (array $crumb) => $crumb['label'] !== '')
+      ->values()
+      ->all();
+
+    if ($schemaBreadcrumbCrumbs === []) {
+      $pageTitle = trim((string) ($page['title'] ?? $page['h1'] ?? 'Search'));
+      $pageBreadcrumb = trim((string) preg_replace('/\s*\|.*$/', '', $pageTitle));
+      if ($pageBreadcrumb === '') {
+        $pageBreadcrumb = trim((string) ($page['h1'] ?? 'Search'));
+      }
+      $schemaBreadcrumbCrumbs = [
+        ['label' => 'Home', 'url' => url('/')],
+        ['label' => 'Search', 'url' => $searchBreadcrumbUrl ?? url('/search')],
+        ['label' => $pageBreadcrumb],
+      ];
+    }
+    $pageCrumbs = $schemaBreadcrumbCrumbs;
+
+    $schemaLocationPlace = null;
+    if ($schemaLocationLabel !== '' || $schemaLocationPath !== '') {
+      $schemaLocationPlace = array_filter([
+        '@type' => 'Place',
+        '@id' => $schemaLocationPlaceId,
+        'name' => $schemaLocationLabel !== '' ? $schemaLocationLabel : trim((string) data_get($schemaLocation, 'city', '')),
+        'address' => array_filter([
+          '@type' => 'PostalAddress',
+          'addressLocality' => trim((string) data_get($schemaLocation, 'city', '')) ?: null,
+          'addressRegion' => trim((string) data_get($schemaLocation, 'region', '')) ?: null,
+          'addressCountry' => $schemaLocationCountryCode !== '' ? $schemaLocationCountryCode : null,
+        ], static fn ($value) => $value !== null && $value !== ''),
+      ], static fn ($value) => $value !== null && $value !== '');
+    }
+
+    $schemaItemList = collect($products ?? [])
+      ->values()
+      ->take(12)
+      ->map(function ($product, $index) use ($seoService, $schemaModalityLabel, $schemaItemType, $pageCanonical, $schemaLocationPlace) {
+          $url = $seoService->canonicalProductUrl($product);
+          $title = trim((string) ($product->title ?? $product->name ?? 'Offering'));
+          $image = method_exists($product, 'getFirstImageUrl') ? trim((string) $product->getFirstImageUrl()) : '';
+          $hasImage = method_exists($product, 'hasDisplayableImage')
+            ? (bool) $product->hasDisplayableImage()
+            : ($image !== '' && ! str_contains($image, 'no-product-image.jpg'));
+          $providerName = trim((string) (
+            data_get($product, 'vendor.vendor_name')
+            ?? data_get($product, 'vendor_name')
+            ?? ''
+          ));
+          $price = data_get($product, 'variants_min_price', data_get($product, 'price', null));
+          if (is_numeric($price) && (float) $price > 1000 && ((float) $price % 100) === 0.0) {
+            $price = (float) $price / 100;
+          }
+
+          $schemaItem = [
+            '@type' => $schemaItemType === 'Event' ? 'Event' : 'Service',
+            '@id' => $url . ($schemaItemType === 'Event' ? '#event' : '#service'),
+            'name' => $title,
+            'url' => $url,
+            'description' => trim((string) data_get($product, 'benefit', data_get($product, 'summary', data_get($product, 'description', '')))),
+            'image' => $hasImage && $image !== '' ? [$image] : null,
+          ];
+
+          if ($schemaItemType === 'Event') {
+            $schemaItem['eventAttendanceMode'] = 'https://schema.org/OfflineEventAttendanceMode';
+            $schemaItem['eventStatus'] = 'https://schema.org/EventScheduled';
+          } else {
+            $schemaItem['serviceType'] = $schemaModalityLabel !== '' ? $schemaModalityLabel : 'Wellness service';
+          }
+
+          if ($providerName !== '') {
+            $schemaItem['provider'] = [
+              '@type' => 'Organization',
+              'name' => $providerName,
+            ];
+          }
+
+          if ($schemaLocationPlace !== null) {
+            $schemaItem['areaServed'] = [
+              '@id' => $pageCanonical . '#place',
+            ];
+          }
+
+          if (is_numeric($price) && (float) $price > 0) {
+            $schemaItem['offers'] = [
+              '@type' => 'Offer',
+              'url' => $url,
+              'price' => number_format((float) $price, 2, '.', ''),
+              'priceCurrency' => 'GBP',
+              'availability' => 'https://schema.org/InStock',
+            ];
+          }
+
+          $schemaItem = array_filter($schemaItem, static fn ($value) => $value !== null && $value !== '');
+
+          return [
+            '@type' => 'ListItem',
+            'position' => $index + 1,
+            'url' => $url,
+            'item' => $schemaItem,
+          ];
+      })
+      ->values()
+      ->all();
+
+    $schemaJsonLd = [
+      '@context' => 'https://schema.org',
+      '@graph' => array_values(array_filter([
+        [
+          '@type' => 'Organization',
+          '@id' => $schemaOrganizationId,
+          'name' => 'We Offer Wellness®',
+          'url' => url('/'),
+          'logo' => [
+            '@type' => 'ImageObject',
+            '@id' => $schemaOrganizationId . '-logo',
+            'url' => $schemaLogoUrl,
+          ],
+        ],
+        [
+          '@type' => 'WebSite',
+          '@id' => $schemaWebsiteId,
+          'url' => url('/'),
+          'name' => 'We Offer Wellness®',
+          'publisher' => [
+            '@id' => $schemaOrganizationId,
+          ],
+          'inLanguage' => 'en-GB',
+        ],
+        $schemaModalityLabel !== '' ? [
+          '@type' => 'DefinedTerm',
+          '@id' => $pageCanonical . '#modality',
+          'name' => $schemaModalityLabel,
+          'termCode' => $schemaModality,
+          'inDefinedTermSet' => 'Wellness Modalities',
+        ] : null,
+        [
+          '@type' => 'CollectionPage',
+          '@id' => $pageCanonical . '#webpage',
+          'url' => $pageCanonical,
+          'name' => $schemaPageTitle,
+          'description' => $schemaDescription,
+          'about' => $schemaModalityLabel !== '' ? [
+            '@id' => $pageCanonical . '#modality',
+          ] : null,
+          'mainEntity' => [
+            '@id' => $pageCanonical . '#itemlist',
+          ],
+          'spatialCoverage' => $schemaLocationPlace !== null ? [
+            '@id' => $schemaLocationPlaceId,
+          ] : null,
+          'contentLocation' => $schemaLocationPlace !== null ? [
+            '@id' => $schemaLocationPlaceId,
+          ] : null,
+          'breadcrumb' => [
+            '@id' => $pageCanonical . '#breadcrumb',
+          ],
+          'isPartOf' => [
+            '@id' => $schemaWebsiteId,
+          ],
+          'publisher' => [
+            '@id' => $schemaOrganizationId,
+          ],
+          'inLanguage' => 'en-GB',
+        ],
+        $schemaLocationPlace,
+        [
+          '@type' => 'ItemList',
+          '@id' => $pageCanonical . '#itemlist',
+          'name' => $schemaPageTitle . ' listings',
+          'numberOfItems' => count($schemaItemList),
+          'itemListOrder' => 'https://schema.org/ItemListOrderAscending',
+          'itemListElement' => $schemaItemList,
+        ],
+        $schemaFaqItems !== [] ? [
+          '@type' => 'FAQPage',
+          '@id' => $pageCanonical . '#faq',
+          'mainEntity' => array_map(static function (array $faq): array {
+            return [
+              '@type' => 'Question',
+              'name' => $faq['q'],
+              'acceptedAnswer' => [
+                '@type' => 'Answer',
+                'text' => $faq['a'],
+              ],
+            ];
+          }, $schemaFaqItems),
+        ] : null,
+      ])),
     ];
   @endphp
-  <script type="application/ld+json">{!! json_encode($itemListLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) !!}</script>
-  <script type="application/ld+json">{!! json_encode($faqLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) !!}</script>
+  <script type="application/ld+json">{!! json_encode($schemaJsonLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) !!}</script>
   <style>
     .seo-money-page{
       --ink:#101828;
@@ -386,7 +577,7 @@
   'schemaUrl' => $pageCanonical ?? url()->current(),
   'chips' => array_filter([
     $page['kicker'] ?? null,
-    $products->count() . ' live listings',
+    $products->isNotEmpty() ? ($products->count() . ' live listings') : 'Online & nearby options',
   ]),
 ])
 
@@ -446,6 +637,11 @@
       </aside>
     </div>
 
+    @include('partials.guide_panel', [
+      'guidePanelModality' => data_get($page, 'modality', data_get($page, 'category_slug', request()->route('modality'))),
+      'guidePanelFormat' => data_get($page, 'format', null),
+    ])
+
     <section class="seo-money-section">
       <h2>Popular locations</h2>
       <p>These location pages are useful starting points for finding live listings by county, town or region.</p>
@@ -473,7 +669,7 @@
         </div>
       @else
         <div class="seo-money-empty">
-          No live listings matched this search yet. Use the therapy pages and location links above to keep browsing the current live catalogue.
+          {{ $page['empty_state'] ?? 'We do not currently have direct local listings for this exact search, so start with online options, nearby towns and related format pages above.' }}
         </div>
       @endif
     </section>
@@ -491,17 +687,19 @@
       </div>
     </section>
 
-    <section class="seo-money-section" data-money-section="faq">
-      <h2>Frequently asked questions</h2>
-      <div class="seo-money-faq">
-        @foreach(($page['faqs'] ?? []) as $faq)
-          <details>
-            <summary>{{ $faq['q'] ?? '' }}</summary>
-            <p>{{ $faq['a'] ?? '' }}</p>
-          </details>
-        @endforeach
-      </div>
-    </section>
+    @if(!empty($page['faqs'] ?? []))
+      <section class="seo-money-section" data-money-section="faq">
+        <h2>Frequently asked questions</h2>
+        <div class="seo-money-faq">
+          @foreach(($page['faqs'] ?? []) as $faq)
+            <details>
+              <summary>{{ $faq['q'] ?? '' }}</summary>
+              <p>{{ $faq['a'] ?? '' }}</p>
+            </details>
+          @endforeach
+        </div>
+      </section>
+    @endif
   </div>
 </section>
 @endsection

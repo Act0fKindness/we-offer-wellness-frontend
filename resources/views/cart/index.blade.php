@@ -291,30 +291,28 @@
       var bag = { items: items };
       items.forEach(function(it){ bag[String(it.id)] = it; });
       localStorage.setItem('wow_cart', JSON.stringify(bag));
-      var cookieObj = {};
-      items.forEach(function(it){
-        var meta = (it && typeof it.meta === 'object') ? it.meta : {};
-        cookieObj[String(it.id)] = {
-          id: it.id,
-          product_id: it.product_id,
-          variant_id: it.variant_id,
-          variant_label: it.variant_label,
-          title: it.title,
-          price: it.price,
-          qty: it.qty,
-          image: it.image,
-          url: it.url,
-          meta: meta,
-          booking: meta.booking || {},
-          selected: Array.isArray(meta.selected) ? meta.selected : [],
-          groupCount: meta.groupCount ?? meta.group_count ?? null,
-          reservationId: meta.reservationId ?? meta.reservation_id ?? null,
-          holdExpiresAt: meta.holdExpiresAt ?? meta.hold_expires_at ?? null,
-          location: meta.location || null,
-          source_version: meta.source_version || null,
+      var cookieItems = items.map(function(it){
+        return {
+          id: String(it.id),
+          product_id: it.product_id || null,
+          variant_id: it.variant_id || null,
+          variant_label: it.variant_label || '',
+          title: it.title || '',
+          price: Number(it.price || it.unit || 0),
+          qty: Number(it.qty || 1) || 1,
+          image: it.image || it.img || '',
+          url: it.url || '#'
         };
       });
-      try{ document.cookie = 'wow_cart='+encodeURIComponent(JSON.stringify(cookieObj))+'; Path=/; Max-Age='+(60*60*24*30)+'; SameSite=Lax'; }catch(_){ }
+      try{
+        if (cookieItems.length) {
+          document.cookie = 'wow_cart=; Path=/; Max-Age=0; SameSite=Lax';
+          document.cookie = 'wow_cart='+encodeURIComponent(JSON.stringify(cookieItems))+'; Domain=.weofferwellness.co.uk; Path=/; Max-Age='+(60*60*24*30)+'; SameSite=Lax';
+        } else {
+          document.cookie = 'wow_cart=; Path=/; Max-Age=0; SameSite=Lax';
+          document.cookie = 'wow_cart=; Domain=.weofferwellness.co.uk; Path=/; Max-Age=0; SameSite=Lax';
+        }
+      }catch(_){ }
       try { window.dispatchEvent(new CustomEvent('wow:cart:change', { detail:{ items: items, source:'cart:page' } })); } catch(_){ }
     }catch(_){ }
   }
@@ -368,7 +366,8 @@
     target.innerHTML = list.map(function(it){
       var p = Number(it.price_min ?? it.price ?? 0); if(p>=1000) p=p/100;
       var img = it.image || (it.images && it.images[0]) || '';
-      var url = it.url || ('/offerings/'+it.id);
+      var slug = String(it.slug || it.handle || it.title || it.id || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      var url = it.url || ('/' + String(it.format || 'therapies').toLowerCase() + '/' + String(it.modality || 'item').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '/' + slug);
       var title = escapeHtml(it.title||'');
       return '<div class="upsell-item" data-upsell="'+it.id+'">'
         + (img?('<img src="'+img+'" alt="">'):'<div style="width:52px;height:52px;border-radius:14px;background:#f3f5f7;border:1px solid #eceff3"></div>')
@@ -610,7 +609,10 @@
       // Update server (best-effort)
       post('/api/cart/clear',{}).catch(function(_){});
       // Also clear cookie immediately so refresh reflects empty state
-      try{ document.cookie = 'wow_cart='+encodeURIComponent(JSON.stringify({}))+'; Path=/; Max-Age='+(60*60*24*30)+'; SameSite=Lax'; }catch(_){ }
+      try{
+        document.cookie = 'wow_cart=; Path=/; Max-Age=0; SameSite=Lax';
+        document.cookie = 'wow_cart=; Domain=.weofferwellness.co.uk; Path=/; Max-Age=0; SameSite=Lax';
+      }catch(_){ }
       return;
     }
     if(e.target && e.target.id==='apply-promo'){ var code=(document.getElementById('promo-code')?.value||'').trim(); var msg=document.getElementById('promo-msg'); post('/api/cart/promo',{code:code}).then(function(){ msg.textContent=code?("Code '"+code+"' applied"):'Code cleared'; }).catch(function(){ msg.textContent='Could not apply code'; }); return; }
@@ -665,7 +667,7 @@
         variant_id:null,
         variant_label:'',
         title:String(u.title||''),
-        url:(u.url||('/offerings/'+uid)),
+        url:(u.url||('/' + String(u.format || 'therapies').toLowerCase() + '/' + String(u.modality || 'item').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '/' + String(u.slug || u.handle || u.title || uid || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''))),
         img:(u.image||(u.images&&u.images[0])||''),
         unit:unit,
         qty:1

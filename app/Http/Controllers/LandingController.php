@@ -8,6 +8,7 @@ use App\Models\ProductCategory;
 use App\Models\Review;
 use App\Models\VendorDetail;
 use App\Services\BookingContextBuilder;
+use App\Services\SeoStructureService;
 use App\Support\EventListing;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -23,6 +24,22 @@ class LandingController extends Controller
 {
     // Supported hubs/types
     private const TYPES = ['therapies', 'events', 'workshops', 'classes', 'retreats', 'gifts'];
+
+    private function seo(): SeoStructureService
+    {
+        return app(SeoStructureService::class);
+    }
+
+    private function redirectWithQuery(Request $request, string $target, int $status = 301)
+    {
+        $query = trim((string) $request->getQueryString());
+        if ($query !== '') {
+            $target .= str_contains($target, '?') ? '&' : '?';
+            $target .= $query;
+        }
+
+        return redirect()->to($target, $status);
+    }
 
     public function hub(Request $request, string $type)
     {
@@ -46,7 +63,7 @@ class LandingController extends Controller
                     'name' => $cat->name,
                     'slug' => $this->slugify($cat->name),
                     'count' => (int) ($cat->products_count ?? 0),
-                    'url' => url('/'.$this->slugify($cat->name).'/'.$type.'/'),
+                    'url' => $this->seo()->modalityPageUrl($type, (string) $cat->name),
                 ];
             })->values();
 
@@ -74,7 +91,7 @@ class LandingController extends Controller
                         'name' => $cat->name,
                         'slug' => $this->slugify($cat->name),
                         'count' => (int) ($row->cnt ?? 0),
-                        'url' => url('/'.$this->slugify($cat->name).'/'.$type.'/'),
+                        'url' => $this->seo()->modalityPageUrl($type, (string) $cat->name),
                     ];
                 })->filter()->values();
             } catch (\Throwable $e) {
@@ -134,44 +151,128 @@ class LandingController extends Controller
             abort(404);
         }
 
-        $slug = $this->slugify($cat->name);
-        $products = $this->queryProducts(null, $cat->id, $request)->limit(12)->get();
+        return $this->redirectWithQuery($request, $this->seo()->modalityPageUrl('therapies', (string) $cat->name), 301);
+    }
+
+    public function formatModality(Request $request, string $format, string $modality)
+    {
+        $format = strtolower(trim($format));
+        if (! in_array($format, self::TYPES, true)) {
+            abort(404);
+        }
+
+        $cat = $this->findCategoryBySlug($modality);
+        if (! $cat) {
+            abort(404);
+        }
+
+        $products = $this->queryProducts($format, $cat->id, $request)->limit(12)->get();
+        $title = $cat->name.' '.ucfirst($format);
 
         return view('landing.show', [
             'seo' => [
-                'title' => $cat->name.' | We Offer Wellness',
-                'description' => $cat->name.' therapies, classes, events, workshops and retreats on We Offer Wellness.',
+                'title' => $title.' | We Offer Wellness',
+                'description' => $cat->name.' '.ucfirst($format).' options on We Offer Wellness.',
                 'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/'.$slug),
+                'canonical' => $this->seo()->modalityPageUrl($format, (string) $cat->name),
             ],
             'landing' => [
-                'kicker' => 'Category',
-                'title' => $cat->name,
-                'intro' => 'Browse '.$cat->name.' experiences across therapies, classes, events, workshops and retreats.',
+                'kicker' => ucfirst($format),
+                'title' => $title,
+                'intro' => 'Browse '.$cat->name.' '.$format.' listings across trusted practitioners.',
                 'points' => [
-                    'Therapies, classes and events in one place',
-                    'Online and in-person listings',
-                    'Browse by format or location',
+                    'Curated and search-friendly',
+                    'Online and in-person availability',
+                    'Popular results surfaced first',
                 ],
-                'primary_cta' => ['label' => 'Browse '.$cat->name, 'href' => '#'.'landing-products'],
-                'secondary_cta' => ['label' => 'View therapies', 'href' => '/'.$slug.'/therapies'],
+                'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
+                'secondary_cta' => ['label' => 'View category', 'href' => $this->seo()->modalityPageUrl($format, (string) $cat->name)],
             ],
-            'type' => 'therapies',
+            'type' => $format,
             'categories' => ProductCategory::query()
-                ->withCount(['products as products_count' => function ($q) {
-                    $this->applyTypeFilter($q, null);
+                ->withCount(['products as products_count' => function ($q) use ($format) {
+                    $this->applyTypeFilter($q, $format);
                 }])
                 ->orderByDesc('products_count')
                 ->orderBy('name')
                 ->take(8)
                 ->get()
-                ->map(function (ProductCategory $category) {
+                ->map(function (ProductCategory $category) use ($format) {
                     $name = trim((string) ($category->name ?? ''));
 
                     return [
                         'name' => $name,
                         'slug' => $this->slugify($name),
                         'count' => (int) ($category->products_count ?? 0),
+                        'url' => $this->seo()->modalityPageUrl($format, $name),
+                    ];
+                })
+                ->filter(fn (array $category) => $category['count'] > 0)
+                ->values(),
+            'products' => $products,
+        ]);
+    }
+
+    public function formatModalityLocation(Request $request, string $format, string $modality, string $country, string $county, string $town)
+    {
+        $format = strtolower(trim($format));
+        if (! in_array($format, self::TYPES, true)) {
+            abort(404);
+        }
+
+        $cat = $this->findCategoryBySlug($modality);
+        if (! $cat) {
+            abort(404);
+        }
+
+        $slug = $this->slugify($cat->name);
+        $countryLabel = ucwords(str_replace('-', ' ', trim($country)));
+        $countyLabel = ucwords(str_replace('-', ' ', trim($county)));
+        $townLabel = ucwords(str_replace('-', ' ', trim($town)));
+        $locationLabel = trim(implode(', ', array_filter([$townLabel, $countyLabel, $countryLabel])));
+        $products = $this->queryProducts($format, $cat->id, $request, $locationLabel)->limit(12)->get();
+        $title = $cat->name.' '.ucfirst($format).' in '.$locationLabel;
+
+        return view('landing.show', [
+            'seo' => [
+                'title' => $title.' | We Offer Wellness',
+                'description' => $cat->name.' '.ucfirst($format).' in '.$locationLabel.'.',
+                'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
+                'canonical' => $this->seo()->modalityLocationPageUrl($format, (string) $cat->name, $country, $county, $town),
+            ],
+            'landing' => [
+                'kicker' => ucfirst($format),
+                'title' => $title,
+                'intro' => 'Browse '.$cat->name.' '.$format.' in '.$locationLabel.'.',
+                'points' => [
+                    'Ranked for the selected location',
+                    'Online fallback available',
+                    'Trusted practitioners and venues',
+                ],
+                'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
+                'secondary_cta' => ['label' => 'View category', 'href' => $this->seo()->modalityPageUrl($format, (string) $cat->name)],
+            ],
+            'type' => $format,
+            'city' => $townLabel,
+            'country' => $countryLabel,
+            'county' => $countyLabel,
+            'town' => $townLabel,
+            'categories' => ProductCategory::query()
+                ->withCount(['products as products_count' => function ($q) use ($format) {
+                    $this->applyTypeFilter($q, $format);
+                }])
+                ->orderByDesc('products_count')
+                ->orderBy('name')
+                ->take(8)
+                ->get()
+                ->map(function (ProductCategory $category) use ($format) {
+                    $name = trim((string) ($category->name ?? ''));
+
+                    return [
+                        'name' => $name,
+                        'slug' => $this->slugify($name),
+                        'count' => (int) ($category->products_count ?? 0),
+                        'url' => $this->seo()->modalityPageUrl($format, $name),
                     ];
                 })
                 ->filter(fn (array $category) => $category['count'] > 0)
@@ -192,7 +293,6 @@ class LandingController extends Controller
             abort(404);
         }
 
-        $slug = $this->slugify($cat->name);
         $products = $this->queryProducts($type, $cat->id, $request)->limit(12)->get();
 
         $title = $cat->name.' '.ucfirst($type);
@@ -202,7 +302,7 @@ class LandingController extends Controller
                 'title' => $title.' | We Offer Wellness',
                 'description' => $cat->name.' '.ucfirst($type).' options on We Offer Wellness.',
                 'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/'.$slug.'/'.$type),
+                'canonical' => $this->seo()->modalityPageUrl($type, (string) $cat->name),
             ],
             'landing' => [
                 'kicker' => ucfirst($type),
@@ -214,7 +314,7 @@ class LandingController extends Controller
                     'Popular results surfaced first',
                 ],
                 'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
-                'secondary_cta' => ['label' => 'View category', 'href' => '/'.$slug],
+                'secondary_cta' => ['label' => 'View category', 'href' => $this->seo()->modalityPageUrl($type, (string) $cat->name)],
             ],
             'type' => $type,
             'categories' => ProductCategory::query()
@@ -232,7 +332,7 @@ class LandingController extends Controller
                         'name' => $name,
                         'slug' => $this->slugify($name),
                         'count' => (int) ($category->products_count ?? 0),
-                        'url' => url('/'.$this->slugify($name).'/'.$type.'/'),
+                        'url' => $this->seo()->modalityPageUrl($type, $name),
                     ];
                 })
                 ->filter(fn (array $category) => $category['count'] > 0)
@@ -253,7 +353,6 @@ class LandingController extends Controller
             abort(404);
         }
 
-        $slug = $this->slugify($cat->name);
         $locationName = trim(str_replace(['-', '+'], ' ', $location));
         $products = $this->queryProducts($type, $cat->id, $request, $locationName)->limit(12)->get();
         $title = $cat->name.' '.ucfirst($type).' in '.ucwords($locationName);
@@ -263,7 +362,7 @@ class LandingController extends Controller
                 'title' => $title.' | We Offer Wellness',
                 'description' => $cat->name.' '.ucfirst($type).' in '.ucwords($locationName).'.',
                 'robots' => $request->hasAny(['page', 'per_page', 'sort', 'mode']) || $products->isEmpty() ? 'noindex,follow' : 'index,follow',
-                'canonical' => url('/'.$slug.'/'.$type.'/'.Str::slug($locationName)),
+                'canonical' => $this->seo()->modalityPageUrl($type, (string) $cat->name),
             ],
             'landing' => [
                 'kicker' => ucfirst($type),
@@ -275,7 +374,7 @@ class LandingController extends Controller
                     'Trusted practitioners and venues',
                 ],
                 'primary_cta' => ['label' => 'Browse listings', 'href' => '#landing-products'],
-                'secondary_cta' => ['label' => 'View category', 'href' => '/'.$slug.'/'],
+                'secondary_cta' => ['label' => 'View category', 'href' => $this->seo()->modalityPageUrl($type, (string) $cat->name)],
             ],
             'type' => $type,
             'city' => ucwords($locationName),
@@ -294,7 +393,7 @@ class LandingController extends Controller
                         'name' => $name,
                         'slug' => $this->slugify($name),
                         'count' => (int) ($category->products_count ?? 0),
-                        'url' => url('/'.$this->slugify($name).'/'.$type.'/'),
+                        'url' => $this->seo()->modalityPageUrl($type, $name),
                     ];
                 })
                 ->filter(fn (array $category) => $category['count'] > 0)
@@ -775,6 +874,62 @@ class LandingController extends Controller
         return trim($s, '-');
     }
 
+    private function normalizeLookupKey(?string $value): string
+    {
+        $value = strtolower(trim((string) $value));
+
+        return preg_replace('~[^a-z0-9]+~', '', $value) ?? '';
+    }
+
+    /**
+     * Build a handful of token combinations so legacy slugs with collapsed
+     * punctuation still resolve to the correct product or offering.
+     *
+     * @return array<int, array<int, string>>
+     */
+    private function candidateLookupTokenSets(string $handle): array
+    {
+        $tokens = preg_split('~[^a-z0-9]+~i', strtolower(trim($handle)), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $tokens = array_values(array_filter(array_unique($tokens), static fn ($token): bool => strlen($token) >= 2));
+        if ($tokens === []) {
+            return [];
+        }
+
+        $sets = [];
+        $shortTokens = array_values(array_filter($tokens, static fn ($token): bool => strlen($token) <= 8));
+        if ($shortTokens !== []) {
+            $sets[] = $shortTokens;
+        }
+
+        if ($tokens !== $shortTokens) {
+            $sets[] = $tokens;
+        }
+
+        foreach ($tokens as $index => $token) {
+            if (strlen($token) <= 8) {
+                continue;
+            }
+
+            $subset = $tokens;
+            unset($subset[$index]);
+            $subset = array_values($subset);
+            if ($subset !== [] && count($subset) >= 2) {
+                $sets[] = $subset;
+            }
+        }
+
+        $unique = [];
+        foreach ($sets as $set) {
+            $key = json_encode($set);
+            if ($key === false) {
+                continue;
+            }
+            $unique[$key] = $set;
+        }
+
+        return array_values($unique);
+    }
+
     private function applyTypeFilter($query, ?string $type): void
     {
         if (! $type) {
@@ -899,13 +1054,15 @@ class LandingController extends Controller
         $isOnline = in_array('Online', $locations, true);
         $physical = array_values(array_filter($locations, fn ($l) => $l !== 'Online'));
         $meta = $p->meta_json ?? [];
-        $slug = $this->slugify($p->title ?? (string) $p->id);
+        $seo = $this->seo();
 
         return [
             'id' => $p->id,
             'title' => $p->title,
             'source_version' => 'legacy',
             'type' => $p->product_type ?: 'experience',
+            'format' => $seo->inferFormatKeyFromProduct($p),
+            'modality' => $seo->inferModalitySlugFromProduct($p),
             'category' => $p->category ? ['id' => $p->category->id, 'name' => $p->category->name] : null,
             'mode' => $isOnline && count($physical) === 0 ? 'Online' : (count($physical) ? 'In-person' : null),
             'location' => $physical[0] ?? ($isOnline ? 'Online' : null),
@@ -918,7 +1075,7 @@ class LandingController extends Controller
             'image' => method_exists($p, 'getFirstImageUrl') ? $p->getFirstImageUrl() : null,
             'tags' => $p->tags_list ? array_map('trim', explode(',', $p->tags_list)) : [],
             'booking_flow' => $this->legacyProductBookingFlow($p),
-            'url' => $this->canonicalOfferingUrl($p->id, $slug),
+            'url' => $seo->canonicalProductUrl($p),
         ];
     }
 
@@ -967,10 +1124,10 @@ class LandingController extends Controller
         return 'therapies';
     }
 
-    public function offering(\Illuminate\Http\Request $request, string $type, string $handle)
+    public function offering(\Illuminate\Http\Request $request, string $format, string $modality, string $handle)
     {
-        $type = strtolower($type);
-        if (! in_array($type, self::TYPES, true)) {
+        $format = strtolower($format);
+        if (! in_array($format, self::TYPES, true)) {
             abort(404);
         }
 
@@ -980,16 +1137,7 @@ class LandingController extends Controller
             $id = (int) $m[1];
         }
 
-        $query = Product::query()
-            ->with(['media', 'options.values', 'variants', 'reviews.user', 'category', 'vendor.user.tier'])
-            ->withCount('reviews')
-            ->withAvg('reviews', 'rating');
-        if ($id) {
-            $query->where('id', $id);
-        } else {
-            $query->where('handle', $handle);
-        }
-        $product = $query->first();
+        $product = $this->resolveProductForOffering($id, (string) $handle);
         if (! $product) {
             $offering = $this->resolveV3Offering($id, (string) $handle);
             if (! $offering) {
@@ -999,13 +1147,24 @@ class LandingController extends Controller
             $requestedVariantId = trim((string) $request->query('variant', ''));
             $requestedVariantId = $requestedVariantId !== '' ? $requestedVariantId : null;
             $requestedPriceOptionId = $this->resolveRequestedPriceOptionId($request);
-            $productData = $this->transformV3Offering($offering, $type, $requestedVariantId, $requestedPriceOptionId);
+            $productData = $this->transformV3Offering($offering, $format, $requestedVariantId, $requestedPriceOptionId);
+
+            $canonicalPath = trim((string) parse_url((string) ($productData['url'] ?? ''), PHP_URL_PATH), '/');
+            if ($canonicalPath !== '' && $canonicalPath !== trim((string) $request->path(), '/')) {
+                return $this->redirectWithQuery($request, (string) ($productData['url'] ?? url('/therapies')));
+            }
 
             return view('offering.show', [
-                'type' => $type,
+                'type' => $format,
                 'product' => $productData,
                 'seo' => $this->offeringSeoData($productData),
             ]);
+        }
+
+        $canonicalTarget = $this->seo()->canonicalProductUrl($product);
+        $canonicalPath = trim((string) parse_url($canonicalTarget, PHP_URL_PATH), '/');
+        if ($canonicalPath !== '' && $canonicalPath !== trim((string) $request->path(), '/')) {
+            return $this->redirectWithQuery($request, $canonicalTarget);
         }
 
         $slug = $this->slugify($product->title ?: (string) $product->id);
@@ -1367,13 +1526,13 @@ class LandingController extends Controller
                 ];
             })->values(),
             'client_reviews' => $clientReviews,
-            'url' => $this->canonicalOfferingUrl($product->id, $slug),
+            'url' => $this->seo()->canonicalProductUrl($product),
             'booking_variant_label' => $variantLabel,
             'is_past_event' => EventListing::isPast($product),
         ];
 
         return view('offering.show', [
-            'type' => $type,
+            'type' => $format,
             'product' => $data,
             'seo' => $this->offeringSeoData($data),
         ]);
@@ -1480,12 +1639,55 @@ class LandingController extends Controller
         if ($id) {
             $query->where('id', $id);
         } else {
-            $query->where('slug', $handle);
+            $normalizedHandle = $this->slugify($handle);
+            $query->where(function ($builder) use ($handle, $normalizedHandle): void {
+                $builder->where('slug', $handle)
+                    ->orWhere('slug', $normalizedHandle)
+                    ->orWhere('title', $handle)
+                    ->orWhere('title', $normalizedHandle);
+            });
         }
 
         $offering = $query->first();
         if ($offering && in_array((string) $offering->status, ['live', 'approved'], true)) {
             return $offering;
+        }
+
+        if ($id) {
+            return null;
+        }
+
+        $normalizedHandle = $this->slugify($handle);
+        $normalizedLookupKey = $this->normalizeLookupKey($handle);
+
+        foreach ($this->candidateLookupTokenSets($handle) as $tokens) {
+            $candidates = OfferingV3::query()
+                ->with(['category', 'type', 'vendor.user.tier', 'vendor.locations', 'media', 'coverMedia'])
+                ->where(function ($builder) use ($tokens): void {
+                    foreach ($tokens as $token) {
+                        $builder->where(function ($tokenBuilder) use ($token): void {
+                            $like = '%' . $token . '%';
+                            $tokenBuilder->whereRaw('LOWER(COALESCE(slug, "")) LIKE ?', [$like])
+                                ->orWhereRaw('LOWER(COALESCE(title, "")) LIKE ?', [$like]);
+                        });
+                    }
+                })
+                ->get();
+
+            if ($candidates->isEmpty()) {
+                continue;
+            }
+
+            $preferred = $candidates->first(function (OfferingV3 $candidate) use ($normalizedHandle, $normalizedLookupKey): bool {
+                return $this->normalizeLookupKey((string) ($candidate->slug ?? '')) === $normalizedLookupKey
+                    || $this->normalizeLookupKey((string) ($candidate->title ?? '')) === $normalizedLookupKey
+                    || $this->slugify((string) ($candidate->slug ?? '')) === $normalizedHandle
+                    || $this->slugify((string) ($candidate->title ?? '')) === $normalizedHandle;
+            });
+
+            if ($preferred && in_array((string) $preferred->status, ['live', 'approved'], true)) {
+                return $preferred;
+            }
         }
 
         return null;
@@ -1932,6 +2134,8 @@ class LandingController extends Controller
                 'source_version' => 'v3',
                 'booking_flow' => $this->offeringBookingFlow($offering),
                 'type' => $offering->type?->name ?: 'experience',
+                'format' => $this->seo()->inferFormatKeyFromOffering($offering),
+                'modality' => $this->seo()->inferModalitySlugFromOffering($offering),
                 'category' => $offering->category ? ['id' => $offering->category->id, 'name' => $offering->category->name] : null,
                 'rating' => ($vendorReviewSummary = $offering->vendor?->review_summary ?? ['count' => 0, 'rating' => null])['rating'] ?? null,
                 'review_count' => $vendorReviewSummary['count'] ?? 0,
@@ -1983,7 +2187,7 @@ class LandingController extends Controller
                 'venue_locations' => $venueLocations,
                 'reviews' => collect(),
                 'client_reviews' => $this->vendorClientReviews($offering->vendor),
-                'url' => $this->canonicalOfferingUrl($offering->id, $this->slugify($offering->title ?: (string) $offering->id)),
+                'url' => $this->seo()->canonicalOfferingUrl($offering),
                 'is_past_event' => $isPastEvent,
             ];
         }
@@ -2196,6 +2400,8 @@ class LandingController extends Controller
             'source_version' => 'v3',
             'booking_flow' => $this->offeringBookingFlow($offering),
             'type' => $offering->type?->name ?: 'experience',
+            'format' => $this->seo()->inferFormatKeyFromOffering($offering),
+            'modality' => $this->seo()->inferModalitySlugFromOffering($offering),
             'category' => $offering->category ? ['id' => $offering->category->id, 'name' => $offering->category->name] : null,
             'rating' => ($vendorReviewSummary = $offering->vendor?->review_summary ?? ['count' => 0, 'rating' => null])['rating'] ?? null,
             'review_count' => $vendorReviewSummary['count'] ?? 0,
@@ -2243,45 +2449,152 @@ class LandingController extends Controller
             'practitioner' => $this->practitionerPayload($offering->vendor, $offering->vendor?->user),
             'reviews' => collect(),
             'client_reviews' => $this->vendorClientReviews($offering->vendor),
-            'url' => $this->canonicalOfferingUrl($offering->id, $this->slugify($offering->title ?: (string) $offering->id)),
+            'url' => $this->seo()->canonicalOfferingUrl($offering),
             'is_past_event' => false,
         ];
     }
 
     public function offeringCanonical(Request $request, string $offering)
     {
+        return $this->redirectOfferingToCanonical($request, $offering);
+    }
+
+    public function offeringLocation(Request $request, string $format, string $modality, string $country, string $county, string $town, string $offering)
+    {
+        $format = strtolower(trim($format));
+        if (! in_array($format, self::TYPES, true)) {
+            abort(404);
+        }
+
+        return $this->redirectOfferingToCanonical($request, $offering);
+    }
+
+    public function onlineOffering(Request $request, string $modality, string $offering)
+    {
         $id = null;
         if (preg_match('/^(\d+)(?:-.+)?$/', (string) $offering, $match)) {
             $id = (int) $match[1];
         }
 
-        $product = Product::query()
-            ->with(['media', 'options.values', 'variants', 'reviews.user', 'category', 'vendor.user.tier'])
-            ->withCount('reviews')
-            ->withAvg('reviews', 'rating');
-
-        if ($id) {
-            $product->where('id', $id);
-        } else {
-            $product->where('handle', $offering);
-        }
-
-        $resolvedProduct = $product->first();
+        $resolvedProduct = $this->resolveProductForOffering($id, (string) $offering);
         if ($resolvedProduct) {
-            return $this->offering($request, $this->typeSegment($resolvedProduct), (string) ($resolvedProduct->id ?? $offering));
+            $canonicalTarget = $this->seo()->canonicalProductUrl($resolvedProduct);
+            $canonicalPath = trim((string) parse_url($canonicalTarget, PHP_URL_PATH), '/');
+            if ($canonicalPath !== '' && $canonicalPath !== trim((string) $request->path(), '/')) {
+                return $this->redirectWithQuery($request, $canonicalTarget, 301);
+            }
+
+            $productData = $this->transformProduct($resolvedProduct);
+
+            return view('offering.show', [
+                'type' => $this->seo()->inferFormatKeyFromProduct($resolvedProduct),
+                'product' => $productData,
+                'seo' => $this->offeringSeoData($productData),
+            ]);
         }
 
         $resolvedOffering = $this->resolveV3Offering($id, (string) $offering);
         if ($resolvedOffering) {
-            return $this->offering($request, $this->offeringTypeSegment((string) ($resolvedOffering->type?->name ?? $resolvedOffering->category?->name ?? 'experience')), (string) ($resolvedOffering->id ?? $offering));
+            $requestedVariantId = trim((string) $request->query('variant', ''));
+            $requestedVariantId = $requestedVariantId !== '' ? $requestedVariantId : null;
+            $requestedPriceOptionId = $this->resolveRequestedPriceOptionId($request);
+            $productData = $this->transformV3Offering($resolvedOffering, $this->seo()->inferFormatKeyFromOffering($resolvedOffering), $requestedVariantId, $requestedPriceOptionId);
+
+            $canonicalPath = trim((string) parse_url((string) ($productData['url'] ?? ''), PHP_URL_PATH), '/');
+            if ($canonicalPath !== '' && $canonicalPath !== trim((string) $request->path(), '/')) {
+                return $this->redirectWithQuery($request, (string) ($productData['url'] ?? url('/online')), 301);
+            }
+
+            return view('offering.show', [
+                'type' => $this->seo()->inferFormatKeyFromOffering($resolvedOffering),
+                'product' => $productData,
+                'seo' => $this->offeringSeoData($productData),
+            ]);
         }
 
         abort(404);
     }
 
-    private function canonicalOfferingUrl(int|string $id, string $slug): string
+    private function redirectOfferingToCanonical(Request $request, string $offering)
     {
-        return url('/offerings/'.$id.'-'.$this->slugify($slug));
+        $id = null;
+        if (preg_match('/^(\d+)(?:-.+)?$/', (string) $offering, $match)) {
+            $id = (int) $match[1];
+        }
+
+        $resolvedProduct = $this->resolveProductForOffering($id, (string) $offering);
+        if ($resolvedProduct) {
+            return $this->redirectWithQuery($request, $this->seo()->canonicalProductUrl($resolvedProduct), 301);
+        }
+
+        $resolvedOffering = $this->resolveV3Offering($id, (string) $offering);
+        if ($resolvedOffering) {
+            return $this->redirectWithQuery($request, $this->seo()->canonicalOfferingUrl($resolvedOffering), 301);
+        }
+
+        abort(404);
+    }
+
+    private function resolveProductForOffering(?int $id, string $handle): ?Product
+    {
+        $query = Product::query()
+            ->with(['media', 'options.values', 'variants', 'reviews.user', 'category', 'vendor.user.tier'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating');
+
+        if ($id) {
+            return $query->where('id', $id)->first();
+        }
+
+        $handle = trim($handle);
+        $normalizedHandle = $this->slugify($handle);
+        $normalizedLookupKey = $this->normalizeLookupKey($handle);
+
+        $exactMatches = (clone $query)
+            ->where(function ($builder) use ($handle, $normalizedHandle): void {
+                $builder->where('handle', $handle)
+                    ->orWhere('handle', $normalizedHandle);
+            })
+            ->get();
+
+        if ($exactMatches->isNotEmpty()) {
+            $preferred = $exactMatches->first(function (Product $product) use ($normalizedHandle): bool {
+                return $this->slugify((string) ($product->title ?? '')) === $normalizedHandle;
+            });
+
+            return $preferred ?: $exactMatches->first();
+        }
+
+        foreach ($this->candidateLookupTokenSets($handle) as $tokens) {
+            $candidates = (clone $query)
+                ->where(function ($builder) use ($tokens): void {
+                    foreach ($tokens as $token) {
+                        $builder->where(function ($tokenBuilder) use ($token): void {
+                            $like = '%' . $token . '%';
+                            $tokenBuilder->whereRaw('LOWER(COALESCE(title, "")) LIKE ?', [$like])
+                                ->orWhereRaw('LOWER(COALESCE(handle, "")) LIKE ?', [$like]);
+                        });
+                    }
+                })
+                ->get();
+
+            if ($candidates->isEmpty()) {
+                continue;
+            }
+
+            $preferred = $candidates->first(function (Product $product) use ($normalizedHandle, $normalizedLookupKey): bool {
+                return $this->normalizeLookupKey((string) ($product->title ?? '')) === $normalizedLookupKey
+                    || $this->normalizeLookupKey((string) ($product->handle ?? '')) === $normalizedLookupKey
+                    || $this->slugify((string) ($product->title ?? '')) === $normalizedHandle
+                    || $this->slugify((string) ($product->handle ?? '')) === $normalizedHandle;
+            });
+
+            if ($preferred) {
+                return $preferred;
+            }
+        }
+
+        return null;
     }
 
     private function legacyProductBookingFlow(Product $product, ?int $priceOptionId = null, ?string $variantLabel = null): string
