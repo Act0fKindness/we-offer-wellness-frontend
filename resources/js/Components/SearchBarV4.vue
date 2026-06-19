@@ -1238,7 +1238,9 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div class="wow-mobile-backdrop" :class="{ 'is-open': filterDrawerOpen }" @click="closeMobileFilterToExpandedSearch"></div>
+    <teleport to="body">
+      <div class="wow-mobile-backdrop" :class="{ 'is-open': filterDrawerOpen }" @click="closeMobileFilterToExpandedSearch"></div>
+    </teleport>
 
     <div class="wow-filter-drawer" :class="{ 'is-open': filterDrawerOpen, 'is-filter-panel-open': !!activeFilterPanel }" data-filter-drawer role="dialog" aria-modal="true" aria-label="Search filters">
       <div class="wow-filter-modal-header">
