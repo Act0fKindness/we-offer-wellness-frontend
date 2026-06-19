@@ -24071,27 +24071,9 @@ header .nav-item > a::before{
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0px !important;
+    bottom: -16px;
     height: 18px;
     background: transparent;
-}
-
-header .nav-item > a::after {
-    content: "";
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    bottom: -9px;
-    height: 3px;
-    border-radius: 3px;
-    background: var(--brand-500);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform .18s ease
-}
-
-header .nav-item:hover > a::after, header .nav-item:focus-within > a::after {
-    transform: scaleX(1)
 }
 
 /* Compact pill for utilities */
