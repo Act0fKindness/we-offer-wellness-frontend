@@ -24071,7 +24071,7 @@ header .nav-item > a::before{
     position: absolute;
     left: 0;
     right: 0;
-    bottom: -16px;
+    bottom: 0px !important;
     height: 18px;
     background: transparent;
 }
