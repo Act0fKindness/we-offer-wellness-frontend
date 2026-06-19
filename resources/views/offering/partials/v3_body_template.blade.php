@@ -17,6 +17,13 @@
     $priceMax = is_numeric($offering['price_max'] ?? null) ? (float) $offering['price_max'] : $price;
     $rating = is_numeric($offering['rating'] ?? null) ? (float) $offering['rating'] : null;
     $reviewCount = is_numeric($offering['review_count'] ?? null) ? (int) $offering['review_count'] : 0;
+    if ($reviewCount > 0 && (! is_numeric($rating) || (float) $rating <= 0)) {
+        $rating = 5.0;
+    }
+    $filledStars = $reviewCount > 0 ? max(0, min(5, (int) round((float) $rating))) : 0;
+    $reviewSummary = $reviewCount > 0
+        ? number_format((float) $rating, 1) . ' · ' . $reviewCount . ' review' . ($reviewCount === 1 ? '' : 's')
+        : 'Be the first to review';
     $mobileTicketText = ($rating !== null && $rating > 0 && $reviewCount > 0)
         ? ('Rated ' . number_format($rating, 1) . ' · ' . $reviewCount . ' review' . ($reviewCount === 1 ? '' : 's'))
         : 'Begin your journey';
@@ -66,6 +73,40 @@
         $credentialTags = array_slice($practitionerSpecialties, 0, 3);
     }
 
+    $normalizeCountryShort = static function (string $country): string {
+        $country = trim($country);
+        if ($country === '') {
+            return 'UK';
+        }
+
+        $slug = Str::slug($country);
+        if (in_array($slug, ['uk', 'u-k', 'gb', 'great-britain', 'united-kingdom', 'england', 'scotland', 'wales', 'northern-ireland'], true)) {
+            return 'UK';
+        }
+
+        return Str::of($country)->headline()->toString();
+    };
+
+    $normalizeLocationKey = static function (string $value) use ($normalizeCountryShort): string {
+        $value = trim(Str::of($value)->replaceMatches('/\s+/', ' ')->toString());
+        if ($value === '') {
+            return '';
+        }
+
+        $value = preg_split('/\s*,\s*/', $value) ?: [$value];
+        $value = trim((string) ($value[0] ?? ''));
+        if ($value === '') {
+            return '';
+        }
+
+        $value = preg_replace('/\b(?:uk|u\.k\.|gb|great britain|united kingdom|england|scotland|wales|northern ireland)\b/i', '', $value) ?? $value;
+        $value = preg_replace('/\b[A-Z]{1,2}\d[\dA-Z]?\s*\d[A-Z]{2}\b/i', '', $value) ?? $value;
+        $value = preg_replace('/\b[A-Z]{1,2}\d[\dA-Z]?\b/i', '', $value) ?? $value;
+        $value = Str::of($value)->replaceMatches('/[^a-z0-9]+/i', ' ')->replaceMatches('/\s+/', ' ')->trim()->lower()->toString();
+
+        return $value;
+    };
+
     $venueLocationsRaw = is_array($offering['venue_locations'] ?? null) ? $offering['venue_locations'] : [];
     $simpleLocationsRaw = is_array($offering['locations'] ?? null) ? $offering['locations'] : [];
     $hasStructuredVenueLocations = ! empty($venueLocationsRaw);
@@ -87,18 +128,24 @@
             trim((string) ($row['county'] ?? '')),
             trim((string) ($row['postcode'] ?? '')),
         ])));
+        $country = $normalizeCountryShort((string) ($row['country'] ?? ''));
         $fullAddress = trim(implode(', ', array_filter([
             $streetAddress,
             trim((string) ($row['city'] ?? '')),
             trim((string) ($row['county'] ?? '')),
             trim((string) ($row['postcode'] ?? '')),
-            trim((string) ($row['country'] ?? '')),
+            $country,
         ])));
         $lat = is_numeric($row['lat'] ?? null) ? (float) $row['lat'] : null;
         $lng = is_numeric($row['lng'] ?? null) ? (float) $row['lng'] : null;
         $notes = trim((string) ($row['notes'] ?? ''));
-        $displayLabel = $compactAddress !== ''
-            ? $compactAddress
+        $displayLabel = trim(implode(', ', array_filter([
+            trim((string) ($row['city'] ?? '')),
+            trim((string) ($row['county'] ?? '')),
+            $country,
+        ])));
+        $displayLabel = $displayLabel !== ''
+            ? $displayLabel
             : ($label !== ''
                 ? $label
                 : ($streetAddress !== ''
@@ -108,13 +155,15 @@
         $locations[] = [
             'id' => 'loc-venue-' . ($index + 1),
             'label' => $displayLabel,
-            'address' => $notes !== '' ? $notes : 'Available',
+            'address' => $notes !== '' ? $notes : ($fullAddress !== '' ? $fullAddress : 'Available'),
             'street_address' => $streetAddress,
             'full_address' => $fullAddress !== '' ? $fullAddress : $streetAddress,
             'notes' => $notes,
             'lat' => $lat,
             'lng' => $lng,
             'online' => false,
+            'location_key' => $normalizeLocationKey($displayLabel !== '' ? $displayLabel : $label),
+            'variant_ids' => [],
         ];
     }
 
@@ -345,6 +394,111 @@
     $selectedVariantPriceOptionId = is_numeric($offering['selectedVariantPriceOptionId'] ?? null)
         ? (int) $offering['selectedVariantPriceOptionId']
         : ($selectedVariantCard['price_option_id'] ?? null);
+
+    $venueLocationLookup = [];
+    foreach ($locations as $location) {
+        $locationKey = trim((string) ($location['location_key'] ?? ''));
+        if ($locationKey === '') {
+            continue;
+        }
+
+        $venueLocationLookup[$locationKey] = $location;
+    }
+
+    $variantLocationGroups = [];
+    foreach ($variantCards as $variantCard) {
+        $selection = array_values(array_filter(array_map('trim', (array) ($variantCard['selection'] ?? []))));
+        if (empty($selection)) {
+            continue;
+        }
+
+        $locationValue = null;
+        foreach (array_reverse($selection) as $selectionValue) {
+            $selectionKey = $normalizeLocationKey((string) $selectionValue);
+            if ($selectionKey !== '') {
+                $locationValue = trim((string) $selectionValue);
+                break;
+            }
+        }
+
+        if ($locationValue === null || $locationValue === '') {
+            continue;
+        }
+
+        $locationKey = $normalizeLocationKey($locationValue);
+        if ($locationKey === '') {
+            continue;
+        }
+
+        if (! isset($variantLocationGroups[$locationKey])) {
+            $variantLocationGroups[$locationKey] = [
+                'value' => $locationValue,
+                'variant_ids' => [],
+            ];
+        }
+
+        $variantLocationGroups[$locationKey]['variant_ids'][] = (string) ($variantCard['id'] ?? '');
+    }
+
+    if (! empty($variantLocationGroups)) {
+        $rebuiltLocations = [];
+        foreach ($variantLocationGroups as $locationKey => $group) {
+            $venueLocation = $venueLocationLookup[$locationKey] ?? null;
+            $locationValue = trim((string) ($group['value'] ?? ''));
+            $locationLabel = $locationValue;
+            $locationAddress = $locationValue;
+
+            if (is_array($venueLocation)) {
+                $locationLabel = trim((string) ($venueLocation['label'] ?? $locationLabel));
+                $locationAddress = trim((string) ($venueLocation['full_address'] ?? $venueLocation['address'] ?? $locationAddress));
+            }
+
+            $rebuiltLocations[] = [
+                'id' => is_array($venueLocation) && ! empty($venueLocation['id'])
+                    ? (string) $venueLocation['id']
+                    : 'loc-variant-' . ($locationKey !== '' ? $locationKey : Str::slug($locationValue ?: 'location')),
+                'label' => $locationLabel !== '' ? $locationLabel : $locationValue,
+                'address' => $locationAddress !== '' ? $locationAddress : 'Available',
+                'street_address' => is_array($venueLocation) ? (string) ($venueLocation['street_address'] ?? '') : '',
+                'full_address' => is_array($venueLocation) ? (string) ($venueLocation['full_address'] ?? $locationAddress) : $locationAddress,
+                'notes' => is_array($venueLocation) ? (string) ($venueLocation['notes'] ?? '') : '',
+                'lat' => is_array($venueLocation) ? ($venueLocation['lat'] ?? null) : null,
+                'lng' => is_array($venueLocation) ? ($venueLocation['lng'] ?? null) : null,
+                'online' => false,
+                'location_key' => $locationKey,
+                'variant_ids' => array_values(array_unique(array_filter(array_map('strval', $group['variant_ids'] ?? [])))),
+            ];
+        }
+
+        $onlineLocations = array_values(array_filter($locations, fn (array $location): bool => ! empty($location['online'])));
+        $locations = array_merge($rebuiltLocations, $onlineLocations);
+    }
+
+    $physicalLocations = array_values(array_filter($locations, fn ($location) => empty($location['online'])));
+    $hasOnlineLocation = collect($locations)->contains(fn ($location) => ! empty($location['online']));
+    $onlineOnlyLocation = $hasOnlineLocation && count($physicalLocations) === 0;
+    if ($onlineOnlyLocation) {
+        $locations = array_map(static function (array $location): array {
+            if (! empty($location['online'])) {
+                $location['label'] = 'Exclusively online';
+                $location['address'] = 'Live session link sent after booking';
+                $location['notes'] = 'Online appointment';
+            }
+
+            return $location;
+        }, $locations);
+    }
+
+    $selectedLocationId = $physicalLocations[0]['id'] ?? ($locations[0]['id'] ?? 'loc-online');
+    $selectedLocationLabel = $locations[0]['label'] ?? 'Location';
+    $selectedLocationAddress = $locations[0]['address'] ?? '';
+    foreach ($locations as $location) {
+        if (($location['id'] ?? '') === $selectedLocationId) {
+            $selectedLocationLabel = $location['label'] ?? $selectedLocationLabel;
+            $selectedLocationAddress = $location['address'] ?? $selectedLocationAddress;
+            break;
+        }
+    }
 
     $selectedVariantMode = strtolower(trim(implode(' ', $selectedVariantSelection)));
     $preferredLocation = null;
@@ -605,6 +759,61 @@
         pointer-events: none;
         font-weight: 500;
         text-align: right;
+    }
+    .wow-v3-offering-page .hero-review-badge {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 4;
+        display: inline-flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 172px;
+        max-width: min(320px, calc(100% - 40px));
+        padding: 12px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 16px 36px rgba(7, 20, 14, 0.22);
+        backdrop-filter: blur(16px);
+        color: var(--ink);
+    }
+    .wow-v3-offering-page .hero-review-badge__eyebrow {
+        color: var(--green-dark);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .wow-v3-offering-page .hero-review-badge__rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink);
+        font-size: 12.5px;
+        line-height: 1.2;
+    }
+    .wow-v3-offering-page .hero-review-badge__stars {
+        display: inline-flex;
+        gap: 2px;
+        flex-shrink: 0;
+    }
+    .wow-v3-offering-page .hero-review-badge__star {
+        width: 14px;
+        height: 14px;
+        display: inline-block;
+        background: #f5c84b;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.083 5.104c.35-.8 1.485-.8 1.834 0l1.752 4.022a1 1 0 0 0 .84.597l4.463.342c.9.069 1.255 1.2.556 1.771l-3.33 2.723a1 1 0 0 0-.337 1.016l1.03 4.119c.214.858-.71 1.552-1.474 1.106l-3.913-2.281a1 1 0 0 0-1.008 0L7.583 20.8c-.764.446-1.688-.248-1.474-1.106l1.03-4.119A1 1 0 0 0 6.8 14.56l-3.33-2.723c-.698-.571-.342-1.702.557-1.771l4.462-.342a1 1 0 0 0 .84-.597l1.753-4.022Z'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+    .wow-v3-offering-page .hero-review-badge__star.is-empty {
+        background: #d0d5dd;
+    }
+    .wow-v3-offering-page .hero-review-badge__copy {
+        color: var(--green-dark);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: -.01em;
     }
     .wow-v3-offering-page .hero-content {
         position: relative;
@@ -2014,7 +2223,8 @@
         .wow-v3-offering-page .hero { min-height: auto; overflow: visible; background: transparent; box-shadow: none; }
         .wow-v3-offering-page .hero-slide,
         .wow-v3-offering-page .hero-overlay,
-        .wow-v3-offering-page .hero-watermark { display: none; }
+        .wow-v3-offering-page .hero-watermark,
+        .wow-v3-offering-page .hero-review-badge { display: none; }
         .wow-v3-offering-page .hero-content {
             display: block;
             min-height: auto;
@@ -2163,6 +2373,19 @@
             @endforeach
             <div class="hero-overlay"></div>
             <div class="hero-watermark">{!! $watermark !!}</div>
+            @if($reviewCount > 0)
+                <div class="hero-review-badge" aria-label="{{ 'Rated ' . number_format((float) $rating, 1) . ' out of 5 from ' . $reviewCount . ' review' . ($reviewCount === 1 ? '' : 's') }}">
+                    <span class="hero-review-badge__eyebrow">Reviews</span>
+                    <div class="hero-review-badge__rating" aria-hidden="true">
+                        <span class="hero-review-badge__stars">
+                            @for($i = 1; $i <= 5; $i++)
+                                <span class="hero-review-badge__star {{ $i > $filledStars ? 'is-empty' : '' }}"></span>
+                            @endfor
+                        </span>
+                        <span class="hero-review-badge__copy">{{ $reviewSummary }}</span>
+                    </div>
+                </div>
+            @endif
 
             <div class="hero-content">
                 <div class="hero-main">
@@ -3058,6 +3281,33 @@
         };
     }
 
+    function locationKeyFromText(value) {
+        let text = String(value || '').trim().toLowerCase();
+        if (!text) {
+            return '';
+        }
+
+        text = text.split(',')[0].trim();
+        if (!text) {
+            return '';
+        }
+
+        text = text.replace(/\b(?:uk|u\.k\.|gb|great britain|united kingdom|england|scotland|wales|northern ireland)\b/g, ' ');
+        text = text.replace(/\b[A-Z]{1,2}\d[\dA-Z]?\s*\d[A-Z]{2}\b/gi, ' ');
+        text = text.replace(/\b[A-Z]{1,2}\d[\dA-Z]?\b/gi, ' ');
+        text = text.replace(/[^a-z0-9]+/gi, ' ').replace(/\s+/g, ' ').trim();
+
+        return text;
+    }
+
+    function locationKeyForLocation(location) {
+        if (!location) {
+            return '';
+        }
+
+        return String(location.location_key || locationKeyFromText(location.label || location.address || location.notes || '') || '');
+    }
+
     function firstOnlineLocation() {
         return locations.find(location => Boolean(location.online)) || null;
     }
@@ -3080,11 +3330,34 @@
         return null;
     }
 
+    function variantLocationKey(variant) {
+        if (variant && typeof variant === 'object' && String(variant.location_key || '').trim() !== '') {
+            return String(variant.location_key).trim();
+        }
+
+        const selection = Array.isArray(variant?.selection) ? variant.selection : [];
+        for (let i = selection.length - 1; i >= 0; i -= 1) {
+            const key = locationKeyFromText(selection[i]);
+            if (key !== '') {
+                return key;
+            }
+        }
+
+        return '';
+    }
+
     function variantSelectionSignature(variant) {
         const selection = Array.isArray(variant?.selection) ? variant.selection : [];
+        const locationKey = variantLocationKey(variant);
         return selection
             .map(value => String(value || '').trim().toLowerCase())
-            .filter(value => value !== '' && value !== 'online' && value !== 'in-person' && value !== 'in person' && value !== 'exclusively online');
+            .filter(value => {
+                if (value === '' || value === 'online' || value === 'in-person' || value === 'in person' || value === 'exclusively online') {
+                    return false;
+                }
+
+                return locationKeyFromText(value) !== locationKey;
+            });
     }
 
     function variantSelectionSignatureKey(variant) {
@@ -3092,22 +3365,29 @@
     }
 
     function variantForLocation(location, currentVariant = selectedVariant) {
-        const desiredPreference = location && location.online ? 'online' : 'in-person';
+        if (!location || location.online) {
+            return currentVariant || variants[0] || null;
+        }
+
+        const desiredKey = locationKeyForLocation(location);
         const currentSignature = variantSelectionSignatureKey(currentVariant);
+        const candidateIds = Array.isArray(location.variant_ids) ? location.variant_ids.map(id => String(id)) : [];
+        const sameLocationVariants = candidateIds.length > 0
+            ? variants.filter(candidate => candidateIds.includes(String(candidate.id)))
+            : (desiredKey !== ''
+                ? variants.filter(candidate => variantLocationKey(candidate) === desiredKey)
+                : []);
 
-        if (currentSignature !== '') {
-            const exactMatch = variants.find(candidate => {
-                return variantLocationPreference(candidate) === desiredPreference
-                    && variantSelectionSignatureKey(candidate) === currentSignature;
-            });
-
+        if (sameLocationVariants.length > 0) {
+            const exactMatch = sameLocationVariants.find(candidate => variantSelectionSignatureKey(candidate) === currentSignature);
             if (exactMatch) {
                 return exactMatch;
             }
+
+            return sameLocationVariants[0];
         }
 
-        const fallback = variants.find(candidate => variantLocationPreference(candidate) === desiredPreference);
-        return fallback || null;
+        return currentVariant || variants[0] || null;
     }
 
     function selectedLocationLabel() {
@@ -3520,6 +3800,7 @@
         selectedLocationAddress.textContent = location.address || location.notes || '';
         renderLocationOptions();
         syncPanelSummary();
+        syncVariantQueryParam();
         focusMapsOnSelectedLocation();
     }
 
@@ -3553,6 +3834,7 @@
         selectedDateLabel = '';
         clearHoldState();
         syncPanelSummary();
+        syncVariantQueryParam();
         fetchBookingAvailability();
     }
 
@@ -4085,8 +4367,10 @@
 
     locationOptions.forEach(option => {
         option.addEventListener('click', () => {
-            pendingLocationId = option.dataset.location;
-            renderLocationOptions();
+            const locationId = option.dataset.location;
+            if (!locationId) return;
+            pendingLocationId = locationId;
+            setSelectedLocation(locationId);
         });
     });
 

@@ -983,6 +983,7 @@ onBeforeUnmount(() => {
     >
     <div class="wow-search-top-row" aria-label="Search tools">
       <button
+        v-if="mobileExpanded"
         class="wow-mobile-search-close"
         type="button"
         @click="collapseMobileSearch"

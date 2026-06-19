@@ -75,6 +75,7 @@
 
 <style>
     .wow-popular-searches{
+        display:none !important;
         margin: 0 0 64px;
     }
     .wow-popular-searches__inner{
