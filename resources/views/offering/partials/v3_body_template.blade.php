@@ -27,9 +27,34 @@
     $mobileTicketText = ($rating !== null && $rating > 0 && $reviewCount > 0)
         ? ('Rated ' . number_format($rating, 1) . ' · ' . $reviewCount . ' review' . ($reviewCount === 1 ? '' : 's'))
         : 'Begin your journey';
+    $typeLabelRaw = trim((string) data_get($offering, 'type', 'Therapy'));
+    $typeLabelKey = Str::slug($typeLabelRaw);
+    $typeLabelMap = [
+        'therapy' => 'Therapy',
+        'therapies' => 'Therapy',
+        'class' => 'Class',
+        'classes' => 'Class',
+        'retreat' => 'Retreat',
+        'retreats' => 'Retreat',
+        'event' => 'Event',
+        'events' => 'Event',
+        'workshop' => 'Workshop',
+        'workshops' => 'Workshop',
+    ];
+    $typeLabel = $typeLabelMap[$typeLabelKey] ?? Str::of($typeLabelRaw)->singular()->headline()->toString();
+    if ($typeLabel === '') {
+        $typeLabel = 'Therapy';
+    }
     $durationRaw = $offering['duration'] ?? null;
     $durationMinutes = 60;
     $durationLabel = '60 minutes';
+    $categoryLabel = trim((string) data_get($offering, 'category.name', ''));
+    if ($categoryLabel === '') {
+        $categoryLabel = trim((string) data_get($offering, 'category.slug', ''));
+    }
+    if ($categoryLabel !== '') {
+        $categoryLabel = Str::of($categoryLabel)->headline()->toString();
+    }
     if (is_numeric($durationRaw)) {
         $durationMinutes = max(15, (int) $durationRaw);
         $durationLabel = $durationMinutes . ' minutes';
@@ -275,19 +300,29 @@
 
     $bookingSummaryLabel = $bookingFlow === 'live' ? 'Live availability' : 'Flexible booking';
     $priceSummary = $priceMin !== $priceMax ? ('From £' . number_format($priceMin, 2)) : ('£' . number_format($price, 2));
+    $durationIconMap = [
+        30 => asset('images/offering-duration-icons/duration-30.png'),
+        45 => asset('images/offering-duration-icons/duration-45.png'),
+        60 => asset('images/offering-duration-icons/duration-60.png'),
+    ];
+    $durationIconUrl = $durationIconMap[$durationMinutes] ?? null;
     $watermarkWords = array_slice(preg_split('/\s+/', strtoupper($title)) ?: [], 0, 2);
     if (empty($watermarkWords)) {
         $watermarkWords = [strtoupper($mode ?: 'WELLNESS')];
     }
     $watermark = implode('<br>', array_map(fn ($word) => e($word), $watermarkWords));
 
-    $quickInfoIconSvg = static function (string $icon): string {
+    $quickInfoIconSvg = static function (string $icon) use ($durationIconUrl): string {
         return match ($icon) {
-            'clock' => '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.8"></path><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
-            'format' => '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21a8.8 8.8 0 1 0 0-17.6A8.8 8.8 0 0 0 12 21Z" stroke="currentColor" stroke-width="1.8"></path><path d="M4.2 10.5h4.2l2.1 2.1v2.7l2.1 2.1h2.7M19.4 8.4h-4.7l-1.9-1.9H9.6L8 4.9M12.8 20.8v-3.2l2.1-2.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+            'clock' => $durationIconUrl !== null
+                ? '<img src="' . e($durationIconUrl) . '" alt="" aria-hidden="true" loading="lazy" decoding="async">'
+                : '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.8"></path><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+            'format' => '<svg viewBox="0 0 24 24" fill="none"><path d="M12 12.2a3.9 3.9 0 1 0 0-7.8 3.9 3.9 0 0 0 0 7.8Z" fill="currentColor"></path><path d="M5.3 20.1c.6-3.5 3.5-5.6 6.7-5.6s6.1 2.1 6.7 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+            'person' => '<svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>',
+            'online' => '<svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>',
             'booking' => '<svg viewBox="0 0 24 24" fill="none"><path d="M7 3v3M17 3v3M4.5 9h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="m9 15 2 2 4-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
-            'price' => '<svg viewBox="0 0 24 24" fill="none"><path d="M6.5 8.5h7A3.5 3.5 0 0 1 17 12v6.5H6.5v-10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M17 11h1.4l2.1 2.7v4.8H17V11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M8.5 19.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM18.5 19.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM3.5 10.5h3M2.5 14h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>',
-            'delivery' => '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.8"></path><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+            'price' => '<svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17.345a4.76 4.76 0 0 0 2.558 1.618c2.274.589 4.512-.446 4.999-2.31.487-1.866-1.273-3.9-3.546-4.49-2.273-.59-4.034-2.623-3.547-4.488.486-1.865 2.724-2.899 4.998-2.31.982.236 1.87.793 2.538 1.592m-3.879 12.171V21m0-18v2.2"/></svg>',
+            'delivery' => '<svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="m5.4 6.8 6.1 5.1c.3.25.74.25 1.05 0l6.05-5.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
             default => '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.8"></path><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
         };
     };
@@ -447,10 +482,12 @@
             $locationValue = trim((string) ($group['value'] ?? ''));
             $locationLabel = $locationValue;
             $locationAddress = $locationValue;
+            $isOnlineLocation = str_contains(strtolower($locationValue), 'online');
 
             if (is_array($venueLocation)) {
                 $locationLabel = trim((string) ($venueLocation['label'] ?? $locationLabel));
                 $locationAddress = trim((string) ($venueLocation['full_address'] ?? $venueLocation['address'] ?? $locationAddress));
+                $isOnlineLocation = $isOnlineLocation || ! empty($venueLocation['online']);
             }
 
             $rebuiltLocations[] = [
@@ -464,7 +501,7 @@
                 'notes' => is_array($venueLocation) ? (string) ($venueLocation['notes'] ?? '') : '',
                 'lat' => is_array($venueLocation) ? ($venueLocation['lat'] ?? null) : null,
                 'lng' => is_array($venueLocation) ? ($venueLocation['lng'] ?? null) : null,
-                'online' => false,
+                'online' => $isOnlineLocation,
                 'location_key' => $locationKey,
                 'variant_ids' => array_values(array_unique(array_filter(array_map('strval', $group['variant_ids'] ?? [])))),
             ];
@@ -473,6 +510,22 @@
         $onlineLocations = array_values(array_filter($locations, fn (array $location): bool => ! empty($location['online'])));
         $locations = array_merge($rebuiltLocations, $onlineLocations);
     }
+
+    $dedupedLocations = [];
+    $seenLocationKeys = [];
+    foreach ($locations as $location) {
+        $locationKey = ! empty($location['online'])
+            ? 'online'
+            : ('location:' . (string) ($location['location_key'] ?? $location['id'] ?? Str::slug((string) ($location['label'] ?? 'location'))));
+
+        if (isset($seenLocationKeys[$locationKey])) {
+            continue;
+        }
+
+        $seenLocationKeys[$locationKey] = true;
+        $dedupedLocations[] = $location;
+    }
+    $locations = $dedupedLocations;
 
     $physicalLocations = array_values(array_filter($locations, fn ($location) => empty($location['online'])));
     $hasOnlineLocation = collect($locations)->contains(fn ($location) => ! empty($location['online']));
@@ -530,7 +583,7 @@
         [
             'label' => 'Format',
             'value' => $formatLabel,
-            'icon' => 'format',
+            'icon' => str_contains(strtolower($formatLabel), 'online') ? 'online' : (str_contains(strtolower($formatLabel), 'in-person') ? 'person' : 'format'),
         ],
         [
             'label' => 'Booking',
@@ -548,6 +601,28 @@
             'icon' => 'delivery',
         ],
     ];
+    $quickInfoMobile = array_map(static function (array $card) use ($durationMinutes): array {
+        $value = (string) ($card['value'] ?? '');
+
+        switch ((string) ($card['label'] ?? '')) {
+            case 'Duration':
+                $value = $durationMinutes . ' mins';
+                break;
+            case 'Booking':
+                $value = 'Availability';
+                break;
+            case 'Price':
+                $value = preg_replace('/\.00$/', '', $value) ?? $value;
+                break;
+            case 'Confirmation':
+                $value = 'Instant';
+                break;
+        }
+
+        $card['value'] = $value;
+
+        return $card;
+    }, $quickInfo);
 
     $renderRichHtml = static function (string $value): string {
         return \App\Support\ContentFormatter::format($value);
@@ -891,12 +966,12 @@
     }
 
     .wow-v3-offering-page .booking-panel {
-        position: sticky;
-        top: 22px;
-        align-self: start;
-        padding: 18px;
+        display: block;
+        align-self: end;
+        min-width: 0;
+        padding: 22px;
         border-radius: var(--radius);
-        background: var(--white);
+        background: #ffffff;
         border: 1px solid var(--line);
         box-shadow: 0 22px 60px rgba(2, 18, 32, 0.22);
     }
@@ -1130,6 +1205,9 @@
         color: var(--muted);
         font-size: 11px;
     }
+    .wow-v3-offering-page span#pickAvailabilityTitle {
+        font-size: 16px;
+    }
     .wow-v3-offering-page .availability-card.is-selected {
         border-color: var(--green);
         background: var(--green-soft);
@@ -1276,6 +1354,28 @@
         gap: 18px;
         margin-bottom: 22px;
     }
+    .wow-v3-offering-page .section-heading--guides {
+        display: block;
+    }
+    .wow-v3-offering-page .section-heading--guides .guides-header-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+    }
+    .wow-v3-offering-page .section-heading--guides .guides-header-copy {
+        min-width: 0;
+    }
+    .wow-v3-offering-page .section-heading--guides .btn-primary {
+        white-space: nowrap;
+        flex-shrink: 0;
+        align-self: flex-start;
+        margin-top: 2px;
+    }
+    .wow-v3-offering-page .section-heading--guides .section-intro {
+        max-width: 760px;
+        margin-top: 10px;
+    }
     .wow-v3-offering-page .eyebrow {
         margin: 0 0 8px;
         color: var(--green);
@@ -1334,6 +1434,36 @@
     }
     .wow-v3-offering-page .gallery-main:hover img,
     .wow-v3-offering-page .gallery-tile:hover img { transform: scale(1.035); }
+    .wow-v3-offering-page .gallery-mobile-slider {
+        display: none;
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+        background: #dcebe5;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+    }
+    .wow-v3-offering-page .gallery-mobile-track {
+        display: flex;
+        height: 100%;
+        transition: transform 0.35s ease;
+        will-change: transform;
+    }
+    .wow-v3-offering-page .gallery-mobile-slide {
+        position: relative;
+        flex: 0 0 100%;
+        min-width: 100%;
+        overflow: hidden;
+    }
+    .wow-v3-offering-page .gallery-mobile-slide img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+    }
+    .wow-v3-offering-page .gallery-mobile-nav,
+    .wow-v3-offering-page .gallery-mobile-dots {
+        display: none;
+    }
     .wow-v3-offering-page .quick-info-grid {
         display: grid;
         grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -1374,7 +1504,13 @@
         color: var(--green);
         box-shadow: 0 10px 24px rgba(25, 53, 44, 0.08);
     }
-    .wow-v3-offering-page .quick-info-icon svg { width: 28px; height: 28px; }
+    .wow-v3-offering-page .quick-info-icon svg,
+    .wow-v3-offering-page .quick-info-icon img {
+        width: 28px;
+        height: 28px;
+        display: block;
+        object-fit: contain;
+    }
     .wow-v3-offering-page .quick-info-card small {
         margin-bottom: 0;
         color: var(--muted);
@@ -1812,6 +1948,11 @@
         min-width: 124px;
         min-height: 48px;
     }
+    @media (max-width: 720px) {
+        .wow-v3-offering-page .mobile-ticket-bar {
+            display: flex;
+        }
+    }
     .wow-v3-offering-page .modal-backdrop,
     .wow-v3-offering-page .calendar-modal-backdrop,
     .wow-v3-offering-page .location-modal-backdrop {
@@ -2134,9 +2275,21 @@
         background: #eaf3ee;
         box-shadow: var(--shadow-soft);
     }
+    .wow-v3-offering-page .location-modal-map-card .map-online-video {
+        display: none;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #10251f;
+    }
     .wow-v3-offering-page .location-modal-map {
         position: absolute;
         inset: 0;
+    }
+    .wow-v3-offering-page .location-modal-map-card.is-online .map-online-video {
+        display: block;
     }
     .wow-v3-offering-page .location-modal-map-caption {
         position: absolute;
@@ -2202,12 +2355,14 @@
         opacity: 0;
         pointer-events: none;
     }
+    .wow-v3-offering-page .location-modal-map-card.is-online .location-modal-map {
+        display: none;
+    }
 
     @media (max-width: 980px) {
         .wow-v3-offering-page .hero-content,
         .wow-v3-offering-page .content-wrap { grid-template-columns: 1fr; }
         .wow-v3-offering-page .hero-content { padding: 28px; }
-        .wow-v3-offering-page .booking-panel,
         .wow-v3-offering-page .side-stack { position: relative; top: auto; }
         .wow-v3-offering-page .hero-meta,
         .wow-v3-offering-page .quick-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2219,6 +2374,12 @@
     }
 
     @media (max-width: 720px) {
+        .wow-v3-offering-page .hero-wrap {
+            margin: 0 auto;
+        }
+        .wow-v3-offering-page .booking-panel {
+            display: none !important;
+        }
         .wow-v3-offering-page .page-nav { display: none; }
         .wow-v3-offering-page .hero { min-height: auto; overflow: visible; background: transparent; box-shadow: none; }
         .wow-v3-offering-page .hero-slide,
@@ -2232,12 +2393,12 @@
         }
         .wow-v3-offering-page .hero-main {
             max-width: none;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.96);
-            border: 1px solid var(--line);
-            box-shadow: 0 -12px 36px rgba(25, 53, 44, 0.12);
-            backdrop-filter: blur(18px);
-            border-radius: var(--radius);
+            padding: 0;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            backdrop-filter: none;
+            border-radius: 0;
         }
         .wow-v3-offering-page .pill {
             background: var(--green-soft);
@@ -2252,24 +2413,96 @@
         .wow-v3-offering-page .hero-actions { display: none; }
         .wow-v3-offering-page .hero-meta { display: none; }
         .wow-v3-offering-page .quick-glance-section { display: block; }
+        .wow-v3-offering-page .quick-glance-section .section-heading { display: none; }
         .wow-v3-offering-page .content-main {
             display: flex;
             flex-direction: column;
         }
+        .wow-v3-offering-page .section.flat {
+            order: -2;
+            padding: 0;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+        }
+        .wow-v3-offering-page section.section.flat {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0px !important;
+            background: transparent !important;
+        }
+        .wow-v3-offering-page .gallery {
+            display: none;
+        }
+        .wow-v3-offering-page .gallery-mobile-slider {
+            display: block;
+            aspect-ratio: 1.43 / 1;
+            margin-bottom: 16px;
+        }
+        .wow-v3-offering-page .gallery-mobile-track {
+            height: 100%;
+        }
+        .wow-v3-offering-page .gallery-mobile-slide {
+            height: 100%;
+        }
+        .wow-v3-offering-page .gallery-mobile-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.96);
+            color: #101827;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+            display: grid;
+            place-items: center;
+            font-size: 24px;
+            z-index: 5;
+        }
+        .wow-v3-offering-page .gallery-mobile-nav--prev { left: 10px; }
+        .wow-v3-offering-page .gallery-mobile-nav--next { right: 10px; }
+        .wow-v3-offering-page .gallery-mobile-dots {
+            position: absolute;
+            left: 50%;
+            bottom: 12px;
+            transform: translateX(-50%);
+            z-index: 6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 25px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        }
+        .wow-v3-offering-page .gallery-mobile-dots button {
+            width: 7px;
+            height: 7px;
+            border-radius: 99px;
+            border: 0;
+            background: rgba(17, 39, 32, 0.36);
+            padding: 0;
+        }
+        .wow-v3-offering-page .gallery-mobile-dots button.is-active {
+            width: 18px;
+            background: var(--green);
+        }
         .wow-v3-offering-page .quick-glance-section {
             order: -1;
         }
-        .wow-v3-offering-page .booking-panel {
-            margin-top: 12px;
-            padding: 16px;
-            box-shadow: var(--shadow-soft);
+        .wow-v3-offering-page .section-heading--guides {
+            gap: 12px;
         }
-        .wow-v3-offering-page .mobile-panel-pick { display: flex; }
+        .wow-v3-offering-page .section-heading--guides .guides-header-row {
+            gap: 12px;
+        }
         .wow-v3-offering-page .desktop-booking-buttons { display: none !important; }
-        .wow-v3-offering-page .booking-panel .booking-fields,
-        .wow-v3-offering-page .booking-panel .secure-note {
-            display: none;
-        }
         .wow-v3-offering-page .section {
             padding: 22px;
             margin-bottom: 16px;
@@ -2280,10 +2513,44 @@
         }
         .wow-v3-offering-page .gallery-main { min-height: 330px; }
         .wow-v3-offering-page .gallery-side .gallery-tile { min-height: 230px; }
-        .wow-v3-offering-page .quick-info-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .wow-v3-offering-page .quick-info-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+        }
         .wow-v3-offering-page .quick-info-card {
             height: auto !important;
             min-height: auto;
+            padding: 10px 8px;
+            gap: 8px;
+            border-radius: var(--radius);
+            background: #fff;
+        }
+        .wow-v3-offering-page .quick-info-card small {
+            display: none;
+        }
+        .wow-v3-offering-page .quick-info-card strong {
+            font-size: 12px;
+            line-height: 1.15;
+        }
+        .wow-v3-offering-page .quick-info-icon {
+            width: 40px;
+            height: 40px;
+        }
+        .wow-v3-offering-page .section {
+            margin-bottom: 16px;
+        }
+        .wow-v3-offering-page .section:not(.quick-glance-section) {
+            padding: 22px;
+            background: #ffffff;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-soft);
+            border-radius: var(--radius);
+        }
+        .wow-v3-offering-page .quick-glance-section {
+            padding: 0;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
         }
         .wow-v3-offering-page .map-box { min-height: 320px; }
         .wow-v3-offering-page .location-list { max-height: 260px; }
@@ -2390,9 +2657,8 @@
             <div class="hero-content">
                 <div class="hero-main">
                     <div class="kicker-row">
-                        <span class="pill">{{ ucfirst($type ?? 'Therapy') }}</span>
-                        <span class="pill">{{ $bookingSummaryLabel }}</span>
-                        <span class="pill">{{ $locationSummary }}</span>
+                        <span class="pill">{{ $typeLabel }}</span>
+                        <span class="pill">{{ $categoryLabel !== '' ? $categoryLabel : $typeLabel }}</span>
                     </div>
 
                     <h1>{{ $title }}</h1>
@@ -2580,6 +2846,36 @@
                             </div>
                         @endif
                     </div>
+
+                    <div class="gallery-mobile-slider" data-mobile-gallery aria-label="{{ $title }} image gallery">
+                        <div class="gallery-mobile-track" data-mobile-gallery-track>
+                            @foreach($galleryImages as $index => $galleryImage)
+                                <div class="gallery-mobile-slide {{ $index === 0 ? 'is-active' : '' }}" data-mobile-gallery-slide>
+                                    <img src="{{ $galleryImage }}" alt="{{ $title }} image">
+                                </div>
+                            @endforeach
+                        </div>
+
+                        @if(count($galleryImages) > 1)
+                            <button class="gallery-mobile-nav gallery-mobile-nav--prev" type="button" data-mobile-gallery-prev aria-label="Previous image">
+                                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                            </button>
+                            <button class="gallery-mobile-nav gallery-mobile-nav--next" type="button" data-mobile-gallery-next aria-label="Next image">
+                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                            </button>
+
+                            <div class="gallery-mobile-dots" data-mobile-gallery-dots aria-label="Gallery position">
+                                @foreach($galleryImages as $index => $galleryImage)
+                                    <button
+                                        type="button"
+                                        class="{{ $index === 0 ? 'is-active' : '' }}"
+                                        data-mobile-gallery-dot="{{ $index }}"
+                                        aria-label="{{ 'Image ' . ($index + 1) }}"
+                                    ></button>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </section>
             @endif
 
@@ -2595,7 +2891,7 @@
                 </div>
 
                 <div class="quick-info-grid" aria-label="Therapy quick information">
-                    @foreach($quickInfo as $card)
+                    @foreach($quickInfoMobile as $card)
                         <article class="quick-info-card">
                             <span class="quick-info-icon" aria-hidden="true">{!! $quickInfoIconSvg($card['icon']) !!}</span>
                             <div>
@@ -2611,7 +2907,7 @@
                 <div class="section-heading">
                     <div>
                         <p class="eyebrow">Overview</p>
-                        <h2>About this offering</h2>
+                        <h2>About this {{ strtolower($typeLabel) }}</h2>
                     </div>
                 </div>
 
@@ -2626,16 +2922,18 @@
 
             @if(!empty($guidePanel))
                 <section class="section" id="related-guides">
-                    <div class="section-heading">
-                        <div>
+                    <div class="section-heading section-heading--guides">
+                        <div class="guides-header-row">
+                            <div class="guides-header-copy">
                             <p class="eyebrow">{{ $guidePanel['eyebrow'] ?? 'Explore guides' }}</p>
                             <h2>{{ $guidePanel['title'] ?? 'Related guides' }}</h2>
-                            @if(!empty($guidePanel['summary']))
-                                <p class="section-intro">{{ $guidePanel['summary'] }}</p>
+                            </div>
+                            @if(!empty($guidePanel['hub_url']))
+                                <a class="btn btn-primary" href="{{ $guidePanel['hub_url'] }}">{{ $guidePanel['hub_label'] ?? 'Browse guides' }}</a>
                             @endif
                         </div>
-                        @if(!empty($guidePanel['hub_url']))
-                            <a class="btn btn-primary" href="{{ $guidePanel['hub_url'] }}">{{ $guidePanel['hub_label'] ?? 'Browse guides' }}</a>
+                        @if(!empty($guidePanel['summary']))
+                            <p class="section-intro">{{ $guidePanel['summary'] }}</p>
                         @endif
                     </div>
 
@@ -2785,7 +3083,7 @@
             <div class="side-card">
                 <h3>Therapy snapshot</h3>
                 <div class="mini-list">
-                    <div class="mini-row"><span>Format</span><strong>{{ $formatLabel }}</strong></div>
+                    <div class="mini-row"><span>Format</span><strong>{{ $typeLabel }}</strong></div>
                     <div class="mini-row"><span>Locations</span><strong>{{ $locationSummary }}</strong></div>
                     <div class="mini-row"><span>Duration</span><strong>{{ $durationLabel }}</strong></div>
                     <div class="mini-row"><span>Booking</span><strong>{{ $bookingSummaryLabel }}</strong></div>
@@ -2906,7 +3204,9 @@
                         <button class="location-option {{ ($location['id'] ?? '') === $selectedLocationId ? 'is-selected' : '' }}" type="button" data-location="{{ $location['id'] }}">
                             <span class="option-main">
                                 <span>{{ $location['label'] }}</span>
-                                <span class="option-pill">{{ ! empty($location['online']) ? 'Online' : 'Available' }}</span>
+                                @if(! ($onlineOnlyLocation && ! empty($location['online'])))
+                                    <span class="option-pill">{{ ! empty($location['online']) ? 'Online' : 'Available' }}</span>
+                                @endif
                             </span>
                             <span class="option-sub">{{ $location['address'] ?: ($location['notes'] ?: 'Available') }}</span>
                         </button>
@@ -2914,6 +3214,11 @@
                 </div>
 
                 <div class="location-modal-map-card" id="locationModalMapCard">
+                    @if($hasOnlineLocation)
+                        <video class="map-online-video" id="locationModalOnlineVideo" autoplay muted loop playsinline poster="{{ $videoPoster }}">
+                            <source src="{{ $videoSource }}" type="video/mp4">
+                        </video>
+                    @endif
                     <div class="location-modal-map" id="locationModalMap"></div>
                     <div class="map-online-overlay">
                         <div>
@@ -4392,10 +4697,11 @@
 
     qsa('.availability-card', page).forEach(card => {
         card.addEventListener('click', () => {
-        setAvailabilityMode(card.dataset.availabilityMode);
-        if (card.dataset.availabilityMode === 'pick') {
-            openDateTimeModal();
-        }
+            const mode = card.dataset.availabilityMode;
+            setAvailabilityMode(mode);
+            if (mode === 'pick') {
+                openDateTimeModal();
+            }
         });
     });
 
@@ -4463,9 +4769,18 @@
 
     function updateMobileStickyBar() {
         if (!bookingPanel || !mobileTicketBar) return;
+        if (!isMobile()) {
+            mobileTicketBar.classList.remove('is-visible');
+            body.classList.remove(mobileMapBarVisibleClass);
+            return;
+        }
+
+        mobileTicketBar.classList.add('is-visible');
+        body.classList.add(mobileMapBarVisibleClass);
+
         const observer = new IntersectionObserver(entries => {
             const entry = entries[0];
-            const shouldShow = isMobile() && !entry.isIntersecting;
+            const shouldShow = isMobile();
             mobileTicketBar.classList.toggle('is-visible', shouldShow);
             body.classList.toggle(mobileMapBarVisibleClass, shouldShow);
         }, { threshold: 0.12 });
