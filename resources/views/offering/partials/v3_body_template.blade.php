@@ -241,13 +241,33 @@
         ];
     }
 
+    $knownLocationKeys = [];
+    foreach ($locations as $location) {
+        foreach ([
+            (string) ($location['label'] ?? ''),
+            (string) ($location['address'] ?? ''),
+            (string) ($location['notes'] ?? ''),
+        ] as $candidate) {
+            $candidateKey = $normalizeLocationKey($candidate);
+            if ($candidateKey !== '') {
+                $knownLocationKeys[$candidateKey] = true;
+            }
+        }
+
+        if (! empty($location['online'])) {
+            $knownLocationKeys['online'] = true;
+            $knownLocationKeys['exclusively online'] = true;
+            $knownLocationKeys['online session'] = true;
+        }
+    }
+
     $physicalLocations = array_values(array_filter($locations, fn ($location) => empty($location['online'])));
     $hasOnlineLocation = collect($locations)->contains(fn ($location) => ! empty($location['online']));
     $onlineOnlyLocation = $hasOnlineLocation && count($physicalLocations) === 0;
     if ($onlineOnlyLocation) {
         $locations = array_map(static function (array $location): array {
             if (! empty($location['online'])) {
-                $location['label'] = 'Exclusively online';
+                $location['label'] = 'Online session';
                 $location['address'] = 'Live session link sent after booking';
                 $location['notes'] = 'Online appointment';
             }
@@ -284,6 +304,8 @@
         : (count($physicalLocations) === 1 ? $physicalLocations[0]['label'] : ($hasOnlineLocation ? 'Exclusively online' : 'Location to be confirmed'));
     if ($hasOnlineLocation && count($physicalLocations) > 0) {
         $locationSummary = count($physicalLocations) . ' locations + online';
+    } elseif ($onlineOnlyLocation) {
+        $locationSummary = 'Online session';
     }
     $locationHeading = $onlineOnlyLocation ? 'Exclusively online.' : 'Choose the studio that works for you.';
     $locationIntro = $onlineOnlyLocation
@@ -456,20 +478,29 @@
         }
 
         $locationValue = null;
+        $locationKey = null;
         foreach (array_reverse($selection) as $selectionValue) {
-            $selectionKey = $normalizeLocationKey((string) $selectionValue);
-            if ($selectionKey !== '') {
-                $locationValue = trim((string) $selectionValue);
+            $selectionText = trim((string) $selectionValue);
+            if ($selectionText === '') {
+                continue;
+            }
+
+            $selectionLower = strtolower($selectionText);
+            if (str_contains($selectionLower, 'online')) {
+                $locationValue = 'Online session';
+                $locationKey = 'online';
+                break;
+            }
+
+            $selectionKey = $normalizeLocationKey($selectionText);
+            if ($selectionKey !== '' && isset($knownLocationKeys[$selectionKey])) {
+                $locationValue = $selectionText;
+                $locationKey = $selectionKey;
                 break;
             }
         }
 
-        if ($locationValue === null || $locationValue === '') {
-            continue;
-        }
-
-        $locationKey = $normalizeLocationKey($locationValue);
-        if ($locationKey === '') {
+        if ($locationValue === null || $locationValue === '' || $locationKey === null || $locationKey === '') {
             continue;
         }
 
