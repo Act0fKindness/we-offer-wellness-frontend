@@ -306,18 +306,26 @@
         60 => asset('images/offering-duration-icons/duration-60.png'),
     ];
     $durationIconUrl = $durationIconMap[$durationMinutes] ?? null;
+    $formatIconUrl = null;
+    if ($onlineOnlyLocation) {
+        $formatIconUrl = asset('images/offering-format-icons/format-online.png');
+    } elseif (count($physicalLocations) > 0 && ! $hasOnlineLocation) {
+        $formatIconUrl = asset('images/offering-format-icons/format-inperson.png');
+    }
     $watermarkWords = array_slice(preg_split('/\s+/', strtoupper($title)) ?: [], 0, 2);
     if (empty($watermarkWords)) {
         $watermarkWords = [strtoupper($mode ?: 'WELLNESS')];
     }
     $watermark = implode('<br>', array_map(fn ($word) => e($word), $watermarkWords));
 
-    $quickInfoIconSvg = static function (string $icon) use ($durationIconUrl): string {
+    $quickInfoIconSvg = static function (string $icon) use ($durationIconUrl, $formatIconUrl): string {
         return match ($icon) {
             'clock' => $durationIconUrl !== null
                 ? '<img src="' . e($durationIconUrl) . '" alt="" aria-hidden="true" loading="lazy" decoding="async">'
                 : '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.8"></path><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
-            'format' => '<svg viewBox="0 0 24 24" fill="none"><path d="M12 12.2a3.9 3.9 0 1 0 0-7.8 3.9 3.9 0 0 0 0 7.8Z" fill="currentColor"></path><path d="M5.3 20.1c.6-3.5 3.5-5.6 6.7-5.6s6.1 2.1 6.7 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+            'format' => $formatIconUrl !== null
+                ? '<img src="' . e($formatIconUrl) . '" alt="" aria-hidden="true" loading="lazy" decoding="async">'
+                : '<svg viewBox="0 0 24 24" fill="none"><path d="M12 12.2a3.9 3.9 0 1 0 0-7.8 3.9 3.9 0 0 0 0 7.8Z" fill="currentColor"></path><path d="M5.3 20.1c.6-3.5 3.5-5.6 6.7-5.6s6.1 2.1 6.7 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
             'person' => '<svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>',
             'online' => '<svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>',
             'booking' => '<svg viewBox="0 0 24 24" fill="none"><path d="M7 3v3M17 3v3M4.5 9h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="m9 15 2 2 4-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
@@ -1508,6 +1516,10 @@
         width: 60px;
         height: 60px;
     }
+    .wow-v3-offering-page .quick-info-icon--format {
+        width: 60px;
+        height: 60px;
+    }
     .wow-v3-offering-page .quick-info-icon svg,
     .wow-v3-offering-page .quick-info-icon img {
         width: 28px;
@@ -1516,6 +1528,10 @@
         object-fit: contain;
     }
     .wow-v3-offering-page .quick-info-icon--duration img {
+        width: 60px;
+        height: 60px;
+    }
+    .wow-v3-offering-page .quick-info-icon--format img {
         width: 60px;
         height: 60px;
     }
@@ -2675,11 +2691,14 @@
                         @foreach($quickInfo as $card)
                             @php
                                 $isDurationImage = ($card['label'] ?? '') === 'Duration' && ! empty($durationIconUrl);
+                                $isFormatImage = ($card['label'] ?? '') === 'Format' && ! empty($formatIconUrl);
                             @endphp
-                            <article class="quick-info-card {{ $isDurationImage ? 'quick-info-card--image' : '' }}">
-                                <span class="quick-info-icon {{ $isDurationImage ? 'quick-info-icon--duration' : '' }}" aria-hidden="true">
+                            <article class="quick-info-card {{ ($isDurationImage || $isFormatImage) ? 'quick-info-card--image' : '' }}">
+                                <span class="quick-info-icon {{ $isDurationImage ? 'quick-info-icon--duration' : '' }} {{ $isFormatImage ? 'quick-info-icon--format' : '' }}" aria-hidden="true">
                                     @if($isDurationImage)
                                         <img src="{{ $durationIconUrl }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                                    @elseif($isFormatImage)
+                                        <img src="{{ $formatIconUrl }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
                                     @else
                                         {!! $quickInfoIconSvg($card['icon']) !!}
                                     @endif
