@@ -2684,12 +2684,10 @@
                                         {!! $quickInfoIconSvg($card['icon']) !!}
                                     @endif
                                 </span>
-                                @unless($isDurationImage)
-                                    <div>
-                                        <small>{{ $card['label'] }}</small>
-                                        <strong>{{ $card['value'] }}</strong>
-                                    </div>
-                                @endunless
+                                <div>
+                                    <small>{{ $card['label'] }}</small>
+                                    <strong>{{ $card['value'] }}</strong>
+                                </div>
                             </article>
                         @endforeach
                     </div>
