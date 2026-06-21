@@ -2588,8 +2588,22 @@
             line-height: 1.15;
         }
         .wow-v3-offering-page .quick-info-icon {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
+        }
+        .wow-v3-offering-page .quick-info-icon--duration,
+        .wow-v3-offering-page .quick-info-icon--format {
+            width: 50px;
+            height: 50px;
+        }
+        .wow-v3-offering-page .quick-info-icon--duration img,
+        .wow-v3-offering-page .quick-info-icon--format img {
+            width: 50px;
+            height: 50px;
+        }
+        .wow-v3-offering-page .quick-info-card small,
+        .wow-v3-offering-page .quick-info-card strong {
+            display: none;
         }
         .wow-v3-offering-page .section {
             margin-bottom: 16px;
