@@ -1504,12 +1504,20 @@
         color: var(--green);
         box-shadow: 0 10px 24px rgba(25, 53, 44, 0.08);
     }
+    .wow-v3-offering-page .quick-info-icon--duration {
+        width: 60px;
+        height: 60px;
+    }
     .wow-v3-offering-page .quick-info-icon svg,
     .wow-v3-offering-page .quick-info-icon img {
         width: 28px;
         height: 28px;
         display: block;
         object-fit: contain;
+    }
+    .wow-v3-offering-page .quick-info-icon--duration img {
+        width: 60px;
+        height: 60px;
     }
     .wow-v3-offering-page .quick-info-card small {
         margin-bottom: 0;
@@ -2665,12 +2673,23 @@
 
                     <div class="hero-meta">
                         @foreach($quickInfo as $card)
-                            <article class="quick-info-card">
-                                <span class="quick-info-icon" aria-hidden="true">{!! $quickInfoIconSvg($card['icon']) !!}</span>
-                                <div>
-                                    <small>{{ $card['label'] }}</small>
-                                    <strong>{{ $card['value'] }}</strong>
-                                </div>
+                            @php
+                                $isDurationImage = ($card['label'] ?? '') === 'Duration' && ! empty($durationIconUrl);
+                            @endphp
+                            <article class="quick-info-card {{ $isDurationImage ? 'quick-info-card--image' : '' }}">
+                                <span class="quick-info-icon {{ $isDurationImage ? 'quick-info-icon--duration' : '' }}" aria-hidden="true">
+                                    @if($isDurationImage)
+                                        <img src="{{ $durationIconUrl }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                                    @else
+                                        {!! $quickInfoIconSvg($card['icon']) !!}
+                                    @endif
+                                </span>
+                                @unless($isDurationImage)
+                                    <div>
+                                        <small>{{ $card['label'] }}</small>
+                                        <strong>{{ $card['value'] }}</strong>
+                                    </div>
+                                @endunless
                             </article>
                         @endforeach
                     </div>
