@@ -329,8 +329,11 @@
     ];
     $durationIconUrl = $durationIconMap[$durationMinutes] ?? null;
     $formatIconUrl = null;
-    if ($onlineOnlyLocation) {
+    $formatLabelLower = strtolower($formatLabel);
+    if ((str_contains($formatLabelLower, 'online') || $onlineOnlyLocation) && ! str_contains($formatLabelLower, '&')) {
         $formatIconUrl = asset('images/offering-format-icons/format-online.png');
+    } elseif ((str_contains($formatLabelLower, 'in-person') || str_contains($formatLabelLower, 'in person')) && ! str_contains($formatLabelLower, '&')) {
+        $formatIconUrl = asset('images/offering-format-icons/format-inperson.png');
     } elseif (count($physicalLocations) > 0 && ! $hasOnlineLocation) {
         $formatIconUrl = asset('images/offering-format-icons/format-inperson.png');
     }
@@ -622,7 +625,7 @@
         [
             'label' => 'Format',
             'value' => $formatLabel,
-            'icon' => str_contains(strtolower($formatLabel), 'online') ? 'online' : (str_contains(strtolower($formatLabel), 'in-person') ? 'person' : 'format'),
+            'icon' => 'format',
         ],
         [
             'label' => 'Booking',
@@ -2576,7 +2579,7 @@
             height: auto !important;
             min-height: auto;
             padding: 10px 8px;
-            gap: 8px;
+            gap: 0;
             border-radius: var(--radius);
             background: #fff;
         }
@@ -2588,18 +2591,23 @@
             line-height: 1.15;
         }
         .wow-v3-offering-page .quick-info-icon {
-            width: 50px;
-            height: 50px;
+            width: 50px !important;
+            height: 50px !important;
         }
         .wow-v3-offering-page .quick-info-icon--duration,
         .wow-v3-offering-page .quick-info-icon--format {
-            width: 50px;
-            height: 50px;
+            width: 50px !important;
+            height: 50px !important;
+        }
+        .wow-v3-offering-page .quick-info-icon svg,
+        .wow-v3-offering-page .quick-info-icon img {
+            width: 50px !important;
+            height: 50px !important;
         }
         .wow-v3-offering-page .quick-info-icon--duration img,
         .wow-v3-offering-page .quick-info-icon--format img {
-            width: 50px;
-            height: 50px;
+            width: 50px !important;
+            height: 50px !important;
         }
         .wow-v3-offering-page .quick-info-card small,
         .wow-v3-offering-page .quick-info-card strong {
