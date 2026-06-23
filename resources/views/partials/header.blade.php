@@ -492,16 +492,6 @@
                                             <a class="menu-link" href="{{ $link['href'] }}"><strong>{{ $link['label'] }}</strong><span>Explore {{ strtolower($link['label']) }} on We Offer Wellness®.</span></a>
                                         @endforeach
                                     </div>
-                                    <div class="wow-for-you-card" data-therapy-default-block>
-                                        <p class="mega-label">Popular this week</p>
-                                        <ul class="list-unstyled m-0 p-0" data-therapy-default-popular></ul>
-                                    </div>
-                                    <div class="wow-for-you-card" data-therapy-personalized-block hidden aria-hidden="true">
-                                        <p class="mega-label">Recently viewed</p>
-                                        <ul class="list-unstyled m-0 p-0" data-therapy-recent></ul>
-                                        <p class="mega-label">Saved therapies</p>
-                                        <ul class="list-unstyled m-0 p-0" data-therapy-saved></ul>
-                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -830,11 +820,12 @@
 #mega-panel.wow-mega-shell{
     display:block !important;
     position:absolute !important;
-    top:14px !important;
+    top:0px !important;
     left:50% !important;
     right:auto !important;
     width:min(var(--mega-max-width), calc(100vw - 36px)) !important;
-    min-height:420px;
+    height:auto;
+    min-height:0;
     max-width:none !important;
     background:rgba(255,255,255,.98);
     border:1px solid rgba(229,231,235,.95);
@@ -844,9 +835,9 @@
     opacity:0;
     transform:translate3d(-50%, -10px, 0) scale(.985) !important;
     transform-origin:top center;
-    transition:height 430ms cubic-bezier(.18,.95,.2,1), opacity 180ms ease, transform 260ms cubic-bezier(.18,.95,.2,1);
+    transition:opacity 180ms ease, transform 260ms cubic-bezier(.18,.95,.2,1);
     pointer-events:none;
-    will-change:height, transform;
+    will-change:transform, opacity;
 }
 #mega-panel.wow-mega-shell::before{
     content:"";
@@ -864,7 +855,7 @@
 }
 .wow-mega-arrow{
     position:absolute;
-    top:-7px;
+    top:-9px;
     left:50%;
     width:16px;
     height:16px;
@@ -877,21 +868,23 @@
 }
 .wow-mega-viewport{
     position:relative;
-    height:100%;
+    height:auto;
     overflow:hidden;
     border-radius:inherit;
     background:rgba(255,255,255,.98);
 }
 .wow-mega-track{
     display:flex;
-    height:100%;
+    height:auto;
     transition:transform 460ms cubic-bezier(.18,.95,.2,1);
     will-change:transform;
+    align-items:flex-start;
 }
 #mega-panel .wow-mega-pane[data-menu]{
     display:block !important;
     flex:0 0 100%;
     min-width:100%;
+    height:auto;
     padding:42px 46px;
 }
 .wow-mega-grid{

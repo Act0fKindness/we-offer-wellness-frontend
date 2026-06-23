@@ -107,6 +107,12 @@ class OfferingV3 extends Model
                     ->get();
 
                 foreach ($rows as $row) {
+                    $rowOnline = data_get($row, 'online', data_get($row, 'is_online', null));
+                    if (filter_var($rowOnline, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE)) {
+                        $locations[] = 'Online';
+                        continue;
+                    }
+
                     $label = trim((string) ($row->label ?? ''));
                     if ($label === '') {
                         $label = trim((string) ($row->city ?? ''));

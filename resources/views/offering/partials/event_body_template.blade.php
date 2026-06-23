@@ -1001,7 +1001,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 50;
+        z-index: 1850;
         display: none;
         align-items: center;
         justify-content: space-between;
@@ -1015,6 +1015,12 @@
 
     .festival-page .mobile-ticket-bar.is-visible {
         display: flex;
+    }
+
+    .festival-page .mobile-ticket-bar.is-docked {
+        position: absolute;
+        bottom: 16px;
+        z-index: 1850;
     }
 
     .festival-page .mobile-ticket-bar strong {
@@ -1038,7 +1044,7 @@
     .festival-page .wow-booking-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 80;
+        z-index: 1800;
         display: none;
         background: rgba(7, 29, 51, 0.56);
     }
@@ -1052,7 +1058,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 90;
+        z-index: 1900;
         display: none;
         max-height: 92vh;
         overflow: auto;
@@ -1588,6 +1594,10 @@
             background: #dceaf3;
             overflow: hidden;
             pointer-events: none;
+            transition: opacity 280ms ease;
+            will-change: opacity;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 78%, rgba(0, 0, 0, 0) 100%);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 78%, rgba(0, 0, 0, 0) 100%);
         }
 
         .festival-page .mobile-map-canvas {
@@ -1610,7 +1620,7 @@
             right: 0;
             bottom: 0;
             height: 140px;
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(247, 251, 253, 0.98));
+            background: linear-gradient(to bottom, rgba(247, 251, 253, 0), rgba(247, 251, 253, 0.98));
             -webkit-backdrop-filter: blur(5px);
             backdrop-filter: blur(5px);
         }
@@ -1618,7 +1628,7 @@
         .festival-page {
             position: relative;
             z-index: 1;
-            padding-top: calc(48vh - 98px);
+            padding-top: calc(48vh - 135px);
         }
 
         .festival-page .event-nav {
@@ -1629,6 +1639,12 @@
         .festival-page .content-wrap {
             padding-left: 12px;
             padding-right: 12px;
+        }
+
+        .festival-page .hero-wrap,
+        .festival-page .content-wrap {
+            position: relative;
+            z-index: 2;
         }
 
         .festival-page .hero-wrap {
@@ -1740,6 +1756,8 @@
         .festival-page .section {
             padding: 22px;
             margin-bottom: 16px;
+            position: relative;
+            z-index: 2;
         }
 
         .festival-page .section.flat {
@@ -2107,6 +2125,11 @@
 (function () {
     const desktopMapEl = document.getElementById('desktopMap');
     const mobileMapEl = document.getElementById('mobileMap');
+    const mobileMapHero = document.querySelector('.festival-page .mobile-map-hero');
+    const heroMain = document.querySelector('.festival-page .hero-main');
+    const mobileTicketBar = document.getElementById('mobileTicketBar');
+    const festivalPage = document.querySelector('.festival-page');
+    const footerEl = document.querySelector('.wow-footer');
     const scheduleTabs = Array.from(document.querySelectorAll('.schedule-tab'));
     const schedules = Array.from(document.querySelectorAll('[data-schedule]'));
     const token = window.WOW_MAPS_KEY || @json(config('services.mapbox.token'));
@@ -2131,6 +2154,8 @@
 
     let desktopMapInstance = null;
     let mobileMapInstance = null;
+    let mobileFadeRaf = 0;
+    let mobileTicketRaf = 0;
 
     function createMarker() {
         const markerEl = document.createElement('div');
@@ -2318,6 +2343,66 @@
         }
     }
 
+    function updateMobileMapFade() {
+        if (!mobileMapHero || window.innerWidth > 720) {
+            return;
+        }
+
+        const rect = heroMain?.getBoundingClientRect();
+        if (!rect) {
+            mobileMapHero.style.opacity = '1';
+            return;
+        }
+
+        const fadeStart = 180;
+        const fadeEnd = -60;
+        const progress = (rect.top - fadeEnd) / (fadeStart - fadeEnd);
+        const opacity = Math.max(0, Math.min(1, progress));
+        mobileMapHero.style.opacity = String(opacity);
+    }
+
+    function scheduleMobileMapFade() {
+        if (mobileFadeRaf) {
+            return;
+        }
+
+        mobileFadeRaf = window.requestAnimationFrame(() => {
+            mobileFadeRaf = 0;
+            updateMobileMapFade();
+        });
+    }
+
+    function updateMobileTicketBarPosition() {
+        if (!mobileTicketBar || window.innerWidth > 720) {
+            return;
+        }
+
+        const footerRect = footerEl?.getBoundingClientRect();
+        const barHeight = mobileTicketBar.offsetHeight || 0;
+        const dockThreshold = window.innerHeight - barHeight - 16;
+        const shouldDock = !!footerRect && footerRect.top <= dockThreshold;
+
+        mobileTicketBar.classList.toggle('is-docked', shouldDock);
+        if (shouldDock && festivalPage) {
+            mobileTicketBar.style.left = '0';
+            mobileTicketBar.style.right = '0';
+        } else {
+            mobileTicketBar.style.left = '';
+            mobileTicketBar.style.right = '';
+        }
+    }
+
+    function scheduleMobileTicketBarPosition() {
+        if (mobileTicketRaf) {
+            return;
+        }
+
+        mobileTicketRaf = window.requestAnimationFrame(() => {
+            mobileTicketRaf = 0;
+            updateMobileTicketBarPosition();
+        });
+    }
+
     function loadMapbox(cb) {
         if (window.mapboxgl && window.mapboxgl.Map) {
             try {
@@ -2403,6 +2488,7 @@
 
             initDesktopMap(resolvedPins);
             initMobileMap(resolvedPins);
+            updateMobileMapFade();
 
             window.addEventListener('resize', () => {
                 if (!mobileMapInstance && window.innerWidth <= 720) {
@@ -2410,11 +2496,21 @@
                 }
 
                 resizeMaps();
+                scheduleMobileMapFade();
             });
         });
     } else {
         setMapPlaceholder('Map unavailable: missing Mapbox API key.');
     }
+
+    window.addEventListener('scroll', scheduleMobileMapFade, { passive: true });
+    window.addEventListener('scroll', scheduleMobileTicketBarPosition, { passive: true });
+    window.addEventListener('resize', scheduleMobileMapFade);
+    window.addEventListener('resize', scheduleMobileTicketBarPosition);
+    window.addEventListener('orientationchange', scheduleMobileMapFade);
+    window.addEventListener('orientationchange', scheduleMobileTicketBarPosition);
+    updateMobileMapFade();
+    updateMobileTicketBarPosition();
 })();
 </script>
 @endpush

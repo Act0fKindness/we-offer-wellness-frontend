@@ -287,7 +287,11 @@
                         <span class="wow-chip">
                             <strong>{{ $chip['label'] }}:</strong>
                             <span>{{ $chip['value'] }}</span>
-                            <button type="button" aria-label="Remove {{ $chip['label'] }}">×</button>
+                            <button type="button" aria-label="Remove {{ $chip['label'] }}">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M6.7 6.7a1 1 0 0 1 1.4 0L12 10.6l3.9-3.9a1 1 0 1 1 1.4 1.4L13.4 12l3.9 3.9a1 1 0 1 1-1.4 1.4L12 13.4l-3.9 3.9a1 1 0 0 1-1.4-1.4l3.9-3.9-3.9-3.9a1 1 0 0 1 0-1.4Z"/>
+                                </svg>
+                            </button>
                         </span>
                     @endforeach
                 </div>

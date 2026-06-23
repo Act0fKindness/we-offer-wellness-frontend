@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-06-16T00:00:05+00:00",
+    "generated_at": "2026-06-23T00:00:23+00:00",
     "count": 105,
     "categories": [
         {
@@ -143,13 +143,13 @@
             "label": "Massage",
             "value": "Massage",
             "type": "Modality",
-            "subtitle": "20 offerings",
+            "subtitle": "17 offerings",
             "slug": "massage",
             "search": "Massage massage",
             "counts": {
-                "products": 20,
+                "products": 17,
                 "offerings": 0,
-                "total": 20
+                "total": 17
             }
         },
         {
@@ -229,21 +229,6 @@
         },
         {
             "cat": "Modalities",
-            "title": "Indian Head Massage",
-            "label": "Indian Head Massage",
-            "value": "Indian Head Massage",
-            "type": "Modality",
-            "subtitle": "9 offerings",
-            "slug": "indian-head-massage",
-            "search": "Indian Head Massage indian-head-massage",
-            "counts": {
-                "products": 9,
-                "offerings": 0,
-                "total": 9
-            }
-        },
-        {
-            "cat": "Modalities",
             "title": "Health Coaching",
             "label": "Health Coaching",
             "value": "Health Coaching",
@@ -251,6 +236,21 @@
             "subtitle": "8 offerings",
             "slug": "health-coaching",
             "search": "Health Coaching health-coaching",
+            "counts": {
+                "products": 8,
+                "offerings": 0,
+                "total": 8
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Indian Head Massage",
+            "label": "Indian Head Massage",
+            "value": "Indian Head Massage",
+            "type": "Modality",
+            "subtitle": "8 offerings",
+            "slug": "indian-head-massage",
+            "search": "Indian Head Massage indian-head-massage",
             "counts": {
                 "products": 8,
                 "offerings": 0,

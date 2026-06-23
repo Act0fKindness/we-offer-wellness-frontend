@@ -179,7 +179,7 @@
         <div class="pref-upsell__grid">
           @foreach($upsells as $product)
             <div class="pref-upsell__item wow-therapy-card-scope">
-              @include('partials.product_card_v4', ['product' => $product])
+              @include('partials.product_card_v4_1', ['product' => $product])
             </div>
           @endforeach
         </div>

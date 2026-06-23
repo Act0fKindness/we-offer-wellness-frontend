@@ -105,7 +105,7 @@
     @if($items->count())
       <div class="flex flex-wrap gap-6 items-start">
         @foreach($items as $item)
-          @include('partials.product_card_v4', ['product' => $item, 'preferredLocation' => null])
+          @include('partials.product_card_v4_1', ['product' => $item, 'preferredLocation' => null])
         @endforeach
       </div>
 

@@ -19,7 +19,7 @@ class HomeRailsController extends Controller
         $section = Str::lower(trim((string) $request->input('section', '')));
 
         if ($section === 'latest') {
-            return response($this->renderCards($this->latestCatalogue()))
+            return response($this->renderCards($this->latestCatalogue(), 'partials.product_card_v4_1', true))
                 ->header('Content-Type', 'text/html; charset=UTF-8');
         }
 
@@ -28,7 +28,7 @@ class HomeRailsController extends Controller
             $page = max(1, (int) $request->integer('page', 1));
             $pageData = $this->giftsUnder50Page($page, $limit);
 
-            return response($this->renderCards($pageData['items']))
+            return response($this->renderCards($pageData['items'], 'partials.product_card_v4_1', true))
                 ->header('Content-Type', 'text/html; charset=UTF-8')
                 ->header('X-Page', (string) $page)
                 ->header('X-Page-Size', (string) $limit)
@@ -49,13 +49,13 @@ class HomeRailsController extends Controller
         return response('', 404);
     }
 
-    private function renderCards(Collection $items): string
+    private function renderCards(Collection $items, string $cardView = 'partials.product_card_v4_1', bool $forceNewCard = false): string
     {
         $html = $items
             ->reject(fn ($item) => EventListing::isPast($item))
             ->filter()
-            ->map(function ($item): string {
-                return view('partials.product_card_v4', ['product' => $item, 'preferredLocation' => null])->render();
+            ->map(function ($item) use ($cardView, $forceNewCard): string {
+                return view($cardView, ['product' => $item, 'preferredLocation' => null, 'forceNewCard' => $forceNewCard])->render();
             })
             ->implode('');
 

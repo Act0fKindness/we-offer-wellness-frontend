@@ -699,9 +699,18 @@
       return;
     }
 
+    if (!isMobileBookingMode()) {
+      mobileTicketBar.classList.remove('is-visible');
+      document.body.classList.remove('mobile-ticket-visible');
+      return;
+    }
+
+    mobileTicketBar.classList.add('is-visible');
+    document.body.classList.add('mobile-ticket-visible');
+
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      const shouldShow = isMobileBookingMode() && !entry.isIntersecting;
+      const shouldShow = isMobileBookingMode();
 
       mobileTicketBar.classList.toggle('is-visible', shouldShow);
       document.body.classList.toggle('mobile-ticket-visible', shouldShow);

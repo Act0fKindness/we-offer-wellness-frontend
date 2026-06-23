@@ -130,7 +130,7 @@
         @endif
 
         @if($reviewItems->isNotEmpty())
-            <div class="row g-3">
+            <div class="review-list">
                 @foreach($reviewItems->take(3) as $review)
                     @php
                         $reviewTitle = trim((string) ($review['title'] ?? ''));
@@ -142,21 +142,19 @@
                         $reviewDate = trim((string) ($review['date'] ?? ''));
                         $reviewRating = max(1, min(5, (int) ($review['rating'] ?? 0)));
                     @endphp
-                    <div class="col-12 col-lg-4">
-                        <article class="card h-100 p-4 offering-review-card">
-                            @if($reviewTitle !== '')
-                                <p class="review-card-title">{{ $reviewTitle }}</p>
+                    <article class="card h-100 p-4 offering-review-card">
+                        @if($reviewTitle !== '')
+                            <p class="review-card-title">{{ $reviewTitle }}</p>
+                        @endif
+                        <div class="review-stars" aria-label="{{ $reviewRating }} out of 5 stars">{{ str_repeat('★', $reviewRating) }}</div>
+                        <p class="review-card-body">{{ $reviewBody !== '' ? $reviewBody : 'A client rated this practitioner.' }}</p>
+                        <footer>
+                            {{ $reviewAuthor }}
+                            @if($reviewDate !== '')
+                                · {{ $reviewDate }}
                             @endif
-                            <div class="review-stars" aria-label="{{ $reviewRating }} out of 5 stars">{{ str_repeat('★', $reviewRating) }}</div>
-                            <p class="review-card-body">{{ $reviewBody !== '' ? $reviewBody : 'A client rated this practitioner.' }}</p>
-                            <footer>
-                                {{ $reviewAuthor }}
-                                @if($reviewDate !== '')
-                                    · {{ $reviewDate }}
-                                @endif
-                            </footer>
-                        </article>
-                    </div>
+                        </footer>
+                    </article>
                 @endforeach
             </div>
         @else
@@ -332,6 +330,12 @@
             padding: 22px;
             margin-bottom: 18px;
             background: var(--soft);
+        }
+
+        .review-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
         }
 
         .review-gate-copy h3,

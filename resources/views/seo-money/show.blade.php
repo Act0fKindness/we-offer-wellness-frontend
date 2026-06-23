@@ -663,7 +663,7 @@
         <div class="seo-money-listing">
           <div class="seo-money-grid-cards">
             @foreach($products as $product)
-              @include('partials.product_card_v4', ['product' => $product])
+              @include('partials.product_card_v4_1', ['product' => $product])
             @endforeach
           </div>
         </div>

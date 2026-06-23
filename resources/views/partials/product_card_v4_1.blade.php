@@ -165,8 +165,8 @@
         : null;
 
     $locations = $product->getLocations();
-    $hasOnline = in_array('Online', $locations, true);
-    $physical = array_values(array_filter($locations, fn ($location) => $location !== 'Online'));
+    $hasOnline = collect($locations)->contains(fn ($location) => str_contains(strtolower(trim((string) $location)), 'online'));
+    $physical = array_values(array_filter($locations, fn ($location) => ! str_contains(strtolower(trim((string) $location)), 'online')));
     $physicalShort = [];
     $seenShort = [];
     foreach ($physical as $locRaw) {
@@ -250,7 +250,7 @@
     $calendarNote = $availabilityDays ? 'Live calendar' : 'Practitioner confirms';
     $availabilityClass = $availabilityDays ? 'has-availability' : 'needs-availability';
     $availabilityBadgeLabel = $hasOnline && count($physicalShort) > 0
-        ? 'Online & in-person'
+        ? 'In-person + Online'
         : ($hasOnline ? 'Online' : ($primary ? 'In-person' : 'By request'));
 @endphp
 

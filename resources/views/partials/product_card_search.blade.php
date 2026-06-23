@@ -190,7 +190,7 @@
 
 @if((is_numeric($priceMin) ? (float) $priceMin : 0.0) > 0.0)
   @if($isGiftCard)
-    @include('partials.product_card_v4', ['product' => $product, 'preferredLocation' => null])
+    @include('partials.product_card_v4_1', ['product' => $product, 'preferredLocation' => null])
   @else
   @once
     <style>

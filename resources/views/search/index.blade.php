@@ -38,7 +38,7 @@
     border:3px solid rgba(0,0,0,0.1);
     position: fixed;
     top: 126px;
-    z-index: 30;
+    z-index: 2000;
     left: 50%;
     transform: translateX(-50%);
     width: min(1200px, calc(100vw - 32px));
@@ -115,7 +115,7 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     position: fixed;
     top: 84px;
-    z-index: 30;
+    z-index: 2000;
     left: 12px;
     right: 12px;
     -webkit-backdrop-filter: blur(14px);
@@ -161,6 +161,12 @@
   max-width: none;
   margin-inline: 0;
 }
+.search-layout .result-view-list .wow-card.md.wow-event-card-v4{
+  width: 280px;
+  max-width: 280px;
+  flex: 0 0 280px;
+  margin-inline: auto;
+}
 .search-layout .result-view-list .therapy-card{
   width: 100%;
 }
@@ -186,7 +192,7 @@
 .wow-ultra #search-top-who-pane::-webkit-scrollbar{ width:0; height:0 }
 /* Requested narrow pane sizing */
 .wow-ultra .pane.narrow{
-  z-index: 39;
+  z-index: 2100;
   left: 0px !important;
   right: 0px !important;
   width: min(560px, 96vw);
@@ -241,7 +247,7 @@
 @endphp
 
 <div class="search-page-shell pt-4 pb-2 bg-transparent">
-  <x-searchbar-v4 id-prefix="search-v4" :result-count="$resultCount" mobile-top-offset="80" />
+  <x-searchbar-v4 id-prefix="search-v4" :result-count="$resultCount" mobile-top-offset="var(--wow-header-offset, 0px)" />
 
   <div class="wow-search-mobile-shell">
     @include('search.partials.mobile')

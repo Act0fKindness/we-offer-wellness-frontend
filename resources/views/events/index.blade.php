@@ -290,7 +290,7 @@
           @if(count($section['items']))
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               @foreach($section['items'] as $it)
-                @include('partials.product_card_v4', ['product' => $eventCardProduct($it), 'preferredLocation' => null])
+                @include('partials.product_card_v4_1', ['product' => $eventCardProduct($it), 'preferredLocation' => null])
               @endforeach
             </div>
           @else

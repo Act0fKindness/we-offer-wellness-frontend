@@ -7,6 +7,68 @@
         $eventSource = [];
     }
 
+    $toLower = function ($value) {
+        return function_exists('mb_strtolower') ? mb_strtolower((string) $value, 'UTF-8') : strtolower((string) $value);
+    };
+    $ucWords = function ($value) {
+        return function_exists('mb_convert_case') ? mb_convert_case((string) $value, MB_CASE_TITLE, 'UTF-8') : ucwords((string) $value);
+    };
+    $normalizeTypeLabel = function ($value) use ($toLower, $ucWords) {
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return 'Event';
+        }
+
+        $normalized = $toLower(str_replace(['_', '-'], ' ', $raw));
+        $map = [
+            'events' => 'Event',
+            'event' => 'Event',
+            'workshops' => 'Workshop',
+            'workshop' => 'Workshop',
+            'classes' => 'Class',
+            'class' => 'Class',
+            'retreats' => 'Retreat',
+            'retreat' => 'Retreat',
+            'experiences' => 'Experience',
+            'experience' => 'Experience',
+        ];
+
+        return $map[$normalized] ?? $ucWords($normalized);
+    };
+
+    $title = trim((string) ($product->title ?? 'Untitled'));
+    $titleFormatted = $ucWords($toLower($title));
+    $url = app(\App\Services\SeoStructureService::class)->canonicalProductUrl($product);
+    $image = method_exists($product, 'getFirstImageUrl') ? $product->getFirstImageUrl() : '';
+    $hasDisplayableImage = method_exists($product, 'hasDisplayableImage')
+        ? $product->hasDisplayableImage()
+        : ($image !== '' && ! str_contains((string) $image, 'no-product-image.jpg'));
+
+    $typeCandidate = data_get($product, 'type.name')
+        ?? data_get($product, 'type_label')
+        ?? data_get($product, 'type_name');
+    if ($typeCandidate === null) {
+        $rawType = data_get($product, 'type');
+        if (is_string($rawType) || is_numeric($rawType)) {
+            $typeCandidate = (string) $rawType;
+        }
+    }
+    $typeRaw = trim((string) ($typeCandidate ?? ($product->product_type ?? 'Event')));
+    $typeLabel = $normalizeTypeLabel($typeRaw);
+
+    $categoryRaw = $product->category?->name
+        ?? data_get($product, 'offering.category.name')
+        ?? ($product->offering_category_name ?? null)
+        ?? ($product->offering_category ?? null)
+        ?? ($product->category_name ?? null)
+        ?? ($product->category_label ?? null)
+        ?? ((is_string($product->category ?? null)) ? $product->category : null);
+    if (is_array($categoryRaw)) {
+        $categoryRaw = $categoryRaw['name'] ?? reset($categoryRaw) ?? null;
+    }
+    $categoryLabel = $categoryRaw ? $normalizeTypeLabel($categoryRaw) : null;
+    $categoryBadgeLabel = $categoryLabel ?? $typeLabel;
+
     $eventParseDateTime = function ($dateValue, $timeValue = null) {
         $rawDate = trim((string) ($dateValue ?? ''));
         if ($rawDate === '') {
@@ -132,6 +194,42 @@
     $eventEndTime = $eventSource['end_time'] ?? $product->end_time ?? null;
     $eventRangeLabel = $eventFormatRange($eventStartDate, $eventStartTime, $eventEndDate, $eventEndTime);
 
+    $locations = method_exists($product, 'getLocations') ? $product->getLocations() : [];
+    $hasOnline = in_array('Online', $locations, true);
+    $physical = array_values(array_filter($locations, fn ($location) => $location !== 'Online'));
+    $physicalShort = [];
+    $seenShort = [];
+    foreach ($physical as $locRaw) {
+        $short = trim((string) $locRaw);
+        if ($short === '') {
+            continue;
+        }
+        $key = $toLower($short);
+        if (! isset($seenShort[$key])) {
+            $seenShort[$key] = true;
+            $physicalShort[] = $short;
+        }
+    }
+    $matchedLocation = trim((string) ($product->matched_location_label ?? ''));
+    $primary = $matchedLocation !== '' ? $matchedLocation : ($physicalShort[0] ?? null);
+    $remainingCount = max(0, count($physicalShort) - ($primary ? 1 : 0));
+    $exclusiveOnline = $hasOnline && count($physicalShort) === 0;
+
+    $benefitText = $product->benefit ?? ($product->summary ?? null);
+    $stripEmoji = function ($value) {
+        $text = (string) ($value ?? '');
+        $clean = preg_replace('/[\x{1F1E6}-\x{1F1FF}\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{FE0F}\x{200D}]/u', '', $text);
+        if ($clean === null) {
+            $clean = $text;
+        }
+        $clean = preg_replace('/\s{2,}/u', ' ', $clean);
+        if ($clean === null) {
+            $clean = $text;
+        }
+        return trim($clean);
+    };
+    $benefitTextClean = $benefitText ? $stripEmoji($benefitText) : null;
+
     $eventRawSources = [];
     foreach (['dates', 'upcoming_dates', 'availability_dates'] as $key) {
         $value = $eventSource[$key] ?? [];
@@ -250,6 +348,30 @@
     $eventLocationLabel = $primary
         ?? ($exclusiveOnline ? 'Online' : ($hasOnline ? 'Online' : 'In-person'));
     $eventDescription = $benefitTextClean ?: 'Upcoming event details coming soon.';
+    $priceMin = $product->variants_min_price ?? ($product->price ?? null);
+    if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) {
+        $priceMin = $priceMin / 100;
+    }
+    $compareMin = $product->variants_min_compare ?? ($product->compare_at_price ?? null);
+    if (is_numeric($compareMin) && $compareMin > 1000 && $compareMin % 100 === 0) {
+        $compareMin = $compareMin / 100;
+    }
+
+    $vendorReviewSummary = data_get($product, 'vendor.review_summary');
+    if (! is_array($vendorReviewSummary)) {
+        $vendorReviewSummary = [];
+    }
+
+    $vendorReviewCount = (int) ($vendorReviewSummary['count'] ?? 0);
+    $vendorReviewRating = isset($vendorReviewSummary['rating']) ? round((float) $vendorReviewSummary['rating'], 1) : null;
+    $productReviewCount = (int) ($product->reviews_count ?? 0);
+    $productReviewRating = isset($product->reviews_avg_rating) ? round((float) $product->reviews_avg_rating, 1) : null;
+
+    $reviewCount = $vendorReviewCount > 0 ? $vendorReviewCount : $productReviewCount;
+    $rating = $vendorReviewCount > 0 ? $vendorReviewRating : $productReviewRating;
+    if ($reviewCount > 0 && (! is_numeric($rating) || (float) $rating <= 0)) {
+        $rating = 5.0;
+    }
     $eventPriceLabel = is_numeric($priceMin)
         ? '£' . number_format((float) $priceMin, 2)
         : '£0.00';
@@ -263,6 +385,9 @@
     $starterPlan = $vendorUser instanceof \App\Models\User
         ? $vendorUser->isStarterPlan()
         : strtolower(trim((string) data_get($product, 'plan_key', ''))) === 'starter';
+    $businessAcceleratorPlan = $vendorUser instanceof \App\Models\User
+        ? $vendorUser->isBusinessAcceleratorPlan()
+        : \Illuminate\Support\Str::slug((string) data_get($product, 'plan_key', '')) === 'business-accelerator';
 
     $provider = $starterPlan
         ? 'Wellness practitioner'
@@ -285,10 +410,23 @@
                 src="{{ $image }}"
                 alt="{{ $titleFormatted }}"
                 loading="lazy"
+                style="position:relative; z-index:2; width:100%; height:100%; object-fit:cover;"
                 onload="var card=this.closest('.wow-card'); if(card){card.classList.remove('is-loading'); card.classList.add('is-image-loaded'); card.setAttribute('aria-busy','false');}"
                 onerror="var card=this.closest('.wow-card'); if(card){card.classList.remove('is-loading'); card.classList.add('is-image-missing'); card.setAttribute('aria-busy','false');} this.remove();"
             >
         @endif
+        <div
+            class="wow-event-card-v4__image-fallback"
+            aria-hidden="true"
+            style="position:absolute; inset:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:linear-gradient(135deg, #24364f 0%, #111827 62%, #0f172a 100%); color:rgba(255,255,255,.88); text-align:center;"
+        >
+            <svg width="58" height="58" viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:.55;">
+                <rect x="16" y="16" width="56" height="56" rx="6" stroke="currentColor" stroke-width="3.7" />
+                <path d="m16 58 16-18 32 32" stroke="currentColor" stroke-width="3.7" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="53" cy="35" r="7" fill="currentColor" opacity=".75" />
+            </svg>
+            <span style="font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;">Event</span>
+        </div>
     </div>
 
     <div class="wow-event-card-v4__shade"></div>

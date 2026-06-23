@@ -21,6 +21,9 @@
     $railClass = $section['rail_class'] ?? 'flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent';
     $pageSize = max(1, (int) ($section['page_size'] ?? 12));
     $loadMore = ! empty($section['load_more']);
+    $cardView = $section['card_view'] ?? 'partials.product_card_v4_1';
+    $ghostView = $section['ghost_view'] ?? 'partials.product_card_v4_ghost';
+    $forceNewCard = (bool) ($section['force_new_card'] ?? false);
 @endphp
 
 <section id="{{ $sectionId }}" class="{{ $section['section_class'] ?? 'section' }}">
@@ -86,11 +89,11 @@
         >
             @if($loading)
                 @for($i = 0; $i < $loadingCount; $i++)
-                    @include('partials.product_card_v4_ghost')
+                    @include($ghostView)
                 @endfor
             @else
                 @forelse($products as $product)
-                    @include('partials.product_card_v4', ['product' => $product, 'preferredLocation' => null])
+                    @include($cardView, ['product' => $product, 'preferredLocation' => null, 'forceNewCard' => $forceNewCard])
                 @empty
                     <div class="text-muted">{!! $section['empty_html'] ?? e($section['empty_text'] ?? 'Nothing to show right now.') !!}</div>
                 @endforelse

@@ -226,13 +226,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="root" class="wow-range-calendar">
+  <div ref="root" class="wow-range-calendar" @pointerdown.stop @mousedown.stop @click.stop>
     <div class="wow-range-calendar__toolbar">
       <div class="wow-range-calendar__toolbar-title">
         <i class="bi bi-calendar3" aria-hidden="true"></i>
         <div>
-          <div class="wow-range-calendar__eyebrow">Select a Date &amp; Time</div>
-          <div class="wow-range-calendar__headline">Pick a range</div>
+          <div class="wow-range-calendar__eyebrow">Pick date and time</div>
+          <div class="wow-range-calendar__headline">Choose a date</div>
         </div>
       </div>
       <div class="wow-range-calendar__toolbar-actions">
@@ -314,10 +314,10 @@ onBeforeUnmount(() => {
   overflow:hidden;
 }
 .wow-range-calendar__toolbar{
-  display:flex;
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
+  column-gap:12px;
   padding:14px 16px;
   border-bottom:1px solid rgba(15, 23, 42, .08);
   background:linear-gradient(180deg,#fff,#fbfcfd);
@@ -326,6 +326,7 @@ onBeforeUnmount(() => {
   display:flex;
   align-items:center;
   gap:12px;
+  flex:1 1 auto;
   min-width:0;
 }
 .wow-range-calendar__toolbar-title > i{
@@ -349,6 +350,7 @@ onBeforeUnmount(() => {
   display:flex;
   align-items:center;
   gap:8px;
+  justify-self:end;
 }
 .wow-range-calendar__nav{
   width:34px;
@@ -432,8 +434,29 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px){
+  .wow-range-calendar__toolbar{
+    padding:12px 14px;
+    column-gap:10px;
+  }
+
+  .wow-range-calendar__toolbar-title{
+    gap:10px;
+  }
+
+  .wow-range-calendar__eyebrow{
+    font-size:10px;
+  }
+
+  .wow-range-calendar__headline{
+    font-size:14px;
+  }
+
   .wow-range-calendar__months{
     grid-template-columns:1fr;
+  }
+
+  .wow-range-calendar__month:last-child{
+    display:none;
   }
 }
 </style>

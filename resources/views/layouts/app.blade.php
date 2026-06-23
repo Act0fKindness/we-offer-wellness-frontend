@@ -643,7 +643,16 @@
 
     // Close when clicking outside
     document.addEventListener('click', function(e){
-      try{ if(root && !root.contains(e.target)) hideAll(); }catch(_){ /* no-op */ }
+      try{
+        const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+        if (path.length && path.includes(root)) return;
+        if (root && root.contains(e.target)) return;
+        if (e.target && typeof e.target.closest === 'function') {
+          if (e.target.closest('.pane')) return;
+          if (e.target.closest('.seg')) return;
+        }
+        hideAll();
+      }catch(_){ /* no-op */ }
     });
     // ESC closes
     document.addEventListener('keydown', function(e){ if(e.key==='Escape') hideAll() });
@@ -652,6 +661,7 @@
     var whatList = byId('what-list');
     if(whatList && whatInput){
       whatList.addEventListener('click', function(e){
+        try { e.stopPropagation(); } catch(_) {}
         var btn = e.target.closest('.item');
         if(btn && btn.dataset.value){ whatInput.value = btn.dataset.value; hideAll(); whatInput.blur(); }
       });
@@ -659,6 +669,7 @@
     var whereHidden = byId('where');
     if(byId('where-list') && whereEditor){
       byId('where-list').addEventListener('click', function(e){
+        try { e.stopPropagation(); } catch(_) {}
         var btn = e.target.closest('.item');
         if(btn && btn.dataset.value){
           try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
@@ -670,7 +681,7 @@
       });
     }
     var whoDone = byId('who-done');
-    if(whoDone){ whoDone.addEventListener('click', function(){ hideAll() }) }
+    if(whoDone){ whoDone.addEventListener('click', function(e){ try { e.stopPropagation(); } catch(_) {} hideAll() }) }
 
     // Shared Who controls: adults counter + group type selection
     (function initWhoControls(){
@@ -732,6 +743,7 @@
       }
 
       pane.addEventListener('click', function(event){
+        try { event.stopPropagation(); } catch(_) {}
         var dec = event.target.closest('[data-dec="adults"]');
         var inc = event.target.closest('[data-inc="adults"]');
         if (!dec && !inc) return;
@@ -742,6 +754,7 @@
 
       if (groupList) {
         groupList.addEventListener('click', function(event){
+          try { event.stopPropagation(); } catch(_) {}
           var btn = event.target.closest('[data-group]');
           if (!btn) return;
           var group = (btn.getAttribute('data-group') || '').trim();
@@ -757,6 +770,13 @@
             setGroupSelection('Group');
             applyAdults(Math.max(3, getAdults() || 3));
           }
+        });
+      }
+
+      var whenPane = byId('when-pane');
+      if (whenPane) {
+        whenPane.addEventListener('click', function(event){
+          try { event.stopPropagation(); } catch(_) {}
         });
       }
 
@@ -964,9 +984,7 @@
 
   const therapyNodes = {
     popular: document.querySelector('[data-therapy-popular-list]'),
-    defaultBlock: document.querySelector('[data-therapy-default-block]'),
     personalizedBlock: document.querySelector('[data-therapy-personalized-block]'),
-    defaultPopular: document.querySelector('[data-therapy-default-popular]'),
     recentList: document.querySelector('[data-therapy-recent]'),
     savedList: document.querySelector('[data-therapy-saved]')
   };
@@ -1190,14 +1208,11 @@
   }
 
   function updateTherapyColumn() {
-    if (!therapyNodes.defaultBlock) return;
     buildTherapyPopular();
-    renderLinks(therapyNodes.defaultPopular, therapyDefaults.defaultColumn, { cartIds: readCartIds(), showBasket: true });
     const history = readStorageArray(THERAPY_HISTORY_KEY);
     const saved = readStorageArray(THERAPY_SAVED_KEY).slice(0, 4);
-    const allowPersonalization = canPersonalize() && (history.length || saved.length);
+    const allowPersonalization = !!therapyNodes.personalizedBlock && canPersonalize() && (history.length || saved.length);
     if (!allowPersonalization) {
-      if (therapyNodes.defaultBlock) therapyNodes.defaultBlock.hidden = false;
       if (therapyNodes.personalizedBlock) {
         therapyNodes.personalizedBlock.hidden = true;
         therapyNodes.personalizedBlock.setAttribute('aria-hidden', 'true');
@@ -1205,7 +1220,6 @@
       return;
     }
 
-    if (therapyNodes.defaultBlock) therapyNodes.defaultBlock.hidden = true;
     if (therapyNodes.personalizedBlock) {
       therapyNodes.personalizedBlock.hidden = false;
       therapyNodes.personalizedBlock.setAttribute('aria-hidden', 'false');

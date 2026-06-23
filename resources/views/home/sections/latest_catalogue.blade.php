@@ -9,6 +9,8 @@
             'label' => 'Browse therapies',
             'href' => '/therapies',
         ],
+        'ghost_view' => 'partials.product_card_v4_1_ghost',
+        'force_new_card' => true,
         'loading' => true,
         'loading_count' => 4,
         'products' => collect(),

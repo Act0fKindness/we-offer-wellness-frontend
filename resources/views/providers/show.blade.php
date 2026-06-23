@@ -2655,7 +2655,7 @@
                                 }
                             @endphp
                             <div class="offering-card-shell" data-offering-card data-offering-tags="{{ implode(' ', array_values(array_unique($filters))) }}">
-                                @include('partials.product_card_v4', ['product' => $product, 'preferredLocation' => null])
+                                @include('partials.product_card_v4_1', ['product' => $product, 'preferredLocation' => null])
                             </div>
                         @endforeach
                     </div>

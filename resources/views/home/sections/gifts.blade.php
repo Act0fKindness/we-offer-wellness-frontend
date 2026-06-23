@@ -12,6 +12,8 @@
         ],
         'loading' => true,
         'loading_count' => 4,
+        'ghost_view' => 'partials.product_card_v4_1_ghost',
+        'force_new_card' => true,
         'page_size' => 12,
         'load_more' => true,
         'products' => collect(),

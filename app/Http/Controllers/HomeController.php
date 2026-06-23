@@ -366,9 +366,12 @@ class HomeController extends Controller
             [
                 __FILE__,
                 resource_path('views/home/index.blade.php'),
+                resource_path('views/home/sections/latest_catalogue.blade.php'),
                 resource_path('views/home/sections/gifts.blade.php'),
                 resource_path('views/home/sections/trust-feel-safe.blade.php'),
                 resource_path('views/partials/product_showcase_section.blade.php'),
+                resource_path('views/partials/product_card_v4_1.blade.php'),
+                resource_path('views/partials/product_card_v4_1_ghost.blade.php'),
                 public_path('build/manifest.json'),
                 resource_path('js/home-offerings.js'),
             ]

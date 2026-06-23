@@ -511,7 +511,7 @@
       @if($items->count())
         <div id="landing-products" class="landing-wow__grid">
           @foreach($items as $product)
-            @include('partials.product_card_v4', [
+            @include('partials.product_card_v4_1', [
               'product' => $product,
               'preferredLocation' => $filters['location'] ?? null,
             ])

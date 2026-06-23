@@ -506,16 +506,32 @@
       .wow-chip button {
         width: 22px;
         height: 22px;
-        border: 0;
+        border: 1px solid rgba(84, 148, 131, .18);
         padding: 0;
         border-radius: 999px;
-        background: rgba(17, 24, 39, .08);
-        color: #111827;
+        background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(241, 246, 244, .9));
+        color: #3f6e61;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
         line-height: 1;
+        box-shadow: 0 6px 14px rgba(16, 24, 40, .08);
+        transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease;
+      }
+
+      .wow-chip button svg {
+        width: 12px;
+        height: 12px;
+        display: block;
+        fill: currentColor;
+      }
+
+      .wow-chip button:hover {
+        transform: translateY(-1px);
+        border-color: rgba(84, 148, 131, .34);
+        background: linear-gradient(180deg, #fff, #e8f4f0);
+        color: #2f5d51;
+        box-shadow: 0 8px 18px rgba(16, 24, 40, .12);
       }
 
       .wow-active-chips > .wow-panel-clear[data-clear-all] {
@@ -979,7 +995,11 @@
         @if($chipLabel !== '' && $chipValue !== '' && $chipParam !== '')
           <span class="wow-chip">
             <span><strong>{{ $chipLabel }}:</strong> {{ $chipValue }}</span>
-            <button type="button" data-remove-param="{{ $chipParam }}" aria-label="Remove {{ $chipLabel }} filter">×</button>
+            <button type="button" data-remove-param="{{ $chipParam }}" aria-label="Remove {{ $chipLabel }} filter">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6.7 6.7a1 1 0 0 1 1.4 0L12 10.6l3.9-3.9a1 1 0 1 1 1.4 1.4L13.4 12l3.9 3.9a1 1 0 1 1-1.4 1.4L12 13.4l-3.9 3.9a1 1 0 0 1-1.4-1.4l3.9-3.9-3.9-3.9a1 1 0 0 1 0-1.4Z"/>
+              </svg>
+            </button>
           </span>
         @endif
       @endforeach

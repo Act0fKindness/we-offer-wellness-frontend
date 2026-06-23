@@ -1,10 +1,10 @@
 {
-    "generated_at": "2026-06-16T00:00:06+00:00",
+    "generated_at": "2026-06-23T00:00:23+00:00",
     "stats": {
         "countries": 8,
         "counties": 52,
         "towns": 159,
-        "products": 588,
+        "products": 584,
         "offerings": 7,
         "online_products": 288,
         "online_offerings": 5
@@ -415,9 +415,9 @@
             "path": "/locations/united-kingdom",
             "online": false,
             "counts": {
-                "products": 846,
+                "products": 842,
                 "offerings": 15,
-                "total": 861
+                "total": 857
             },
             "counties": [
                 {
@@ -1098,7 +1098,7 @@
                             "locations": [
                                 "Exeter, Devon, United Kingdom"
                             ],
-                            "source": "Exeter Devon | Exeter | Devon | United Kingdom"
+                            "source": "Exeter (and up to 1 hour travel from Exeter) | Exeter | Devon | United Kingdom"
                         },
                         {
                             "key": "united-kingdom/devon/exmouth",
@@ -2125,9 +2125,9 @@
                     "district": null,
                     "region": null,
                     "counts": {
-                        "products": 323,
+                        "products": 319,
                         "offerings": 7,
-                        "total": 330
+                        "total": 326
                     },
                     "towns": [
                         {
@@ -2147,9 +2147,9 @@
                             "lat": 51.1451007,
                             "lng": 0.8739631,
                             "counts": {
-                                "products": 5,
+                                "products": 1,
                                 "offerings": 0,
-                                "total": 5
+                                "total": 1
                             },
                             "locations": [
                                 "Ashford, Kent, United Kingdom"
@@ -2537,14 +2537,14 @@
                             "lat": 51.0928319,
                             "lng": 0.8392471,
                             "counts": {
-                                "products": 5,
+                                "products": 2,
                                 "offerings": 0,
-                                "total": 5
+                                "total": 2
                             },
                             "locations": [
                                 "Kent, Kent, United Kingdom"
                             ],
-                            "source": "Kent | United Kingdom"
+                            "source": "kent | Kent | United Kingdom"
                         },
                         {
                             "key": "united-kingdom/kent/langton-green",
@@ -2797,14 +2797,14 @@
                             "lat": 51.132377,
                             "lng": 0.263695,
                             "counts": {
-                                "products": 3,
+                                "products": 1,
                                 "offerings": 0,
-                                "total": 3
+                                "total": 1
                             },
                             "locations": [
                                 "Royal Tunbridge Wells, Kent, United Kingdom"
                             ],
-                            "source": "Central Tunbridge Wells | Royal Tunbridge Wells | Tunbridge Wells | Kent | United Kingdom"
+                            "source": "Tunbridge Wells | Royal Tunbridge Wells | Kent | United Kingdom"
                         },
                         {
                             "key": "united-kingdom/kent/ruckinge",
@@ -2830,7 +2830,7 @@
                             "locations": [
                                 "Ruckinge, Kent, United Kingdom"
                             ],
-                            "source": "Ruckinge | Kent | United Kingdom"
+                            "source": "Ashford | Ruckinge | Kent | United Kingdom"
                         },
                         {
                             "key": "united-kingdom/kent/sandwich",
@@ -2875,9 +2875,9 @@
                             "lat": 51.27241,
                             "lng": 0.190898,
                             "counts": {
-                                "products": 4,
+                                "products": 3,
                                 "offerings": 0,
-                                "total": 4
+                                "total": 3
                             },
                             "locations": [
                                 "Sevenoaks, Kent, United Kingdom"
@@ -3179,14 +3179,14 @@
                             "lat": 51.5072178,
                             "lng": -0.1275862,
                             "counts": {
-                                "products": 4,
+                                "products": 3,
                                 "offerings": 0,
-                                "total": 4
+                                "total": 3
                             },
                             "locations": [
                                 "London, United Kingdom"
                             ],
-                            "source": "London | Greater London | United Kingdom"
+                            "source": "North London | London | Greater London | United Kingdom"
                         },
                         {
                             "key": "united-kingdom/london/morden",
@@ -3428,8 +3428,8 @@
                             "town": "Maidstone",
                             "path": "/locations/united-kingdom/maidstone",
                             "online": false,
-                            "lat": null,
-                            "lng": null,
+                            "lat": 0,
+                            "lng": 0,
                             "counts": {
                                 "products": 0,
                                 "offerings": 0,
@@ -4401,9 +4401,9 @@
                             "lat": 51.2622513,
                             "lng": -0.4672517,
                             "counts": {
-                                "products": 7,
+                                "products": 9,
                                 "offerings": 0,
-                                "total": 7
+                                "total": 9
                             },
                             "locations": [
                                 "Surrey, Surrey, United Kingdom"
@@ -4520,8 +4520,8 @@
                             "town": "South Shields",
                             "path": "/locations/united-kingdom/tyne-and-wear/south-shields",
                             "online": false,
-                            "lat": 54.9991081,
-                            "lng": -1.4329074,
+                            "lat": 54.9937583,
+                            "lng": -1.4289006,
                             "counts": {
                                 "products": 3,
                                 "offerings": 0,
@@ -4530,7 +4530,7 @@
                             "locations": [
                                 "South Shields, Tyne And Wear, United Kingdom"
                             ],
-                            "source": "Flower of Life Empor.I.Am | South Shields | Tyne and Wear | United Kingdom"
+                            "source": "Westoe Rd | South Shields | Tyne and Wear | United Kingdom"
                         },
                         {
                             "key": "united-kingdom/tyne-and-wear/tynemouth",
@@ -5223,6 +5223,32 @@
             "locations": []
         },
         {
+            "key": "united-kingdom/surrey",
+            "slug": "united-kingdom/surrey",
+            "title": "Surrey",
+            "country": "United Kingdom",
+            "country_slug": "united-kingdom",
+            "county": "Surrey",
+            "county_slug": "surrey",
+            "district": "Surrey",
+            "region": "Surrey",
+            "city": "Surrey",
+            "town": "Surrey",
+            "path": "/locations/united-kingdom/surrey",
+            "online": false,
+            "lat": 51.2622513,
+            "lng": -0.4672517,
+            "counts": {
+                "products": 9,
+                "offerings": 0,
+                "total": 9
+            },
+            "locations": [
+                "Surrey, Surrey, United Kingdom"
+            ],
+            "source": "Surrey | United Kingdom"
+        },
+        {
             "key": "united-kingdom/west-sussex/bracklesham-bay",
             "slug": "united-kingdom/west-sussex/bracklesham-bay",
             "title": "Bracklesham Bay",
@@ -5376,7 +5402,7 @@
             "locations": [
                 "Exeter, Devon, United Kingdom"
             ],
-            "source": "Exeter Devon | Exeter | Devon | United Kingdom"
+            "source": "Exeter (and up to 1 hour travel from Exeter) | Exeter | Devon | United Kingdom"
         },
         {
             "key": "united-kingdom/hampshire",
@@ -5481,32 +5507,6 @@
                 "Romsey, Hampshire, United Kingdom"
             ],
             "source": "Romsey | Hampshire | United Kingdom"
-        },
-        {
-            "key": "united-kingdom/surrey",
-            "slug": "united-kingdom/surrey",
-            "title": "Surrey",
-            "country": "United Kingdom",
-            "country_slug": "united-kingdom",
-            "county": "Surrey",
-            "county_slug": "surrey",
-            "district": "Surrey",
-            "region": "Surrey",
-            "city": "Surrey",
-            "town": "Surrey",
-            "path": "/locations/united-kingdom/surrey",
-            "online": false,
-            "lat": 51.2622513,
-            "lng": -0.4672517,
-            "counts": {
-                "products": 7,
-                "offerings": 0,
-                "total": 7
-            },
-            "locations": [
-                "Surrey, Surrey, United Kingdom"
-            ],
-            "source": "Surrey | United Kingdom"
         },
         {
             "key": "united-kingdom/west-sussex",
@@ -5743,32 +5743,6 @@
             "source": "South Somerset | Somerset | NY 14008 | USA | Niagara County | United States"
         },
         {
-            "key": "united-kingdom/kent/ashford",
-            "slug": "united-kingdom/kent/ashford",
-            "title": "Ashford",
-            "country": "United Kingdom",
-            "country_slug": "united-kingdom",
-            "county": "Kent",
-            "county_slug": "kent",
-            "district": "Kent",
-            "region": "Kent",
-            "city": "Ashford",
-            "town": "Ashford",
-            "path": "/locations/united-kingdom/kent/ashford",
-            "online": false,
-            "lat": 51.1451007,
-            "lng": 0.8739631,
-            "counts": {
-                "products": 5,
-                "offerings": 0,
-                "total": 5
-            },
-            "locations": [
-                "Ashford, Kent, United Kingdom"
-            ],
-            "source": "Ashford | Kent | United Kingdom"
-        },
-        {
             "key": "ireland/county-cavan/ballinagh",
             "slug": "ireland/county-cavan/ballinagh",
             "title": "Ballinagh",
@@ -5975,32 +5949,6 @@
                 "Godalming, Surrey, United Kingdom"
             ],
             "source": "Winkworth Arboretum NT | Godalming | Hascombe Rd | Surrey | United Kingdom"
-        },
-        {
-            "key": "united-kingdom/kent",
-            "slug": "united-kingdom/kent",
-            "title": "Kent",
-            "country": "United Kingdom",
-            "country_slug": "united-kingdom",
-            "county": "Kent",
-            "county_slug": "kent",
-            "district": "Kent",
-            "region": "Kent",
-            "city": "Kent",
-            "town": "Kent",
-            "path": "/locations/united-kingdom/kent",
-            "online": false,
-            "lat": 51.0928319,
-            "lng": 0.8392471,
-            "counts": {
-                "products": 5,
-                "offerings": 0,
-                "total": 5
-            },
-            "locations": [
-                "Kent, Kent, United Kingdom"
-            ],
-            "source": "Kent | United Kingdom"
         },
         {
             "key": "united-kingdom/london/kingston-upon-thames",
@@ -6260,7 +6208,7 @@
             "locations": [
                 "Ruckinge, Kent, United Kingdom"
             ],
-            "source": "Ruckinge | Kent | United Kingdom"
+            "source": "Ashford | Ruckinge | Kent | United Kingdom"
         },
         {
             "key": "united-kingdom/sidcup",
@@ -6731,32 +6679,6 @@
             "source": "Leatherhead Surrey | Leatherhead | Surrey | United Kingdom"
         },
         {
-            "key": "united-kingdom/london",
-            "slug": "united-kingdom/london",
-            "title": "London",
-            "country": "United Kingdom",
-            "country_slug": "united-kingdom",
-            "county": null,
-            "county_slug": null,
-            "district": "Greater London",
-            "region": "Greater London",
-            "city": "London",
-            "town": "London",
-            "path": "/locations/united-kingdom/london",
-            "online": false,
-            "lat": 51.5072178,
-            "lng": -0.1275862,
-            "counts": {
-                "products": 4,
-                "offerings": 0,
-                "total": 4
-            },
-            "locations": [
-                "London, United Kingdom"
-            ],
-            "source": "London | Greater London | United Kingdom"
-        },
-        {
             "key": "united-kingdom/kent/loose",
             "slug": "united-kingdom/kent/loose",
             "title": "Loose",
@@ -6859,32 +6781,6 @@
                 "Reigate, Surrey, United Kingdom"
             ],
             "source": "Reigate Surrey | Reigate | Surrey | United Kingdom"
-        },
-        {
-            "key": "united-kingdom/kent/sevenoaks",
-            "slug": "united-kingdom/kent/sevenoaks",
-            "title": "Sevenoaks",
-            "country": "United Kingdom",
-            "country_slug": "united-kingdom",
-            "county": "Kent",
-            "county_slug": "kent",
-            "district": "Kent",
-            "region": "Kent",
-            "city": "Sevenoaks",
-            "town": "Sevenoaks",
-            "path": "/locations/united-kingdom/kent/sevenoaks",
-            "online": false,
-            "lat": 51.27241,
-            "lng": 0.190898,
-            "counts": {
-                "products": 4,
-                "offerings": 0,
-                "total": 4
-            },
-            "locations": [
-                "Sevenoaks, Kent, United Kingdom"
-            ],
-            "source": "Sevenoaks | Kent | United Kingdom"
         },
         {
             "key": "united-kingdom/devon/sidmouth",
@@ -7433,6 +7329,32 @@
             "source": "Hove | West Sussex | Brighton and Hove | United Kingdom"
         },
         {
+            "key": "united-kingdom/london",
+            "slug": "united-kingdom/london",
+            "title": "London",
+            "country": "United Kingdom",
+            "country_slug": "united-kingdom",
+            "county": null,
+            "county_slug": null,
+            "district": "Greater London",
+            "region": "Greater London",
+            "city": "London",
+            "town": "London",
+            "path": "/locations/united-kingdom/london",
+            "online": false,
+            "lat": 51.5072178,
+            "lng": -0.1275862,
+            "counts": {
+                "products": 3,
+                "offerings": 0,
+                "total": 3
+            },
+            "locations": [
+                "London, United Kingdom"
+            ],
+            "source": "North London | London | Greater London | United Kingdom"
+        },
+        {
             "key": "united-kingdom/kent/new-ash-green",
             "slug": "united-kingdom/kent/new-ash-green",
             "title": "New Ash Green",
@@ -7589,30 +7511,30 @@
             "source": "North Carolina 27616 | Raleigh | NC 27616 | USA | Wake County | United States"
         },
         {
-            "key": "united-kingdom/kent/royal-tunbridge-wells",
-            "slug": "united-kingdom/kent/royal-tunbridge-wells",
-            "title": "Royal Tunbridge Wells",
+            "key": "united-kingdom/kent/sevenoaks",
+            "slug": "united-kingdom/kent/sevenoaks",
+            "title": "Sevenoaks",
             "country": "United Kingdom",
             "country_slug": "united-kingdom",
             "county": "Kent",
             "county_slug": "kent",
             "district": "Kent",
             "region": "Kent",
-            "city": "Royal Tunbridge Wells",
-            "town": "Royal Tunbridge Wells",
-            "path": "/locations/united-kingdom/kent/royal-tunbridge-wells",
+            "city": "Sevenoaks",
+            "town": "Sevenoaks",
+            "path": "/locations/united-kingdom/kent/sevenoaks",
             "online": false,
-            "lat": 51.132377,
-            "lng": 0.263695,
+            "lat": 51.27241,
+            "lng": 0.190898,
             "counts": {
                 "products": 3,
                 "offerings": 0,
                 "total": 3
             },
             "locations": [
-                "Royal Tunbridge Wells, Kent, United Kingdom"
+                "Sevenoaks, Kent, United Kingdom"
             ],
-            "source": "Central Tunbridge Wells | Royal Tunbridge Wells | Tunbridge Wells | Kent | United Kingdom"
+            "source": "Sevenoaks | Kent | United Kingdom"
         },
         {
             "key": "united-kingdom/shetland-islands/shetland",
@@ -7680,8 +7602,8 @@
             "town": "South Shields",
             "path": "/locations/united-kingdom/tyne-and-wear/south-shields",
             "online": false,
-            "lat": 54.9991081,
-            "lng": -1.4329074,
+            "lat": 54.9937583,
+            "lng": -1.4289006,
             "counts": {
                 "products": 3,
                 "offerings": 0,
@@ -7690,7 +7612,7 @@
             "locations": [
                 "South Shields, Tyne And Wear, United Kingdom"
             ],
-            "source": "Flower of Life Empor.I.Am | South Shields | Tyne and Wear | United Kingdom"
+            "source": "Westoe Rd | South Shields | Tyne and Wear | United Kingdom"
         },
         {
             "key": "united-kingdom/west-sussex/steyning",
@@ -8159,6 +8081,32 @@
                 "Hyde, Manchester, United Kingdom"
             ],
             "source": "Hyde | Greater Manchester | United Kingdom"
+        },
+        {
+            "key": "united-kingdom/kent",
+            "slug": "united-kingdom/kent",
+            "title": "Kent",
+            "country": "United Kingdom",
+            "country_slug": "united-kingdom",
+            "county": "Kent",
+            "county_slug": "kent",
+            "district": "Kent",
+            "region": "Kent",
+            "city": "Kent",
+            "town": "Kent",
+            "path": "/locations/united-kingdom/kent",
+            "online": false,
+            "lat": 51.0928319,
+            "lng": 0.8392471,
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            },
+            "locations": [
+                "Kent, Kent, United Kingdom"
+            ],
+            "source": "kent | Kent | United Kingdom"
         },
         {
             "key": "united-kingdom/west-yorkshire/leeds",
@@ -8681,6 +8629,32 @@
             "source": "Wealden | Wealden District | East Sussex | United Kingdom"
         },
         {
+            "key": "united-kingdom/kent/ashford",
+            "slug": "united-kingdom/kent/ashford",
+            "title": "Ashford",
+            "country": "United Kingdom",
+            "country_slug": "united-kingdom",
+            "county": "Kent",
+            "county_slug": "kent",
+            "district": "Kent",
+            "region": "Kent",
+            "city": "Ashford",
+            "town": "Ashford",
+            "path": "/locations/united-kingdom/kent/ashford",
+            "online": false,
+            "lat": 51.1451007,
+            "lng": 0.8739631,
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            },
+            "locations": [
+                "Ashford, Kent, United Kingdom"
+            ],
+            "source": "Ashford | Kent | United Kingdom"
+        },
+        {
             "key": "united-kingdom/east-sussex/battle",
             "slug": "united-kingdom/east-sussex/battle",
             "title": "Battle",
@@ -9123,6 +9097,32 @@
             "source": "Gerald St | Port Talbot | Neath Port Talbot | United Kingdom"
         },
         {
+            "key": "united-kingdom/kent/royal-tunbridge-wells",
+            "slug": "united-kingdom/kent/royal-tunbridge-wells",
+            "title": "Royal Tunbridge Wells",
+            "country": "United Kingdom",
+            "country_slug": "united-kingdom",
+            "county": "Kent",
+            "county_slug": "kent",
+            "district": "Kent",
+            "region": "Kent",
+            "city": "Royal Tunbridge Wells",
+            "town": "Royal Tunbridge Wells",
+            "path": "/locations/united-kingdom/kent/royal-tunbridge-wells",
+            "online": false,
+            "lat": 51.132377,
+            "lng": 0.263695,
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            },
+            "locations": [
+                "Royal Tunbridge Wells, Kent, United Kingdom"
+            ],
+            "source": "Tunbridge Wells | Royal Tunbridge Wells | Kent | United Kingdom"
+        },
+        {
             "key": "united-kingdom/buckinghamshire/slough",
             "slug": "united-kingdom/buckinghamshire/slough",
             "title": "Slough",
@@ -9292,8 +9292,8 @@
             "town": "Maidstone",
             "path": "/locations/united-kingdom/maidstone",
             "online": false,
-            "lat": null,
-            "lng": null,
+            "lat": 0,
+            "lng": 0,
             "counts": {
                 "products": 0,
                 "offerings": 0,
@@ -9529,34 +9529,6 @@
             "value": "Manchester"
         },
         {
-            "key": "united-kingdom/kent",
-            "slug": "united-kingdom/kent",
-            "title": "Kent",
-            "country": "United Kingdom",
-            "country_slug": "united-kingdom",
-            "county": "Kent",
-            "county_slug": "kent",
-            "district": "Kent",
-            "region": "Kent",
-            "city": "Kent",
-            "town": "Kent",
-            "path": "/locations/united-kingdom/kent",
-            "online": false,
-            "lat": 51.0928319,
-            "lng": 0.8392471,
-            "counts": {
-                "products": 5,
-                "offerings": 0,
-                "total": 5
-            },
-            "locations": [
-                "Kent, Kent, United Kingdom"
-            ],
-            "source": "Kent | United Kingdom",
-            "label": "Kent",
-            "value": "Kent"
-        },
-        {
             "key": "united-kingdom/east-sussex/brighton-and-hove",
             "slug": "united-kingdom/east-sussex/brighton-and-hove",
             "title": "Brighton & Hove",
@@ -9601,16 +9573,44 @@
             "lat": 51.5072178,
             "lng": -0.1275862,
             "counts": {
-                "products": 4,
+                "products": 3,
                 "offerings": 0,
-                "total": 4
+                "total": 3
             },
             "locations": [
                 "London, United Kingdom"
             ],
-            "source": "London | Greater London | United Kingdom",
+            "source": "North London | London | Greater London | United Kingdom",
             "label": "London",
             "value": "London"
+        },
+        {
+            "key": "united-kingdom/kent",
+            "slug": "united-kingdom/kent",
+            "title": "Kent",
+            "country": "United Kingdom",
+            "country_slug": "united-kingdom",
+            "county": "Kent",
+            "county_slug": "kent",
+            "district": "Kent",
+            "region": "Kent",
+            "city": "Kent",
+            "town": "Kent",
+            "path": "/locations/united-kingdom/kent",
+            "online": false,
+            "lat": 51.0928319,
+            "lng": 0.8392471,
+            "counts": {
+                "products": 2,
+                "offerings": 0,
+                "total": 2
+            },
+            "locations": [
+                "Kent, Kent, United Kingdom"
+            ],
+            "source": "kent | Kent | United Kingdom",
+            "label": "Kent",
+            "value": "Kent"
         }
     ]
 }

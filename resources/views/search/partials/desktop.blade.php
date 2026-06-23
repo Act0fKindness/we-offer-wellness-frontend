@@ -92,7 +92,7 @@
     border:3px solid rgba(0,0,0,0.1);
     position: fixed;
     top: 126px;
-    z-index: 30;
+    z-index: 2000;
     left: 50%; transform: translateX(-50%);
     width: min(1200px, calc(100vw - 32px));
     -webkit-backdrop-filter: blur(14px);
@@ -227,6 +227,12 @@
   max-width: none;
   margin-inline: 0;
 }
+.search-layout .result-view-list .wow-card.md.wow-event-card-v4{
+  width: 280px;
+  max-width: 280px;
+  flex: 0 0 280px;
+  margin-inline: auto;
+}
 .search-layout .result-view-list .therapy-card{
   width: 100%;
 }
@@ -269,7 +275,7 @@
 .wow-ultra #search-top-who-pane::-webkit-scrollbar{ width:0; height:0 }
 /* Requested narrow pane sizing */
 .wow-ultra .pane.narrow{
-  z-index: 39;
+  z-index: 2100;
   left: 0px !important;
   right: 0px !important;
   width: min(560px, 96vw);
@@ -902,6 +908,7 @@
         antialias: true,
         fadeDuration: 0,
       });
+      map.scrollZoom.disable();
 
       map.on('load', function () {
         var layers = map.getStyle().layers || [];
@@ -1125,6 +1132,13 @@
       window.addEventListener('wow:searchbar-v4:query-change', handleQueryChange);
       window.addEventListener('wow:searchbar-v4:layout-change', handleLayoutChange);
       window.addEventListener('popstate', handlePopState);
+
+      window.requestAnimationFrame(function () {
+        fetchSearchResults(window.location.href, {
+          viewMode: currentView,
+          mapMode: currentMapMode,
+        });
+      });
     }
 
     boot();

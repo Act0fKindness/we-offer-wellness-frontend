@@ -24,6 +24,7 @@ const props = defineProps({
 
 const root = ref(null)
 const isFlexible = ref(false)
+const desktopNativeWhen = ref(false)
 const whatValue = ref('')
 const WHAT_LIMIT = 5
 
@@ -36,6 +37,8 @@ const state = {
 let detachGlobal = null
 let groupTypeTouched = false
 let lastExactWhen = ''
+const paneHideTimers = new WeakMap()
+const paneOpenFrames = new WeakMap()
 
 // Helpers to scope queries within this component instance
 const q = (sel) => root.value?.querySelector(sel)
@@ -44,8 +47,139 @@ const id = (name) => `${props.idPrefix}-${name}`
 
 const whatFilled = computed(() => whatValue.value.trim().length > 0)
 
+function syncDesktopNativeWhen() {
+  if (typeof window === 'undefined') {
+    desktopNativeWhen.value = false
+    return
+  }
+  try {
+    desktopNativeWhen.value = window.matchMedia('(min-width: 992px)').matches
+  } catch {
+    desktopNativeWhen.value = false
+  }
+}
+
+function parseDesktopDate(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (iso) {
+    const date = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]))
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const parts = raw.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/)
+  if (!parts) return null
+
+  const monthMap = {
+    jan: 0,
+    feb: 1,
+    mar: 2,
+    apr: 3,
+    may: 4,
+    jun: 5,
+    jul: 6,
+    aug: 7,
+    sep: 8,
+    oct: 9,
+    nov: 10,
+    dec: 11,
+  }
+  const month = monthMap[parts[2].toLowerCase()]
+  if (month === undefined) return null
+
+  const date = new Date(Number(parts[3]), month, Number(parts[1]))
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function toDesktopISODate(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function setDesktopWhenValue(value) {
+  const whenInput = q(`#${id('when')}`)
+  if (!whenInput) return
+
+  const nextValue = String(value || '').trim()
+  whenInput.value = nextValue
+  if (nextValue) {
+    whenInput.dataset.rangeStart = nextValue
+    whenInput.dataset.rangeEnd = nextValue
+  } else {
+    delete whenInput.dataset.rangeStart
+    delete whenInput.dataset.rangeEnd
+  }
+}
+
+function syncDesktopWhenFromValue(value) {
+  const parsed = parseDesktopDate(value)
+  if (!parsed) return false
+  setDesktopWhenValue(toDesktopISODate(parsed))
+  return true
+}
+
 function closeAll() {
-  qa('.pane').forEach((p) => p.classList.add('d-none'))
+  qa('.pane').forEach((p) => hidePane(p))
+}
+
+function hidePane(pane, immediate = false) {
+  if (!pane) return
+
+  const pending = paneHideTimers.get(pane)
+  if (pending) {
+    clearTimeout(pending)
+    paneHideTimers.delete(pane)
+  }
+
+  const openFrame = paneOpenFrames.get(pane)
+  if (openFrame) {
+    cancelAnimationFrame(openFrame)
+    paneOpenFrames.delete(pane)
+  }
+
+  pane.setAttribute('aria-hidden', 'true')
+
+  if (immediate) {
+    pane.classList.add('d-none')
+    pane.classList.remove('is-open', 'is-closing')
+    return
+  }
+
+  if (pane.classList.contains('d-none')) return
+
+  pane.classList.remove('is-open')
+  pane.classList.add('is-closing')
+
+  const timer = window.setTimeout(() => {
+    pane.classList.add('d-none')
+    pane.classList.remove('is-closing')
+    paneHideTimers.delete(pane)
+  }, 180)
+
+  paneHideTimers.set(pane, timer)
+}
+
+function showPane(pane) {
+  if (!pane) return
+
+  const pending = paneHideTimers.get(pane)
+  if (pending) {
+    clearTimeout(pending)
+    paneHideTimers.delete(pane)
+  }
+
+  pane.classList.remove('d-none', 'is-closing')
+  pane.setAttribute('aria-hidden', 'false')
+
+  const openFrame = requestAnimationFrame(() => {
+    pane.classList.add('is-open')
+    paneOpenFrames.delete(pane)
+  })
+  paneOpenFrames.set(pane, openFrame)
 }
 
 function parseWhereValues(raw = '') {
@@ -375,9 +509,23 @@ function bindInteractions() {
   const whenInput = q(`#${id('when')}`)
 
   segWhen?.addEventListener('click', (e) => {
+    if (desktopNativeWhen.value) {
+      whenInput?.showPicker?.()
+      whenInput?.focus?.()
+      return
+    }
     if (e.target.closest('.pane')) return
     closeAll()
-    whenPane?.classList.remove('d-none')
+    showPane(whenPane)
+  })
+
+  whenInput?.addEventListener('change', () => {
+    if (!desktopNativeWhen.value) return
+    setDesktopWhenValue(whenInput.value)
+  })
+  whenInput?.addEventListener('input', () => {
+    if (!desktopNativeWhen.value) return
+    setDesktopWhenValue(whenInput.value)
   })
 
   qa(`#${id('seg-when')} .dur`).forEach((b) =>
@@ -402,14 +550,14 @@ function bindInteractions() {
   const whereList = q(`#${id('where-list')}`)
   segWhere?.addEventListener('click', () => {
     closeAll()
-    wherePane?.classList.remove('d-none')
+    showPane(wherePane)
     alignPane(wherePane, segWhere)
     whereEditor?.focus()
     updateWhereDropdownVisibility()
   })
   whereEditor?.addEventListener('focus', () => {
     closeAll()
-    wherePane?.classList.remove('d-none')
+    showPane(wherePane)
     alignPane(wherePane, segWhere)
     updateWhereDropdownVisibility()
   })
@@ -447,7 +595,7 @@ function bindInteractions() {
   whoSeg?.addEventListener('click', (e) => {
     if (e.target.closest('.pane')) return
     closeAll()
-    whoPane?.classList.remove('d-none')
+    showPane(whoPane)
     alignPane(whoPane, whoSeg)
   })
   whoPane?.addEventListener('click', (e) => {
@@ -488,7 +636,7 @@ function bindInteractions() {
       updateWhoSummary()
     })
   }
-  q(`#${id('who-done')}`)?.addEventListener('click', () => whoPane?.classList.add('d-none'))
+  q(`#${id('who-done')}`)?.addEventListener('click', () => hidePane(whoPane))
 
   // GROUP TYPE
   const segGroup = q(`#${id('seg-group')}`)
@@ -497,7 +645,7 @@ function bindInteractions() {
   segGroup?.addEventListener('click', (e) => {
     if (e.target.closest('.pane')) return
     closeAll()
-    groupPane?.classList.remove('d-none')
+    showPane(groupPane)
   })
   groupPane?.addEventListener('click', (e) => {
     const btn = e.target.closest('.item')
@@ -519,18 +667,18 @@ function bindInteractions() {
     closeAll()
     whatInput?.focus()
     if (renderWhat(whatValue.value || whatInput?.value || '')) {
-      whatPane?.classList.remove('d-none')
+      showPane(whatPane)
     }
   })
   whatInput?.addEventListener('focus', () => {
     if (renderWhat(whatValue.value || whatInput.value)) {
-      whatPane?.classList.remove('d-none')
+      showPane(whatPane)
     }
     else closeAll()
   })
   whatInput?.addEventListener('input', () => {
     whatValue.value = whatInput.value
-    if (renderWhat(whatValue.value)) whatPane?.classList.remove('d-none')
+    if (renderWhat(whatValue.value)) showPane(whatPane)
     else closeAll()
   })
   whatList?.addEventListener('click', (e) => {
@@ -544,6 +692,7 @@ function bindInteractions() {
 }
 
 onMounted(async () => {
+  syncDesktopNativeWhen()
   whatCategories = []
 
   // Load categories to power WHAT suggestions
@@ -578,10 +727,24 @@ onMounted(async () => {
     }
     // WHEN (free text)
     const whenVal = urlParams.get('when') || ''
-    if (whenVal) {
+    if (whenVal && desktopNativeWhen.value) {
       const whenInput = q(`#${id('when')}`)
-      if (whenInput) whenInput.value = whenVal
+      if (whenInput) {
+        if (!syncDesktopWhenFromValue(urlParams.get('when_start') || '')) {
+          if (!syncDesktopWhenFromValue(whenVal.split(/\s+-\s+|\s+—\s+/)[0] || whenVal)) {
+            whenInput.value = ''
+          }
+        }
+      }
       lastExactWhen = whenVal
+    }
+    const whenStart = urlParams.get('when_start') || ''
+    if (whenStart && desktopNativeWhen.value) {
+      const whenInput = q(`#${id('when')}`)
+      if (whenInput) {
+        setDesktopWhenValue(whenStart)
+        whenInput.value = whenStart
+      }
     }
     const flexVal = (urlParams.get('flexible') || '').toLowerCase()
     if (flexVal && flexVal !== '0' && flexVal !== 'false') {
@@ -623,7 +786,7 @@ onBeforeUnmount(() => {
           <span class="btn-label">Search</span>
           <span class="btn-spinner" aria-hidden="true"><span class="spin"></span></span>
         </button>
-        <div :id="id('what-pane')" class="pane narrow d-none" role="listbox" aria-label="What suggestions">
+        <div :id="id('what-pane')" class="pane narrow d-none" role="listbox" aria-label="What suggestions" aria-hidden="true">
           <div :id="id('what-list')" class="listy"></div>
         </div>
       </div>
@@ -636,7 +799,7 @@ onBeforeUnmount(() => {
           <div :id="id('where-editor')" class="where-editor" contenteditable="true" data-placeholder="City, region, or 'Online'"></div>
           <input :id="id('where')" type="hidden">
         </div>
-        <div :id="id('where-pane')" class="pane narrow d-none" role="listbox" aria-label="Trending places">
+        <div :id="id('where-pane')" class="pane narrow d-none" role="listbox" aria-label="Trending places" aria-hidden="true">
           <div class="section-title">Trending destinations</div>
           <div class="listy" :id="id('where-list')" data-wow-location-list="1"></div>
         </div>
@@ -647,10 +810,16 @@ onBeforeUnmount(() => {
         <i class="bi bi-calendar3 fs-5 text-muted"></i>
         <div class="flex-grow-1">
           <div class="seg-label">When</div>
-          <input :id="id('when')" type="text" placeholder="Select dates" readonly aria-haspopup="dialog">
+          <input
+            :id="id('when')"
+            :type="desktopNativeWhen ? 'date' : 'text'"
+            :placeholder="desktopNativeWhen ? '' : 'Select dates'"
+            :readonly="!desktopNativeWhen"
+            :aria-haspopup="desktopNativeWhen ? undefined : 'dialog'"
+          >
         </div>
 
-        <div :id="id('when-pane')" class="pane d-none" aria-label="Calendar">
+        <div v-if="!desktopNativeWhen" :id="id('when-pane')" class="pane d-none" aria-label="Calendar" aria-hidden="true">
           <div class="cal-body cal-body--range">
             <SearchRangeCalendar :prefix="props.idPrefix" />
           </div>
@@ -664,7 +833,7 @@ onBeforeUnmount(() => {
           <div class="seg-label">Who</div>
           <div :id="id('who-summary')" class="summary">2 adults · Solo</div>
         </div>
-        <div :id="id('who-pane')" class="pane narrow d-none" aria-label="Guests">
+        <div :id="id('who-pane')" class="pane narrow d-none" aria-label="Guests" aria-hidden="true">
           <div class="section-title">Guests</div>
           <div class="listy">
             <div class="item" style="justify-content: space-between;">
@@ -695,7 +864,7 @@ onBeforeUnmount(() => {
           <div class="seg-label">Group type</div>
           <div :id="id('group-summary')" class="summary">Solo</div>
         </div>
-        <div :id="id('group-pane')" class="pane narrow d-none" aria-label="Group type">
+        <div :id="id('group-pane')" class="pane narrow d-none" aria-label="Group type" aria-hidden="true">
           <div class="listy">
             <button type="button" class="item kicker" data-value="Solo"><i class="bi bi-person"></i><span class="title">Solo</span></button>
             <button type="button" class="item" data-value="Couple"><i class="bi bi-heart"></i><span class="title">Couple</span></button>
@@ -738,18 +907,23 @@ onBeforeUnmount(() => {
 .wow-ultra .item .title{ font-family: 'Manrope', var(--bs-font-sans-serif) !important; }
 
 .wow-ultra .bar{
-  background:#fff;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(22px) saturate(180%);
+  -webkit-backdrop-filter:blur(22px) saturate(180%);
+  border:1px solid rgba(255,255,255,.74);
   border-radius:18px;
   padding:5px;
-  box-shadow:var(--shadow);
+  box-shadow:0 16px 46px rgba(16,24,40,.12);
+  z-index:2000;
   display:flex;
   gap:5px;
   flex-wrap:wrap;
+  transition:background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease, border-radius 220ms ease;
 }
 @media (min-width: 992px){
   .wow-ultra .bar{
     border-radius:19px;
-    border:3px solid rgba(0,0,0,0.1);
+    border:1px solid rgba(16,24,40,.08);
   }
 }
 .wow-ultra .bar-compact{ gap:4px; padding:4px }
@@ -758,8 +932,15 @@ onBeforeUnmount(() => {
   flex:1 1 220px; display:flex; gap:10px; align-items:center;
   background:#fff; border:1px solid rgba(15,23,42,.12); border-radius:var(--radius);
   padding:14px 16px; position:relative; max-height:58px;
+  box-shadow:0 1px 0 rgba(255,255,255,.65) inset;
+  transition:background 160ms ease, box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease, color 160ms ease;
 }
 .wow-ultra .seg:focus-within{ box-shadow:var(--ring); border-color:transparent }
+.wow-ultra .seg:hover{
+  background:#f8fafc;
+  transform:translateY(-1px);
+  border-color:rgba(15,23,42,.08);
+}
 .wow-ultra .seg-label{
   font-weight:600;
   color:#111827;
@@ -770,9 +951,11 @@ onBeforeUnmount(() => {
 .wow-ultra .seg input{
   border:0; outline:0; width:100%; background:transparent;
   font-size:1rem; line-height:1.25; padding:0; margin:0; /* avoid looking pushed down */
+  transition:color 160ms ease;
 }
 .wow-ultra .where-editor{
   outline:0; min-height:1.25rem; font-size:1rem; line-height:1.25;
+  transition:color 160ms ease, opacity 160ms ease;
 }
 .wow-ultra .where-editor:empty:before{
   content: attr(data-placeholder); color:#9ca3af;
@@ -791,6 +974,14 @@ onBeforeUnmount(() => {
   cursor:not-allowed;
   filter:saturate(.75);
 }
+.wow-ultra .btn-wow{
+  transition:transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+.wow-ultra .btn-wow:hover,
+.wow-ultra .btn-wow:focus-visible{
+  transform:translateY(-1px);
+  box-shadow:0 14px 30px rgba(16,24,40,.18);
+}
 
 /* Inline search button now uses .btn-wow classes */
 .wow-ultra.only-what .seg{ flex:1 1 100% }
@@ -799,10 +990,27 @@ onBeforeUnmount(() => {
 .wow-ultra .pane{
   position:absolute; left:0; right:0; top:calc(100% + 10px);
   background:#fff; border:1px solid var(--soft-border); border-radius:16px;
-  box-shadow:var(--shadow); z-index:40; overflow:hidden; text-align:left;
+  box-shadow:var(--shadow); z-index:2100; overflow:hidden; text-align:left;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(-8px) scale(.985);
+  transition:opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
+  will-change:opacity, transform;
+}
+.wow-ultra .pane.is-open{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+  transition:opacity 180ms ease, transform 180ms ease, visibility 0s linear 0s;
+}
+.wow-ultra .pane.is-closing{
+  opacity:0;
+  transform:translateY(-6px) scale(.99);
 }
 .wow-ultra .pane.narrow{
-  z-index:39;
+  z-index:2100;
   left:0!important;
   right:0!important;
   width:min(560px,96vw);
@@ -830,8 +1038,8 @@ onBeforeUnmount(() => {
 }
 .wow-ultra .listy{ max-height:360px; overflow:auto; padding:6px 0 }
 .wow-ultra [data-wow-location-list="1"]{ max-height:none; overflow:hidden; padding:6px 0 }
-.wow-ultra .item{ display:flex; align-items:center; gap:10px; padding:12px 14px; text-align:left; background:#fff; border:0; width:100% }
-.wow-ultra .item:hover, .wow-ultra .item[aria-selected="true"]{ background:#f2f5ff }
+.wow-ultra .item{ display:flex; align-items:center; gap:10px; padding:12px 14px; text-align:left; background:#fff; border:0; width:100%; transition:background 140ms ease, transform 140ms ease, color 140ms ease }
+.wow-ultra .item:hover, .wow-ultra .item[aria-selected="true"]{ background:#f2f5ff; transform:translateX(1px) }
 .wow-ultra .item .title{ font-weight:600; color:#0f172a }
 .wow-ultra .item .type{ font-size:.75rem; padding:.1rem .5rem; border-radius:999px; background:#eef2ff; color:#2536eb; margin-left:.5rem }
 .wow-ultra .hl{ background:linear-gradient(180deg,rgba(255,233,150,.0),rgba(255,233,150,.9)); border-radius:4px }

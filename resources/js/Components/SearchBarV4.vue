@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import SearchRangeCalendar from './SearchRangeCalendar.vue'
 import { fetchLocations } from '@/services/locations'
 import { fetchWhatCategories } from '@/services/whatCategories'
@@ -37,7 +37,13 @@ const state = reactive({
 
 const activeSegment = ref(null)
 const filterDrawerOpen = ref(false)
-const activeFilterPanel = ref('')
+const filterSections = reactive({
+  sort: true,
+  price: true,
+  type: true,
+  rating: false,
+  mode: false,
+})
 const mobileExpanded = ref(false)
 const scrollCollapsed = ref(false)
 const scrollExpanded = ref(false)
@@ -59,6 +65,7 @@ let escapeHandler = null
 let popStateHandler = null
 let rootResizeObserver = null
 let scrollCollapseTimer = null
+let bodyOverflowBeforeLock = ''
 
 const sortLabels = {
   popular: 'Recommended',
@@ -75,8 +82,8 @@ const ratingLabels = {
 }
 
 const typeLabels = {
-  therapies: 'Therapies',
-  therapy: 'Therapies',
+  therapies: 'Therapy',
+  therapy: 'Therapy',
   classes: 'Classes',
   class: 'Classes',
   events: 'Events',
@@ -275,6 +282,11 @@ function collapseMobileSearch() {
   whenInput.value?.blur?.()
   closeFilterDrawer()
   mobileExpanded.value = false
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = bodyOverflowBeforeLock || ''
+    document.documentElement.style.overflow = ''
+  }
+  bodyOverflowBeforeLock = ''
 }
 
 function clearScrollCollapseTimer() {
@@ -296,7 +308,7 @@ function scheduleScrollCollapse() {
 
     scrollExpanded.value = false
     closeSegments()
-  }, 120)
+  }, 180)
 }
 
 function updateScrollCollapsedSearch() {
@@ -308,7 +320,6 @@ function updateScrollCollapsedSearch() {
   }
 
   const shouldCollapse = typeof window !== 'undefined' && window.scrollY > 8
-  const wasCollapsed = scrollCollapsed.value
   scrollCollapsed.value = shouldCollapse
 
   if (!shouldCollapse) {
@@ -317,11 +328,9 @@ function updateScrollCollapsedSearch() {
     return
   }
 
-  if (!wasCollapsed && root.value) {
-    scrollExpanded.value = root.value.matches(':hover') || root.value.matches(':focus-within')
-  }
+  scrollExpanded.value = false
 
-  if (!scrollExpanded.value && !filterDrawerOpen.value) {
+  if (!filterDrawerOpen.value) {
     closeSegments()
   }
 }
@@ -336,8 +345,7 @@ function updateDesktopSpacerHeight() {
 }
 
 function ensureScrollExpanded() {
-  if (isMobile() || !scrollCollapsed.value || filterDrawerOpen.value) return
-  clearScrollCollapseTimer()
+  if (isMobile() || filterDrawerOpen.value) return
   scrollExpanded.value = true
 }
 
@@ -359,6 +367,7 @@ function handleRootFocusIn() {
 
 function handleRootFocusOut(event) {
   if (isMobile() || !scrollCollapsed.value || filterDrawerOpen.value) return
+  if (activeSegment.value === 'when') return
 
   const related = event?.relatedTarget
   if (related && root.value?.contains(related)) return
@@ -373,15 +382,31 @@ function closeMobileFilterToExpandedSearch() {
     return
   }
 
-  closeFilterDrawer()
-  expandMobileSearch()
+  collapseMobileSearch()
 }
 
 function syncBodyScrollLock() {
   if (typeof document === 'undefined') return
-  document.body.style.overflow = isMobile() && filterDrawerOpen.value
-    ? 'hidden'
-    : ''
+  const shouldLock = filterDrawerOpen.value || mobileExpanded.value
+
+  if (shouldLock) {
+    if (bodyOverflowBeforeLock === '') {
+      bodyOverflowBeforeLock = document.body.style.overflow || ''
+    }
+    document.body.style.overflow = 'hidden'
+    return
+  }
+
+  document.body.style.overflow = bodyOverflowBeforeLock
+  bodyOverflowBeforeLock = ''
+}
+
+function resetFilterSections() {
+  filterSections.sort = true
+  filterSections.price = true
+  filterSections.type = true
+  filterSections.rating = false
+  filterSections.mode = false
 }
 
 function openSegment(name) {
@@ -418,23 +443,34 @@ function toggleFilterDrawer() {
   expandMobileSearch()
   closeSegments()
   filterDrawerOpen.value = true
-  activeFilterPanel.value = ''
-  syncBodyScrollLock()
-}
-
-function openFilterPanel(panel) {
-  expandMobileSearch()
-  closeSegments()
-  filterDrawerOpen.value = true
-  activeFilterPanel.value = panel
+  resetFilterSections()
   syncBodyScrollLock()
 }
 
 function closeFilterDrawer() {
   closeSegments()
   filterDrawerOpen.value = false
-  activeFilterPanel.value = ''
   syncBodyScrollLock()
+}
+
+watch([mobileExpanded, filterDrawerOpen], syncBodyScrollLock, { immediate: true })
+
+async function toggleFilterSection(section) {
+  const isOpening = !filterSections[section]
+
+  if (isMobile() && isOpening) {
+    Object.keys(filterSections).forEach((key) => {
+      filterSections[key] = key === section
+    })
+  } else {
+    filterSections[section] = !filterSections[section]
+  }
+
+  if (!isMobile() || !isOpening) return
+
+  await nextTick()
+  const panel = root.value?.querySelector?.(`[data-filter-panel="${section}"]`)
+  panel?.scrollIntoView?.({ behavior: 'smooth', block: 'start', inline: 'nearest' })
 }
 
 function setViewMode(mode) {
@@ -452,9 +488,13 @@ function setMapMode(mode) {
 }
 
 function applySearch(immediate = true) {
-  closeSegments()
-  closeFilterDrawer()
   clearScrollCollapseTimer()
+  if (isMobile()) {
+    collapseMobileSearch()
+  } else {
+    closeSegments()
+    closeFilterDrawer()
+  }
   emitQueryChange('submit', immediate)
 }
 
@@ -522,7 +562,7 @@ function refreshWhatSuggestions(query) {
   const source = Array.isArray(whatCatalog.value) ? whatCatalog.value : []
 
   if (!needle) {
-    whatSuggestions.value = source.slice(0, 6)
+    whatSuggestions.value = source.slice(0, 3)
     return
   }
 
@@ -545,7 +585,7 @@ function refreshWhatSuggestions(query) {
     })
     .filter((row) => row.score < 999)
     .sort((left, right) => (left.score - right.score) || String(left.item.title || '').localeCompare(String(right.item.title || '')))
-    .slice(0, 8)
+    .slice(0, 3)
     .map((row) => row.item)
 }
 
@@ -576,9 +616,11 @@ function refreshWhereSuggestions(query) {
     whereTimer = null
   }
 
+  const limit = isMobile() ? 3 : 5
+
   whereTimer = window.setTimeout(async () => {
     try {
-      whereSuggestions.value = await fetchLocations(8, query)
+      whereSuggestions.value = (await fetchLocations(limit, query)).slice(0, limit)
       whereLoaded.value = true
     } catch (error) {
       console.warn('[searchbar-v4] where suggestions failed', error)
@@ -815,7 +857,34 @@ function removeChip(key) {
 
 function closePanelsOnOutsideClick(event) {
   if (!root.value) return
-  if (root.value.contains(event.target)) return
+
+  const target = event?.target
+  const path = typeof event?.composedPath === 'function' ? event.composedPath() : []
+  const pathContainsRoot = path.length > 0 && path.includes(root.value)
+
+  if (target && typeof target.closest === 'function') {
+    if (target.closest('[data-filter-drawer]')) return
+    if (target.closest('.wow-filter-backdrop')) return
+  }
+
+  if (pathContainsRoot || root.value.contains(event.target)) return
+
+  if (activeSegment.value === 'when') {
+    const insideCalendar = path.some((node) => {
+      if (!node || typeof node !== 'object') return false
+      if (node === root.value) return true
+      if (typeof node.classList === 'undefined') return false
+      return node.classList.contains('wow-panel--calendar')
+        || node.classList.contains('wow-range-calendar')
+        || node.classList.contains('wow-range-calendar__cell')
+        || node.classList.contains('wow-range-calendar__nav')
+        || node.classList.contains('wow-range-calendar__grid')
+        || node.classList.contains('wow-range-calendar__month')
+        || node.classList.contains('wow-range-calendar__months')
+    })
+
+    if (insideCalendar) return
+  }
 
   if (isMobile()) {
     if (filterDrawerOpen.value) {
@@ -857,7 +926,7 @@ const activeChips = computed(() => {
   if (state.sort && state.sort !== 'popular') chips.push({ key: 'sort', label: 'Sort', value: sortLabels[state.sort] || state.sort })
   if (state.priceMax) chips.push({ key: 'price', label: 'Price', value: `Up to £${state.priceMax}` })
   if (state.rating) chips.push({ key: 'rating', label: 'Rating', value: ratingLabels[state.rating] || state.rating })
-  if (state.type) chips.push({ key: 'type', label: 'Type', value: typeLabels[state.type] || toTitleCase(state.type) })
+  if (state.type) chips.push({ key: 'type', label: 'Format', value: typeLabels[state.type] || toTitleCase(state.type) })
   if (state.onlineOnly) chips.push({ key: 'online', label: 'Mode', value: 'Online only' })
   if (state.anytime) chips.push({ key: 'anytime', label: 'Timing', value: 'Anytime' })
   return chips
@@ -878,10 +947,12 @@ const guestsSummary = computed(() => {
   return `${label} · ${group}`
 })
 
+const searchBackdropOpen = computed(() => !!activeSegment.value && !filterDrawerOpen.value)
+
 const sortSummary = computed(() => sortLabels[state.sort] || 'Recommended')
 const priceSummary = computed(() => (state.priceMax ? `Up to £${state.priceMax}` : 'Any price'))
 const ratingSummary = computed(() => ratingLabels[state.rating] || 'Any rating')
-const typeSummary = computed(() => (state.type ? (typeLabels[state.type] || toTitleCase(state.type)) : 'Any type'))
+const typeSummary = computed(() => (state.type ? (typeLabels[state.type] || toTitleCase(state.type)) : 'Any format'))
 
 onMounted(async () => {
   syncFromQuery()
@@ -959,6 +1030,11 @@ onBeforeUnmount(() => {
     rootResizeObserver = null
   }
 
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = bodyOverflowBeforeLock
+  }
+  bodyOverflowBeforeLock = ''
+
   clearScrollCollapseTimer()
 })
 </script>
@@ -975,6 +1051,8 @@ onBeforeUnmount(() => {
         'is-scroll-collapsed': scrollCollapsed,
         'is-scroll-expanded': scrollExpanded,
         'is-filter-open': filterDrawerOpen,
+        'is-filter-drawer-open': filterDrawerOpen,
+        'is-panel-open': !!activeSegment || filterDrawerOpen,
       }"
       @mouseenter="handleRootMouseEnter"
       @mouseleave="handleRootMouseLeave"
@@ -1044,6 +1122,16 @@ onBeforeUnmount(() => {
               @focus="openSegment('what')"
               @input="onWhatInput"
             >
+            <button
+              v-if="state.what"
+              type="button"
+              class="wow-inline-clear"
+              aria-label="Clear What"
+              @mousedown.stop.prevent
+              @click.stop.prevent="setWhatValue('', true)"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
           </span>
         </div>
 
@@ -1054,6 +1142,9 @@ onBeforeUnmount(() => {
           :class="{ 'is-open': activeSegment === 'what' }"
           role="listbox"
           aria-label="What suggestions"
+          @pointerdown.stop
+          @mousedown.stop
+          @click.stop
         >
           <div class="wow-panel-inner">
             <div class="wow-panel-head">
@@ -1090,10 +1181,30 @@ onBeforeUnmount(() => {
               @focus="openSegment('where')"
               @input="onWhereInput"
             >
+            <button
+              v-if="state.where"
+              type="button"
+              class="wow-inline-clear"
+              aria-label="Clear Where"
+              @mousedown.stop.prevent
+              @click.stop.prevent="setWhereValue('', true)"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
           </span>
         </div>
 
-        <div v-show="activeSegment === 'where'" :id="id('where-pane')" class="wow-panel" role="listbox" aria-label="Where suggestions">
+        <div
+          v-show="activeSegment === 'where'"
+          :id="id('where-pane')"
+          class="wow-panel wow-panel--where"
+          :class="{ 'is-open': activeSegment === 'where' }"
+          role="listbox"
+          aria-label="Where suggestions"
+          @pointerdown.stop
+          @mousedown.stop
+          @click.stop
+        >
           <div class="wow-panel-inner">
             <div class="wow-panel-head">
               <strong>Where should we look?</strong>
@@ -1144,12 +1255,17 @@ onBeforeUnmount(() => {
           </span>
         </div>
 
-        <div v-show="activeSegment === 'when'" :id="id('when-pane')" class="wow-panel wow-panel--calendar" aria-label="Calendar">
+        <div
+          v-show="activeSegment === 'when'"
+          :id="id('when-pane')"
+          class="wow-panel wow-panel--calendar"
+          :class="{ 'is-open': activeSegment === 'when' }"
+          aria-label="Calendar"
+          @pointerdown.stop
+          @mousedown.stop
+          @click.stop
+        >
           <div class="wow-panel-inner">
-            <div class="wow-panel-head">
-              <strong>Choose a date</strong>
-              <span>Pick a range using the live calendar.</span>
-            </div>
             <div class="wow-calendar-shell">
               <SearchRangeCalendar :prefix="props.idPrefix" />
             </div>
@@ -1180,7 +1296,16 @@ onBeforeUnmount(() => {
           </span>
         </div>
 
-        <div v-show="activeSegment === 'who'" :id="id('who-pane')" class="wow-panel wow-panel--who" aria-label="Guests">
+        <div
+          v-show="activeSegment === 'who'"
+          :id="id('who-pane')"
+          class="wow-panel wow-panel--who"
+          :class="{ 'is-open': activeSegment === 'who' }"
+          aria-label="Guests"
+          @pointerdown.stop
+          @mousedown.stop
+          @click.stop
+        >
           <div class="wow-panel-inner">
             <div class="wow-panel-head">
               <strong>How many people?</strong>
@@ -1214,7 +1339,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <button class="wow-submit" type="submit" aria-label="Search">
+        <button class="wow-submit" type="submit" aria-label="Search" @click.prevent="applySearch(true)">
           <span class="visually-hidden">Search</span>
           <i class="bi bi-search" aria-hidden="true"></i>
         </button>
@@ -1222,12 +1347,26 @@ onBeforeUnmount(() => {
 
     </form>
 
+    <teleport to="body">
+      <button
+        v-show="searchBackdropOpen"
+        type="button"
+        class="wow-search-backdrop"
+        aria-label="Close search dropdown"
+        @click="closeSegments"
+      ></button>
+    </teleport>
+
     <div class="wow-search-bottom-row" aria-label="Search filters">
       <div class="wow-active-chips" data-chip-list>
         <span v-for="chip in activeChips" :key="chip.key" class="wow-chip">
           <strong>{{ chip.label }}:</strong>
           <span>{{ chip.value }}</span>
-          <button type="button" @click="removeChip(chip.key)" :aria-label="`Remove ${chip.label}`">×</button>
+          <button type="button" class="wow-chip-remove" @click="removeChip(chip.key)" :aria-label="`Remove ${chip.label}`">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6.7 6.7a1 1 0 0 1 1.4 0L12 10.6l3.9-3.9a1 1 0 1 1 1.4 1.4L13.4 12l3.9 3.9a1 1 0 1 1-1.4 1.4L12 13.4l-3.9 3.9a1 1 0 0 1-1.4-1.4l3.9-3.9-3.9-3.9a1 1 0 0 1 0-1.4Z"/>
+            </svg>
+          </button>
         </span>
       </div>
 
@@ -1239,150 +1378,206 @@ onBeforeUnmount(() => {
     </div>
 
     <teleport to="body">
-      <div class="wow-mobile-backdrop" :class="{ 'is-open': filterDrawerOpen }" @click="closeMobileFilterToExpandedSearch"></div>
+      <div class="wow-filter-backdrop" :class="{ 'is-open': filterDrawerOpen }" @click="closeMobileFilterToExpandedSearch"></div>
     </teleport>
 
-    <div class="wow-filter-drawer" :class="{ 'is-open': filterDrawerOpen, 'is-filter-panel-open': !!activeFilterPanel }" data-filter-drawer role="dialog" aria-modal="true" aria-label="Search filters">
-      <div class="wow-filter-modal-header">
-        <div>
-          <p class="wow-filter-modal-kicker">Filters</p>
-          <h2 class="wow-filter-modal-title">Refine your search</h2>
-          <span class="wow-filter-modal-subtitle">Sort, price, rating and booking style are all ready to adjust.</span>
+    <teleport to="body">
+      <div
+        class="wow-filter-drawer"
+        :class="{ 'is-open': filterDrawerOpen }"
+        data-filter-drawer
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search filters"
+      >
+        <div class="wow-filter-drawer-handle" aria-hidden="true">
+          <span></span>
         </div>
-        <button class="wow-filter-modal-close" type="button" @click="closeMobileFilterToExpandedSearch" aria-label="Close filters">×</button>
-      </div>
 
-      <div class="wow-filter-modal-body">
-        <div class="wow-filter-panel" data-filter-panel="sort" :class="{ 'is-open': activeFilterPanel === 'sort' }">
-          <div class="wow-panel-inner">
-            <div class="wow-panel-head">
-              <strong>Sort results</strong>
-              <span>Choose how offerings should be ordered.</span>
-            </div>
-            <div class="wow-location-list">
-              <button type="button" :class="{ 'is-active': state.sort === 'popular' }" @click="setSort('popular')"><strong>Recommended</strong><span>Best match for this page</span></button>
-              <button type="button" :class="{ 'is-active': state.sort === 'rating_desc' }" @click="setSort('rating_desc')"><strong>Highest rated</strong><span>Prioritise verified reviews</span></button>
-              <button type="button" :class="{ 'is-active': state.sort === 'price_asc' }" @click="setSort('price_asc')"><strong>Price: low to high</strong><span>Budget-friendly first</span></button>
-              <button type="button" :class="{ 'is-active': state.sort === 'price_desc' }" @click="setSort('price_desc')"><strong>Price: high to low</strong><span>Higher-priced offerings first</span></button>
-              <button type="button" :class="{ 'is-active': state.sort === 'newest' }" @click="setSort('newest')"><strong>Newest</strong><span>Recently added offerings</span></button>
-            </div>
-            <div class="wow-panel-actions">
-              <button type="button" class="wow-clear-btn" @click="clearFilterPanel('sort')">Clear</button>
-              <button type="button" class="wow-done-btn" @click="activeFilterPanel = ''">Done</button>
-            </div>
+        <div class="wow-filter-modal-header">
+          <div>
+            <p class="wow-filter-modal-kicker">Filters</p>
+            <h2 class="wow-filter-modal-title">Refine your search</h2>
+            <span class="wow-filter-modal-subtitle">Sort, price, rating and booking style are all ready to adjust.</span>
           </div>
+          <button class="wow-filter-modal-close" type="button" @click="closeMobileFilterToExpandedSearch" aria-label="Close filters">×</button>
         </div>
 
-        <div class="wow-filter-panel" data-filter-panel="price" :class="{ 'is-open': activeFilterPanel === 'price' }">
-          <div class="wow-panel-inner">
-            <div class="wow-panel-head">
-              <strong>Set price range</strong>
-              <span>Keep results inside a comfortable budget.</span>
-            </div>
-            <div class="wow-price-grid">
-              <div class="wow-price-boxes">
-                <div class="wow-price-input">
-                  <label>Max price</label>
-                  <input :id="id('price-max')" type="number" min="0" step="1" :value="state.priceMax" @input="setPriceMax($event.target.value)">
-                </div>
-              </div>
-              <input class="wow-range" type="range" min="10" max="500" step="5" :value="state.priceMax || 170" @input="setPriceMax($event.target.value)">
-              <div class="wow-price-presets">
-                <button class="wow-mini-pill" type="button" :class="{ 'is-active': state.priceMax === '50' }" @click="setPriceMax('50')">Under £50</button>
-                <button class="wow-mini-pill" type="button" :class="{ 'is-active': state.priceMax === '100' }" @click="setPriceMax('100')">Under £100</button>
-                <button class="wow-mini-pill" type="button" :class="{ 'is-active': state.priceMax === '170' }" @click="setPriceMax('170')">Under £170</button>
-              </div>
-              <div class="wow-panel-actions">
-                <button type="button" class="wow-clear-btn" @click="clearFilterPanel('price')">Clear</button>
-                <button type="button" class="wow-done-btn" @click="activeFilterPanel = ''">Done</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="wow-filter-panel" data-filter-panel="rating" :class="{ 'is-open': activeFilterPanel === 'rating' }">
-          <div class="wow-panel-inner">
-            <div class="wow-panel-head">
-              <strong>Rating</strong>
-              <span>Prioritise offerings with stronger customer feedback.</span>
-            </div>
-            <div class="wow-location-list">
-              <button type="button" :class="{ 'is-active': !state.rating }" @click="setRating('')">
-                <strong>Any rating</strong>
-                <span>Show everything</span>
-              </button>
-              <button type="button" :class="{ 'is-active': state.rating === '4.5' }" @click="setRating('4.5')">
-                <strong>4.5+ stars</strong>
-                <span>Only highly rated offerings</span>
-              </button>
-              <button type="button" :class="{ 'is-active': state.rating === '4' }" @click="setRating('4')">
-                <strong>4.0+ stars</strong>
-                <span>Well-rated offerings and practitioners</span>
-              </button>
-              <button type="button" :class="{ 'is-active': state.rating === 'reviewed' }" @click="setRating('reviewed')">
-                <strong>Reviewed only</strong>
-                <span>Hide offerings with no reviews yet</span>
-              </button>
-            </div>
-            <div class="wow-panel-actions">
-              <button type="button" class="wow-clear-btn" @click="clearFilterPanel('rating')">Clear</button>
-              <button type="button" class="wow-done-btn" @click="activeFilterPanel = ''">Done</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="wow-filter-panel" data-filter-panel="more" :class="{ 'is-open': activeFilterPanel === 'more' }">
-          <div class="wow-panel-inner">
-            <div class="wow-panel-head">
-              <strong>More filters</strong>
-              <span>Refine the type and booking style without needing a PhD in dropdowns.</span>
-            </div>
-
-            <div class="wow-more-section">
-              <div class="wow-more-block">
-                <h3 class="wow-more-heading">Type</h3>
-                <div class="wow-pill-grid">
-                  <button class="wow-choice-pill" type="button" :class="{ 'is-active': state.type === 'therapies' }" @click="setType('therapies')">Therapy</button>
-                  <button class="wow-choice-pill" type="button" :class="{ 'is-active': state.type === 'classes' }" @click="setType('classes')">Class</button>
-                  <button class="wow-choice-pill" type="button" :class="{ 'is-active': state.type === 'events' }" @click="setType('events')">Event</button>
-                  <button class="wow-choice-pill" type="button" :class="{ 'is-active': state.type === 'retreats' }" @click="setType('retreats')">Retreat</button>
+        <div class="wow-filter-modal-body">
+          <div class="wow-filter-modal-columns">
+            <div class="wow-filter-modal-column">
+              <div class="wow-filter-panel" data-filter-panel="sort" :class="{ 'is-open': filterSections.sort }">
+                <button
+                  type="button"
+                  class="wow-filter-accordion-toggle"
+                  :class="{ 'is-open': filterSections.sort }"
+                  @click="toggleFilterSection('sort')"
+                  :aria-expanded="filterSections.sort ? 'true' : 'false'"
+                >
+                  <span class="wow-filter-accordion-copy">
+                    <strong>Sort results</strong>
+                    <span>Choose how offerings should be ordered.</span>
+                  </span>
+                  <i class="bi" :class="filterSections.sort ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                </button>
+                <div v-show="filterSections.sort" class="wow-filter-panel-body">
+                  <div class="wow-panel-inner">
+                    <div class="wow-location-list">
+                      <button type="button" :class="{ 'is-active': state.sort === 'popular' }" @click="setSort('popular')"><strong>Recommended</strong><span>Best match for this page</span></button>
+                      <button type="button" :class="{ 'is-active': state.sort === 'rating_desc' }" @click="setSort('rating_desc')"><strong>Highest rated</strong><span>Prioritise verified reviews</span></button>
+                      <button type="button" :class="{ 'is-active': state.sort === 'price_asc' }" @click="setSort('price_asc')"><strong>Price: low to high</strong><span>Budget-friendly first</span></button>
+                      <button type="button" :class="{ 'is-active': state.sort === 'price_desc' }" @click="setSort('price_desc')"><strong>Price: high to low</strong><span>Higher-priced offerings first</span></button>
+                      <button type="button" :class="{ 'is-active': state.sort === 'newest' }" @click="setSort('newest')"><strong>Newest</strong><span>Recently added offerings</span></button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div class="wow-more-block">
-                <h3 class="wow-more-heading">Booking</h3>
-                <div class="wow-toggle-row">
-                  <button type="button" class="wow-toggle-line" :class="{ 'is-active': state.onlineOnly }" @click="setOnlineOnly(!state.onlineOnly)">
-                    <span class="wow-toggle-text">
-                      <strong>Online only</strong>
-                      <span>Filter to remote sessions</span>
-                    </span>
-                    <span class="wow-switch" aria-hidden="true"></span>
-                  </button>
-                  <button type="button" class="wow-toggle-line" :class="{ 'is-active': state.anytime }" @click="setAnytime(!state.anytime)">
-                    <span class="wow-toggle-text">
-                      <strong>Anytime</strong>
-                      <span>Hide date-specific offerings</span>
-                    </span>
-                    <span class="wow-switch" aria-hidden="true"></span>
-                  </button>
+              <div class="wow-filter-panel" data-filter-panel="price" :class="{ 'is-open': filterSections.price }">
+                <button
+                  type="button"
+                  class="wow-filter-accordion-toggle"
+                  :class="{ 'is-open': filterSections.price }"
+                  @click="toggleFilterSection('price')"
+                  :aria-expanded="filterSections.price ? 'true' : 'false'"
+                >
+                  <span class="wow-filter-accordion-copy">
+                    <strong>Set price range</strong>
+                    <span>Keep results inside a comfortable budget.</span>
+                  </span>
+                  <i class="bi" :class="filterSections.price ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                </button>
+                <div v-show="filterSections.price" class="wow-filter-panel-body">
+                  <div class="wow-panel-inner">
+                    <div class="wow-price-grid">
+                      <div class="wow-price-boxes">
+                        <div class="wow-price-input">
+                          <label>Max price</label>
+                          <input :id="id('price-max')" type="number" min="0" step="1" :value="state.priceMax" @input="setPriceMax($event.target.value)">
+                        </div>
+                      </div>
+                      <input class="wow-range" type="range" min="10" max="500" step="5" :value="state.priceMax || 170" @input="setPriceMax($event.target.value)">
+                      <div class="wow-price-presets">
+                        <button class="wow-mini-pill" type="button" :class="{ 'is-active': state.priceMax === '50' }" @click="setPriceMax('50')">Under £50</button>
+                        <button class="wow-mini-pill" type="button" :class="{ 'is-active': state.priceMax === '100' }" @click="setPriceMax('100')">Under £100</button>
+                        <button class="wow-mini-pill" type="button" :class="{ 'is-active': state.priceMax === '170' }" @click="setPriceMax('170')">Under £170</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="wow-panel-actions">
-              <button type="button" class="wow-clear-btn" @click="clearFilterPanel('more')">Clear</button>
-              <button type="button" class="wow-done-btn" @click="activeFilterPanel = ''">Done</button>
+            <div class="wow-filter-modal-column">
+              <div class="wow-filter-panel" data-filter-panel="type" :class="{ 'is-open': filterSections.type }">
+                <button
+                  type="button"
+                  class="wow-filter-accordion-toggle"
+                  :class="{ 'is-open': filterSections.type }"
+                  @click="toggleFilterSection('type')"
+                  :aria-expanded="filterSections.type ? 'true' : 'false'"
+                >
+                  <span class="wow-filter-accordion-copy">
+                    <strong>Format:</strong>
+                    <span>Type:</span>
+                  </span>
+                  <i class="bi" :class="filterSections.type ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                </button>
+                <div v-show="filterSections.type" class="wow-filter-panel-body">
+                  <div class="wow-panel-inner">
+                    <div class="wow-pill-grid">
+                      <button class="wow-choice-pill" type="button" :class="{ 'is-active': state.type === 'therapies' }" @click="setType('therapies')">Therapy</button>
+                      <button class="wow-choice-pill" type="button" :class="{ 'is-active': state.type === 'classes' }" @click="setType('classes')">Class</button>
+                      <button class="wow-choice-pill" type="button" :class="{ 'is-active': state.type === 'events' }" @click="setType('events')">Event</button>
+                      <button class="wow-choice-pill" type="button" :class="{ 'is-active': state.type === 'retreats' }" @click="setType('retreats')">Retreat</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wow-filter-panel" data-filter-panel="rating" :class="{ 'is-open': filterSections.rating }">
+                <button
+                  type="button"
+                  class="wow-filter-accordion-toggle"
+                  :class="{ 'is-open': filterSections.rating }"
+                  @click="toggleFilterSection('rating')"
+                  :aria-expanded="filterSections.rating ? 'true' : 'false'"
+                >
+                  <span class="wow-filter-accordion-copy">
+                    <strong>Rating</strong>
+                    <span>Prioritise offerings with stronger customer feedback.</span>
+                  </span>
+                  <i class="bi" :class="filterSections.rating ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                </button>
+                <div v-show="filterSections.rating" class="wow-filter-panel-body">
+                  <div class="wow-panel-inner">
+                    <div class="wow-location-list">
+                      <button type="button" :class="{ 'is-active': !state.rating }" @click="setRating('')">
+                        <strong>Any rating</strong>
+                        <span>Show everything</span>
+                      </button>
+                      <button type="button" :class="{ 'is-active': state.rating === '4.5' }" @click="setRating('4.5')">
+                        <strong>4.5+ stars</strong>
+                        <span>Only highly rated offerings</span>
+                      </button>
+                      <button type="button" :class="{ 'is-active': state.rating === '4' }" @click="setRating('4')">
+                        <strong>4.0+ stars</strong>
+                        <span>Well-rated offerings and practitioners</span>
+                      </button>
+                      <button type="button" :class="{ 'is-active': state.rating === 'reviewed' }" @click="setRating('reviewed')">
+                        <strong>Reviewed only</strong>
+                        <span>Hide offerings with no reviews yet</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wow-filter-panel" data-filter-panel="mode" :class="{ 'is-open': filterSections.mode }">
+                <button
+                  type="button"
+                  class="wow-filter-accordion-toggle"
+                  :class="{ 'is-open': filterSections.mode }"
+                  @click="toggleFilterSection('mode')"
+                  :aria-expanded="filterSections.mode ? 'true' : 'false'"
+                >
+                  <span class="wow-filter-accordion-copy">
+                    <strong>Mode</strong>
+                    <span>Online sessions or bookings that can happen anytime.</span>
+                  </span>
+                  <i class="bi" :class="filterSections.mode ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                </button>
+                <div v-show="filterSections.mode" class="wow-filter-panel-body">
+                  <div class="wow-panel-inner">
+                    <div class="wow-toggle-row">
+                      <button type="button" class="wow-toggle-line" :class="{ 'is-active': state.onlineOnly }" @click="setOnlineOnly(!state.onlineOnly)">
+                        <span class="wow-toggle-text">
+                          <strong>Online only</strong>
+                          <span>Filter to remote sessions</span>
+                        </span>
+                        <span class="wow-switch" aria-hidden="true"></span>
+                      </button>
+                      <button type="button" class="wow-toggle-line" :class="{ 'is-active': state.anytime }" @click="setAnytime(!state.anytime)">
+                        <span class="wow-toggle-text">
+                          <strong>Anytime</strong>
+                          <span>Hide date-specific offerings</span>
+                        </span>
+                        <span class="wow-switch" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="wow-filter-modal-footer">
-        <button class="wow-clear-btn" type="button" @click="clearAllFilters">Clear all</button>
-        <button class="wow-done-btn" type="button" @click="closeMobileFilterToExpandedSearch">Show results</button>
+        <div class="wow-filter-modal-footer">
+          <button class="wow-clear-btn" type="button" @click="clearAllFilters">Clear all</button>
+          <button class="wow-done-btn" type="button" @click="applySearch(true)">Show {{ displayCount }} results</button>
+        </div>
       </div>
-    </div>
+    </teleport>
     </section>
   </div>
 </template>
@@ -1390,13 +1585,27 @@ onBeforeUnmount(() => {
 <style>
 .wow-search-filter{
   position:relative;
-  z-index:50;
+  z-index:1950;
   box-sizing:border-box;
   font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size:14px;
   line-height:1.2;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
+  overflow-x:clip;
+}
+
+.wow-search-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:1900;
+  border:0;
+  padding:0;
+  background:rgba(15, 23, 42, .28);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+  pointer-events:auto;
+  cursor:default;
 }
 
 .wow-search-filter *{
@@ -1566,6 +1775,8 @@ onBeforeUnmount(() => {
 
 .wow-search-card{
   position:relative;
+  width:100%;
+  min-width:0;
   border:1px solid rgba(207,215,227,.96);
   border-radius:60px;
   background:rgba(255,255,255,.97);
@@ -1579,6 +1790,7 @@ onBeforeUnmount(() => {
   grid-template-columns:minmax(220px, 1.15fr) minmax(220px, 1.1fr) minmax(180px, .82fr) minmax(170px, .76fr) minmax(86px, .28fr);
   gap:8px;
   min-height:86px;
+  min-width:0;
 }
 
 .wow-segment{
@@ -1622,6 +1834,7 @@ onBeforeUnmount(() => {
 }
 
 .wow-copy{
+  position:relative;
   min-width:0;
   display:block;
 }
@@ -1640,10 +1853,52 @@ onBeforeUnmount(() => {
   outline:0;
   background:transparent;
   color:#111827;
-  font-size:17px;
+  font-size:14px;
   line-height:1.2;
   letter-spacing:-.015em;
-  padding:0;
+  padding:0 34px 0 0;
+  appearance:none;
+  -webkit-appearance:none;
+}
+
+.wow-copy input[type="search"]::-webkit-search-cancel-button,
+.wow-copy input[type="search"]::-webkit-search-decoration,
+.wow-copy input[type="search"]::-webkit-search-results-button,
+.wow-copy input[type="search"]::-webkit-search-results-decoration{
+  appearance:none;
+  -webkit-appearance:none;
+  display:none;
+}
+
+.wow-inline-clear{
+  position:absolute;
+  top:calc(50% - 10px);
+  right:0;
+  width:24px;
+  height:24px;
+  border:1px solid rgba(84,148,131,.16);
+  border-radius:999px;
+  background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(241,246,244,.9));
+  color:#436c60;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transform:none;
+  box-shadow:0 6px 16px rgba(16,24,40,.08);
+  transition:transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease;
+}
+
+.wow-inline-clear:hover{
+  transform:scale(1.04);
+  border-color:rgba(84,148,131,.32);
+  background:linear-gradient(180deg, #fff, #e7f3ef);
+  color:#2f5d51;
+  box-shadow:0 10px 20px rgba(16,24,40,.12);
+}
+
+.wow-inline-clear:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(84,148,131,.18), 0 10px 20px rgba(16,24,40,.12);
 }
 
 .wow-copy input::placeholder,
@@ -1655,7 +1910,7 @@ onBeforeUnmount(() => {
   display:block;
   max-width:100%;
   color:#111827;
-  font-size:17px;
+  font-size:14px;
   line-height:1.2;
   letter-spacing:-.015em;
   white-space:nowrap;
@@ -1721,18 +1976,40 @@ onBeforeUnmount(() => {
   box-shadow:0 10px 24px rgba(16,24,40,.055);
 }
 
-.wow-chip button{
-  width:21px;
-  height:21px;
-  border:0;
+.wow-chip-remove{
+  width:22px;
+  height:22px;
+  border:1px solid rgba(84,148,131,.18);
   border-radius:999px;
-  background:rgba(17,24,39,.08);
-  color:#111827;
+  background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(241,246,244,.88));
+  color:#3f6e61;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-size:17px;
+  font-size:10px;
   line-height:1;
+  box-shadow:0 6px 14px rgba(16,24,40,.08);
+  transition:transform .16s ease, box-shadow .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+
+.wow-chip-remove svg{
+  width:12px;
+  height:12px;
+  display:block;
+  fill:currentColor;
+}
+
+.wow-chip-remove:hover{
+  transform:translateY(-1px);
+  border-color:rgba(84,148,131,.34);
+  background:linear-gradient(180deg, #fff, #e8f4f0);
+  color:#2f5d51;
+  box-shadow:0 8px 18px rgba(16,24,40,.12);
+}
+
+.wow-chip-remove:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(84,148,131,.18), 0 8px 18px rgba(16,24,40,.12);
 }
 
 .wow-filter-actions{
@@ -1743,26 +2020,43 @@ onBeforeUnmount(() => {
   margin-left:auto;
 }
 
+.wow-filter-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:450;
+  background:rgba(16,24,40,.42);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+  transition:opacity 180ms ease, visibility 180ms ease;
+}
+
+.wow-filter-backdrop.is-open{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+
 .wow-filter-drawer{
   position:fixed;
-  top:96px;
+  top:50%;
   left:50%;
-  z-index:160;
-  width:min(760px, calc(100vw - 48px));
-  max-height:calc(100vh - 112px);
-  height:calc(100vh - 112px);
+  z-index:2000;
+  width:min(680px, calc(100vw - 48px));
+  max-height:80vh;
   overflow:hidden;
   margin:0;
-  padding:20px;
-  border-radius:32px;
-  background:rgba(255,255,255,.98);
-  box-shadow:0 34px 90px rgba(16,24,40,.24);
+  border-radius:24px;
+  background:#fff;
+  box-shadow:0 28px 80px rgba(16,24,40,.22);
   display:flex;
   flex-direction:column;
   opacity:0;
   visibility:hidden;
   pointer-events:none;
-  transform:translate(-50%, -8px) scale(.985);
+  transform:translate(-50%, -50%) scale(.985);
   transition:opacity 180ms ease, visibility 180ms ease, transform 180ms ease;
 }
 
@@ -1770,17 +2064,29 @@ onBeforeUnmount(() => {
   opacity:1;
   visibility:visible;
   pointer-events:auto;
-  transform:translate(-50%, 0) scale(1);
+  transform:translate(-50%, -50%) scale(1);
+}
+
+.wow-filter-drawer-handle{
+  display:none;
+  justify-content:center;
+  padding:10px 0 0;
+}
+
+.wow-filter-drawer-handle span{
+  width:36px;
+  height:4px;
+  border-radius:999px;
+  background:#e0e4eb;
 }
 
 .wow-filter-modal-header{
-  display:none;
+  display:flex;
   align-items:flex-start;
   justify-content:space-between;
   gap:18px;
-  padding:4px 4px 16px;
-  border-bottom:1px solid #eef2f6;
-  margin-bottom:14px;
+  padding:20px 24px 16px;
+  border-bottom:1px solid #f0f0f0;
 }
 
 .wow-filter-modal-kicker{
@@ -1795,7 +2101,7 @@ onBeforeUnmount(() => {
 .wow-filter-modal-title{
   margin:0;
   color:#111827;
-  font-size:28px;
+  font-size:24px;
   font-weight:850;
   line-height:1.05;
   letter-spacing:-.045em;
@@ -1810,15 +2116,15 @@ onBeforeUnmount(() => {
 }
 
 .wow-filter-modal-footer{
-  display:none;
+  display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  margin:16px 0 0;
-  padding:16px 0 0;
-  border-top:1px solid #eef2f6;
-  background:rgba(255,255,255,.96);
-  backdrop-filter:blur(14px);
+  padding:12px 24px 20px;
+  border-top:1px solid #f0f0f0;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
 }
 
 .wow-filter-modal-close{
@@ -1841,10 +2147,19 @@ onBeforeUnmount(() => {
   max-height:none;
   overflow-y:auto;
   overflow-x:hidden;
-  padding-right:6px;
-  margin-right:-2px;
+  padding:0 24px 20px;
   scrollbar-width:thin;
   scrollbar-color:#111827 transparent;
+}
+
+.wow-filter-modal-columns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 32px;
+}
+
+.wow-filter-modal-column{
+  display:block;
 }
 
 .wow-filter-modal-body::-webkit-scrollbar{
@@ -1862,11 +2177,70 @@ onBeforeUnmount(() => {
 
 .wow-filter-panel{
   display:block;
-  gap:14px;
-  border:1px solid #e5ebf2;
-  border-radius:24px;
-  background:#fff;
-  overflow:hidden;
+  border-bottom:1px solid rgba(16,24,40,.07);
+  padding-bottom:0;
+}
+
+.wow-filter-accordion-toggle{
+  width:100%;
+  min-height:74px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 0;
+  border:0;
+  background:none;
+  color:#111827;
+  text-align:left;
+  cursor:pointer;
+  transition:color 160ms ease, transform 160ms ease;
+}
+
+.wow-filter-accordion-toggle:hover,
+.wow-filter-accordion-toggle:focus-visible{
+  outline:none;
+}
+
+.wow-filter-accordion-toggle.is-open{
+  color:#111827;
+}
+
+.wow-filter-accordion-copy{
+  min-width:0;
+  display:grid;
+  gap:4px;
+}
+
+.wow-filter-accordion-copy strong{
+  color:#101828;
+  font-size:16px;
+  font-weight:850;
+  line-height:1.15;
+  letter-spacing:-.03em;
+}
+
+.wow-filter-accordion-copy span{
+  color:#667085;
+  font-size:13px;
+  line-height:1.35;
+}
+
+.wow-filter-accordion-toggle i{
+  flex:0 0 auto;
+  color:#667085;
+  font-size:18px;
+  transition:transform 160ms ease, color 160ms ease;
+}
+
+.wow-filter-accordion-toggle.is-open i{
+  color:#2f6f60;
+  transform:rotate(180deg);
+}
+
+.wow-filter-panel-body{
+  border-top:none;
+  background:transparent;
 }
 
 .wow-panel{
@@ -1874,13 +2248,15 @@ onBeforeUnmount(() => {
   left:0;
   right:0;
   top:calc(100% + 10px);
+  width:auto;
+  margin:0;
   background:#fff;
   border:1px solid #dbe2ea;
-  border-radius:26px;
-  box-shadow:0 26px 70px rgba(16,24,40,.13);
-  z-index:40;
+  border-radius:22px;
+  box-shadow:0 14px 34px rgba(16,24,40,.08);
   overflow:hidden;
   text-align:left;
+  z-index:1950;
 }
 
 .wow-panel--calendar{
@@ -1999,11 +2375,11 @@ onBeforeUnmount(() => {
 
 .wow-location-list button{
   width:100%;
-  min-height:62px;
+  min-height:58px;
   display:grid;
   gap:3px;
   border:1px solid transparent;
-  border-radius:17px;
+  border-radius:12px;
   background:#fff;
   text-align:left;
   padding:11px 13px;
@@ -2012,8 +2388,8 @@ onBeforeUnmount(() => {
 
 .wow-location-list button:hover,
 .wow-location-list button.is-active{
-  background:#f8faf9;
-  border-color:rgba(84,148,131,.18);
+  background:#e8f5f1;
+  border-color:rgba(79,147,129,.35);
 }
 
 .wow-location-list strong{
@@ -2223,8 +2599,8 @@ onBeforeUnmount(() => {
 }
 
 .wow-toggle-line.is-active{
-  border-color:rgba(84,148,131,.28);
-  background:#f7faf9;
+  border-color:rgba(79,147,129,.28);
+  background:rgba(232,245,241,.5);
 }
 
 .wow-toggle-text strong{
@@ -2317,23 +2693,6 @@ onBeforeUnmount(() => {
   font-size:18px;
 }
 
-.wow-mobile-backdrop{
-  position:fixed;
-  inset:0;
-  z-index:120;
-  background:rgba(17,24,39,.38);
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transition:opacity 180ms ease, visibility 180ms ease;
-}
-
-.wow-mobile-backdrop.is-open{
-  opacity:1;
-  visibility:visible;
-  pointer-events:auto;
-}
-
 .wow-search-filter-shell{
   width:100%;
 }
@@ -2362,6 +2721,13 @@ onBeforeUnmount(() => {
     width:100%;
     max-width:min(850px, calc(100vw - 32px));
     margin:0;
+    padding:0;
+    border:1px solid transparent;
+    border-radius:28px;
+    background:transparent;
+    box-shadow:none;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
     transition:max-width 220ms ease, padding 220ms ease, background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, border-radius 220ms ease;
     will-change:max-width, padding, background-color, border-color, box-shadow, border-radius;
   }
@@ -2438,13 +2804,20 @@ onBeforeUnmount(() => {
   }
 
   .wow-filter-panel.is-open{
-    box-shadow:0 16px 38px rgba(16,24,40,.05);
+    padding-bottom:16px;
   }
 
   .wow-filter-drawer{
-    top:96px;
-    max-height:calc(100vh - 112px);
-    height:calc(100vh - 112px);
+    top:50%;
+    left:50%;
+    z-index:2000;
+    width:min(680px, calc(100vw - 48px));
+    max-height:80vh;
+    height:auto;
+  }
+
+  .wow-search-filter.is-filter-drawer-open{
+    z-index:1800;
   }
 }
 
@@ -2511,95 +2884,114 @@ onBeforeUnmount(() => {
   .wow-filter-drawer{
     position:fixed;
     inset:auto 0 0;
-    z-index:140;
+    z-index:2000;
     width:100%;
     max-height:88vh;
     margin:0;
-    border-radius:28px 28px 0 0;
-    overflow:auto;
+    border-radius:24px 24px 0 0;
+    overflow:hidden;
     transform:translateY(calc(100% + 20px));
-    box-shadow:0 -24px 70px rgba(16,24,40,.22);
+    box-shadow:0 -20px 60px rgba(16,24,40,.2);
   }
 
   .wow-filter-drawer.is-open{
     transform:translateY(0);
   }
 
-  .wow-filter-panel{
-    display:block;
+  .wow-filter-drawer-handle{
+    display:flex;
   }
 
   .wow-filter-modal-header,
   .wow-filter-modal-footer{
-    display:none;
+    display:flex;
+  }
+
+  .wow-filter-modal-header{
+    padding:12px 20px 12px;
+  }
+
+  .wow-filter-modal-title{
+    font-size:22px;
+  }
+
+  .wow-filter-modal-subtitle{
+    font-size:13px;
   }
 
   .wow-filter-modal-body{
     overflow-y:auto;
     overflow-x:hidden;
-    padding-right:0;
+    padding:0 20px 0;
     margin-right:0;
   }
 
-  .wow-panel{
-    position:static;
-    width:100%;
-    grid-column:1 / -1;
-    margin:0;
-    border:1px solid #dbe2ea;
-    border-radius:22px;
-    background:#fff;
-    box-shadow:0 14px 34px rgba(16,24,40,.08);
-    transform:none;
-    left:auto;
-    right:auto;
-    top:auto;
-    overflow:hidden;
+  .wow-filter-modal-columns{
+    display:block;
   }
 
-  .wow-search-main > .wow-panel{
-    align-self:stretch;
+  .wow-filter-modal-column{
+    display:block;
   }
 
-  .wow-panel::before{
-    display:none;
+  .wow-filter-panel{
+    border-bottom:1px solid rgba(16,24,40,.07);
   }
 
-  .wow-panel--calendar{
-    width:100%;
-    left:0;
-    right:0;
-    transform:none;
+  .wow-filter-panel.is-open{
+    padding-bottom:16px;
   }
 
-  .wow-panel--who{
-    width:100%;
-    left:0;
-    right:0;
+  .wow-filter-accordion-toggle{
+    min-height:74px;
+    padding:14px 0;
   }
 
-  .wow-panel.is-open{
-    border:1px solid #dbe2ea;
+  .wow-filter-accordion-copy strong{
+    font-size:16px;
+  }
+
+  .wow-filter-accordion-copy span{
+    font-size:13px;
+  }
+
+  .wow-filter-panel-body{
+    padding-bottom:16px;
   }
 
   .wow-panel-inner{
-    padding:16px;
+    padding:0;
   }
 
-  .wow-panel-head{
-    margin-bottom:12px;
+  .wow-location-list button{
+    min-height:58px;
+    border-radius:12px;
   }
 
-  .wow-panel-head strong{
-    font-size:17px;
+  .wow-price-grid{
+    gap:12px;
   }
 
-  .wow-panel-head span{
-    font-size:12px;
+  .wow-price-presets{
+    grid-template-columns:repeat(3, 1fr);
   }
 
   .wow-panel-actions{
-    margin-top:12px;
+    display:none;
+  }
+
+  .wow-toggle-line{
+    min-height:52px;
+  }
+
+  .wow-filter-modal-footer{
+    padding:12px 20px 20px;
+    gap:10px;
+  }
+
+  .wow-filter-modal-footer .wow-clear-btn,
+  .wow-filter-modal-footer .wow-done-btn{
+    height:46px;
   }
 
   .wow-segment .wow-copy{
@@ -2679,6 +3071,34 @@ onBeforeUnmount(() => {
     box-shadow:0 24px 70px rgba(16,24,40,.22);
   }
 
+  .wow-search-filter.is-mobile-expanded{
+    position:fixed;
+    top:65px;
+    left:0;
+    right:0;
+    width:100vw;
+    max-width:100vw;
+    height:calc(100dvh - 65px);
+    max-height:none;
+    z-index:1950;
+    padding:12px 0 14px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    background:rgba(0, 0, 0, .7);
+    backdrop-filter:blur(14px) saturate(140%);
+    -webkit-backdrop-filter:blur(14px) saturate(140%);
+    box-shadow:none;
+  }
+
+  .wow-search-filter.is-mobile-expanded .wow-search-card{
+    width:calc(100vw - 24px);
+    max-width:none;
+    margin:0 12px;
+    overflow:visible;
+  }
+
   .wow-search-bottom-row{
     grid-template-columns:1fr;
   }
@@ -2688,7 +3108,7 @@ onBeforeUnmount(() => {
   }
 
   .wow-filter-actions{
-    width:100%;
+    width:auto;
     justify-content:flex-end;
   }
 }
@@ -2730,8 +3150,9 @@ onBeforeUnmount(() => {
     align-items:center;
     justify-content:space-between;
     flex-wrap:nowrap;
-    width:100%;
+    width:calc(100vw - 24px);
     gap:12px;
+    margin:10px 12px 8px;
     margin-bottom:8px;
   }
 
@@ -2754,23 +3175,61 @@ onBeforeUnmount(() => {
 
   .wow-search-filter.is-mobile-expanded .wow-search-bottom-row{
     display:grid;
+    width:calc(100vw - 24px);
+    margin:0 12px;
   }
 
   .wow-search-filter.is-mobile-expanded .wow-desktop-map-controls{
     display:none !important;
+  }
+
+  .wow-search-filter.is-mobile-expanded{
+    position:fixed;
+    top:65px;
+    left:0;
+    right:0;
+    width:100vw;
+    max-width:100vw;
+    height:calc(100dvh - 65px);
+    max-height:none;
+    z-index:1950;
+    padding:12px 0 14px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    background:rgba(0, 0, 0, .7);
+    backdrop-filter:blur(14px) saturate(140%);
+    -webkit-backdrop-filter:blur(14px) saturate(140%);
+    box-shadow:none;
+  }
+
+  .wow-search-filter.is-mobile-expanded .wow-search-card{
+    width:calc(100vw - 24px);
+    max-width:none;
+    margin:0 12px;
+  }
+
+  .wow-search-filter.is-mobile-expanded .wow-search-bottom-row{
+    width:calc(100vw - 24px);
+    margin:0 12px;
   }
 }
 
 @media (max-width: 1040px){
   .wow-search-filter{
     position:fixed;
-    top:calc(env(safe-area-inset-top, 0px) + var(--wow-search-filter-mobile-top, 12px));
+    top:82px;
     left:14px;
     right:14px;
-    z-index:700;
+    z-index:1950;
     width:auto;
     max-width:none;
     margin:0;
+  }
+
+  .wow-search-filter.is-panel-open{
+    z-index:1950;
   }
 
   .wow-panel--what{
@@ -2796,16 +3255,58 @@ onBeforeUnmount(() => {
     transform:none;
   }
 
+  .wow-search-filter.is-mobile-expanded .wow-panel--where,
+  .wow-search-filter.is-mobile-expanded .wow-panel--calendar,
+  .wow-search-filter.is-mobile-expanded .wow-panel--who{
+    position:static !important;
+    top:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    left:auto !important;
+    inset:auto !important;
+    width:100% !important;
+    max-width:none;
+    grid-column:1 / -1;
+    margin:0 0 6px;
+    border:1px solid #dbe2ea;
+    border-radius:22px;
+    background:#fff;
+    box-shadow:0 14px 34px rgba(16,24,40,.08);
+    overflow:hidden;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:none;
+  }
+
   .wow-panel--what.is-open{
     display:block;
     border:1px solid #dbe2ea;
+  }
+
+  .wow-search-filter.is-mobile-expanded .wow-panel--where.is-open,
+  .wow-search-filter.is-mobile-expanded .wow-panel--calendar.is-open,
+  .wow-search-filter.is-mobile-expanded .wow-panel--who.is-open{
+    display:block;
   }
 
   .wow-panel--what .wow-panel-inner{
     padding:16px;
   }
 
+  .wow-search-filter.is-mobile-expanded .wow-panel--where .wow-panel-inner,
+  .wow-search-filter.is-mobile-expanded .wow-panel--calendar .wow-panel-inner,
+  .wow-search-filter.is-mobile-expanded .wow-panel--who .wow-panel-inner{
+    padding:16px;
+  }
+
   .wow-panel--what .wow-panel-head{
+    margin-bottom:12px;
+  }
+
+  .wow-search-filter.is-mobile-expanded .wow-panel--where .wow-panel-head,
+  .wow-search-filter.is-mobile-expanded .wow-panel--calendar .wow-panel-head,
+  .wow-search-filter.is-mobile-expanded .wow-panel--who .wow-panel-head{
     margin-bottom:12px;
   }
 
@@ -2814,7 +3315,20 @@ onBeforeUnmount(() => {
     gap:8px;
   }
 
+  .wow-search-filter.is-mobile-expanded .wow-panel--where .wow-location-list,
+  .wow-search-filter.is-mobile-expanded .wow-panel--calendar .wow-location-list,
+  .wow-search-filter.is-mobile-expanded .wow-panel--who .wow-location-list{
+    display:grid;
+    gap:8px;
+  }
+
   .wow-panel--what .wow-panel-empty{
+    padding-top:12px;
+  }
+
+  .wow-search-filter.is-mobile-expanded .wow-panel--where .wow-panel-empty,
+  .wow-search-filter.is-mobile-expanded .wow-panel--calendar .wow-panel-empty,
+  .wow-search-filter.is-mobile-expanded .wow-panel--who .wow-panel-empty{
     padding-top:12px;
   }
 }
@@ -2832,40 +3346,50 @@ onBeforeUnmount(() => {
 @media (min-width: 1041px){
   .wow-search-filter{
     top:calc(var(--wow-header-offset, 0px) + 12px);
-    z-index:180;
-    width:100%;
-    max-width:min(850px, calc(100vw - 32px));
+    z-index:1950;
+    width:min(900px, calc(100vw - 32px));
+    max-width:none;
+    padding:8px;
+    border:0;
+    border-radius:28px;
+    background:none;
+    box-shadow:none;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    transition:width 320ms cubic-bezier(.25,.46,.45,.94), padding 220ms ease, border-radius 220ms ease, transform 220ms ease;
+    will-change:width;
   }
 
   .wow-search-filter.is-scroll-collapsed{
-    max-width:300px;
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open){
-    padding:10px;
-    border:1px solid rgba(255,255,255,.75);
-    border-radius:48px;
-    background:rgba(255,255,255,.15);
-    box-shadow:0 20px 56px rgba(16,24,40,.14);
-    backdrop-filter:blur(28px) saturate(190%);
-    -webkit-backdrop-filter:blur(28px) saturate(190%);
-  }
-
-  .wow-search-filter.is-scroll-collapsed.is-scroll-expanded,
-  .wow-search-filter.is-scroll-collapsed.is-filter-open{
-    max-width:min(850px, calc(100vw - 32px));
-    padding:10px;
-    border:1px solid rgba(255,255,255,.75);
+    width:min(900px, calc(100vw - 30px));
+    padding:9px 8px;
+    border:1px solid rgba(229,231,235,.96);
     border-radius:28px;
-    background:rgba(255,255,255,.8);
+    background:rgba(255,255,255,.9);
     box-shadow:0 20px 56px rgba(16,24,40,.14);
-    backdrop-filter:blur(28px) saturate(190%);
-    -webkit-backdrop-filter:blur(28px) saturate(190%);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
   }
 
-  .wow-search-filter.is-scroll-collapsed.is-scroll-expanded .wow-search-card{
+  .wow-search-filter.is-scroll-collapsed.is-filter-open{
+    width:min(900px, calc(100vw - 30px));
+    padding:9px 8px;
+    border:1px solid rgba(229,231,235,.96);
+    border-radius:28px;
+    background:rgba(255,255,255,.9);
+    box-shadow:0 20px 56px rgba(16,24,40,.14);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+
+  .wow-search-filter.is-scroll-collapsed .wow-search-card,
+  .wow-search-filter.is-scroll-collapsed.is-filter-open .wow-search-card{
     box-shadow:var(--wow-shadow);
     border:1px solid #ddd;
+  }
+
+  .wow-search-filter.is-panel-open{
+    z-index:1950;
   }
 
   .wow-search-card,
@@ -2874,73 +3398,19 @@ onBeforeUnmount(() => {
     width:100%;
   }
 
+  .wow-search-top-row{
+    padding:0 6px;
+  }
+
   .wow-search-main{
     grid-template-columns:minmax(140px, 1fr) minmax(140px, 1fr) minmax(140px, 1fr) minmax(140px, 1fr) 58px;
   }
 
   .wow-search-filter.is-scroll-collapsed .wow-search-top-row{
     display:flex;
-    justify-content:flex-start;
-    margin-bottom:8px;
-    padding:0 6px;
-  }
-
-  .wow-search-filter.is-scroll-collapsed.is-scroll-expanded .wow-search-top-row{
     justify-content:space-between;
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-search-top-row{
-    display:none;
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-search-bottom-row,
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-segment--where,
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-segment--when,
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-segment--who,
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-submit{
-    display:none !important;
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-desktop-map-controls{
-    display:none;
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-filter-icon-btn{
-    display:none;
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-search-card{
-    border-radius:999px;
-    padding:6px;
-    margin-bottom:0;
-    box-shadow:0 16px 42px rgba(16,24,40,.13);
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-search-main{
-    grid-template-columns:1fr;
-    min-height:58px;
-    gap:0;
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-segment--what{
-    min-height:58px;
-    border-radius:999px;
-    grid-template-columns:42px minmax(0, 1fr);
-    background:transparent;
-  }
-
-  .wow-search-filter.is-scroll-collapsed:not(.is-scroll-expanded):not(.is-filter-open) .wow-segment--what:hover{
-    background:var(--wow-soft);
-  }
-
-  .wow-search-filter.is-scroll-collapsed.is-scroll-expanded .wow-search-card{
-    box-shadow:var(--wow-shadow);
-  }
-
-  .wow-search-filter.is-scroll-collapsed .wow-search-card{
-    background:transparent;
-    border-color:transparent;
-    box-shadow:none;
+    margin-bottom:10px;
+    padding:0 6px;
   }
 
   .wow-search-main > .wow-segment,

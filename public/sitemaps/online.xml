@@ -1,247 +1,171 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.weofferwellness.co.uk/online</loc>
-    <lastmod>2026-06-16T15:34:54+00:00</lastmod>
+    <loc>http://localhost/online</loc>
+    <lastmod>2026-06-23T00:33:37+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/9d-breathwork</loc>
+    <loc>http://localhost/online/9d-breathwork</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/active-resonance-technique</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/akashic-reading</loc>
+    <loc>http://localhost/online/akashic-reading</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/angelic-reiki</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/anxiety-coaching</loc>
+    <loc>http://localhost/online/anxiety-coaching</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/astrology-reading</loc>
+    <loc>http://localhost/online/astrology-reading</loc>
     <lastmod>2026-06-05T09:25:19+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/ayurveda</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/belief-coding-adhd</loc>
+    <loc>http://localhost/online/ayurveda</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/birth-chart-reading</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/blood-chemistry-analysis</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/bodytalk</loc>
+    <loc>http://localhost/online/belief-coding-adhd</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/breathwork</loc>
+    <loc>http://localhost/online/blood-chemistry-analysis</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>http://localhost/online/bodytalk</loc>
+    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
+  </url>
+  <url>
+    <loc>http://localhost/online/breathwork</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/card-reading</loc>
+    <loc>http://localhost/online/card-reading</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/class</loc>
+    <loc>http://localhost/online/class</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/coaching</loc>
-    <lastmod>2026-06-01T17:55:38+00:00</lastmod>
+    <loc>http://localhost/online/coaching</loc>
+    <lastmod>2026-06-01T17:52:45+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/corporate</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/course</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/crystal-healing</loc>
+    <loc>http://localhost/online/crystal-healing</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/distance-reiki</loc>
+    <loc>http://localhost/online/distance-reiki</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/eft</loc>
+    <loc>http://localhost/online/eft</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/eft-and-personalised-meditation</loc>
+    <loc>http://localhost/online/emotional-freedom-techniques</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/emotional-freedom-techniques</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/energy-healing</loc>
+    <loc>http://localhost/online/energy-healing</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/energy-medicine</loc>
+    <loc>http://localhost/online/focusing-sessions</loc>
+    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
+  </url>
+  <url>
+    <loc>http://localhost/online/hatha-yoga</loc>
+    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
+  </url>
+  <url>
+    <loc>http://localhost/online/health-coaching</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/facial-reflexology</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/focusing-sessions</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/full-new-moon-holistic-health-empower-hour</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/future-life-progression</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/hatha-yoga</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/health-coaching</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/holistic-therapy</loc>
+    <loc>http://localhost/online/holistic-therapy</loc>
     <lastmod>2026-06-06T10:14:39+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/homeopathy</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/hypnotherapy</loc>
+    <loc>http://localhost/online/hypnotherapy</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/incense</loc>
+    <loc>http://localhost/online/incense</loc>
     <lastmod>2026-05-31T08:34:26+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/kundalini-yoga</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/life-coaching</loc>
+    <loc>http://localhost/online/life-coaching</loc>
     <lastmod>2026-06-11T07:33:19+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/meditation</loc>
+    <loc>http://localhost/online/meditation</loc>
     <lastmod>2026-06-01T17:47:27+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/menopause</loc>
+    <loc>http://localhost/online/menopause</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/mindful-wellness-workshop</loc>
-    <lastmod>2026-03-03T10:43:57+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/mindfulness</loc>
+    <loc>http://localhost/online/mindfulness</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/movement-therapy</loc>
+    <loc>http://localhost/online/movement-therapy</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/nutrition</loc>
+    <loc>http://localhost/online/nutrition</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/pregnancy</loc>
+    <loc>http://localhost/online/rapid-transformation-therapy</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/qigong</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/rahanni-celestial-healing</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/rapid-transformation-therapy</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/reiki</loc>
+    <loc>http://localhost/online/reiki</loc>
     <lastmod>2026-06-08T13:32:42+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/reiki-healing</loc>
+    <loc>http://localhost/online/reiki-healing</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/self-discovery-and-healing</loc>
+    <loc>http://localhost/online/self-discovery-and-healing</loc>
     <lastmod>2026-06-10T10:30:51+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/shadow-work</loc>
+    <loc>http://localhost/online/shamanic-healing</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/shamanic-healing</loc>
+    <loc>http://localhost/online/silent-counselling</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/silent-counselling</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/sleep</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/sound-healing</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/theta-healing</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/wellness</loc>
+    <loc>http://localhost/online/sleep</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/womens-circle</loc>
+    <loc>http://localhost/online/sound-healing</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/womens-health</loc>
+    <loc>http://localhost/online/wellness</loc>
+    <lastmod>2026-03-03T10:43:57+00:00</lastmod>
+  </url>
+  <url>
+    <loc>http://localhost/online/womens-circle</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>http://localhost/online/womens-health</loc>
     <lastmod>2026-06-01T17:53:48+00:00</lastmod>
   </url>
   <url>
-    <loc>https://www.weofferwellness.co.uk/online/yang-tai-chi</loc>
-    <lastmod>2026-03-03T10:43:57+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://www.weofferwellness.co.uk/online/yoga</loc>
+    <loc>http://localhost/online/yoga</loc>
     <lastmod>2026-06-05T09:38:30+00:00</lastmod>
   </url>
 </urlset>

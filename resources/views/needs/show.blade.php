@@ -157,7 +157,7 @@
     @if($items->count())
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         @foreach($items as $product)
-          @include('partials.product_card_v4', [
+          @include('partials.product_card_v4_1', [
             'product' => $product,
             'preferredLocation' => $filters['location'] ?? null,
           ])

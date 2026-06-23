@@ -54,6 +54,58 @@ class SearchController extends Controller
             return redirect($to, 302);
         }
 
+        if (! $request->expectsJson()) {
+            $what = Str::squish((string) $request->query('what', ''));
+            $where = Str::squish((string) $request->query('where', ''));
+            $when = Str::squish((string) $request->query('when', ''));
+
+            $seoTitleBase = 'Search all Offerings';
+            if ($what !== '' && $where !== '') {
+                $seoTitleBase = 'Search ' . $what . ' in ' . $where;
+            } elseif ($what !== '') {
+                $seoTitleBase = 'Search ' . $what;
+            } elseif ($where !== '') {
+                $seoTitleBase = 'Search in ' . $where;
+            }
+
+            $seoDescription = $what !== ''
+                ? 'Search ' . $what . ' and browse live therapies, classes, events and workshops on We Offer Wellness.'
+                : 'Search all offerings and browse live therapies, classes, events and workshops on We Offer Wellness.';
+
+            if ($where !== '') {
+                $seoDescription = 'Search live therapies, classes, events and workshops in ' . $where . ' on We Offer Wellness.';
+            }
+
+            if ($when !== '') {
+                $seoDescription .= ' Available ' . $when . '.';
+            }
+
+            $emptyProducts = new LengthAwarePaginator(
+                collect(),
+                0,
+                24,
+                1,
+                ['path' => url()->current(), 'query' => $request->query()]
+            );
+
+            return view('search.index', [
+                'mapsKey' => env('GOOGLE_MAPS_API_KEY'),
+                'products' => $emptyProducts,
+                'resultCount' => 0,
+                'perPage' => 24,
+                'searchGridHtml' => '',
+                'searchPaginationHtml' => '',
+                'searchMapData' => [],
+                'searchAsyncBoot' => true,
+                'seo' => [
+                    'title' => $seoTitleBase . ' | We Offer Wellness®',
+                    'description' => $seoDescription,
+                    'canonical' => url()->full(),
+                    'og_type' => 'website',
+                ],
+            ]);
+        }
+
         // Server-rendered results to support Blade product card + map
         $base = Product::query()
             ->withCount('reviews')

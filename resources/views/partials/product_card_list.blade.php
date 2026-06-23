@@ -1,1 +1,1 @@
-@include('partials.product_card_v4')
+@include('partials.product_card_v4_1')

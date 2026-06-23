@@ -47,7 +47,6 @@
     }
     $durationRaw = $offering['duration'] ?? null;
     $durationMinutes = 60;
-    $durationLabel = '60 minutes';
     $categoryLabel = trim((string) data_get($offering, 'category.name', ''));
     if ($categoryLabel === '') {
         $categoryLabel = trim((string) data_get($offering, 'category.slug', ''));
@@ -57,11 +56,111 @@
     }
     if (is_numeric($durationRaw)) {
         $durationMinutes = max(15, (int) $durationRaw);
-        $durationLabel = $durationMinutes . ' minutes';
     } elseif (is_string($durationRaw) && preg_match('/(\d+(?:\.\d+)?)/', $durationRaw, $durationMatch)) {
         $durationMinutes = max(15, (int) round((float) $durationMatch[1]));
-        $durationLabel = $durationMinutes . ' minutes';
     }
+    $durationTone = static function (int $minutes): string {
+        $roundedHours = round(($minutes / 60) * 2) / 2;
+
+        if ($roundedHours > 3) {
+            return '#D94B3D';
+        }
+
+        if ($roundedHours > 1.5) {
+            return '#F0B429';
+        }
+
+        return '#6AA8FD';
+    };
+    $durationCompactLabelFormatter = static function (int $minutes): string {
+        if ($minutes < 60) {
+            return $minutes . ' MINS';
+        }
+
+        if ($minutes === 60) {
+            return '60 MIN';
+        }
+
+        $hours = round(($minutes / 60) * 2) / 2;
+        $hoursLabel = rtrim(rtrim(number_format($hours, 1, '.', ''), '0'), '.');
+
+        return $hoursLabel . ' HOUR';
+    };
+    $durationLabelFormatter = static function (int $minutes): string {
+        if ($minutes < 60) {
+            return $minutes . ' Minutes';
+        }
+
+        if ($minutes === 60) {
+            return '60 Minutes';
+        }
+
+        $hours = round(($minutes / 60) * 2) / 2;
+        $hoursLabel = rtrim(rtrim(number_format($hours, 1, '.', ''), '0'), '.');
+
+        return $hoursLabel . ' Hours';
+    };
+    $durationLabel = $durationLabelFormatter($durationMinutes);
+    $durationCompactLabel = $durationCompactLabelFormatter($durationMinutes);
+    $renderDurationIconSvg = static function (int $minutes) use ($durationCompactLabelFormatter, $durationTone): string {
+        $label = $durationCompactLabelFormatter($minutes);
+        [$primary, $secondary] = array_pad(preg_split('/\s+/', $label, 2) ?: [], 2, '');
+        $accent = $durationTone($minutes);
+
+        return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 505.4 521" role="img" aria-hidden="true" focusable="false" style="--timer-accent: {$accent};">
+  <style>
+    .timer-accent { fill: var(--timer-accent, #69a6fa); }
+    .timer-ink { fill: #040506; }
+    .time-count,
+    .time-label {
+      font-family: VarelaRound-Regular, 'Varela Round', sans-serif;
+      fill: #040506;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      alignment-baseline: middle;
+      paint-order: stroke fill;
+      stroke: #ffffff;
+      stroke-width: 2px;
+    }
+    .time-count {
+      font-size: 160px;
+      font-weight: 400;
+    }
+    .time-label {
+      font-size: 92px;
+      font-weight: 700;
+      letter-spacing: 4px;
+    }
+  </style>
+  <g>
+    <g>
+      <path class="timer-ink" d="M229.24,474.13c-31.12-5.29-61.37-15.41-88.11-33.13-40.48-26.83-70.64-65.62-84.69-112.34-13.42-44.65-12.13-92.91,3.78-136.65,15.06-41.42,43.48-75.73,81.32-97.61,5.21-3.02,11.5-1.73,14.19,4.05l6.22,13.38,28.29-64.58-61.61-16.83,7.19,18.7c3.93,6.92.61,13.19-5.7,16.75-16.46,9.3-31.35,20.73-44.9,33.96-44.29,43.24-66.85,102.4-67.36,164.06-.48,57.83,18.22,113.43,56.14,157.29,39.03,45.14,87.31,71.91,146.2,81.5l4.23,2.46c1.2,3.78,1.99,8.99-.38,12-3.61,4.57-7.4,3.87-12.27,3.06-45.54-7.61-86.63-27.41-121.63-57.21C34.9,415.93,1.55,347.77.07,274.93c-.67-32.85,3.19-64.26,14.03-95.09,18.89-53.73,54.73-99.03,103.59-128.38l-9.6-24.72c-1.53-3.95.42-9.98,3.02-13.14,1.94-2.35,6.96-5.66,10.89-4.59l76.96,20.95c3.99,1.09,7.73,2.9,9.43,5.55,2.21,3.45,3.06,8.31,1.43,12.03l-36.95,83.9c-2.05,4.67-4.49,8.04-9.39,8.57-3.91.43-9.2-1.33-10.91-5.41l-8.57-20.39c-76.88,47.79-98.37,155.77-60.62,234.58,22.95,47.91,65.08,83.33,115.65,99.15,12.06,3.77,23.66,5.62,35.54,8.47,4.89,1.17,6.5,8.22,5.42,11.53-1.59,4.9-5.98,6.97-10.73,6.17Z"/>
+      <path class="timer-accent" d="M229.24,474.13l-3,23.78c-.35,2.56-1.05,5.44-1.82,7.23l-4.23-2.46c-58.89-9.59-107.17-36.36-146.2-81.5-37.92-43.86-56.62-99.46-56.14-157.29.52-61.66,23.07-120.82,67.36-164.06,13.55-13.23,28.43-24.66,44.9-33.96,6.31-3.56,9.63-9.83,5.7-16.75l-7.19-18.7,61.61,16.83-28.29,64.58-6.22-13.38c-2.69-5.79-8.97-7.07-14.19-4.05-37.83,21.88-66.26,56.19-81.32,97.61-15.91,43.75-17.2,92-3.78,136.65,14.05,46.72,44.21,85.52,84.69,112.34,26.74,17.72,56.99,27.84,88.11,33.13Z"/>
+    </g>
+    <g>
+      <path class="timer-ink" d="M285.74,506.04l5.54-3.3c85.41-12.6,154.15-75.52,182.75-156.09,25.72-72.43,15.07-155.43-29.26-218.2-6.84-9.12-13.24-16.94-21.54-25.39l-20.75,21.1c50.4,51.57,66.3,126.83,48.96,195.83-4.18,16.65-10.54,31.71-18.42,46.61-30.99,58.65-87.61,98.27-152.72,107.65-4.98.72-9.89-1.6-11.01-7.05-.69-3.35,1.24-10.3,6.36-10.98,68.05-9.06,125.58-54.23,150.88-118.1,9.71-24.52,14.61-49.57,13.8-76.28-1.53-50.37-18.33-93.55-54.32-128.75-4.6-4.5-5.69-12.68-1.04-17.41l27.26-27.73c3.67-3.74,8.16-5.71,13.35-5.18,4.27.44,7.28,3.65,10.57,7.21,15.69,16.93,29.06,34.68,39.65,55.35,10.81,21.09,19.02,42.54,23.82,66.1,7.58,37.17,8.01,75.42-.51,112.57-22.65,98.67-101.59,180.23-202.83,196.86-4.51.74-8.07-1.56-10.16-4.49-2.3-3.22.12-7.51-.37-10.33Z"/>
+      <path class="timer-accent" d="M285.74,506.04l-5.44-31.79c65.11-9.39,121.73-49,152.72-107.65,7.87-14.9,14.23-29.96,18.42-46.61,17.34-69,1.44-144.27-48.96-195.83l20.75-21.1c8.3,8.44,14.7,16.26,21.54,25.39,44.32,62.78,54.98,145.77,29.26,218.2-28.61,80.57-97.35,143.49-182.75,156.09l-5.54,3.3Z"/>
+    </g>
+    <path class="timer-ink" d="M255.72,518.2c-8.5.13-13.59-6.97-14.01-14.01-.44-7.39,4.4-14.43,12.66-15.21s14.49,6.01,14.97,13.45-4.65,15.63-13.63,15.76Z"/>
+    <g>
+      <g>
+        <path class="timer-ink" d="M376.16,102.36c-3.58,5.6-10.51,10.58-16.75,6.15-12.82-9.11-26.22-16.97-40.64-23.12-7.06-3.01-7.67-10.71-5.03-16.92l17.83-41.96c4.48-7.64,11.9-8.44,19.3-5.3,16.59,7.03,32.12,15.26,45.23,27.71,6.23,5.92,5.26,14.04.94,20.8l-20.88,32.64ZM363.22,89.28l18.38-28.74c-10.8-9.01-22.98-16.29-36.2-21.27l-12.89,32.28c11.39,5.23,20.94,10.71,30.7,17.72Z"/>
+        <path class="timer-accent" d="M363.22,89.28c-9.76-7.02-19.32-12.5-30.7-17.72l12.89-32.28c13.21,4.98,25.4,12.26,36.2,21.27l-18.38,28.74Z"/>
+      </g>
+      <g>
+        <path class="timer-ink" d="M298.33,64.96c-4.43,21.03-14.76,8.33-50.07,10.16-7.36.38-10.3-6.07-10.77-12.24l-3.53-45.99c-.54-7.08,3.96-13.07,10.65-14.62,16.55-3.84,32.65-2.36,49.18.98,4.51.91,8.62,2.22,11.15,5.48,2.67,3.44,3.56,7.92,2.62,12.36l-9.24,43.87ZM281.51,57.52l7.57-36.01c-12.59-2.49-24.13-3.11-36.84-1.22l2.88,35.53c9.26.05,17.63.63,26.39,1.71Z"/>
+        <path class="timer-accent" d="M281.51,57.52c-8.76-1.08-17.13-1.66-26.39-1.71l-2.88-35.53c12.71-1.88,24.25-1.27,36.84,1.22l-7.57,36.01Z"/>
+      </g>
+    </g>
+  </g>
+  <g id="timer-text" aria-label="{$label}">
+    <text id="timer-number" class="time-count timer-ink" x="50%" y="45%">{$primary}</text>
+    <text id="timer-unit" class="time-label timer-ink" x="50%" y="65%">{$secondary}</text>
+  </g>
+</svg>
+SVG;
+    };
     $galleryImages = is_array($offering['images'] ?? null) ? array_values(array_filter($offering['images'])) : [];
     $primaryImage = trim((string) ($offering['image'] ?? ''));
     if ($primaryImage !== '' && ! in_array($primaryImage, $galleryImages, true)) {
@@ -322,16 +421,46 @@
 
     $bookingSummaryLabel = $bookingFlow === 'live' ? 'Live availability' : 'Flexible booking';
     $priceSummary = $priceMin !== $priceMax ? ('From £' . number_format($priceMin, 2)) : ('£' . number_format($price, 2));
-    $durationIconMap = [
-        30 => asset('images/offering-duration-icons/duration-30.png'),
-        45 => asset('images/offering-duration-icons/duration-45.png'),
-        60 => asset('images/offering-duration-icons/duration-60.png'),
-    ];
-    $durationIconUrl = $durationIconMap[$durationMinutes] ?? null;
+    $formatOnlineIconSvg = <<<'SVG'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720.73 720.73" role="img" aria-hidden="true" focusable="false">
+  <defs>
+    <style>
+      .cls-1 { fill: #000000; }
+      .cls-2 { fill: #a7cb63; }
+      .cls-3 { fill: #6baafa; }
+    </style>
+  </defs>
+  <path class="cls-1" d="M720.73,360.37c0,199.03-161.34,360.37-360.37,360.37S0,559.39,0,360.37,161.34,0,360.37,0s360.37,161.34,360.37,360.37ZM263.58,123.78c27.9,8.64,54.54,12.32,82.31,13.46V30.78c-22.41,5.46-41.8,24.76-54.89,43.29-10.9,15.43-20.02,31.63-27.43,49.71ZM398.76,43.11c-7.57-5.28-14.9-9.6-24.52-12.16l.06,106.42c28.55-1.03,55.12-4.46,82.47-12.3-13.51-31.21-31.96-61.16-58.01-81.96ZM237.09,114.39c12.33-27.67,26.41-51.56,45.56-74.84-15.52,2.12-28.77,7.53-42.81,12.31-20.02,8.46-38.75,18.05-58.12,30.16,16.28,14.41,34.78,24.69,55.37,32.37ZM492.04,112.51c17.44-7.81,33.79-16.75,47.5-30.44-31.99-20.48-65.85-35.43-102.94-42.78,20.01,23.54,34.23,48.41,46.16,75.81,3.35-.26,6.04-1.14,9.28-2.59ZM156.8,251.12c9.45,2.97,15.35,13.69,24.04,10.82,15.44-5.1,7.88-46.83,36.09-55.05l19.31-5.62c8.04-2.34,14.83-6.57,19.56-13.46,6.81-9.91,9.87-21.61,7.65-33.86-39.27-10.77-76.32-26.11-106.34-54.94-43.22,34.24-75.92,77.82-97.95,127.92,10.63,19.41,19.19,38.82,25.99,59.59,3.4,10.37,9.67,18.31,16.7,26.5,12.67,12.99,25.55,24.64,39.29,36.77l9.49-.29c-4.48-12.47-10.42-21.74-18.23-31.13l-13.19-15.86c-7.01-8.42-6.54-23.94-4.46-35.85,2.89-16.52,27.11-20.24,42.04-15.55ZM521.81,273.48l-12.55-6.99c-5.91-3.29-12.74-4.83-19.43-2.59l-39.57,13.26c-30.58,10.25-38.3,44.3-26.73,72.8l208.69-.03c3.41-9.86,1.58-18.92-1.17-28.19l-7.08-23.85c-1.64-5.52-.39-11.21,3.32-15.82,8.85-11.02,35.02-6.69,51.72-3.28-17.64-70.22-57.99-134.24-115.17-179.27-20.13,19.66-44.01,33.13-70.49,43.37l5.71,22.9c2.5,9-2.07,17.66-11.01,20.34l-24.53,7.35c-3.42,1.02-5.08,4.04-5.37,7.44l-1.17,14.05c-.77,9.18-14.7,13.72-17.97,20.83-1.97,4.29.6,7.8,4.18,8.65,24.35,5.77,40.88-14.17,65.94-6.64,10.19,3.06,19.92,8.14,28.18,14.52,5.73,4.43,5.63,13.01,2.14,17.69-4.14,5.55-11.19,7.07-17.64,3.47ZM427.19,210.2c3.02-2.3,4.36-5.29,4.2-9.18-.61-14.9,7.47-27.78,21.46-32.23l17.17-5.45-3.95-10.88c-30.52,8.45-60.57,12.74-91.83,13.77l.03,183.64,20.54.08c-8.79-32.3-1.61-66.97,25.98-87.07-15.72-16.48-11.67-38.91,6.4-52.68ZM141.44,277.91c-3.04,4.2.56,10.93,3.66,13.58l8.77,10.52c11.95,13.85,20.37,29.53,25.41,47.92h166.61s0-183.66,0-183.66c-18.3-1.14-36.34-2.95-55.16-5.87.38,18.07-5.22,34.73-16.45,47.79-20.2,23.49-40.87,18.7-49.75,25.48-6.86,5.23-5.91,46.07-36.84,54.13-13.03,3.39-25.19.37-34.98-7.77-2.6-2.16-8.52-5.92-11.28-2.11ZM84.7,333.59c-12.54-12.38-21.33-26.42-26.75-42.75-3.28-9.89-6.89-19.3-11.53-28.46-9.33,29.21-14.59,57.52-15.83,87.54h70.64s-16.54-16.34-16.54-16.34ZM690.02,349.96c-.61-14.86-2.08-28.58-4.84-42.72l-32.12-5.21,6.59,22.38c1.34,8.53,1.66,16.2.51,25.42l29.85.13ZM150.81,507.53c-.71-5.16-3.01-9.84-6.46-12.99l-14.15-12.92c-13.04-12.64-20.2-29.07-20.75-47.33-.92-20.34,5.05-39.76,18.66-55.59l-97.71-.02c4.07,96.78,48.03,181.09,123.13,240.5,2.14.94,4.1.44,5.55-1.02,6.75-6.79,13.57-12.31,21.98-18.52-13.08-16.76-22.47-35.57-25.35-56.49l-4.91-35.61ZM277.92,535.37c-10.32,7.45-16.5,17.24-17.21,29.54,28.03-7.29,55.39-10.62,85.15-11.7l.05-174.56-119.18.05,21.02,21.38c3.86,4.89,8.9,7.76,14.93,9.14,8.8,2.02,17.24,4.19,25.61,7.21,17.66,6.36,28.38,21.58,28.87,40.65.8,31.04-14.36,59.2-39.23,78.29ZM491.61,433.41c.08-6.47-.83-12.14-2.52-17.55l-21.48-2.65c-23.79-2.93-44.6-15-58.68-34.55l-34.71.11-.02,174.3c36.19,1.48,71.01,6.62,105.59,17.83,6.68-14.91,11.8-29,15.81-43.77-3.09-9.84-4.94-19.16-4.81-29.28l.81-64.43ZM533.52,524.9c20.22-3.65,39.82-27.74,49.8-45.56,5.66-10.12,8.65-20.77,9.59-32.44.83-11.62,2.55-22.84,7.8-33.24l17.66-34.99h-169.94c8.32,5.39,17.82,7.07,27.44,8.38l19.27,2.62c18.74,2.55,23.73,24.51,23.45,43.25l-.9,59.98c-.12,7.82.69,15.51,2.18,22.9,1.28,6.32,6.45,10.41,13.66,9.11ZM517.09,549.74l-11.82,31.57c22.14,9.78,41.79,22.55,59.54,39.92,43.23-33.48,76.71-75.84,98.56-124.82,16.27-37.36,24.91-76.54,26.81-117.7h-41.69s-19.93,38.87-19.93,38.87c-5.06,9.94-8.04,20.09-8.87,31.34-.99,13.38-4.11,25.83-10.03,37.87-9.08,18.44-21.67,34.26-37.29,47.55s-34.34,20.77-55.29,15.41ZM235.87,550.28c2.13-10.97,8.09-20.18,16.05-27.33l14.8-13.28c14.69-13.18,23.71-31.86,23.43-51.62l22.75-6.07c9.84-2.63,17.42-7.37,24.55-14.59l21.77-22.05c16.19-16.4,50.02-18.15,63.29,1.93,12.3,18.6,12.91,46.56-3.56,61.72l-14.55,13.4c-8.29,7.64-12.76,17.3-14.39,28.61l-5.29,36.76c-2.45,16.99-10.68,32.84-22.2,44.87l-26-11.29-4.68-24.15ZM345.87,690.2l.03-108.24c-28.83.95-56.68,4.8-84.17,12.53,7.99,18.1,16.68,34.39,27.65,49.91,13.64,19.3,33.28,39.92,56.49,45.8ZM433.42,650.88c13.47-16.61,24.51-33.63,34.2-53.55-30.54-9.82-61.5-14.24-93.46-15.37l.09,109.2c24.08-4.4,43.81-22.59,59.18-40.28ZM285.18,682.27c-21.16-23.05-35.88-49.17-49.6-78.62-20.3,7.53-38.81,18.27-54.33,32.68-.46,1.58,1.63,4.04,3.29,5.06,31.1,19.26,64.51,33.5,99.77,41.69l.87-.82ZM536.79,640.92c1.01-.63,2.48-1.76,2.24-2.53l-.85-2.78c-13.53-11.87-28.42-21.24-45.31-28.37-13.17,27.82-29.81,52.25-50.59,74.34,34.39-8.54,65.3-22.47,94.51-40.66ZM285.78,682.74l-.58.99.58-.99Z"/>
+  <path class="cls-3" d="M491.61,433.41l-.81,64.43c-.13,10.12,1.72,19.44,4.81,29.28-4.01,14.78-9.13,28.86-15.81,43.77-34.58-11.21-69.4-16.35-105.59-17.83l.02-174.3,34.71-.11c14.08,19.55,34.89,31.62,58.68,34.55l21.48,2.65c1.69,5.42,2.6,11.08,2.52,17.55Z"/>
+  <path class="cls-2" d="M236.87,550.28l-4.68,24.15-26,11.29c-11.51-12.03-19.75-27.87-22.2-44.87l-5.29-36.76c-1.63-11.31-6.09-20.97-14.39-28.61l-14.55-13.4c-16.46-15.16-15.85-43.12-3.56-61.72,13.27-20.08,47.1-18.32,63.29-1.93l21.77,22.05c7.13,7.22,14.71,11.96,24.55,14.59l22.75,6.07c7.84,2.09,12.47,8.47,12.59,16.92.28,19.76-8.74,38.43-23.43,51.62l-14.8,13.28c-7.96,7.14-13.92,16.35-16.05,27.33Z"/>
+  <path class="cls-3" d="M150.81,507.53l4.91,35.61c2.88,20.92,12.26,39.73,25.35,56.49-8.41,6.21-15.23,11.73-21.98,18.52-1.45,1.46-3.41,1.96-5.55,1.02-75.1-59.41-119.06-143.72-123.13-240.5l97.71.02c-13.6,15.83-19.58,35.25-18.66,55.59.54,18.26,7.71,34.69,20.75,47.33l14.15,12.92c3.45,3.15,5.75,7.83,6.46,12.99Z"/>
+  <path class="cls-3" d="M517.09,549.74c20.95,5.36,39.13-1.66,55.29-15.41s28.21-29.11,37.29-47.55c5.92-12.03,9.05-24.48,10.03-37.87.83-11.25,3.81-21.4,8.87-31.34l19.93-38.86h41.69c-1.9,41.15-10.54,80.33-26.81,117.69-21.86,48.99-55.34,91.34-98.56,124.82-17.75-17.37-37.4-30.14-59.54-39.92l11.82-31.57Z"/>
+  <g>
+    <path class="cls-2" d="M521.81,273.48c6.45,3.59,13.51,2.07,17.64-3.47,3.49-4.68,3.59-13.26-2.14-17.69-8.26-6.38-17.98-11.45-28.18-14.52-25.06-7.53-41.59,12.41-65.94,6.64-3.59-.85-6.15-4.37-4.18-8.65,3.27-7.11,17.2-11.65,17.97-20.83l1.17-14.05c.28-3.4,1.95-6.41,5.37-7.44l24.53-7.35c8.94-2.68,13.51-11.33,11.01-20.34l-5.71-22.9c26.48-10.23,50.36-23.7,70.49-43.37,57.18,45.03,97.53,109.05,115.17,179.27-16.71-3.41-42.87-7.74-51.72,3.28-3.71,4.62-4.96,10.3-3.32,15.82l7.08,23.85c2.75,9.26,4.58,18.33,1.17,28.19l-208.69.03c-11.57-28.5-3.86-62.55,26.73-72.8l39.57-13.26c6.69-2.24,13.52-.71,19.43,2.59l12.55,6.99Z"/>
+    <path class="cls-2" d="M533.52,524.9c-7.21,1.3-12.38-2.78-13.66-9.11-1.49-7.39-2.3-15.08-2.18-22.9l.9-59.98c.28-18.75-4.71-40.7-23.45-43.25l-19.27-2.62c-9.61-1.31-19.12-2.99-27.44-8.37h169.94s-17.66,34.99-17.66,34.99c-5.25,10.4-6.97,21.62-7.8,33.24-.94,11.67-3.93,22.32-9.59,32.44-9.98,17.83-29.58,41.91-49.8,45.56Z"/>
+  </g>
+  <path class="cls-3" d="M277.92,535.37c24.87-19.1,40.02-47.25,39.23-78.29-.49-19.07-11.2-34.29-28.87-40.65-8.37-3.01-16.81-5.19-25.61-7.21-6.03-1.38-11.07-4.25-14.93-9.14l-21.02-21.38,119.18-.05-.05,174.56c-29.76,1.08-57.12,4.41-85.15,11.7.71-12.3,6.89-22.09,17.21-29.54Z"/>
+  <path class="cls-3" d="M433.42,650.88c-15.36,17.69-35.1,35.87-59.18,40.28l-.09-109.2c31.96,1.13,62.92,5.55,93.46,15.37-9.69,19.92-20.73,36.93-34.2,53.55Z"/>
+  <path class="cls-3" d="M345.87,690.2c-23.21-5.88-42.85-26.5-56.49-45.8-10.97-15.52-19.66-31.81-27.65-49.91,27.49-7.73,55.34-11.58,84.17-12.53l-.03,108.24Z"/>
+  <path class="cls-3" d="M536.79,640.92c-29.21,18.19-60.11,32.12-94.51,40.66,20.78-22.09,37.42-46.52,50.59-74.34,16.89,7.13,31.78,16.5,45.31,28.37l.85,2.78c.24.77-1.24,1.91-2.24,2.53Z"/>
+  <path class="cls-3" d="M84.7,333.59l16.54,16.34H30.6c1.24-30.02,6.5-58.33,15.83-87.54,4.64,9.16,8.24,18.57,11.53,28.46,5.42,16.33,14.21,30.36,26.75,42.75Z"/>
+  <path class="cls-3" d="M690.02,349.96l-29.85-.13c1.15-9.23.83-16.89-.51-25.42l-6.59-22.38,32.12,5.21c2.75,14.14,4.22,27.86,4.84,42.72Z"/>
+  <path class="cls-3" d="M284.31,683.09c-35.26-8.19-68.67-22.44-99.77-41.69-1.66-1.03-3.75-3.48-3.29-5.06,15.52-14.4,34.03-25.15,54.33-32.68,13.72,29.45,28.44,55.56,49.6,78.62l.6.47-.58.99-.89-.64Z"/>
+  <g>
+    <path class="cls-3" d="M141.44,277.91c2.76-3.81,8.67-.05,11.28,2.11,9.79,8.14,21.96,11.16,34.98,7.77,30.93-8.06,29.98-48.9,36.84-54.13,8.89-6.78,29.55-1.99,49.75-25.48,11.23-13.06,16.82-29.72,16.45-47.79,18.83,2.93,36.87,4.73,55.16,5.87v183.68s-166.62-.01-166.62-.01c-5.04-18.38-13.46-34.07-25.41-47.92l-8.77-10.52c-3.09-2.65-6.7-9.38-3.66-13.58Z"/>
+    <path class="cls-2" d="M156.8,251.12c-14.93-4.69-39.15-.98-42.04,15.55-2.08,11.91-2.55,27.42,4.46,35.85l13.19,15.86c7.81,9.39,13.75,18.66,18.23,31.13l-9.49.29c-13.74-12.13-26.62-23.78-39.29-36.77-7.03-8.19-13.3-16.12-16.7-26.5-6.8-20.76-15.36-40.18-25.99-59.59,22.02-50.1,54.73-93.68,97.95-127.92,30.02,28.83,67.07,44.17,106.34,54.94,2.22,12.25-.84,23.95-7.65,33.86-4.73,6.88-11.52,11.12-19.56,13.46l-19.31,5.62c-28.21,8.21-20.65,49.95-36.09,55.05-8.7,2.87-14.59-7.85-24.04-10.82Z"/>
+    <path class="cls-3" d="M427.19,210.2c-18.06,13.77-22.12,36.2-6.4,52.68-27.59,20.1-34.77,54.77-25.98,87.07l-20.54-.08-.03-183.64c31.26-1.03,61.31-5.32,91.83-13.77l3.95,10.88-17.17,5.45c-13.99,4.45-22.07,17.33-21.46,32.23.16,3.89-1.18,6.88-4.2,9.18Z"/>
+    <path class="cls-3" d="M398.76,43.11c26.04,20.8,44.49,50.75,58.01,81.96-27.35,7.84-53.92,11.27-82.47,12.3l-.06-106.42c9.62,2.56,16.95,6.88,24.52,12.16Z"/>
+    <path class="cls-3" d="M263.58,123.78c7.41-18.08,16.53-34.28,27.43-49.71,13.08-18.53,32.48-37.83,54.89-43.29v106.46c-27.77-1.15-54.41-4.83-82.32-13.46Z"/>
+    <path class="cls-3" d="M492.04,112.51c-3.24,1.45-5.93,2.34-9.28,2.59-11.93-27.41-26.15-52.27-46.16-75.81,37.09,7.35,70.95,22.3,102.94,42.78-13.7,13.7-30.06,22.63-47.5,30.44Z"/>
+    <path class="cls-3" d="M237.09,114.39c-20.59-7.68-39.09-17.95-55.37-32.37,19.36-12.12,38.1-21.7,58.12-30.16,14.05-4.78,27.29-10.2,42.81-12.31-19.16,23.29-33.23,47.17-45.56,74.84Z"/>
+  </g>
+</svg>
+SVG;
     $formatIconUrl = null;
     $formatLabelLower = strtolower($formatLabel);
     if ((str_contains($formatLabelLower, 'online') || $onlineOnlyLocation) && ! str_contains($formatLabelLower, '&')) {
-        $formatIconUrl = asset('images/offering-format-icons/format-online.png');
+        $formatIconUrl = null;
     } elseif ((str_contains($formatLabelLower, 'in-person') || str_contains($formatLabelLower, 'in person')) && ! str_contains($formatLabelLower, '&')) {
         $formatIconUrl = asset('images/offering-format-icons/format-inperson.png');
     } elseif (count($physicalLocations) > 0 && ! $hasOnlineLocation) {
@@ -343,14 +472,12 @@
     }
     $watermark = implode('<br>', array_map(fn ($word) => e($word), $watermarkWords));
 
-    $quickInfoIconSvg = static function (string $icon) use ($durationIconUrl, $formatIconUrl): string {
+    $quickInfoIconSvg = static function (string $icon) use ($formatIconUrl, $formatOnlineIconSvg): string {
         return match ($icon) {
-            'clock' => $durationIconUrl !== null
-                ? '<img src="' . e($durationIconUrl) . '" alt="" aria-hidden="true" loading="lazy" decoding="async">'
-                : '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.8"></path><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+            'clock' => '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.8"></path><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
             'format' => $formatIconUrl !== null
                 ? '<img src="' . e($formatIconUrl) . '" alt="" aria-hidden="true" loading="lazy" decoding="async">'
-                : '<svg viewBox="0 0 24 24" fill="none"><path d="M12 12.2a3.9 3.9 0 1 0 0-7.8 3.9 3.9 0 0 0 0 7.8Z" fill="currentColor"></path><path d="M5.3 20.1c.6-3.5 3.5-5.6 6.7-5.6s6.1 2.1 6.7 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+                : $formatOnlineIconSvg,
             'person' => '<svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>',
             'online' => '<svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>',
             'booking' => '<svg viewBox="0 0 24 24" fill="none"><path d="M7 3v3M17 3v3M4.5 9h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="m9 15 2 2 4-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
@@ -643,12 +770,12 @@
             'icon' => 'delivery',
         ],
     ];
-    $quickInfoMobile = array_map(static function (array $card) use ($durationMinutes): array {
+    $quickInfoMobile = array_map(static function (array $card) use ($durationCompactLabel): array {
         $value = (string) ($card['value'] ?? '');
 
         switch ((string) ($card['label'] ?? '')) {
             case 'Duration':
-                $value = $durationMinutes . ' mins';
+                $value = $durationCompactLabel;
                 break;
             case 'Booking':
                 $value = 'Availability';
@@ -1561,7 +1688,7 @@
         display: block;
         object-fit: contain;
     }
-    .wow-v3-offering-page .quick-info-icon--duration img {
+    .wow-v3-offering-page .quick-info-icon--duration svg {
         width: 60px;
         height: 60px;
     }
@@ -2578,10 +2705,17 @@
         .wow-v3-offering-page .quick-info-card {
             height: auto !important;
             min-height: auto;
-            padding: 10px 8px;
+            border: none;
+            padding: 0;
             gap: 0;
             border-radius: var(--radius);
-            background: #fff;
+            background: none;
+            box-shadow: none;
+        }
+        .wow-v3-offering-page .quick-info-card:hover {
+            transform: none;
+            border-color: transparent;
+            box-shadow: none;
         }
         .wow-v3-offering-page .quick-info-card small {
             display: none;
@@ -2591,23 +2725,23 @@
             line-height: 1.15;
         }
         .wow-v3-offering-page .quick-info-icon {
-            width: 50px !important;
-            height: 50px !important;
+            width: 65px !important;
+            height: 65px !important;
         }
         .wow-v3-offering-page .quick-info-icon--duration,
         .wow-v3-offering-page .quick-info-icon--format {
-            width: 50px !important;
-            height: 50px !important;
+            width: 65px !important;
+            height: 65px !important;
         }
         .wow-v3-offering-page .quick-info-icon svg,
         .wow-v3-offering-page .quick-info-icon img {
-            width: 50px !important;
-            height: 50px !important;
+            width: 65px !important;
+            height: 65px !important;
         }
-        .wow-v3-offering-page .quick-info-icon--duration img,
+        .wow-v3-offering-page .quick-info-icon--duration svg,
         .wow-v3-offering-page .quick-info-icon--format img {
-            width: 50px !important;
-            height: 50px !important;
+            width: 65px !important;
+            height: 65px !important;
         }
         .wow-v3-offering-page .quick-info-card small,
         .wow-v3-offering-page .quick-info-card strong {
@@ -2743,13 +2877,13 @@
                     <div class="hero-meta">
                         @foreach($quickInfo as $card)
                             @php
-                                $isDurationImage = ($card['label'] ?? '') === 'Duration' && ! empty($durationIconUrl);
+                                $isDurationCard = ($card['label'] ?? '') === 'Duration';
                                 $isFormatImage = ($card['label'] ?? '') === 'Format' && ! empty($formatIconUrl);
                             @endphp
-                            <article class="quick-info-card {{ ($isDurationImage || $isFormatImage) ? 'quick-info-card--image' : '' }}">
-                                <span class="quick-info-icon {{ $isDurationImage ? 'quick-info-icon--duration' : '' }} {{ $isFormatImage ? 'quick-info-icon--format' : '' }}" aria-hidden="true">
-                                    @if($isDurationImage)
-                                        <img src="{{ $durationIconUrl }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                            <article class="quick-info-card {{ $isFormatImage ? 'quick-info-card--image' : '' }}">
+                                <span class="quick-info-icon {{ $isDurationCard ? 'quick-info-icon--duration' : '' }} {{ $isFormatImage ? 'quick-info-icon--format' : '' }}" aria-hidden="true">
+                                    @if($isDurationCard)
+                                        {!! $renderDurationIconSvg($durationMinutes) !!}
                                     @elseif($isFormatImage)
                                         <img src="{{ $formatIconUrl }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
                                     @else
@@ -2982,7 +3116,9 @@
                 <div class="quick-info-grid" aria-label="Therapy quick information">
                     @foreach($quickInfoMobile as $card)
                         <article class="quick-info-card">
-                            <span class="quick-info-icon" aria-hidden="true">{!! $quickInfoIconSvg($card['icon']) !!}</span>
+                            <span class="quick-info-icon {{ ($card['label'] ?? '') === 'Duration' ? 'quick-info-icon--duration' : '' }}" aria-hidden="true">
+                                {!! ($card['label'] ?? '') === 'Duration' ? $renderDurationIconSvg($durationMinutes) : $quickInfoIconSvg($card['icon']) !!}
+                            </span>
                             <div>
                                 <small>{{ $card['label'] }}</small>
                                 <strong>{{ $card['value'] }}</strong>

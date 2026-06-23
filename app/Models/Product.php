@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -179,6 +181,147 @@ class Product extends Model
      */
     public function getLocations()
     {
+        try {
+            if (Schema::hasTable('vendor_locations')) {
+                $select = array_values(array_filter([
+                    'label',
+                    'city',
+                    'county',
+                    'country',
+                    'formatted_address',
+                    'line1',
+                    'line2',
+                    'street_address',
+                    'address_line2',
+                    'postcode',
+                ]));
+
+                $locationQuery = DB::table('vendor_locations')->orderBy('id');
+                $rows = collect();
+                if ($this->getKey() !== null && Schema::hasColumn('vendor_locations', 'product_id')) {
+                    $rows = (clone $locationQuery)
+                        ->where('product_id', $this->getKey())
+                        ->get($select);
+                }
+                if ($rows->isEmpty() && $this->vendor_id) {
+                    $rows = (clone $locationQuery)
+                        ->where('vendor_id', $this->vendor_id)
+                        ->get($select);
+                }
+
+                $normalizeCountryShort = static function (string $country): string {
+                    $country = trim($country);
+                    if ($country === '') {
+                        return 'UK';
+                    }
+
+                    $slug = Str::slug($country);
+                    if (in_array($slug, ['uk', 'u-k', 'gb', 'great-britain', 'united-kingdom', 'england', 'scotland', 'wales', 'northern-ireland'], true)) {
+                        return 'UK';
+                    }
+
+                    return Str::of($country)->headline()->toString();
+                };
+
+                $extractSegments = static function (string ...$sources): array {
+                    $segments = [];
+
+                    foreach ($sources as $source) {
+                        $source = trim($source);
+                        if ($source === '') {
+                            continue;
+                        }
+
+                        foreach (preg_split('/\s*,\s*/', $source) ?: [] as $part) {
+                            $part = trim((string) $part);
+                            if ($part === '') {
+                                continue;
+                            }
+
+                            if (Str::contains(Str::lower($part), 'online')) {
+                                continue;
+                            }
+
+                            if (preg_match('/\b[A-Z]{1,2}\d[\dA-Z]?\s*\d[A-Z]{2}\b/i', $part) || preg_match('/\b[A-Z]{1,2}\d[\dA-Z]?\b/i', $part)) {
+                                continue;
+                            }
+
+                            if (preg_match('/^\d+[A-Za-z]?(?:[-\/]\d+)?\s+.+$/', $part)) {
+                                continue;
+                            }
+
+                            if (preg_match('/\b(?:road|street|avenue|lane|drive|close|crescent|court|place|way|terrace|gardens|square|highway|boulevard|path|alley|row)\b\.?$/i', $part)) {
+                                continue;
+                            }
+
+                            $segments[] = $part;
+                        }
+                    }
+
+                    return array_values(array_unique($segments));
+                };
+
+                $locations = [];
+                foreach ($rows as $row) {
+                    $rowOnline = data_get($row, 'online', data_get($row, 'is_online', null));
+                    if (filter_var($rowOnline, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE)) {
+                        $locations[] = 'Online';
+                        continue;
+                    }
+
+                    $label = trim((string) ($row->label ?? ''));
+                    if ($label !== '' && Str::contains(Str::lower($label), 'online')) {
+                        $locations[] = 'Online';
+                        continue;
+                    }
+
+                    $city = trim((string) ($row->city ?? ''));
+                    $county = trim((string) ($row->county ?? ''));
+                    $country = $normalizeCountryShort((string) ($row->country ?? ''));
+                    $segments = $extractSegments(
+                        (string) ($row->label ?? ''),
+                        (string) ($row->formatted_address ?? ''),
+                        (string) ($row->line1 ?? ''),
+                        (string) ($row->line2 ?? ''),
+                        (string) ($row->street_address ?? ''),
+                        (string) ($row->address_line2 ?? ''),
+                        $city,
+                        $county
+                    );
+
+                    if ($city === '' && isset($segments[0])) {
+                        $city = trim((string) $segments[0]);
+                    }
+                    if ($county === '' && isset($segments[1])) {
+                        $county = trim((string) $segments[1]);
+                    }
+
+                    $pieces = array_values(array_filter([
+                        $city !== '' ? $city : null,
+                        $county !== '' && Str::lower($county) !== Str::lower($city) ? $county : null,
+                        $country !== '' ? $country : null,
+                    ]));
+
+                    $locationLabel = trim(implode(', ', $pieces));
+                    if ($locationLabel !== '') {
+                        $locations[] = $locationLabel;
+                        continue;
+                    }
+
+                    if ($label !== '') {
+                        $locations[] = $label;
+                    }
+                }
+
+                $locations = array_values(array_unique(array_filter($locations)));
+                if ($locations !== []) {
+                    return $locations;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fall back to option values below.
+        }
+
         $locationsOption = $this->relationLoaded('options')
             ? $this->options->firstWhere('meta_name', 'locations')
             : $this->options()->where('meta_name', 'locations')->with('values')->first();
