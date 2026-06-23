@@ -254,7 +254,7 @@
 </div>
 
 <div class="container-page py-2">
-  <x-searchbar-v4 id-prefix="search-v4" :result-count="0" mobile-top-offset="var(--wow-header-offset, 0px)" :static-layout="true" />
+  <x-home-searchbar-v4 id-prefix="home-search-v4" :result-count="0" mobile-top-offset="var(--wow-header-offset, 0px)" />
 </div>
 
   {{-- Swiper JS --}}

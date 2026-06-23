@@ -3,6 +3,7 @@ import { createApp } from 'vue';
 import ui from '@nuxt/ui/vue-plugin';
 import { initSubscriberForms } from './lib/subscriber-forms';
 import SearchRangeCalendar from './Components/SearchRangeCalendar.vue';
+import HomeSearchBarV4 from './Components/HomeSearchBarV4.vue';
 import SearchBarV4 from './Components/SearchBarV4.vue';
 import { fetchWhatCategories } from './services/whatCategories';
 
@@ -674,12 +675,46 @@ function mountSearchBarV4() {
   }
 }
 
+function mountHomeSearchBarV4() {
+  try {
+    document.querySelectorAll('[data-wow-home-searchbar-v4]').forEach((el) => {
+      if (!el || el.dataset.wowMounted === '1') return;
+      el.dataset.wowMounted = '1';
+
+      let initialQuery = {};
+      try {
+        initialQuery = JSON.parse(el.dataset.initialQuery || '{}') || {};
+      } catch (_err) {
+        initialQuery = {};
+      }
+
+      const props = {
+        idPrefix: el.dataset.idPrefix || 'home-search-v4',
+        searchUrl: el.dataset.searchUrl || '/search',
+        resultCount: Number(el.dataset.resultCount || 0),
+        mobileTopOffset: el.dataset.mobileTopOffset || 12,
+        initialQuery,
+      };
+
+      try {
+        createApp(HomeSearchBarV4, props).use(ui).mount(el);
+      } catch (err) {
+        el.dataset.wowMounted = '0';
+        console.warn('[WOW] home search bar v4 mount failed', err);
+      }
+    });
+  } catch (err) {
+    console.warn('[WOW] home search bar v4 bootstrap skipped', err);
+  }
+}
+
 onDocumentReady(() => {
   runIdle(() => { try { initMegaMenu(); } catch (e) {} });
   runIdle(() => { try { initMobileMenu(); } catch (e) {} });
   runIdle(() => { try { ['home-template','home-sticky'].forEach(prefix => setupUltraSearchBar(prefix)); } catch (e) {} });
   runIdle(() => { try { mountSearchRangeCalendars(); } catch (e) {} });
   try { mountSearchBarV4(); } catch (e) {}
+  try { mountHomeSearchBarV4(); } catch (e) {}
   runIdle(() => { try { initAccountDropdown(); } catch (e) {} });
   runIdle(() => { try { initSubscriberForms(); } catch (e) {} });
 
