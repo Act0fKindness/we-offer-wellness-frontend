@@ -2774,6 +2774,29 @@ onBeforeUnmount(() => {
     will-change:max-width, padding, background-color, border-color, box-shadow, border-radius;
   }
 
+  .wow-search-filter.is-static-layout{
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    transform:none !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    background:none !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    z-index:1 !important;
+  }
+
+  .wow-search-filter.is-static-layout .wow-search-filter-spacer{
+    display:none !important;
+  }
+
   .wow-panel{
     right:auto;
     width:400px;
@@ -3400,6 +3423,30 @@ onBeforeUnmount(() => {
     -webkit-backdrop-filter:none;
     transition:width 320ms cubic-bezier(.25,.46,.45,.94), padding 220ms ease, border-radius 220ms ease, transform 220ms ease;
     will-change:width;
+  }
+
+  .wow-search-filter.is-static-layout{
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    transform:none !important;
+    width:100% !important;
+    max-width:none !important;
+    padding:0 !important;
+    border:0 !important;
+    background:none !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    z-index:1 !important;
+  }
+
+  .wow-search-filter.is-static-layout .wow-search-card{
+    box-shadow:0 16px 42px rgba(16,24,40,.075);
+    border:1px solid rgba(207,215,227,.96);
+    background:rgba(255,255,255,.97);
   }
 
   .wow-search-filter.is-scroll-collapsed{
