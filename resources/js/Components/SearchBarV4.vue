@@ -10,6 +10,7 @@ const props = defineProps({
   resultCount: { type: [Number, String], default: 0 },
   initialQuery: { type: Object, default: () => ({}) },
   mobileTopOffset: { type: [Number, String], default: 12 },
+  staticLayout: { type: Boolean, default: false },
 })
 
 const root = ref(null)
@@ -106,6 +107,22 @@ const mobileTopOffsetValue = computed(() => {
   if (!text) return '12px'
   return /^\d+$/.test(text) ? `${text}px` : text
 })
+
+const rootStyle = computed(() => ({
+  '--wow-search-filter-mobile-top': mobileTopOffsetValue.value,
+  ...(props.staticLayout ? {
+    position: 'relative',
+    top: 'auto',
+    right: 'auto',
+    bottom: 'auto',
+    left: 'auto',
+    transform: 'none',
+    width: '100%',
+    maxWidth: 'none',
+    margin: '0',
+    zIndex: '1',
+  } : {}),
+}))
 
 function id(name) {
   return `${props.idPrefix}-${name}`
@@ -269,12 +286,19 @@ function emitLayoutChange(reason = 'layout') {
 }
 
 function expandMobileSearch() {
+  if (props.staticLayout) return
   if (isMobile()) {
     mobileExpanded.value = true
   }
 }
 
 function collapseMobileSearch() {
+  if (props.staticLayout) {
+    mobileExpanded.value = false
+    closeFilterDrawer()
+    return
+  }
+
   if (!isMobile()) return
 
   whatInput.value?.blur?.()
@@ -296,6 +320,7 @@ function clearScrollCollapseTimer() {
 }
 
 function scheduleScrollCollapse() {
+  if (props.staticLayout) return
   clearScrollCollapseTimer()
 
   if (typeof window === 'undefined') return
@@ -312,6 +337,12 @@ function scheduleScrollCollapse() {
 }
 
 function updateScrollCollapsedSearch() {
+  if (props.staticLayout) {
+    scrollCollapsed.value = false
+    scrollExpanded.value = false
+    return
+  }
+
   if (isMobile()) {
     scrollCollapsed.value = false
     scrollExpanded.value = false
@@ -336,7 +367,7 @@ function updateScrollCollapsedSearch() {
 }
 
 function updateDesktopSpacerHeight() {
-  if (typeof window === 'undefined' || !root.value || isMobile()) {
+  if (props.staticLayout || typeof window === 'undefined' || !root.value || isMobile()) {
     desktopSpacerHeight.value = 0
     return
   }
@@ -345,6 +376,7 @@ function updateDesktopSpacerHeight() {
 }
 
 function ensureScrollExpanded() {
+  if (props.staticLayout) return
   if (isMobile() || filterDrawerOpen.value) return
   scrollExpanded.value = true
 }
@@ -377,6 +409,11 @@ function handleRootFocusOut(event) {
 }
 
 function closeMobileFilterToExpandedSearch() {
+  if (props.staticLayout) {
+    closeFilterDrawer()
+    return
+  }
+
   if (!isMobile()) {
     closeFilterDrawer()
     return
@@ -489,7 +526,7 @@ function setMapMode(mode) {
 
 function applySearch(immediate = true) {
   clearScrollCollapseTimer()
-  if (isMobile()) {
+  if (isMobile() && !props.staticLayout) {
     collapseMobileSearch()
   } else {
     closeSegments()
@@ -984,15 +1021,19 @@ onMounted(async () => {
     window.addEventListener('wow:searchbar-v4:results-updated', resultsListener)
     document.addEventListener('click', outsideClickHandler)
     document.addEventListener('keydown', escapeHandler)
-    window.addEventListener('scroll', updateScrollCollapsedSearch, { passive: true })
-    window.addEventListener('resize', updateScrollCollapsedSearch)
-    window.addEventListener('resize', updateDesktopSpacerHeight)
+    if (!props.staticLayout) {
+      window.addEventListener('scroll', updateScrollCollapsedSearch, { passive: true })
+      window.addEventListener('resize', updateScrollCollapsedSearch)
+      window.addEventListener('resize', updateDesktopSpacerHeight)
+    }
     popStateHandler = () => {
       syncFromQuery()
       loadWhatSuggestions()
       refreshWhereSuggestions(state.where)
-      updateScrollCollapsedSearch()
-      updateDesktopSpacerHeight()
+      if (!props.staticLayout) {
+        updateScrollCollapsedSearch()
+        updateDesktopSpacerHeight()
+      }
     }
     window.addEventListener('popstate', popStateHandler)
   }
@@ -1041,12 +1082,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="wow-search-filter-shell">
-    <div class="wow-search-filter-spacer" aria-hidden="true" :style="{ height: `${desktopSpacerHeight}px` }"></div>
+    <div v-if="!staticLayout" class="wow-search-filter-spacer" aria-hidden="true" :style="{ height: `${desktopSpacerHeight}px` }"></div>
     <section
       ref="root"
       class="wow-search-filter"
-      :style="{ '--wow-search-filter-mobile-top': mobileTopOffsetValue }"
+      :style="rootStyle"
       :class="{
+        'is-static-layout': staticLayout,
         'is-mobile-expanded': mobileExpanded,
         'is-scroll-collapsed': scrollCollapsed,
         'is-scroll-expanded': scrollExpanded,
