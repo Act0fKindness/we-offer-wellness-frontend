@@ -3386,6 +3386,7 @@ onBeforeUnmount(() => {
   .wow-search-filter.is-scroll-collapsed.is-filter-open .wow-search-card{
     box-shadow:var(--wow-shadow);
     border:1px solid #ddd;
+    background:#eee;
   }
 
   .wow-search-filter.is-panel-open{

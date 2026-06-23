@@ -1,8 +1,8 @@
-<section data-v-f43bb09d="" class="py-4">
-    <div data-v-f43bb09d="" class="container">
-        <x-ultra-search-bar prefix="home-template" :show-seven-day-chip="true" />
+<section class="py-4">
+    <div class="container">
+        <x-searchbar-v4 id-prefix="home-search" :result-count="0" mobile-top-offset="var(--wow-header-offset, 0px)" />
     </div>
-</section><!---->
+</section>
 
 <style>
 /* Ensure search suggestion panes overlay content but stay under the header */
