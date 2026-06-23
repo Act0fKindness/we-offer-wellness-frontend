@@ -1054,8 +1054,6 @@
 
 @include('home.sections.mindful_times_ribbon')
 
-@include('home.sections.search_bar')
-
 @include('home.sections.popular_searches')
 
 @include('home.sections.discover_category')

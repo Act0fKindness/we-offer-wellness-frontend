@@ -211,12 +211,8 @@
     }
   </style>
 
-{{-- Keep your sticky bar OUTSIDE the slider (so IDs stay unique and not duplicated) --}}
-<div data-v-f43bb09d="" class="hidden lg:block fixed left-0 right-0 z-30 transition-all"
-     style="top: 65px; display: none;">
-    <div data-v-f43bb09d="" class="container-page py-2">
-        <x-ultra-search-bar prefix="home-sticky" bar-class="bar bar-compact" :show-seven-day-chip="true" />
-    </div>
+<div class="container-page py-2">
+  <x-searchbar-v4 id-prefix="search-v4" :result-count="0" mobile-top-offset="var(--wow-header-offset, 0px)" />
 </div>
 
 {{-- Swiper slider --}}
