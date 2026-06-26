@@ -381,6 +381,7 @@ class OfferingV3 extends Model
                 $normalizedSessions[] = [
                     'id' => (string) (Arr::get($session, 'id', '') ?: sprintf('event_schedule_%s_%d_%d', $date !== '' ? $date : 'day', $dayIndex + 1, $sessionIndex + 1)),
                     'label' => trim((string) Arr::get($session, 'label', '')),
+                    'space_area' => trim((string) Arr::get($session, 'space_area', Arr::get($session, 'spaceArea', ''))),
                     'start_time' => trim((string) Arr::get($session, 'start_time', Arr::get($session, 'startTime', ''))),
                     'end_time' => trim((string) Arr::get($session, 'end_time', Arr::get($session, 'endTime', ''))),
                     'notes' => trim((string) Arr::get($session, 'notes', '')),

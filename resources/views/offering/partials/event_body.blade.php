@@ -246,17 +246,19 @@
             }
 
             $label = trim((string) data_get($session, 'label', data_get($session, 'title', '')));
+            $spaceArea = trim((string) data_get($session, 'space_area', data_get($session, 'spaceArea', '')));
             $startTime = trim((string) data_get($session, 'start_time', data_get($session, 'startTime', '')));
             $endTime = trim((string) data_get($session, 'end_time', data_get($session, 'endTime', '')));
             $notes = trim((string) data_get($session, 'notes', data_get($session, 'description', '')));
 
-            if ($label === '' && $startTime === '' && $endTime === '' && $notes === '') {
+            if ($label === '' && $spaceArea === '' && $startTime === '' && $endTime === '' && $notes === '') {
                 continue;
             }
 
             $sessions[] = [
                 'id' => (string) (data_get($session, 'id', '') ?: sprintf('event_schedule_%s_%d_%d', $dayDate !== '' ? $dayDate : 'day', $dayIndex + 1, $sessionIndex + 1)),
                 'label' => $label !== '' ? $label : 'Session',
+                'space_area' => $spaceArea,
                 'start_time' => $startTime,
                 'end_time' => $endTime,
                 'notes' => $notes,
@@ -1055,6 +1057,15 @@
     letter-spacing: -0.02em;
     font-weight: 400;
   }
+  .wow-event-body__timeline-space {
+    margin: 0 0 8px;
+    color: #0f6b57;
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
   .wow-event-body__timeline-item p {
     margin: 0;
     color: #637486;
@@ -1645,6 +1656,7 @@
               @forelse($day['sessions'] ?? [] as $sessionIndex => $session)
                 @php
                   $sessionLabel = trim((string) ($session['label'] ?? ''));
+                  $sessionSpaceArea = trim((string) ($session['space_area'] ?? ''));
                   $sessionStart = trim((string) ($session['start_time'] ?? ''));
                   $sessionEnd = trim((string) ($session['end_time'] ?? ''));
                   $sessionNotes = trim((string) ($session['notes'] ?? ''));
@@ -1655,6 +1667,9 @@
                   </div>
                   <div>
                     <h3>{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
+                    @if($sessionSpaceArea !== '')
+                      <div class="wow-event-body__timeline-space">{{ $sessionSpaceArea }}</div>
+                    @endif
                     <p>{{ $sessionNotes !== '' ? $sessionNotes : ($day['label'] ?? 'Festival session') }}</p>
                   </div>
                 </article>
