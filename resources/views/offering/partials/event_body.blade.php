@@ -273,6 +273,52 @@
         ];
     }
 
+    $eventScheduleDays = array_map(static function (array $day): array {
+        $sessions = array_values(array_filter($day['sessions'] ?? [], fn ($session) => is_array($session)));
+        $spaceOrder = [];
+
+        foreach ($sessions as $session) {
+            $spaceArea = trim((string) ($session['space_area'] ?? ''));
+            if ($spaceArea === '') {
+                continue;
+            }
+
+            if (! in_array($spaceArea, $spaceOrder, true)) {
+                $spaceOrder[] = $spaceArea;
+            }
+        }
+
+        $hasMultipleSpaces = count($spaceOrder) > 1;
+        $groupedSessions = [];
+        if ($hasMultipleSpaces) {
+            foreach ($sessions as $session) {
+                $spaceArea = trim((string) ($session['space_area'] ?? ''));
+                if ($spaceArea === '') {
+                    $spaceArea = 'General';
+                }
+
+                if (! isset($groupedSessions[$spaceArea])) {
+                    $groupedSessions[$spaceArea] = [];
+                }
+
+                $groupedSessions[$spaceArea][] = $session;
+            }
+        }
+
+        return $day + [
+            'space_order' => $spaceOrder,
+            'has_multiple_spaces' => $hasMultipleSpaces,
+            'grouped_sessions' => array_map(
+                static fn (string $spaceArea, array $spaceSessions): array => [
+                    'label' => $spaceArea,
+                    'sessions' => $spaceSessions,
+                ],
+                array_keys($groupedSessions),
+                array_values($groupedSessions)
+            ),
+        ];
+    }, $eventScheduleDays);
+
     if (empty($eventScheduleDays) && ! empty($eventTimelineDays)) {
         foreach ($eventTimelineDays as $day) {
             $eventScheduleDays[] = [
@@ -1073,6 +1119,243 @@
     line-height: 1.55;
     font-weight: 400;
   }
+  .wow-room-carousel {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    gap: 8px;
+    align-items: start;
+  }
+  .wow-room-carousel__viewport {
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .wow-room-carousel__viewport::-webkit-scrollbar {
+    display: none;
+  }
+  .wow-room-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    align-items: stretch;
+    min-width: 100%;
+  }
+  .wow-room {
+    flex: 0 0 calc((100% - 12px) / 2);
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(2, 6, 23, .10);
+    border-radius: 1px;
+    background: #f8fbff;
+    scroll-snap-align: start;
+  }
+  .wow-room-grid.has-one-room .wow-room {
+    flex-basis: 100%;
+  }
+  .wow-room-grid.has-two-rooms .wow-room {
+    flex-basis: calc((100% - 12px) / 2);
+  }
+  .wow-room--tone-1 {
+    background: #f5f9ff;
+    border-color: #cfe2f7;
+  }
+  .wow-room--tone-2 {
+    background: #f6fbf8;
+    border-color: #cfe7d8;
+  }
+  .wow-room--tone-3 {
+    background: #faf8ff;
+    border-color: #ddd3f5;
+  }
+  .wow-room--tone-4 {
+    background: #fffaf0;
+    border-color: #ead9aa;
+  }
+  .wow-room__header {
+    min-height: 88px;
+    border-bottom: 1px solid rgba(2, 6, 23, .10);
+    background: #f3f9fd;
+    padding: 14px;
+  }
+  .wow-room--tone-1 .wow-room__header {
+    background: #eef6ff;
+    border-bottom-color: #cfe2f7;
+  }
+  .wow-room--tone-2 .wow-room__header {
+    background: #effaf3;
+    border-bottom-color: #cfe7d8;
+  }
+  .wow-room--tone-3 .wow-room__header {
+    background: #f5f1ff;
+    border-bottom-color: #ddd3f5;
+  }
+  .wow-room--tone-4 .wow-room__header {
+    background: #fff5dc;
+    border-bottom-color: #ead9aa;
+  }
+  .wow-room__name {
+    margin: 0;
+    color: #071d33;
+    font-size: 18px;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+  }
+  .wow-room__note {
+    margin: 6px 0 0;
+    color: #637486;
+    font-size: 13px;
+    line-height: 1.3;
+    font-weight: 400;
+  }
+  .wow-room__slots {
+    display: grid;
+    grid-auto-rows: 292px;
+    gap: 12px;
+    padding: 12px;
+    background: transparent;
+  }
+  .wow-room-arrow {
+    width: 38px;
+    height: 54px;
+    appearance: none;
+    border: 1px solid rgba(13, 27, 42, .16);
+    border-radius: 1px;
+    background: #ffffff;
+    color: #478ee4;
+    font: inherit;
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 300;
+    cursor: pointer;
+    box-shadow: 0 10px 22px rgba(7, 27, 54, 0.08);
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+  }
+  .wow-room-arrow:hover:not(:disabled) {
+    border-color: #478ee4;
+    background: #478ee4;
+    color: #ffffff;
+  }
+  .wow-room-arrow:disabled {
+    opacity: 0.32;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .wow-room-carousel.is-not-scrollable .wow-room-arrow,
+  .wow-room-carousel.is-not-scrollable .wow-room-progress {
+    display: none;
+  }
+  .wow-room-carousel.is-not-scrollable {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wow-room-carousel.is-not-scrollable .wow-room-carousel__viewport {
+    grid-column: 1;
+  }
+  .wow-room-progress {
+    grid-column: 2;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .wow-room-progress__dot {
+    width: 8px;
+    height: 8px;
+    border: 1px solid rgba(13, 27, 42, .16);
+    border-radius: 999px;
+    background: #ffffff;
+  }
+  .wow-room-progress__dot.is-active {
+    border-color: #478ee4;
+    background: #478ee4;
+  }
+  .wow-session {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(2, 6, 23, .10);
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.82);
+    padding: 16px;
+    overflow: hidden;
+  }
+  .wow-room--tone-1 .wow-session {
+    border-color: #cfe2f7;
+    background: rgba(255, 255, 255, 0.74);
+  }
+  .wow-room--tone-2 .wow-session {
+    border-color: #cfe7d8;
+    background: rgba(255, 255, 255, 0.74);
+  }
+  .wow-room--tone-3 .wow-session {
+    border-color: #ddd3f5;
+    background: rgba(255, 255, 255, 0.74);
+  }
+  .wow-room--tone-4 .wow-session {
+    border-color: #ead9aa;
+    background: rgba(255, 255, 255, 0.74);
+  }
+  .wow-session__time {
+    display: block;
+    margin: 0 0 12px;
+    color: #478ee4;
+    font-size: 15px;
+    line-height: 1.2;
+    font-weight: 400;
+    flex: 0 0 auto;
+  }
+  .wow-session__title {
+    margin: 0;
+    color: #071d33;
+    font-size: 20px;
+    line-height: 1.18;
+    letter-spacing: -0.05em;
+    font-weight: 400;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .wow-session__desc {
+    margin: 10px 0 0;
+    color: #637486;
+    font-size: 16px;
+    line-height: 1.45;
+    font-weight: 400;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .wow-session__host {
+    margin: auto 0 0;
+    padding-top: 12px;
+    color: #637486;
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 400;
+    flex: 0 0 auto;
+  }
+  .wow-session__host strong {
+    color: #071d33;
+    font-weight: 500;
+  }
+  .wow-room__empty {
+    height: 292px;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(2, 6, 23, .10);
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.74);
+    padding: 16px;
+    color: #637486;
+    font-size: 15px;
+    line-height: 1.4;
+  }
   .wow-event-body__venue-grid {
     grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.05fr);
   }
@@ -1653,35 +1936,77 @@
               role="tabpanel"
               @if(! $loop->first) hidden @endif
             >
-              @forelse($day['sessions'] ?? [] as $sessionIndex => $session)
-                @php
-                  $sessionLabel = trim((string) ($session['label'] ?? ''));
-                  $sessionSpaceArea = trim((string) ($session['space_area'] ?? ''));
-                  $sessionStart = trim((string) ($session['start_time'] ?? ''));
-                  $sessionEnd = trim((string) ($session['end_time'] ?? ''));
-                  $sessionNotes = trim((string) ($session['notes'] ?? ''));
-                @endphp
-                <article class="wow-event-body__timeline-item">
-                  <div class="wow-event-body__timeline-time">
-                    {{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? ('Day ' . ($dayIndex + 1))) }}
+              @if(! empty($day['has_multiple_spaces']))
+                <div class="wow-room-carousel" data-room-carousel>
+                  <button type="button" class="wow-room-arrow wow-room-arrow--prev" data-room-prev aria-label="Show previous spaces">‹</button>
+
+                  <div class="wow-room-carousel__viewport" data-room-viewport tabindex="0" aria-label="Event spaces">
+                    <div class="wow-room-grid {{ count($day['grouped_sessions'] ?? []) === 1 ? 'has-one-room' : (count($day['grouped_sessions'] ?? []) === 2 ? 'has-two-rooms' : 'has-many-rooms') }}">
+                      @foreach($day['grouped_sessions'] ?? [] as $spaceIndex => $spaceGroup)
+                        <section class="wow-room wow-room--tone-{{ ($spaceIndex % 4) + 1 }}">
+                          <header class="wow-room__header">
+                            <h3 class="wow-room__name">{{ $spaceGroup['label'] ?? 'General' }}</h3>
+                            <p class="wow-room__note">{{ count($spaceGroup['sessions'] ?? []) }} session{{ count($spaceGroup['sessions'] ?? []) === 1 ? '' : 's' }}</p>
+                          </header>
+
+                          <div class="wow-room__slots">
+                            @forelse($spaceGroup['sessions'] ?? [] as $sessionIndex => $session)
+                              @php
+                                $sessionLabel = trim((string) ($session['label'] ?? ''));
+                                $sessionStart = trim((string) ($session['start_time'] ?? ''));
+                                $sessionEnd = trim((string) ($session['end_time'] ?? ''));
+                                $sessionNotes = trim((string) ($session['notes'] ?? ''));
+                              @endphp
+                              <article class="wow-session">
+                                <div class="wow-session__time">{{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? ('Day ' . ($dayIndex + 1))) }}</div>
+                                <h3 class="wow-session__title">{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
+                                @if($sessionNotes !== '')
+                                  <p class="wow-session__desc">{{ $sessionNotes }}</p>
+                                @endif
+                              </article>
+                            @empty
+                              <div class="wow-room__empty">No sessions added for this space yet.</div>
+                            @endforelse
+                          </div>
+                        </section>
+                      @endforeach
+                    </div>
                   </div>
-                  <div>
-                    <h3>{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
-                    @if($sessionSpaceArea !== '')
-                      <div class="wow-event-body__timeline-space">{{ $sessionSpaceArea }}</div>
-                    @endif
-                    <p>{{ $sessionNotes !== '' ? $sessionNotes : ($day['label'] ?? 'Festival session') }}</p>
-                  </div>
-                </article>
-              @empty
-                <article class="wow-event-body__timeline-item">
-                  <div class="wow-event-body__timeline-time">{{ $day['label'] ?? ('Day ' . ($dayIndex + 1)) }}</div>
-                  <div>
-                    <h3>Schedule coming soon</h3>
-                    <p>The detailed timetable for this day will be added later.</p>
-                  </div>
-                </article>
-              @endforelse
+
+                  <button type="button" class="wow-room-arrow wow-room-arrow--next" data-room-next aria-label="Show next spaces">›</button>
+                  <div class="wow-room-progress" data-room-progress aria-hidden="true"></div>
+                </div>
+              @else
+                @forelse($day['sessions'] ?? [] as $sessionIndex => $session)
+                  @php
+                    $sessionLabel = trim((string) ($session['label'] ?? ''));
+                    $sessionSpaceArea = trim((string) ($session['space_area'] ?? ''));
+                    $sessionStart = trim((string) ($session['start_time'] ?? ''));
+                    $sessionEnd = trim((string) ($session['end_time'] ?? ''));
+                    $sessionNotes = trim((string) ($session['notes'] ?? ''));
+                  @endphp
+                  <article class="wow-event-body__timeline-item">
+                    <div class="wow-event-body__timeline-time">
+                      {{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? ('Day ' . ($dayIndex + 1))) }}
+                    </div>
+                    <div>
+                      <h3>{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
+                      @if($sessionSpaceArea !== '')
+                        <div class="wow-event-body__timeline-space">{{ $sessionSpaceArea }}</div>
+                      @endif
+                      <p>{{ $sessionNotes !== '' ? $sessionNotes : ($day['label'] ?? 'Festival session') }}</p>
+                    </div>
+                  </article>
+                @empty
+                  <article class="wow-event-body__timeline-item">
+                    <div class="wow-event-body__timeline-time">{{ $day['label'] ?? ('Day ' . ($dayIndex + 1)) }}</div>
+                    <div>
+                      <h3>Schedule coming soon</h3>
+                      <p>The detailed timetable for this day will be added later.</p>
+                    </div>
+                  </article>
+                @endforelse
+              @endif
             </div>
           @endforeach
         @endif
@@ -1836,6 +2161,8 @@
       schedulePanels.forEach((panel) => {
         panel.hidden = panel.id !== targetId;
       });
+
+      window.requestAnimationFrame(refreshRoomCarousels);
     };
 
     showSchedule(scheduleTabs[0].getAttribute('data-schedule-target') || schedulePanels[0].id);
@@ -1845,6 +2172,78 @@
       });
     });
   }
+
+  function refreshRoomCarousels() {
+    document.querySelectorAll('[data-room-carousel]').forEach((carousel) => {
+      const viewport = carousel.querySelector('[data-room-viewport]');
+      const prev = carousel.querySelector('[data-room-prev]');
+      const next = carousel.querySelector('[data-room-next]');
+      const rooms = Array.from(carousel.querySelectorAll('.wow-room'));
+      const progress = carousel.querySelector('[data-room-progress]');
+
+      if (!viewport || !prev || !next) {
+        return;
+      }
+
+      const firstRoom = rooms[0];
+      const track = carousel.querySelector('.wow-room-grid');
+      const gap = track ? parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || 0) : 0;
+      const roomStep = firstRoom ? (firstRoom.getBoundingClientRect().width + gap) : viewport.clientWidth;
+      const visibleCount = Math.max(1, Math.round(viewport.clientWidth / Math.max(roomStep, 1)));
+      const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+      const isScrollable = rooms.length > visibleCount && maxScroll > 2;
+
+      carousel.classList.toggle('is-not-scrollable', !isScrollable);
+      prev.disabled = !isScrollable || viewport.scrollLeft <= 2;
+      next.disabled = !isScrollable || viewport.scrollLeft >= maxScroll - 2;
+
+      if (!progress) {
+        return;
+      }
+
+      if (!isScrollable) {
+        progress.innerHTML = '';
+        return;
+      }
+
+      const maxStartIndex = Math.max(0, rooms.length - visibleCount);
+      const activeIndex = Math.min(maxStartIndex, Math.max(0, Math.round(viewport.scrollLeft / Math.max(roomStep, 1))));
+
+      progress.innerHTML = Array.from({ length: maxStartIndex + 1 }, (_, index) => `
+        <span class="wow-room-progress__dot ${index === activeIndex ? 'is-active' : ''}"></span>
+      `).join('');
+    });
+  }
+
+  document.querySelectorAll('[data-room-carousel]').forEach((carousel) => {
+    if (carousel.dataset.carouselBound === '1') {
+      return;
+    }
+    carousel.dataset.carouselBound = '1';
+
+    const viewport = carousel.querySelector('[data-room-viewport]');
+    const prev = carousel.querySelector('[data-room-prev]');
+    const next = carousel.querySelector('[data-room-next]');
+
+    if (!viewport || !prev || !next) {
+      return;
+    }
+
+    const move = (direction) => {
+      const firstRoom = carousel.querySelector('.wow-room');
+      const track = carousel.querySelector('.wow-room-grid');
+      const gap = track ? parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || 0) : 0;
+      const step = firstRoom ? (firstRoom.getBoundingClientRect().width + gap) : viewport.clientWidth;
+      viewport.scrollBy({ left: step * direction, behavior: 'smooth' });
+    };
+
+    prev.addEventListener('click', () => move(-1));
+    next.addEventListener('click', () => move(1));
+    viewport.addEventListener('scroll', () => refreshRoomCarousels(), { passive: true });
+  });
+
+  window.addEventListener('resize', refreshRoomCarousels);
+  refreshRoomCarousels();
 
   document.querySelectorAll('[data-wow-event-video-autoplay]').forEach((video) => {
     if (!(video instanceof HTMLVideoElement)) {

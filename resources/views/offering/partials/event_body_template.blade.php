@@ -252,6 +252,52 @@
         ];
     }
 
+    $eventScheduleDays = array_map(static function (array $day): array {
+        $sessions = array_values(array_filter($day['sessions'] ?? [], fn ($session) => is_array($session)));
+        $spaceOrder = [];
+
+        foreach ($sessions as $session) {
+            $spaceArea = trim((string) ($session['space_area'] ?? ''));
+            if ($spaceArea === '') {
+                continue;
+            }
+
+            if (! in_array($spaceArea, $spaceOrder, true)) {
+                $spaceOrder[] = $spaceArea;
+            }
+        }
+
+        $hasMultipleSpaces = count($spaceOrder) > 1;
+        $groupedSessions = [];
+        if ($hasMultipleSpaces) {
+            foreach ($sessions as $session) {
+                $spaceArea = trim((string) ($session['space_area'] ?? ''));
+                if ($spaceArea === '') {
+                    $spaceArea = 'General';
+                }
+
+                if (! isset($groupedSessions[$spaceArea])) {
+                    $groupedSessions[$spaceArea] = [];
+                }
+
+                $groupedSessions[$spaceArea][] = $session;
+            }
+        }
+
+        return $day + [
+            'space_order' => $spaceOrder,
+            'has_multiple_spaces' => $hasMultipleSpaces,
+            'grouped_sessions' => array_map(
+                static fn (string $spaceArea, array $spaceSessions): array => [
+                    'label' => $spaceArea,
+                    'sessions' => $spaceSessions,
+                ],
+                array_keys($groupedSessions),
+                array_values($groupedSessions)
+            ),
+        ];
+    }, $eventScheduleDays);
+
     $eventScheduleSessionCount = 0;
     foreach ($eventScheduleDays as $day) {
         $eventScheduleSessionCount += count($day['sessions'] ?? []);
@@ -1753,6 +1799,261 @@
         line-height: 1.55;
     }
 
+    .festival-page .room-carousel {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr) 38px;
+        gap: 8px;
+        align-items: start;
+    }
+
+    .festival-page .room-carousel__viewport {
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .festival-page .room-carousel__viewport::-webkit-scrollbar {
+        display: none;
+    }
+
+    .festival-page .room-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 12px;
+        align-items: stretch;
+        min-width: 100%;
+    }
+
+    .festival-page .room-card {
+        flex: 0 0 calc((100% - 12px) / 2);
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #f8fbff;
+        scroll-snap-align: start;
+    }
+
+    .festival-page .room-grid.has-one-room .room-card {
+        flex-basis: 100%;
+    }
+
+    .festival-page .room-grid.has-two-rooms .room-card {
+        flex-basis: calc((100% - 12px) / 2);
+    }
+
+    .festival-page .room-card--tone-1 {
+        background: #f5f9ff;
+        border-color: #cfe2f7;
+    }
+
+    .festival-page .room-card--tone-2 {
+        background: #f6fbf8;
+        border-color: #cfe7d8;
+    }
+
+    .festival-page .room-card--tone-3 {
+        background: #faf8ff;
+        border-color: #ddd3f5;
+    }
+
+    .festival-page .room-card--tone-4 {
+        background: #fffaf0;
+        border-color: #ead9aa;
+    }
+
+    .festival-page .room-card__header {
+        min-height: 88px;
+        border-bottom: 1px solid var(--line);
+        background: var(--blue-75);
+        padding: 14px;
+    }
+
+    .festival-page .room-card--tone-1 .room-card__header {
+        background: #eef6ff;
+        border-bottom-color: #cfe2f7;
+    }
+
+    .festival-page .room-card--tone-2 .room-card__header {
+        background: #effaf3;
+        border-bottom-color: #cfe7d8;
+    }
+
+    .festival-page .room-card--tone-3 .room-card__header {
+        background: #f5f1ff;
+        border-bottom-color: #ddd3f5;
+    }
+
+    .festival-page .room-card--tone-4 .room-card__header {
+        background: #fff5dc;
+        border-bottom-color: #ead9aa;
+    }
+
+    .festival-page .room-card__name {
+        margin: 0;
+        color: var(--blue-950);
+        font-size: 18px;
+        line-height: 1.15;
+        letter-spacing: -0.025em;
+        font-weight: 400;
+    }
+
+    .festival-page .room-card__note {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.3;
+        font-weight: 400;
+    }
+
+    .festival-page .room-card__slots {
+        display: grid;
+        grid-auto-rows: 292px;
+        gap: 12px;
+        padding: 12px;
+        background: transparent;
+    }
+
+    .festival-page .room-card__empty {
+        height: 292px;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.74);
+        padding: 16px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.4;
+    }
+
+    .festival-page .room-arrow {
+        width: 38px;
+        height: 54px;
+        appearance: none;
+        border: 1px solid var(--line-dark);
+        border-radius: var(--radius);
+        background: #fff;
+        color: var(--button-blue);
+        font: inherit;
+        font-size: 28px;
+        line-height: 1;
+        font-weight: 300;
+        cursor: pointer;
+        box-shadow: 0 10px 22px rgba(7, 27, 54, 0.08);
+        transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+    }
+
+    .festival-page .room-arrow:hover:not(:disabled) {
+        border-color: var(--button-blue);
+        background: var(--button-blue);
+        color: #fff;
+    }
+
+    .festival-page .room-arrow:disabled {
+        opacity: 0.32;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .festival-page .room-carousel.is-not-scrollable .room-arrow,
+    .festival-page .room-carousel.is-not-scrollable .room-progress {
+        display: none;
+    }
+
+    .festival-page .room-carousel.is-not-scrollable {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .festival-page .room-carousel.is-not-scrollable .room-carousel__viewport {
+        grid-column: 1;
+    }
+
+    .festival-page .room-progress {
+        grid-column: 2;
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .festival-page .room-progress__dot {
+        width: 8px;
+        height: 8px;
+        border: 1px solid var(--line-dark);
+        border-radius: 999px;
+        background: #fff;
+    }
+
+    .festival-page .room-progress__dot.is-active {
+        border-color: var(--button-blue);
+        background: var(--button-blue);
+    }
+
+    .festival-page .session-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.82);
+        padding: 16px;
+        overflow: hidden;
+    }
+
+    .festival-page .room-card--tone-1 .session-card {
+        border-color: #cfe2f7;
+    }
+
+    .festival-page .room-card--tone-2 .session-card {
+        border-color: #cfe7d8;
+    }
+
+    .festival-page .room-card--tone-3 .session-card {
+        border-color: #ddd3f5;
+    }
+
+    .festival-page .room-card--tone-4 .session-card {
+        border-color: #ead9aa;
+    }
+
+    .festival-page .session-card__time {
+        display: block;
+        margin: 0 0 12px;
+        color: var(--button-blue);
+        font-size: 15px;
+        line-height: 1.2;
+    }
+
+    .festival-page .session-card__title {
+        margin: 0;
+        color: var(--blue-950);
+        font-size: 20px;
+        line-height: 1.18;
+        letter-spacing: -0.05em;
+        font-weight: 400;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .festival-page .session-card__desc {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.45;
+        font-weight: 400;
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
     .festival-page .split {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -2379,31 +2680,79 @@
 
                     @foreach($eventScheduleDays as $day)
                         <div class="timeline" id="schedule-{{ $day['id'] }}" role="tabpanel" data-schedule="{{ $day['id'] }}" @if(! $loop->first) hidden @endif>
-                            @forelse($day['sessions'] ?? [] as $sessionIndex => $session)
-                                @php
-                                    $sessionLabel = trim((string) ($session['label'] ?? ''));
-                                    $sessionStart = trim((string) ($session['start_time'] ?? ''));
-                                    $sessionEnd = trim((string) ($session['end_time'] ?? ''));
-                                    $sessionNotes = trim((string) ($session['notes'] ?? ''));
-                                @endphp
-                                <article class="timeline-item">
-                                    <div class="timeline-time">
-                                        {{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? 'Day') }}
+                            @if(! empty($day['has_multiple_spaces']))
+                                <div class="room-carousel" data-room-carousel>
+                                    <button type="button" class="room-arrow room-arrow--prev" data-room-prev aria-label="Show previous spaces">‹</button>
+
+                                    <div class="room-carousel__viewport" data-room-viewport tabindex="0" aria-label="Event spaces">
+                                        <div class="room-grid {{ count($day['grouped_sessions'] ?? []) === 1 ? 'has-one-room' : (count($day['grouped_sessions'] ?? []) === 2 ? 'has-two-rooms' : 'has-many-rooms') }}">
+                                            @foreach($day['grouped_sessions'] ?? [] as $spaceIndex => $spaceGroup)
+                                                <section class="room-card room-card--tone-{{ ($spaceIndex % 4) + 1 }}">
+                                                    <header class="room-card__header">
+                                                        <h3 class="room-card__name">{{ $spaceGroup['label'] ?? 'General' }}</h3>
+                                                        <p class="room-card__note">{{ count($spaceGroup['sessions'] ?? []) }} session{{ count($spaceGroup['sessions'] ?? []) === 1 ? '' : 's' }}</p>
+                                                    </header>
+
+                                                    <div class="room-card__slots">
+                                                        @forelse($spaceGroup['sessions'] ?? [] as $sessionIndex => $session)
+                                                            @php
+                                                                $sessionLabel = trim((string) ($session['label'] ?? ''));
+                                                                $sessionStart = trim((string) ($session['start_time'] ?? ''));
+                                                                $sessionEnd = trim((string) ($session['end_time'] ?? ''));
+                                                                $sessionNotes = trim((string) ($session['notes'] ?? ''));
+                                                            @endphp
+                                                            <article class="session-card">
+                                                                <div class="session-card__time">
+                                                                    {{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? 'Day') }}
+                                                                </div>
+                                                                <h3 class="session-card__title">{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
+                                                                @if($sessionNotes !== '')
+                                                                    <p class="session-card__desc">{{ $sessionNotes }}</p>
+                                                                @endif
+                                                            </article>
+                                                        @empty
+                                                            <div class="room-card__empty">No sessions added for this space yet.</div>
+                                                        @endforelse
+                                                    </div>
+                                                </section>
+                                            @endforeach
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3>{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
-                                        <p>{{ $sessionNotes !== '' ? $sessionNotes : 'Session details will be added here soon.' }}</p>
-                                    </div>
-                                </article>
-                            @empty
-                                <article class="timeline-item">
-                                    <div class="timeline-time">{{ $day['label'] }}</div>
-                                    <div>
-                                        <h3>Schedule coming soon</h3>
-                                        <p>No sessions for this day yet.</p>
-                                    </div>
-                                </article>
-                            @endforelse
+
+                                    <button type="button" class="room-arrow room-arrow--next" data-room-next aria-label="Show next spaces">›</button>
+                                    <div class="room-progress" data-room-progress aria-hidden="true"></div>
+                                </div>
+                            @else
+                                @forelse($day['sessions'] ?? [] as $sessionIndex => $session)
+                                    @php
+                                        $sessionLabel = trim((string) ($session['label'] ?? ''));
+                                        $sessionSpaceArea = trim((string) ($session['space_area'] ?? ''));
+                                        $sessionStart = trim((string) ($session['start_time'] ?? ''));
+                                        $sessionEnd = trim((string) ($session['end_time'] ?? ''));
+                                        $sessionNotes = trim((string) ($session['notes'] ?? ''));
+                                    @endphp
+                                    <article class="timeline-item">
+                                        <div class="timeline-time">
+                                            {{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? 'Day') }}
+                                        </div>
+                                        <div>
+                                            <h3>{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
+                                            @if($sessionSpaceArea !== '')
+                                                <p style="margin: 0 0 8px; color: var(--blue-950); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">{{ $sessionSpaceArea }}</p>
+                                            @endif
+                                            <p>{{ $sessionNotes !== '' ? $sessionNotes : 'Session details will be added here soon.' }}</p>
+                                        </div>
+                                    </article>
+                                @empty
+                                    <article class="timeline-item">
+                                        <div class="timeline-time">{{ $day['label'] }}</div>
+                                        <div>
+                                            <h3>Schedule coming soon</h3>
+                                            <p>No sessions for this day yet.</p>
+                                        </div>
+                                    </article>
+                                @endforelse
+                            @endif
                         </div>
                     @endforeach
                 @else
@@ -3390,6 +3739,8 @@
         schedules.forEach((schedule) => {
             schedule.hidden = schedule.dataset.schedule !== day;
         });
+
+        window.requestAnimationFrame(refreshRoomCarousels);
     }
 
     scheduleTabs.forEach((tab) => {
@@ -3401,6 +3752,78 @@
     if (scheduleTabs.length && schedules.length) {
         showSchedule(scheduleTabs[0].dataset.day || schedules[0].dataset.schedule || '');
     }
+
+    function refreshRoomCarousels() {
+        document.querySelectorAll('[data-room-carousel]').forEach((carousel) => {
+            const viewport = carousel.querySelector('[data-room-viewport]');
+            const prev = carousel.querySelector('[data-room-prev]');
+            const next = carousel.querySelector('[data-room-next]');
+            const rooms = Array.from(carousel.querySelectorAll('.room-card'));
+            const progress = carousel.querySelector('[data-room-progress]');
+
+            if (!viewport || !prev || !next) {
+                return;
+            }
+
+            const firstRoom = rooms[0];
+            const track = carousel.querySelector('.room-grid');
+            const gap = track ? parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || 0) : 0;
+            const roomStep = firstRoom ? (firstRoom.getBoundingClientRect().width + gap) : viewport.clientWidth;
+            const visibleCount = Math.max(1, Math.round(viewport.clientWidth / Math.max(roomStep, 1)));
+            const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+            const isScrollable = rooms.length > visibleCount && maxScroll > 2;
+
+            carousel.classList.toggle('is-not-scrollable', !isScrollable);
+            prev.disabled = !isScrollable || viewport.scrollLeft <= 2;
+            next.disabled = !isScrollable || viewport.scrollLeft >= maxScroll - 2;
+
+            if (!progress) {
+                return;
+            }
+
+            if (!isScrollable) {
+                progress.innerHTML = '';
+                return;
+            }
+
+            const maxStartIndex = Math.max(0, rooms.length - visibleCount);
+            const activeIndex = Math.min(maxStartIndex, Math.max(0, Math.round(viewport.scrollLeft / Math.max(roomStep, 1))));
+
+            progress.innerHTML = Array.from({ length: maxStartIndex + 1 }, (_, index) => `
+                <span class="room-progress__dot ${index === activeIndex ? 'is-active' : ''}"></span>
+            `).join('');
+        });
+    }
+
+    document.querySelectorAll('[data-room-carousel]').forEach((carousel) => {
+        if (carousel.dataset.carouselBound === '1') {
+            return;
+        }
+        carousel.dataset.carouselBound = '1';
+
+        const viewport = carousel.querySelector('[data-room-viewport]');
+        const prev = carousel.querySelector('[data-room-prev]');
+        const next = carousel.querySelector('[data-room-next]');
+
+        if (!viewport || !prev || !next) {
+            return;
+        }
+
+        const move = (direction) => {
+            const firstRoom = carousel.querySelector('.room-card');
+            const track = carousel.querySelector('.room-grid');
+            const gap = track ? parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || 0) : 0;
+            const step = firstRoom ? (firstRoom.getBoundingClientRect().width + gap) : viewport.clientWidth;
+            viewport.scrollBy({ left: step * direction, behavior: 'smooth' });
+        };
+
+        prev.addEventListener('click', () => move(-1));
+        next.addEventListener('click', () => move(1));
+        viewport.addEventListener('scroll', () => refreshRoomCarousels(), { passive: true });
+    });
+
+    window.addEventListener('resize', refreshRoomCarousels);
+    refreshRoomCarousels();
 
     if (token) {
         loadMapbox(async () => {
