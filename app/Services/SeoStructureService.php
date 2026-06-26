@@ -367,6 +367,10 @@ class SeoStructureService
         $modality = $this->inferModalitySlugFromOffering($offering);
         $slug = $this->offeringSlugFromOffering($offering);
 
+        if ($format === 'events' && $modality === 'events') {
+            return url('/events/' . $slug);
+        }
+
         return $this->modalityOfferingUrl($format, $modality, $slug);
     }
 
@@ -444,6 +448,191 @@ class SeoStructureService
         $value = Str::slug(trim($value));
 
         return $value !== '' ? $value : 'item';
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     * @return array<int, string>
+     */
+    public function keywordsForPage(array $context = []): array
+    {
+        $keywords = [];
+
+        $push = function (string $value) use (&$keywords): void {
+            $value = trim(preg_replace('/\s+/', ' ', $value) ?? '');
+            if ($value === '') {
+                return;
+            }
+
+            $key = mb_strtolower($value);
+            $keywords[$key] = $value;
+        };
+
+        foreach ([
+            'We Offer Wellness',
+            'WOW',
+            'wellness marketplace',
+            'holistic wellness',
+            'book wellness experiences',
+            'online and in person',
+        ] as $seed) {
+            $push($seed);
+        }
+
+        $type = $this->canonicalFormatKey((string) data_get($context, 'type', ''));
+        if ($type !== '') {
+            $definition = $this->typeDefinition($type);
+            foreach ([
+                (string) ($definition['page_label'] ?? ucfirst($type)),
+                (string) ($definition['singular'] ?? $type),
+                (string) ($definition['plural'] ?? $type),
+                (string) ($definition['seo_label'] ?? ''),
+                'book ' . ((string) ($definition['page_label'] ?? ucfirst($type))),
+            ] as $seed) {
+                $push($seed);
+            }
+        }
+
+        $categorySeeds = [];
+        foreach ([
+            data_get($context, 'category'),
+            data_get($context, 'landing.category'),
+        ] as $candidate) {
+            if (is_string($candidate)) {
+                $categorySeeds[] = $candidate;
+                continue;
+            }
+
+            $label = trim((string) data_get($candidate, 'name', data_get($candidate, 'title', '')));
+            if ($label !== '') {
+                $categorySeeds[] = $label;
+            }
+        }
+
+        foreach ((array) data_get($context, 'categories', []) as $candidate) {
+            $label = trim((string) data_get($candidate, 'name', data_get($candidate, 'title', '')));
+            if ($label !== '') {
+                $categorySeeds[] = $label;
+            }
+            $slug = trim((string) data_get($candidate, 'slug', ''));
+            if ($slug !== '') {
+                $categorySeeds[] = Str::headline(str_replace('-', ' ', $slug));
+            }
+        }
+
+        foreach ((array) data_get($context, 'products', []) as $item) {
+            $label = trim((string) data_get($item, 'category.name', ''));
+            if ($label !== '') {
+                $categorySeeds[] = $label;
+            }
+        }
+
+        foreach ((array) data_get($context, 'offeringResults.items', []) as $item) {
+            $label = trim((string) data_get($item, 'category.name', ''));
+            if ($label !== '') {
+                $categorySeeds[] = $label;
+            }
+        }
+
+        foreach (array_values(array_unique($categorySeeds)) as $seed) {
+            $push($seed);
+        }
+
+        $locationSeeds = [];
+        foreach ([
+            data_get($context, 'location'),
+            data_get($context, 'locationQuery'),
+            data_get($context, 'locationSearch.label'),
+            data_get($context, 'locationSearch.place'),
+            data_get($context, 'city'),
+            data_get($context, 'county'),
+            data_get($context, 'town'),
+        ] as $candidate) {
+            $label = trim((string) $candidate);
+            if ($label !== '') {
+                $locationSeeds[] = $label;
+            }
+        }
+
+        foreach (array_values(array_unique($locationSeeds)) as $seed) {
+            $push($seed);
+        }
+
+        foreach ([
+            'therapies',
+            'classes',
+            'events',
+            'workshops',
+            'retreats',
+            'reiki',
+            'massage',
+            'sound healing',
+            'breathwork',
+            'meditation',
+            'yoga',
+            'wellbeing workshops',
+            'corporate wellness',
+            'gift vouchers',
+        ] as $seed) {
+            $push($seed);
+        }
+
+        return array_values($keywords);
+    }
+
+    public function shortOgTitle(string $title, int $maxLength = 35): string
+    {
+        $title = trim(preg_replace('/\s+/', ' ', $title) ?? '');
+        if ($title === '') {
+            return 'WOW®';
+        }
+
+        $title = preg_replace('/\s*[\|\-–—]\s*We Offer Wellness®?$/u', '', $title) ?: $title;
+        $title = preg_replace('/\s*[\|\-–—]\s*WOW®$/u', '', $title) ?: $title;
+        $title = trim($title);
+
+        if (mb_strlen($title) <= $maxLength) {
+            return $title;
+        }
+
+        $suffix = ' | WOW®';
+        $limit = max(1, $maxLength - mb_strlen($suffix));
+
+        return rtrim((string) Str::limit($title, $limit, '')) . $suffix;
+    }
+
+    public function shortOgDescription(string $description, int $maxLength = 62): string
+    {
+        $description = trim(preg_replace('/\s+/', ' ', $description) ?? '');
+        if ($description === '') {
+            return 'Trusted wellness experiences online and in person.';
+        }
+
+        return rtrim((string) Str::limit($description, $maxLength, ''));
+    }
+
+    public function canonicalUrl(?string $path = null): string
+    {
+        $base = rtrim((string) config('services.public_site_url', 'https://www.weofferwellness.co.uk'), '/');
+        if ($base === '') {
+            $base = 'https://www.weofferwellness.co.uk';
+        }
+
+        if ($path === null || trim($path) === '') {
+            return $base . '/';
+        }
+
+        $path = trim($path);
+        if (preg_match('~^https?://~i', $path) === 1) {
+            $path = (string) parse_url($path, PHP_URL_PATH);
+            $path = $path !== '' ? $path : '/';
+        }
+
+        if (! str_starts_with($path, '/')) {
+            $path = '/' . ltrim($path, '/');
+        }
+
+        return $base . rtrim($path, '/') ?: '/';
     }
 
     public function categoryNoun(string $type, string $category): string
