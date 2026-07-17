@@ -89,6 +89,7 @@
     const mobileTotal = document.querySelector('[data-mobile-total]');
     const quantityLabel = document.querySelector('[data-qty-label]');
     const pluralLabel = document.querySelector('[data-qty-plural]');
+    const mobileCartButton = document.querySelector('.sp-mobile-buy .js-add-to-cart');
     const syncQuantity = () => {
         const value = Math.min(20, Math.max(1, Number(quantity?.value || 1)));
         if (quantity) quantity.value = value;
@@ -112,6 +113,12 @@
     }));
     quantity?.addEventListener('input', syncQuantity);
     quantity?.addEventListener('change', syncQuantity);
+    mobileCartButton?.addEventListener('click', (event) => {
+        if (typeof window.WOW_addToCart !== 'function') return;
+        event.preventDefault();
+        event.stopPropagation();
+        window.WOW_addToCart(mobileCartButton);
+    });
     syncQuantity();
 })();
 </script>
