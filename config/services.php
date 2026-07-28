@@ -84,6 +84,11 @@ return [
         'token' => env('WOW_MAIL_RELAY_TOKEN'),
     ],
 
+    'studio_calendar_sync' => [
+        'url' => env('STUDIO_CALENDAR_SYNC_URL', 'https://studio.weofferwellness.co.uk/api/internal/google-calendar/sync-bookings'),
+        'secret' => env('GOOGLE_CALENDAR_INTERNAL_SYNC_SECRET'),
+    ],
+
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),

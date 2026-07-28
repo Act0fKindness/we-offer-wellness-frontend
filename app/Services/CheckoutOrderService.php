@@ -113,7 +113,12 @@ class CheckoutOrderService
 
             $this->syncCustomerProfile($freshOrder, $customerUser, $customerEmail);
             $this->syncPaymentDetails($freshOrder);
-            $this->syncBookings($freshOrder, $customerUser, $customerEmail);
+            $bookingIds = $this->syncBookings($freshOrder, $customerUser, $customerEmail);
+            if ($bookingIds !== []) {
+                DB::afterCommit(function () use ($bookingIds): void {
+                    app(StudioCalendarSyncService::class)->syncBookingIds($bookingIds);
+                });
+            }
             $this->syncVendorClients($freshOrder, $customerUser);
 
             $freshOrder = $freshOrder->fresh(['items.product.vendor.user', 'customerProfile', 'paymentDetail']);
@@ -295,13 +300,14 @@ class CheckoutOrderService
         );
     }
 
-    protected function syncBookings(Order $order, ?User $customerUser, string $customerEmail): void
+    protected function syncBookings(Order $order, ?User $customerUser, string $customerEmail): array
     {
         if (! $this->hasTable('bookings') || ! $this->hasTable('reservations')) {
-            return;
+            return [];
         }
 
         $order->loadMissing('items.product.vendor.user');
+        $bookingIds = [];
 
         foreach ($order->items as $item) {
             $bookingData = $this->extractBookingData($item);
@@ -350,7 +356,7 @@ class CheckoutOrderService
                 $reservation = Reservation::create($reservationPayload);
             }
 
-            Booking::updateOrCreate(
+            $booking = Booking::updateOrCreate(
                 [
                     'order_id' => $order->id,
                     'offering_id' => $this->resolveOfferingIdForItem($item),
@@ -372,7 +378,10 @@ class CheckoutOrderService
                     'session_format' => $this->resolveSessionFormat($item),
                 ]
             );
+            $bookingIds[] = (int) $booking->id;
         }
+
+        return array_values(array_unique($bookingIds));
     }
 
     protected function syncVendorClients(Order $order, ?User $customerUser): void
