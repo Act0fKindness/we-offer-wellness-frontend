@@ -11,6 +11,13 @@ const props = defineProps({
   initialQuery: { type: Object, default: () => ({}) },
   mobileTopOffset: { type: [Number, String], default: 12 },
   staticLayout: { type: Boolean, default: false },
+  showChrome: { type: Boolean, default: true },
+  mobileChrome: { type: Boolean, default: false },
+  navigateOnSubmit: { type: Boolean, default: false },
+  forceMobileLayout: { type: Boolean, default: false },
+  defaultActiveSegment: { type: String, default: '' },
+  hideTopRow: { type: Boolean, default: false },
+  hideMobileClose: { type: Boolean, default: false },
 })
 
 const root = ref(null)
@@ -48,9 +55,8 @@ const filterSections = reactive({
 const mobileExpanded = ref(false)
 const scrollCollapsed = ref(false)
 const scrollExpanded = ref(false)
-const DESKTOP_SPACER_FALLBACK = 176
-const desktopSpacerHeight = ref(DESKTOP_SPACER_FALLBACK)
 const displayCount = ref(Number(props.resultCount) || 0)
+const isSearchPageModal = computed(() => props.idPrefix === 'search-v4')
 const whatSuggestions = ref([])
 const whereSuggestions = ref([])
 const whatCatalog = ref([])
@@ -67,6 +73,39 @@ let popStateHandler = null
 let rootResizeObserver = null
 let scrollCollapseTimer = null
 let bodyOverflowBeforeLock = ''
+let bodyLockSnapshot = null
+let bodyScrollYBeforeLock = 0
+let touchScrollLockHandler = null
+
+function isWithinSearchSurface(target) {
+  if (typeof document === 'undefined') return true
+  const rootEl = root.value
+  if (!rootEl) return false
+  const node = target?.nodeType === Node.ELEMENT_NODE ? target : target?.parentElement
+  if (node && rootEl.contains(node)) return true
+  if (target?.closest && target.closest('.wow-search-filter')) return true
+  if (target?.closest && target.closest('.wow-filter-drawer')) return true
+  return false
+}
+
+function removeTouchScrollLock() {
+  if (typeof document === 'undefined' || !touchScrollLockHandler) return
+  document.removeEventListener('touchmove', touchScrollLockHandler, { passive: false })
+  document.removeEventListener('wheel', touchScrollLockHandler, { passive: false })
+  touchScrollLockHandler = null
+}
+
+function addTouchScrollLock() {
+  if (typeof document === 'undefined' || touchScrollLockHandler) return
+
+  touchScrollLockHandler = (event) => {
+    if (isWithinSearchSurface(event.target)) return
+    event.preventDefault()
+  }
+
+  document.addEventListener('touchmove', touchScrollLockHandler, { passive: false })
+  document.addEventListener('wheel', touchScrollLockHandler, { passive: false })
+}
 
 const sortLabels = {
   popular: 'Recommended',
@@ -110,7 +149,18 @@ const mobileTopOffsetValue = computed(() => {
 
 const rootStyle = computed(() => ({
   '--wow-search-filter-mobile-top': mobileTopOffsetValue.value,
-  ...(props.staticLayout ? {
+  ...(props.staticLayout && mobileExpanded.value && isMobile() ? {
+    position: 'fixed',
+    top: mobileTopOffsetValue.value,
+    right: '0',
+    bottom: 'auto',
+    left: '0',
+    transform: 'none',
+    width: '100vw',
+    maxWidth: '100vw',
+    margin: '0',
+    zIndex: '1950',
+  } : props.staticLayout ? {
     position: 'relative',
     top: 'auto',
     right: 'auto',
@@ -120,7 +170,7 @@ const rootStyle = computed(() => ({
     width: '100%',
     maxWidth: 'none',
     margin: '0',
-    zIndex: '1',
+    zIndex: '10',
   } : {}),
 }))
 
@@ -130,6 +180,10 @@ function id(name) {
 
 function isMobile() {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 1040px)').matches
+}
+
+function isCompactLayout() {
+  return props.forceMobileLayout || isMobile()
 }
 
 function normalizeText(value) {
@@ -286,20 +340,20 @@ function emitLayoutChange(reason = 'layout') {
 }
 
 function expandMobileSearch() {
-  if (props.staticLayout) return
-  if (isMobile()) {
+  if (props.staticLayout && !isCompactLayout()) return
+  if (isCompactLayout()) {
     mobileExpanded.value = true
   }
 }
 
 function collapseMobileSearch() {
-  if (props.staticLayout) {
+  if (props.staticLayout && !isCompactLayout()) {
     mobileExpanded.value = false
     closeFilterDrawer()
     return
   }
 
-  if (!isMobile()) return
+  if (!isCompactLayout()) return
 
   whatInput.value?.blur?.()
   whereInput.value?.blur?.()
@@ -328,7 +382,7 @@ function scheduleScrollCollapse() {
   scrollCollapseTimer = window.setTimeout(() => {
     scrollCollapseTimer = null
 
-    if (isMobile() || !scrollCollapsed.value || filterDrawerOpen.value) return
+    if (isCompactLayout() || !scrollCollapsed.value || filterDrawerOpen.value) return
     if (root.value?.matches(':hover') || root.value?.matches(':focus-within')) return
 
     scrollExpanded.value = false
@@ -343,10 +397,9 @@ function updateScrollCollapsedSearch() {
     return
   }
 
-  if (isMobile()) {
+  if (isCompactLayout()) {
     scrollCollapsed.value = false
     scrollExpanded.value = false
-    desktopSpacerHeight.value = 0
     return
   }
 
@@ -364,20 +417,48 @@ function updateScrollCollapsedSearch() {
   if (!filterDrawerOpen.value) {
     closeSegments()
   }
+
+  syncActivePanelPosition()
 }
 
-function updateDesktopSpacerHeight() {
-  if (props.staticLayout || typeof window === 'undefined' || !root.value || isMobile()) {
-    desktopSpacerHeight.value = 0
+function syncActivePanelPosition() {
+  if (typeof window === 'undefined' || !root.value || !activeSegment.value || isCompactLayout()) {
+    activePanelStyle.value = {}
     return
   }
 
-  desktopSpacerHeight.value = DESKTOP_SPACER_FALLBACK
+  const card = root.value.querySelector('.wow-search-card')
+  const segment = root.value.querySelector(`[data-search-segment="${activeSegment.value}"]`)
+
+  if (!card || !segment) {
+    activePanelStyle.value = {}
+    return
+  }
+
+  const cardRect = card.getBoundingClientRect()
+  const segmentRect = segment.getBoundingClientRect()
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0
+  const width = activeSegment.value === 'when'
+    ? Math.min(900, Math.max(320, viewportWidth - 32))
+    : activeSegment.value === 'who'
+      ? Math.min(560, Math.max(320, viewportWidth - 32))
+      : Math.min(420, Math.max(320, viewportWidth - 32))
+  const desiredLeft = Math.max(0, Math.round(segmentRect.left - cardRect.left))
+  const maxLeft = Math.max(0, Math.round(cardRect.width - width))
+
+  const style = {
+    width: `${width}px`,
+    transform: 'none',
+    left: `${Math.min(desiredLeft, maxLeft)}px`,
+    right: 'auto',
+  }
+
+  activePanelStyle.value = style
 }
 
 function ensureScrollExpanded() {
   if (props.staticLayout) return
-  if (isMobile() || filterDrawerOpen.value) return
+  if (isCompactLayout() || filterDrawerOpen.value) return
   scrollExpanded.value = true
 }
 
@@ -387,7 +468,7 @@ function handleRootMouseEnter() {
 }
 
 function handleRootMouseLeave() {
-  if (isMobile() || !scrollCollapsed.value || filterDrawerOpen.value) return
+  if (isCompactLayout() || !scrollCollapsed.value || filterDrawerOpen.value) return
   if (root.value?.matches(':focus-within')) return
   scheduleScrollCollapse()
 }
@@ -398,7 +479,7 @@ function handleRootFocusIn() {
 }
 
 function handleRootFocusOut(event) {
-  if (isMobile() || !scrollCollapsed.value || filterDrawerOpen.value) return
+  if (isCompactLayout() || !scrollCollapsed.value || filterDrawerOpen.value) return
   if (activeSegment.value === 'when') return
 
   const related = event?.relatedTarget
@@ -409,12 +490,12 @@ function handleRootFocusOut(event) {
 }
 
 function closeMobileFilterToExpandedSearch() {
-  if (props.staticLayout) {
+  if (props.staticLayout && !isCompactLayout()) {
     closeFilterDrawer()
     return
   }
 
-  if (!isMobile()) {
+  if (!isCompactLayout()) {
     closeFilterDrawer()
     return
   }
@@ -424,18 +505,75 @@ function closeMobileFilterToExpandedSearch() {
 
 function syncBodyScrollLock() {
   if (typeof document === 'undefined') return
-  const shouldLock = filterDrawerOpen.value || mobileExpanded.value
+  if (props.forceMobileLayout && props.staticLayout) return
+  const shouldLock = filterDrawerOpen.value
+    || mobileExpanded.value
+    || (props.staticLayout && isMobile() && !!activeSegment.value)
+
+  const shouldUseTouchLock = props.staticLayout && isMobile() && !filterDrawerOpen.value
 
   if (shouldLock) {
-    if (bodyOverflowBeforeLock === '') {
-      bodyOverflowBeforeLock = document.body.style.overflow || ''
+    if (!bodyLockSnapshot) {
+      bodyLockSnapshot = {
+        body: {
+          overflow: document.body.style.overflow || '',
+          position: document.body.style.position || '',
+          top: document.body.style.top || '',
+          left: document.body.style.left || '',
+          right: document.body.style.right || '',
+          width: document.body.style.width || '',
+        },
+        html: {
+          overflow: document.documentElement.style.overflow || '',
+        },
+      }
     }
+
+    if (shouldUseTouchLock) {
+      document.body.style.position = bodyLockSnapshot.body.position
+      document.body.style.top = bodyLockSnapshot.body.top
+      document.body.style.left = bodyLockSnapshot.body.left
+      document.body.style.right = bodyLockSnapshot.body.right
+      document.body.style.width = bodyLockSnapshot.body.width
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+      addTouchScrollLock()
+      return
+    }
+
+    removeTouchScrollLock()
+    bodyScrollYBeforeLock = typeof window !== 'undefined'
+      ? (window.scrollY || window.pageYOffset || 0)
+      : 0
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${bodyScrollYBeforeLock}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.width = '100%'
     document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
     return
   }
 
-  document.body.style.overflow = bodyOverflowBeforeLock
-  bodyOverflowBeforeLock = ''
+  removeTouchScrollLock()
+  if (bodyLockSnapshot) {
+    document.body.style.overflow = bodyLockSnapshot.body.overflow
+    document.body.style.position = bodyLockSnapshot.body.position
+    document.body.style.top = bodyLockSnapshot.body.top
+    document.body.style.left = bodyLockSnapshot.body.left
+    document.body.style.right = bodyLockSnapshot.body.right
+    document.body.style.width = bodyLockSnapshot.body.width
+    document.documentElement.style.overflow = bodyLockSnapshot.html.overflow
+    if (bodyLockSnapshot.body.position === 'fixed' && typeof window !== 'undefined') {
+      window.scrollTo(0, bodyScrollYBeforeLock)
+    }
+  } else {
+    document.body.style.overflow = ''
+    document.documentElement.style.overflow = ''
+  }
+
+  bodyLockSnapshot = null
+  bodyScrollYBeforeLock = 0
 }
 
 function resetFilterSections() {
@@ -450,12 +588,13 @@ function openSegment(name) {
   ensureScrollExpanded()
   expandMobileSearch()
 
-  if (isMobile() && filterDrawerOpen.value) {
+  if (isCompactLayout() && filterDrawerOpen.value) {
     closeFilterDrawer()
   }
 
   activeSegment.value = name
   syncBodyScrollLock()
+  nextTick(syncActivePanelPosition)
 
   if (activeSegment.value === 'what') {
     refreshWhatSuggestions(state.what)
@@ -468,10 +607,12 @@ function openSegment(name) {
 
 function closeSegments() {
   activeSegment.value = null
+  activePanelStyle.value = {}
   syncBodyScrollLock()
 }
 
 function toggleFilterDrawer() {
+  if (!props.showChrome && !props.mobileChrome) return
   if (filterDrawerOpen.value) {
     closeFilterDrawer()
     return
@@ -485,17 +626,43 @@ function toggleFilterDrawer() {
 }
 
 function closeFilterDrawer() {
+  if (!props.showChrome && !props.mobileChrome) {
+    filterDrawerOpen.value = false
+    syncBodyScrollLock()
+    return
+  }
   closeSegments()
   filterDrawerOpen.value = false
   syncBodyScrollLock()
 }
 
+function openFromHost(segment = null) {
+  if (!props.forceMobileLayout && !props.staticLayout) return
+  mobileExpanded.value = true
+  activeSegment.value = null
+  openSegment(segment || props.defaultActiveSegment || 'what')
+  nextTick(() => {
+    if ((segment || props.defaultActiveSegment || 'what') === 'what') {
+      whatInput.value?.focus?.()
+    }
+  })
+}
+
+function closeFromHost() {
+  if (!props.forceMobileLayout) return
+  closeSegments()
+  filterDrawerOpen.value = false
+  mobileExpanded.value = false
+  activePanelStyle.value = {}
+}
+
 watch([mobileExpanded, filterDrawerOpen], syncBodyScrollLock, { immediate: true })
+watch(activeSegment, syncBodyScrollLock, { immediate: true })
 
 async function toggleFilterSection(section) {
   const isOpening = !filterSections[section]
 
-  if (isMobile() && isOpening) {
+  if (isCompactLayout() && isOpening) {
     Object.keys(filterSections).forEach((key) => {
       filterSections[key] = key === section
     })
@@ -503,7 +670,7 @@ async function toggleFilterSection(section) {
     filterSections[section] = !filterSections[section]
   }
 
-  if (!isMobile() || !isOpening) return
+  if (!isCompactLayout() || !isOpening) return
 
   await nextTick()
   const panel = root.value?.querySelector?.(`[data-filter-panel="${section}"]`)
@@ -526,11 +693,20 @@ function setMapMode(mode) {
 
 function applySearch(immediate = true) {
   clearScrollCollapseTimer()
-  if (isMobile() && !props.staticLayout) {
+  if (!state.what.trim()) {
+    whatInput.value?.focus?.()
+    return
+  }
+
+  if (isCompactLayout() && !props.staticLayout) {
     collapseMobileSearch()
   } else {
     closeSegments()
     closeFilterDrawer()
+  }
+  if (props.navigateOnSubmit && typeof window !== 'undefined') {
+    window.location.assign(buildUrl())
+    return
   }
   emitQueryChange('submit', immediate)
 }
@@ -898,13 +1074,36 @@ function closePanelsOnOutsideClick(event) {
   const target = event?.target
   const path = typeof event?.composedPath === 'function' ? event.composedPath() : []
   const pathContainsRoot = path.length > 0 && path.includes(root.value)
+  const targetIsInsideSearchUi = (() => {
+    if (!target || typeof target !== 'object') return false
+    if (typeof target.closest === 'function') {
+      return !!target.closest(
+        '.wow-search-filter, .wow-search-card, .wow-search-main, .wow-search-top-row, .wow-panel, .wow-range-calendar, .wow-range-calendar__toolbar, .wow-range-calendar__months, .wow-range-calendar__grid, .wow-range-calendar__cell, .wow-range-calendar__nav, [data-search-segment], [data-filter-drawer]'
+      )
+    }
+
+    return path.some((node) => {
+      if (!node || typeof node !== 'object' || !node.classList) return false
+      return node.classList.contains('wow-search-filter')
+        || node.classList.contains('wow-search-card')
+        || node.classList.contains('wow-search-main')
+        || node.classList.contains('wow-search-top-row')
+        || node.classList.contains('wow-panel')
+        || node.classList.contains('wow-range-calendar')
+        || node.classList.contains('wow-range-calendar__toolbar')
+        || node.classList.contains('wow-range-calendar__months')
+        || node.classList.contains('wow-range-calendar__grid')
+        || node.classList.contains('wow-range-calendar__cell')
+        || node.classList.contains('wow-range-calendar__nav')
+    })
+  })()
 
   if (target && typeof target.closest === 'function') {
     if (target.closest('[data-filter-drawer]')) return
     if (target.closest('.wow-filter-backdrop')) return
   }
 
-  if (pathContainsRoot || root.value.contains(event.target)) return
+  if (pathContainsRoot || root.value.contains(event.target) || targetIsInsideSearchUi) return
 
   if (activeSegment.value === 'when') {
     const insideCalendar = path.some((node) => {
@@ -923,7 +1122,7 @@ function closePanelsOnOutsideClick(event) {
     if (insideCalendar) return
   }
 
-  if (isMobile()) {
+  if (isCompactLayout()) {
     if (filterDrawerOpen.value) {
       closeMobileFilterToExpandedSearch()
     } else {
@@ -984,7 +1183,13 @@ const guestsSummary = computed(() => {
   return `${label} · ${group}`
 })
 
-const searchBackdropOpen = computed(() => !!activeSegment.value && !filterDrawerOpen.value)
+const searchBackdropOpen = computed(() => (
+  (props.showChrome || props.mobileChrome)
+  && isMobile()
+  && !filterDrawerOpen.value
+  && (mobileExpanded.value || (!!props.staticLayout && !!activeSegment.value))
+))
+const activePanelStyle = ref({})
 
 const sortSummary = computed(() => sortLabels[state.sort] || 'Recommended')
 const priceSummary = computed(() => (state.priceMax ? `Up to £${state.priceMax}` : 'Any price'))
@@ -996,13 +1201,17 @@ onMounted(async () => {
   await loadWhatSuggestions()
   refreshWhereSuggestions(state.where)
   updateScrollCollapsedSearch()
-  updateDesktopSpacerHeight()
 
   resultsListener = (event) => handleResultsUpdated(event)
   outsideClickHandler = (event) => closePanelsOnOutsideClick(event)
   escapeHandler = (event) => {
     if (event.key === 'Escape') {
-      if (isMobile()) {
+      if (props.forceMobileLayout && props.staticLayout) {
+        closeSegments()
+        closeFilterDrawer()
+        return
+      }
+      if (isCompactLayout()) {
         if (filterDrawerOpen.value) {
           closeMobileFilterToExpandedSearch()
           return
@@ -1024,7 +1233,6 @@ onMounted(async () => {
     if (!props.staticLayout) {
       window.addEventListener('scroll', updateScrollCollapsedSearch, { passive: true })
       window.addEventListener('resize', updateScrollCollapsedSearch)
-      window.addEventListener('resize', updateDesktopSpacerHeight)
     }
     popStateHandler = () => {
       syncFromQuery()
@@ -1032,10 +1240,17 @@ onMounted(async () => {
       refreshWhereSuggestions(state.where)
       if (!props.staticLayout) {
         updateScrollCollapsedSearch()
-        updateDesktopSpacerHeight()
       }
     }
     window.addEventListener('popstate', popStateHandler)
+  }
+
+  if (typeof window !== 'undefined') {
+    window.__WOWSearchBarV4 = window.__WOWSearchBarV4 || {}
+    window.__WOWSearchBarV4[props.idPrefix] = {
+      open: openFromHost,
+      close: closeFromHost,
+    }
   }
 
 })
@@ -1055,7 +1270,6 @@ onBeforeUnmount(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('scroll', updateScrollCollapsedSearch)
     window.removeEventListener('resize', updateScrollCollapsedSearch)
-    window.removeEventListener('resize', updateDesktopSpacerHeight)
   }
 
   if (outsideClickHandler) {
@@ -1071,10 +1285,27 @@ onBeforeUnmount(() => {
     rootResizeObserver = null
   }
 
+  if (typeof window !== 'undefined' && window.__WOWSearchBarV4) {
+    delete window.__WOWSearchBarV4[props.idPrefix]
+  }
+
   if (typeof document !== 'undefined') {
-    document.body.style.overflow = bodyOverflowBeforeLock
+    if (bodyLockSnapshot) {
+      document.body.style.overflow = bodyLockSnapshot.body.overflow
+      document.body.style.position = bodyLockSnapshot.body.position
+      document.body.style.top = bodyLockSnapshot.body.top
+      document.body.style.left = bodyLockSnapshot.body.left
+      document.body.style.right = bodyLockSnapshot.body.right
+      document.body.style.width = bodyLockSnapshot.body.width
+      document.documentElement.style.overflow = bodyLockSnapshot.html.overflow
+    } else {
+      document.body.style.overflow = bodyOverflowBeforeLock
+    }
   }
   bodyOverflowBeforeLock = ''
+  bodyLockSnapshot = null
+  bodyScrollYBeforeLock = 0
+  removeTouchScrollLock()
 
   clearScrollCollapseTimer()
 })
@@ -1082,7 +1313,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="wow-search-filter-shell">
-    <div v-if="!staticLayout" class="wow-search-filter-spacer" aria-hidden="true" :style="{ height: `${desktopSpacerHeight}px` }"></div>
     <section
       ref="root"
       class="wow-search-filter"
@@ -1090,6 +1320,7 @@ onBeforeUnmount(() => {
       :class="{
         'is-static-layout': staticLayout,
         'is-mobile-expanded': mobileExpanded,
+        'is-force-mobile-layout': forceMobileLayout,
         'is-scroll-collapsed': scrollCollapsed,
         'is-scroll-expanded': scrollExpanded,
         'is-filter-open': filterDrawerOpen,
@@ -1101,9 +1332,9 @@ onBeforeUnmount(() => {
       @focusin="handleRootFocusIn"
       @focusout="handleRootFocusOut"
     >
-    <div class="wow-search-top-row" aria-label="Search tools">
+    <div v-if="!hideTopRow && (showChrome || mobileExpanded)" class="wow-search-top-row" aria-label="Search tools">
       <button
-        v-if="mobileExpanded"
+        v-if="mobileExpanded && !hideMobileClose"
         class="wow-mobile-search-close"
         type="button"
         @click="collapseMobileSearch"
@@ -1113,7 +1344,8 @@ onBeforeUnmount(() => {
       </button>
 
       <button
-        class="wow-filter-icon-btn"
+      v-if="showChrome"
+      class="wow-filter-icon-btn"
         type="button"
         :class="{ 'is-open': filterDrawerOpen }"
         @click="toggleFilterDrawer"
@@ -1124,7 +1356,7 @@ onBeforeUnmount(() => {
         <span class="wow-filter-badge">{{ filterBadgeCount }}</span>
       </button>
 
-      <div class="wow-desktop-map-controls" aria-label="Desktop view and map mode controls">
+      <div v-if="showChrome" class="wow-desktop-map-controls" aria-label="Desktop view and map mode controls">
         <div class="wow-segmented-control" data-control-group="view">
           <span class="wow-control-label">View</span>
           <span class="wow-control-pill">
@@ -1159,6 +1391,7 @@ onBeforeUnmount(() => {
               name="what"
               autocomplete="off"
               placeholder="Massage, yoga, breathwork..."
+              required
               :aria-expanded="activeSegment === 'what' ? 'true' : 'false'"
               :aria-controls="id('what-pane')"
               @focus="openSegment('what')"
@@ -1181,6 +1414,7 @@ onBeforeUnmount(() => {
           v-show="activeSegment === 'what'"
           :id="id('what-pane')"
           class="wow-panel wow-panel--what"
+          :style="activePanelStyle"
           :class="{ 'is-open': activeSegment === 'what' }"
           role="listbox"
           aria-label="What suggestions"
@@ -1240,6 +1474,7 @@ onBeforeUnmount(() => {
           v-show="activeSegment === 'where'"
           :id="id('where-pane')"
           class="wow-panel wow-panel--where"
+          :style="activePanelStyle"
           :class="{ 'is-open': activeSegment === 'where' }"
           role="listbox"
           aria-label="Where suggestions"
@@ -1301,6 +1536,7 @@ onBeforeUnmount(() => {
           v-show="activeSegment === 'when'"
           :id="id('when-pane')"
           class="wow-panel wow-panel--calendar"
+          :style="activePanelStyle"
           :class="{ 'is-open': activeSegment === 'when' }"
           aria-label="Calendar"
           @pointerdown.stop
@@ -1342,6 +1578,7 @@ onBeforeUnmount(() => {
           v-show="activeSegment === 'who'"
           :id="id('who-pane')"
           class="wow-panel wow-panel--who"
+          :style="activePanelStyle"
           :class="{ 'is-open': activeSegment === 'who' }"
           aria-label="Guests"
           @pointerdown.stop
@@ -1389,17 +1626,17 @@ onBeforeUnmount(() => {
 
     </form>
 
-    <teleport to="body">
+    <teleport v-if="showChrome || mobileChrome" to="body">
       <button
         v-show="searchBackdropOpen"
         type="button"
         class="wow-search-backdrop"
         aria-label="Close search dropdown"
-        @click="closeSegments"
+        @click="collapseMobileSearch"
       ></button>
     </teleport>
 
-    <div class="wow-search-bottom-row" aria-label="Search filters">
+    <div v-if="showChrome" class="wow-search-bottom-row" aria-label="Search filters">
       <div class="wow-active-chips" data-chip-list>
         <span v-for="chip in activeChips" :key="chip.key" class="wow-chip">
           <strong>{{ chip.label }}:</strong>
@@ -1419,14 +1656,14 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <teleport to="body">
+    <teleport v-if="showChrome || mobileChrome" to="body">
       <div class="wow-filter-backdrop" :class="{ 'is-open': filterDrawerOpen }" @click="closeMobileFilterToExpandedSearch"></div>
     </teleport>
 
-    <teleport to="body">
+    <teleport v-if="showChrome || mobileChrome" to="body">
       <div
         class="wow-filter-drawer"
-        :class="{ 'is-open': filterDrawerOpen }"
+        :class="{ 'is-open': filterDrawerOpen, 'is-search-page-modal': isSearchPageModal }"
         data-filter-drawer
         role="dialog"
         aria-modal="true"
@@ -1635,6 +1872,11 @@ onBeforeUnmount(() => {
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
   overflow-x:clip;
+}
+
+.wow-search-filter.is-static-layout{
+  overflow:visible;
+  isolation:isolate;
 }
 
 .wow-search-backdrop{
@@ -1854,7 +2096,7 @@ onBeforeUnmount(() => {
 
 .wow-segment:hover,
 .wow-segment:focus-within{
-  background:#f8faf9;
+  background:#fff;
 }
 
 .wow-segment:focus-within{
@@ -2301,11 +2543,25 @@ onBeforeUnmount(() => {
   z-index:1950;
 }
 
+.wow-search-filter.is-static-layout .wow-search-card{
+  position:relative;
+  z-index:2;
+}
+
+.wow-search-filter.is-static-layout .wow-panel{
+  z-index:4000;
+}
+
 .wow-panel--calendar{
-  width:min(680px, 96vw);
-  left:50%;
-  right:auto;
-  transform:translateX(-50%);
+  width:min(900px, calc(100vw - 32px));
+  left:auto;
+  right:0;
+  transform:none;
+}
+
+.wow-panel--what,
+.wow-panel--where{
+  width:min(420px, calc(100vw - 32px));
 }
 
 .wow-panel--who{
@@ -2739,19 +2995,10 @@ onBeforeUnmount(() => {
   width:100%;
 }
 
-.wow-search-filter-spacer{
-  display:none;
-  width:100%;
-}
-
 @media (min-width: 1041px){
   .wow-search-filter-shell{
     position:relative;
     width:100%;
-  }
-
-  .wow-search-filter-spacer{
-    display:block;
   }
 
   .wow-search-filter{
@@ -2790,20 +3037,26 @@ onBeforeUnmount(() => {
     box-shadow:none !important;
     backdrop-filter:none !important;
     -webkit-backdrop-filter:none !important;
-    z-index:1 !important;
-  }
-
-  .wow-search-filter.is-static-layout .wow-search-filter-spacer{
-    display:none !important;
+    z-index:5000 !important;
+    overflow:visible !important;
   }
 
   .wow-panel{
-    right:auto;
+    right:350px;
     width:400px;
   }
 
+  .wow-search-filter.is-static-layout .wow-panel{
+    z-index:6000;
+  }
+
+  .wow-panel--who{
+    right:65px !important;
+  }
+
   div#search-v4-when-pane{
-    width:660px;
+    width:700px;
+    right:350px;
   }
 
   .wow-search-card{
@@ -2881,6 +3134,14 @@ onBeforeUnmount(() => {
     height:auto;
   }
 
+  .wow-filter-drawer.is-search-page-modal .wow-filter-modal-columns{
+    display:block;
+  }
+
+  .wow-filter-drawer.is-search-page-modal .wow-filter-modal-column{
+    display:block;
+  }
+
   .wow-search-filter.is-filter-drawer-open{
     z-index:1800;
   }
@@ -2893,6 +3154,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1040px){
+  .wow-search-filter{
+    padding:0 24px !important;
+  }
+
   .wow-search-top-row{
     flex-wrap:wrap;
   }
@@ -3143,7 +3408,7 @@ onBeforeUnmount(() => {
     right:0;
     width:100vw;
     max-width:100vw;
-    height:calc(100dvh - 65px);
+    height:100vh;
     max-height:none;
     z-index:1950;
     padding:12px 0 14px;
@@ -3179,6 +3444,45 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1040px){
+  .wow-search-filter.is-static-layout.is-mobile-expanded{
+    position:fixed;
+    top:var(--wow-search-filter-mobile-top, 70px);
+    top:100px !important;
+    left:0;
+    right:0;
+    width:100vw;
+    max-width:100vw;
+    height:calc(100dvh - var(--wow-search-filter-mobile-top, 70px));
+    max-height:none;
+    z-index:5000 !important;
+    padding:12px 0 14px;
+    margin:0;
+    background:transparent;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    box-shadow:none;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .wow-search-filter.is-static-layout.is-mobile-expanded.is-panel-open{
+    background:none;
+    padding:0 24px !important;
+  }
+
+  .wow-search-filter.is-static-layout.is-mobile-expanded.is-force-mobile-layout.is-panel-open{
+    padding:0 24px !important;
+    top:100px !important;
+  }
+
+  .wow-search-filter.is-static-layout.is-mobile-expanded .wow-search-card{
+    width:100%;
+    max-width:none;
+    margin:0;
+  }
+
   .wow-search-filter:not(.is-mobile-expanded) .wow-search-top-row{
     display:none;
   }
@@ -3215,7 +3519,7 @@ onBeforeUnmount(() => {
     align-items:center;
     justify-content:space-between;
     flex-wrap:nowrap;
-    width:calc(100vw - 24px);
+    width:calc(100% - 24px);
     gap:12px;
     margin:10px 12px 8px;
     margin-bottom:8px;
@@ -3240,7 +3544,7 @@ onBeforeUnmount(() => {
 
   .wow-search-filter.is-mobile-expanded .wow-search-bottom-row{
     display:grid;
-    width:calc(100vw - 24px);
+    width:calc(100% - 24px);
     margin:0 12px;
   }
 
@@ -3263,20 +3567,20 @@ onBeforeUnmount(() => {
     overflow-x:hidden;
     overscroll-behavior:contain;
     -webkit-overflow-scrolling:touch;
-    background:rgba(0, 0, 0, .7);
-    backdrop-filter:blur(14px) saturate(140%);
-    -webkit-backdrop-filter:blur(14px) saturate(140%);
+    background:none;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
     box-shadow:none;
   }
 
   .wow-search-filter.is-mobile-expanded .wow-search-card{
-    width:calc(100vw - 24px);
+    width:calc(100% - 26px);
     max-width:none;
     margin:0 12px;
   }
 
   .wow-search-filter.is-mobile-expanded .wow-search-bottom-row{
-    width:calc(100vw - 24px);
+    width:calc(100% - 24px);
     margin:0 12px;
   }
 }
@@ -3412,7 +3716,7 @@ onBeforeUnmount(() => {
   .wow-search-filter{
     top:calc(var(--wow-header-offset, 0px) + 12px);
     z-index:1950;
-    width:min(900px, calc(100vw - 32px));
+    width:min(1234px, calc(100vw - 32px));
     max-width:none;
     padding:8px;
     border:0;
@@ -3441,6 +3745,7 @@ onBeforeUnmount(() => {
     backdrop-filter:none !important;
     -webkit-backdrop-filter:none !important;
     z-index:1 !important;
+    overflow:visible !important;
   }
 
   .wow-search-filter.is-static-layout .wow-search-card{
@@ -3449,26 +3754,54 @@ onBeforeUnmount(() => {
     background:rgba(255,255,255,.97);
   }
 
+  .wow-search-filter.is-static-layout .wow-search-main{
+    overflow:visible;
+  }
+
   .wow-search-filter.is-scroll-collapsed{
-    width:min(900px, calc(100vw - 30px));
-    padding:9px 8px;
-    border:1px solid rgba(229,231,235,.96);
+    width:calc(min(1234px, calc(100vw - 30px)) + 2px);
+    padding:10px 8px;
+    border:1px solid #ccc;
+    border-top:1px solid #ddd;
+    border-bottom:1px solid #aaa;
     border-radius:28px;
-    background:rgba(255,255,255,.9);
-    box-shadow:0 20px 56px rgba(16,24,40,.14);
-    backdrop-filter:none;
-    -webkit-backdrop-filter:none;
+    background:rgba(255,255,255,.5);
+    box-shadow:0 20px 56px #10182824;
+    backdrop-filter:blur(5px);
+    -webkit-backdrop-filter:blur(5px);
+  }
+
+  .wow-search-filter.is-scroll-collapsed::after,
+  .wow-search-filter.is-scroll-collapsed.is-filter-open::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    background:rgba(255,255,255,.18);
+    backdrop-filter:blur(1px);
+    -webkit-backdrop-filter:blur(1px);
+    z-index:0;
+  }
+
+  .wow-search-filter.is-scroll-collapsed .wow-search-card,
+  .wow-search-filter.is-scroll-collapsed.is-filter-open .wow-search-card,
+  .wow-search-filter.is-scroll-collapsed > *{
+    position:relative;
+    z-index:1;
   }
 
   .wow-search-filter.is-scroll-collapsed.is-filter-open{
-    width:min(900px, calc(100vw - 30px));
-    padding:9px 8px;
-    border:1px solid rgba(229,231,235,.96);
+    width:calc(min(1234px, calc(100vw - 30px)) + 2px);
+    padding:10px 8px;
+    border:1px solid #ccc;
+    border-top:1px solid #ddd;
+    border-bottom:1px solid #aaa;
     border-radius:28px;
-    background:rgba(255,255,255,.9);
-    box-shadow:0 20px 56px rgba(16,24,40,.14);
-    backdrop-filter:none;
-    -webkit-backdrop-filter:none;
+    background:rgba(255,255,255,.5);
+    box-shadow:0 20px 56px #10182824;
+    backdrop-filter:blur(5px);
+    -webkit-backdrop-filter:blur(5px);
   }
 
   .wow-search-filter.is-scroll-collapsed .wow-search-card,
@@ -3515,6 +3848,160 @@ onBeforeUnmount(() => {
 
   .wow-submit{
     min-width:58px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout{
+    position:relative !important;
+    top:100px !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    transform:none !important;
+    width:100% !important;
+    max-width:none !important;
+    height:auto !important;
+    max-height:none !important;
+    padding:0 24px !important;
+    margin:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    overflow:visible !important;
+  }
+
+  .wow-search-filter.is-static-layout.is-mobile-expanded.is-force-mobile-layout.is-panel-open{
+    padding:0 24px !important;
+    top:100px !important;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-search-top-row{
+    display:none !important;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-search-card{
+    width:100% !important;
+    max-width:none !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:7px !important;
+    border-radius:26px !important;
+    box-shadow:0 24px 70px rgba(16,24,40,.22) !important;
+    overflow:visible !important;
+    background:#fff !important;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-search-main{
+    grid-template-columns:1fr !important;
+    gap:6px !important;
+    min-height:auto !important;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-segment{
+    min-height:66px;
+    border-radius:18px;
+    grid-template-columns:32px minmax(0, 1fr);
+    gap:8px;
+    padding:0 11px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-segment .wow-icon{
+    width:32px;
+    height:32px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-segment .wow-icon i{
+    font-size:18px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-label{
+    font-size:12px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-copy input,
+  .wow-search-filter.is-force-mobile-layout .wow-value{
+    font-size:15px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-copy{
+    align-self:stretch;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    height:66px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-panel--what,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--where,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--calendar,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--who{
+    position:static !important;
+    top:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    left:auto !important;
+    inset:auto !important;
+    width:100% !important;
+    max-width:none !important;
+    grid-column:1 / -1;
+    margin:0 0 6px;
+    border:1px solid #dbe2ea;
+    border-radius:22px;
+    background:#fff;
+    box-shadow:0 14px 34px rgba(16,24,40,.08);
+    overflow:hidden;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:none;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-panel--what.is-open,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--where.is-open,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--calendar.is-open,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--who.is-open{
+    display:block;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-panel--what .wow-panel-inner,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--where .wow-panel-inner,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--calendar .wow-panel-inner,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--who .wow-panel-inner{
+    padding:16px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-panel--what .wow-panel-head,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--where .wow-panel-head,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--calendar .wow-panel-head,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--who .wow-panel-head{
+    margin-bottom:12px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-panel--what .wow-location-list,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--where .wow-location-list,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--calendar .wow-location-list,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--who .wow-location-list{
+    display:grid;
+    gap:8px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-panel--what .wow-panel-empty,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--where .wow-panel-empty,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--calendar .wow-panel-empty,
+  .wow-search-filter.is-force-mobile-layout .wow-panel--who .wow-panel-empty{
+    padding-top:12px;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-panel-actions{
+    display:none;
+  }
+
+  .wow-search-filter.is-force-mobile-layout .wow-submit{
+    min-height:58px;
+    border-radius:999px;
+    width:100%;
+    font-size:0;
   }
 }
 </style>
