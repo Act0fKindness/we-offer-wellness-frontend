@@ -305,22 +305,27 @@
 
  <script>
    document.addEventListener('DOMContentLoaded', () => {
-     const el = document.querySelector('[data-hero-swiper]');
+    const el = document.querySelector('[data-hero-swiper]');
     if (!el) return;
 
     const toggleBtn = document.querySelector('[data-hero-toggle]');
-     let isPaused = false;
+    const slideCount = el.querySelectorAll('.swiper-wrapper > .swiper-slide').length;
+    const hasMultipleSlides = slideCount > 1;
+    if (!hasMultipleSlides) {
+      el.querySelector('.wow-hero-nav')?.setAttribute('hidden', 'hidden');
+    }
+    let isPaused = false;
 
 	    const swiper = new Swiper(el, {
-	      loop: true,
+	      loop: hasMultipleSlides,
 	      speed: 650,
 	      effect: 'slide',
 
-       autoplay: {
+       autoplay: hasMultipleSlides ? {
          delay: 5000,
          disableOnInteraction: false,
          pauseOnMouseEnter: true,
-       },
+       } : false,
 
        navigation: {
          nextEl: '.wow-hero-next',
