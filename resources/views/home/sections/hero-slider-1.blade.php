@@ -1,195 +1,65 @@
-{{-- resources/views/home/sections/hero-slider-1.blade.php --}}
+{{-- Customer-focused homepage hero slide. --}}
 
 <style>
-    .whero.whero--s1{
-      height: 100%;
+  .whero.whero--s1 {
+    min-height: 100%;
+  }
+
+  .whero.whero--s1 .container.whero-pad {
+    display: flex;
+    align-items: center;
+    min-height: 100%;
+  }
+
+  .whero.whero--s1 .s1-copy {
+    width: min(100%, 980px);
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .whero.whero--s1 .whero-eyebrow {
+    display: inline-flex;
+  }
+
+  .whero.whero--s1 .whero-title,
+  .whero.whero--s1 .whero-sub {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .whero.whero--s1 .whero-sub {
+    max-width: 720px;
+  }
+
+  .whero.whero--s1 .s1-search {
+    width: min(100%, 920px);
+    margin: 2rem auto 0;
+    text-align: left;
+  }
+
+  @media (max-width: 575.98px) {
+    .whero.whero--s1 .container.whero-pad {
+      padding: 84px 20px 34px !important;
     }
 
-    .whero.whero--s1 .container.whero-pad{
-      height: 100%;
+    .whero.whero--s1 .s1-search {
+      margin-top: 1.25rem;
     }
-
-    @media (max-width: 575.98px){
-      .whero.whero--s1 .container.whero-pad{
-        padding: 84px 30px 30px !important;
-      }
-
-      .whero .row.align-items-center.g-5{
-        row-gap: 20px !important;
-      }
-
-      .whero.whero--s1 .row.align-items-center.g-5{
-        flex-direction: column;
-      }
-
-      .whero.whero--s1 .row.align-items-center.g-5 > .browser-window{
-        display: none !important;
-      }
-
-      .whero.whero--s1 .row.align-items-center.g-5 > .col-12{
-        flex: 0 0 100%;
-        max-width: 100%;
-      }
-
-      .whero.whero--s1 .row.align-items-center.g-5 > .col-lg-7{
-        order: 2;
-      }
-
-      .whero-title,
-      .whero-sub,
-      .whero-cta{
-        max-width: none;
-        width: 100%;
-      }
-
-      .whero-cta{
-        flex-wrap: wrap;
-        height: auto;
-        padding: 10px;
-        border-radius: 20px;
-      }
-
-      .whero-cta-input{
-        flex: 1 1 100%;
-        width: 100%;
-        height: 46px;
-        padding: 0 8px;
-      }
-
-      .whero-cta .btn-wow{
-        width: 100%;
-      }
-    }
-
+  }
 </style>
 
+<section class="whero whero--s1" aria-labelledby="homepage-hero-title">
+  <div class="whero-radial" aria-hidden="true"></div>
 
-<section data-v-f43bb09d="" class="whero whero--s1">
-  <div data-v-f43bb09d="" class="whero-radial" aria-hidden="true"></div>
+  <div class="container whero-pad">
+    <div class="s1-copy">
+      <span class="whero-eyebrow">Find support that fits your life</span>
+      <h1 id="homepage-hero-title" class="whero-title">Feel better with wellness experiences chosen for you</h1>
+      <p class="whero-sub mt-3">Discover trusted therapies, classes, workshops and retreats — online or near you — and find the right next step for how you feel today.</p>
 
-    <div data-v-f43bb09d="" class="container whero-pad">
-        <div data-v-f43bb09d="" class="row align-items-center g-5">
-            <div data-v-f43bb09d="" class="col-12 col-lg-7">
-                <span data-v-f43bb09d="" class="whero-eyebrow">Trusted holistic therapies</span>
-                <h1 data-v-f43bb09d="" class="whero-title">Discover therapies and classes that work for you</h1>
-                <p data-v-f43bb09d="" class="whero-sub mt-3"> Explore therapies, classes, workshops and experiences by the kind of support you are looking for. <span
-                        data-v-f43bb09d="" class="whero-subline">Therapies, classes, and workshops curated by practitioners you can trust so you can feel better, faster.</span>
-                </p>
-                <form data-v-f43bb09d="" class="whero-cta mt-4" data-subscriber-form="hero-slider-1" data-subscriber-source="hero-slider-1:community" novalidate>
-                    <input data-v-f43bb09d="" class="whero-cta-input"
-                           type="email" name="email" placeholder="Email address"
-                           aria-label="Email address" required>
-                    <button data-v-f43bb09d="" type="submit" class="btn-wow btn-md btn-arrow"
-                            data-loader-init="1"><span class="btn-label">Join our Community</span><span
-                        class="btn-icon-wrap" aria-hidden="true"><svg class="btn-icon-hover"
-                                                                      xmlns="http://www.w3.org/2000/svg"
-                                                                      viewBox="0 0 24 24"><path
-                        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                        stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg><svg
-                        class="btn-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path
-                        fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"
-                        stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg></span><span
-                        class="btn-spinner" aria-hidden="true"><span class="spin"></span></span></button>
-                    <p class="whero-cta-feedback" data-subscriber-feedback aria-live="polite" hidden></p>
-                </form>
-            </div>
-            <div data-v-f43bb09d="" class="browser-window col-12 col-lg-5 d-none d-lg-block">
-                <div data-v-f43bb09d="" class="whero-stack">
-                    <div data-v-f43bb09d="" class="whero-panel">
-                        <div data-v-f43bb09d="" class="whero-browser-frame">
-                            <div data-v-f43bb09d="" class="whero-browser-chrome">
-                                <div data-v-f43bb09d="" class="whero-browser-dots"><span data-v-f43bb09d=""
-                                                                                         class="r"></span><span
-                                    data-v-f43bb09d="" class="y"></span><span data-v-f43bb09d=""
-                                                                              class="g"></span></div>
-                                <div data-v-f43bb09d="" class="whero-browser-url">
-                                    <div data-v-f43bb09d="" class="whero-url-pill">weofferwellness.co.uk •
-                                        Today
-                                    </div>
-                                </div>
-                            </div>
-                            <div data-v-f43bb09d="" class="whero-browser-page">
-                                <div data-v-f43bb09d="" class="whero-bar"><span data-v-f43bb09d=""
-                                                                                class="me-auto">TODAY • Studio Calendar</span><span
-                                    data-v-f43bb09d="" class="badge text-bg-light">Search</span></div>
-                                <div data-v-f43bb09d="" class="whero-grid-viewport">
-                                    <div data-v-f43bb09d="" class="whero-grid"
-                                         style="--scrollDist: 1919px; --drift-time: 36.0s;">
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Upcoming
-                                                class
-                                            </div>
-                                            <div data-v-f43bb09d="" class="mt-1">Yoga Flow — 14:00</div>
-                                            <div data-v-f43bb09d="" class="text-muted">12 / 18 spots</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">1-to-1
-                                                therapy
-                                            </div>
-                                            <div data-v-f43bb09d="" class="mt-1">Deep Tissue Massage</div>
-                                            <div data-v-f43bb09d="" class="text-success">3 slots open</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Bookings
-                                                (week)
-                                            </div>
-                                            <div data-v-f43bb09d="" class="mt-1">+32.1%</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Pilates</div>
-                                            <div data-v-f43bb09d="" class="mt-1">Reformer — 16:30</div>
-                                            <div data-v-f43bb09d="" class="text-muted">4 / 10 spots</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Sound Bath
-                                            </div>
-                                            <div data-v-f43bb09d="" class="mt-1">Candlelight — 19:00</div>
-                                            <div data-v-f43bb09d="" class="text-muted">8 / 20 spots</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Acupuncture
-                                            </div>
-                                            <div data-v-f43bb09d="" class="mt-1">Initial consult</div>
-                                            <div data-v-f43bb09d="" class="text-success">Today • 17:45</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Meditation
-                                            </div>
-                                            <div data-v-f43bb09d="" class="mt-1">Guided — 12:30</div>
-                                            <div data-v-f43bb09d="" class="text-muted">Live online</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Hot Yoga</div>
-                                            <div data-v-f43bb09d="" class="mt-1">90 mins — 18:15</div>
-                                            <div data-v-f43bb09d="" class="text-muted">Waitlist open</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Physio</div>
-                                            <div data-v-f43bb09d="" class="mt-1">Follow-up</div>
-                                            <div data-v-f43bb09d="" class="text-success">2 slots today</div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                        <div data-v-f43bb09d="" class="card">
-                                            <div data-v-f43bb09d="" class="small text-muted">Reiki</div>
-                                            <div data-v-f43bb09d="" class="mt-1">Energy balance</div>
-                                            <div data-v-f43bb09d="" class="text-muted">Tomorrow • 11:00
-                                            </div>
-                                            <div data-v-f43bb09d="" class="spark"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div><!----></div>
-            </div>
-        </div>
+      <div class="s1-search">
+        <x-home-searchbar-v4 id-prefix="hero-search-v4" mobile-top-offset="var(--wow-header-offset, 0px)" />
+      </div>
     </div>
+  </div>
 </section>

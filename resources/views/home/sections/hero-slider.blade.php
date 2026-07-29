@@ -296,10 +296,6 @@
 
 @include('home.sections.mindful_times_ribbon')
 
-<div class="container-page py-2 wow-home-search-wrap">
-  <x-home-searchbar-v4 id-prefix="home-search-v4" mobile-top-offset="var(--wow-header-offset, 0px)" />
-</div>
-
   {{-- Swiper JS --}}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
