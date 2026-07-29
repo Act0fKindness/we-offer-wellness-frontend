@@ -13,6 +13,11 @@
     overflow: visible;
   }
 
+  .wow-hero-swiper {
+    position: relative;
+    z-index: 20;
+  }
+
   .whero.whero--s1 .container.whero-pad {
     display: flex;
     align-items: center;
@@ -45,6 +50,11 @@
     width: min(100%, 920px);
     margin: 2rem auto 0;
     text-align: left;
+  }
+
+  .whero.whero--s1 .s1-search .wow-search-filter,
+  .whero.whero--s1 .s1-search .wow-panel {
+    z-index: 3000;
   }
 
   @media (max-width: 575.98px) {
