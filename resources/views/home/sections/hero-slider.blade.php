@@ -118,6 +118,10 @@
     }
 
     @media (max-width: 1040px) {
+      .wow-hero-swiper:has(.wow-search-filter.is-mobile-expanded) {
+        z-index: 5000;
+      }
+
       .wow-home-search-wrap {
         position: sticky;
         top: 70px;
