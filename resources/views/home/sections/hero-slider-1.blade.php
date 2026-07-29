@@ -3,6 +3,14 @@
 <style>
   .whero.whero--s1 {
     min-height: 100%;
+    overflow: visible;
+    z-index: 2;
+  }
+
+  .wow-hero-swiper,
+  .wow-hero-swiper .swiper-wrapper,
+  .wow-hero-swiper .swiper-slide {
+    overflow: visible;
   }
 
   .whero.whero--s1 .container.whero-pad {
@@ -32,6 +40,8 @@
   }
 
   .whero.whero--s1 .s1-search {
+    position: relative;
+    z-index: 100;
     width: min(100%, 920px);
     margin: 2rem auto 0;
     text-align: left;
