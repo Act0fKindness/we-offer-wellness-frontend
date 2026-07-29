@@ -105,6 +105,6 @@
     </div>
   </section>
 
-  <section class="partners-final"><div class="container-page"><div class="partners-kicker">Start simply</div><h2>Your next client may already be looking for what you do.</h2><p>Join We Offer Wellness for free, create your Partner profile and put your offerings where wellness-minded people are already searching.</p><div class="partners-actions"><a class="partners-btn partners-btn--primary" href="{{ route('register', ['redirect' => '/account']) }}">Become a Partner — free <span aria-hidden="true">→</span></a><a class="partners-btn partners-btn--outline" href="https://studio.weofferwellness.co.uk/" target="_blank" rel="noopener">See WOW Studio</a></div></div></section>
+  <section class="partners-final"><div class="container-page"><div class="partners-kicker">Start simply</div><h2>Your next client may already be looking for what you do.</h2><p>Join We Offer Wellness for free, create your Partner profile and put your offerings where wellness-minded people are already searching.</p><div class="partners-actions"><a class="partners-btn partners-btn--primary" href="https://studio.weofferwellness.co.uk/" target="_blank" rel="noopener">Become a Partner — free <span aria-hidden="true">→</span></a><a class="partners-btn partners-btn--outline" href="https://studio.weofferwellness.co.uk/" target="_blank" rel="noopener">See WOW Studio</a></div></div></section>
 </div>
 @endsection
