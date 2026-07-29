@@ -178,5 +178,22 @@
             width:auto;
         }
     }
+
+    @media (max-width:767.98px){
+        #home-gifts{
+            height:auto !important;
+            min-height:0 !important;
+            margin-bottom:0 !important;
+            padding-bottom:0 !important;
+        }
+        #home-gifts > .container-page,
+        #home-gifts-cards{
+            height:auto !important;
+            min-height:0 !important;
+        }
+        #home-gifts-cards{
+            margin-bottom:0 !important;
+        }
+    }
 </style>
 @endonce
