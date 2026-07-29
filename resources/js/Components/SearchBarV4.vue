@@ -2559,6 +2559,12 @@ onBeforeUnmount(() => {
   transform:none;
 }
 
+@media (min-width: 1041px){
+  #hero-search-v4-when-pane{
+    width:auto;
+  }
+}
+
 .wow-panel--what,
 .wow-panel--where{
   width:min(420px, calc(100vw - 32px));
