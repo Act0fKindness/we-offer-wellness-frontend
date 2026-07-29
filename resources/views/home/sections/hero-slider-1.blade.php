@@ -77,7 +77,7 @@
       <h1 id="homepage-hero-title" class="whero-title">Find holistic therapies, events, workshops, festivals and retreats</h1>
       <p class="whero-sub mt-3">Explore trusted practitioners and experiences online or near you, then choose the support, session or event that feels right for you.</p>
 
-      <div class="s1-search">
+      <div class="s1-search wow-home-search-wrap">
         <x-home-searchbar-v4 id-prefix="hero-search-v4" mobile-top-offset="var(--wow-header-offset, 0px)" />
       </div>
     </div>
