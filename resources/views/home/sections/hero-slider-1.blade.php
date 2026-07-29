@@ -24,6 +24,10 @@
     min-height: 100%;
   }
 
+  .wow-hero-swiper.wow-hero-swiper--single .whero.whero--s1 .container.whero-pad {
+    min-height: auto;
+  }
+
   .whero.whero--s1 .s1-copy {
     width: min(100%, 980px);
     margin: 0 auto;

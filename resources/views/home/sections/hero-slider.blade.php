@@ -21,6 +21,15 @@
     .wow-hero-swiper .swiper-slide > .whero .whero-pad {
       min-height: var(--wow-hero-band-height);
     }
+
+    .wow-hero-swiper.wow-hero-swiper--single,
+    .wow-hero-swiper.wow-hero-swiper--single .swiper-wrapper,
+    .wow-hero-swiper.wow-hero-swiper--single .swiper-slide,
+    .wow-hero-swiper.wow-hero-swiper--single .swiper-slide > .whero,
+    .wow-hero-swiper.wow-hero-swiper--single .swiper-slide > .whero .whero-pad {
+      height: auto !important;
+      min-height: 0 !important;
+    }
     @media (max-width: 767.98px) {
       .wow-hero-swiper .swiper-wrapper,
       .wow-hero-swiper .swiper-slide {
@@ -307,6 +316,7 @@
     const toggleBtn = document.querySelector('[data-hero-toggle]');
     const slideCount = el.querySelectorAll('.swiper-wrapper > .swiper-slide').length;
     const hasMultipleSlides = slideCount > 1;
+    el.classList.toggle('wow-hero-swiper--single', !hasMultipleSlides);
     if (!hasMultipleSlides) {
       el.querySelector('.wow-hero-nav')?.setAttribute('hidden', 'hidden');
     }
