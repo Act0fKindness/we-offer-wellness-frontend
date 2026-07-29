@@ -25,7 +25,38 @@
       .wow-hero-swiper .swiper-wrapper,
       .wow-hero-swiper .swiper-slide {
         min-height: var(--wow-hero-band-height);
-        height: 602px !important;
+        height: 828px !important;
+      }
+      .wow-hero-pagination .swiper-pagination-bullet{
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        margin: 0 !important;
+        background: transparent;
+        border: 0;
+        position: relative;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+      }
+      .wow-hero-pagination .swiper-pagination-bullet::before{
+        content:"";
+        position:absolute;
+        left:50%;
+        top:50%;
+        width:10px;
+        height:10px;
+        transform:translate(-50%,-50%);
+        border-radius:999px;
+        background: rgba(255,255,255,.22);
+        border:1px solid #fff;
+      }
+      .wow-hero-pagination .swiper-pagination-bullet-active::before{
+        width:26px;
+        background: rgba(255,255,255,.65);
+        border-color: rgba(255,255,255,.65);
       }
     }
     @media (min-width: 992px) {
@@ -64,6 +95,34 @@
       align-items:center;
       justify-content:space-between;
       gap:14px;
+    }
+
+    .wow-home-search-wrap{
+      position:relative;
+      z-index:50;
+    }
+
+    @media (min-width: 1041px) {
+      .wow-home-search-wrap{
+        scroll-margin-top: 127px;
+      }
+    }
+
+    @media (max-width: 1040px) {
+      .wow-home-search-wrap {
+        position: sticky;
+        top: 70px;
+        z-index: 3000;
+        padding: 0;
+      }
+
+      .wow-home-search-wrap:has(.wow-search-filter.is-mobile-expanded) {
+        position: fixed;
+        top: 55px;
+        left: 0;
+        right: 0;
+        width: 100%;
+      }
     }
 
     .wow-hero-btn {
@@ -190,36 +249,18 @@
       .wow-hero-swiper .whero-spark,
       .wow-hero-swiper .spark { height: 72px; }
 
-      /* Slide 2 specific tweaks */
-      .whero.whero--s2 .ourvibe-poster { max-height: 260px !important; height: auto; width: auto; }
-      .whero.whero--s2 .ourvibe-mid img { max-height: 280px !important; }
-      .whero.whero--s2 .ourvibe-sticker { width: 82px !important; height: 82px !important; }
-      .whero.whero--s2 .ourvibe-box { transform: scale(.74); transform-origin: top right; }
-      .whero.whero--s2 .present { letter-spacing: .24em; }
-      .whero.whero--s2 .ourvibe-bottom--desktop-consistent { font-size: 16px !important; line-height: 1.16; }
-      .whero.whero--s2 .ourvibe-actions { margin-top: 14px !important; }
-      .whero.whero--s2 a.ourvibe-buy { font-size: 18px !important; padding: 8px 12px; }
-      .whero.whero--s2 .ourvibe-top .brand svg { height: 26px; }
-      .whero.whero--s2 .ourvibe-box.box-1 { top: clamp(188px, 22vh, 248px); }
-      .whero.whero--s2 .ourvibe-box.box-2 { top: clamp(320px, 36vh, 420px); }
-      .whero.whero--s2 .ourvibe-wrap { padding: clamp(10px, 2vw, 22px) 0; }
-      .whero.whero--s2 .ourvibe-shell { gap: 10px; padding-bottom: 14px !important; }
-      .whero.whero--s2 .ourvibe-bottom { font-size: clamp(16px, 1.05vw + .35rem, 18px) !important; }
-      .whero.whero--s2 .ourvibe-bottom .ourvibe-actions { margin-top: 16px; }
-      /* Cap section internal spacing to avoid overflow vs slide 1 */
-      .whero.whero--s2 .whero-pad { padding-top: 32px !important; padding-bottom: 16px !important; min-height: var(--wow-hero-band-height); }
     }
   </style>
 
 {{-- Swiper slider --}}
 <div class="swiper wow-hero-swiper" data-hero-swiper>
   <div class="swiper-wrapper">
-    <div class="swiper-slide">
-      @include('home.sections.hero-slider-2')
-    </div>
-    <div class="swiper-slide">
-      @include('home.sections.hero-slider-3')
-    </div>
+    @if(false)
+      {{-- WOW Studio slide retained for later reuse, currently hidden from the homepage. --}}
+      <div class="swiper-slide">
+        @include('home.sections.hero-slider-3')
+      </div>
+    @endif
     <div class="swiper-slide">
       @include('home.sections.hero-slider-1')
     </div>
@@ -253,8 +294,10 @@
   </div>
 </div>
 
-<div class="container-page py-2">
-  <x-home-searchbar-v4 id-prefix="home-search-v4" :result-count="0" mobile-top-offset="var(--wow-header-offset, 0px)" />
+@include('home.sections.mindful_times_ribbon')
+
+<div class="container-page py-2 wow-home-search-wrap">
+  <x-home-searchbar-v4 id-prefix="home-search-v4" mobile-top-offset="var(--wow-header-offset, 0px)" />
 </div>
 
   {{-- Swiper JS --}}
