@@ -330,9 +330,7 @@
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
         'seller' => [
-          '@type' => $schemaProviderType,
-          'name' => $schemaProviderName,
-          'url' => $schemaProviderUrl !== '' ? $schemaProviderUrl : url('/'),
+          '@id' => url('/') . '#organization',
         ],
       ];
 
@@ -353,9 +351,7 @@
         'priceCurrency' => $schemaPriceCurrency,
         'availability' => 'https://schema.org/InStock',
         'seller' => [
-          '@type' => $schemaProviderType,
-          'name' => $schemaProviderName,
-          'url' => $schemaProviderUrl !== '' ? $schemaProviderUrl : url('/'),
+          '@id' => url('/') . '#organization',
         ],
       ];
 
@@ -891,7 +887,246 @@
       ], static fn ($value) => $value !== null && $value !== '');
     }
 
+    $schemaEventLinks = [];
+    $schemaEventLinksSource = data_get($p, 'event_links', []);
+    if ($schemaEventLinksSource instanceof \Illuminate\Support\Collection) {
+      $schemaEventLinksSource = $schemaEventLinksSource->all();
+    }
+    if (is_string($schemaEventLinksSource)) {
+      $schemaEventLinksSource = json_decode($schemaEventLinksSource, true) ?: [];
+    }
+    if (is_object($schemaEventLinksSource)) {
+      $schemaEventLinksSource = (array) $schemaEventLinksSource;
+    }
+    if (! is_array($schemaEventLinksSource)) {
+      $schemaEventLinksSource = [];
+    }
+    foreach ($schemaEventLinksSource as $schemaEventLink) {
+      if (is_object($schemaEventLink)) {
+        $schemaEventLink = (array) $schemaEventLink;
+      }
+      if (! is_array($schemaEventLink)) {
+        continue;
+      }
+      $schemaEventLinkUrl = trim((string) ($schemaEventLink['url'] ?? ''));
+      if ($schemaEventLinkUrl === '') {
+        continue;
+      }
+      $schemaEventLinks[] = $schemaEventLinkUrl;
+    }
+    $schemaEventLinks = array_values(array_unique($schemaEventLinks));
+
+    $schemaEventVideoUrl = trim((string) data_get($p, 'video_url', ''));
+    $schemaEventVideo = null;
+    if ($schemaEventVideoUrl !== '') {
+      $schemaEventVideoUploadDate = trim((string) data_get($p, 'created_at', data_get($p, 'event.created_at', '')));
+      if ($schemaEventVideoUploadDate === '') {
+        $schemaEventVideoUploadDate = now()->toAtomString();
+      } else {
+        try {
+          $schemaEventVideoUploadDate = \Carbon\Carbon::parse($schemaEventVideoUploadDate)->toAtomString();
+        } catch (\Throwable $e) {
+          $schemaEventVideoUploadDate = now()->toAtomString();
+        }
+      }
+      $schemaEventVideo = [
+        '@id' => $schemaUrl . '#video',
+        '@type' => 'VideoObject',
+        'name' => $title . ' video',
+        'description' => $schemaEventDescription,
+        'contentUrl' => $schemaEventVideoUrl,
+        'url' => $schemaEventVideoUrl,
+        'thumbnailUrl' => $schemaImages[0] ?? null,
+        'encodingFormat' => str_contains(strtolower($schemaEventVideoUrl), '.mov') ? 'video/quicktime' : null,
+        'uploadDate' => $schemaEventVideoUploadDate,
+      ];
+    }
+
+    $schemaEventVenuePlace = null;
+    $schemaEventSpacePlaces = [];
+    $schemaEventSubEvents = [];
+    $schemaEventSchedule = data_get($p, 'event.schedule', []);
+    if (is_object($schemaEventSchedule)) {
+      $schemaEventSchedule = (array) $schemaEventSchedule;
+    }
+    if (! is_array($schemaEventSchedule)) {
+      $schemaEventSchedule = [];
+    }
+    $schemaEventScheduleDays = $schemaEventSchedule['days'] ?? [];
+    if ($schemaEventScheduleDays instanceof \Illuminate\Support\Collection) {
+      $schemaEventScheduleDays = $schemaEventScheduleDays->all();
+    }
+    if (! is_array($schemaEventScheduleDays)) {
+      $schemaEventScheduleDays = [];
+    }
+    $schemaEventSpaceMap = [];
+    $schemaEventVenueName = trim((string) ($schemaEventVenueName !== '' ? $schemaEventVenueName : ($schemaEventLocations[0] ?? $title)));
+    $schemaEventPostalAddress = null;
+    if ($schemaEventStreetAddress !== '' || $schemaEventAddressLine2 !== '' || $schemaEventCity !== '' || $schemaEventCounty !== '' || $schemaEventPostcode !== '') {
+      $schemaEventPostalAddress = array_filter([
+        '@type' => 'PostalAddress',
+        'streetAddress' => trim(implode(', ', array_filter([$schemaEventStreetAddress, $schemaEventAddressLine2]))),
+        'addressLocality' => $schemaEventCity !== '' ? $schemaEventCity : null,
+        'addressRegion' => $schemaEventCounty !== '' ? $schemaEventCounty : null,
+        'postalCode' => $schemaEventPostcode !== '' ? $schemaEventPostcode : null,
+        'addressCountry' => $schemaEventCountry !== '' ? $schemaEventCountry : 'GB',
+      ], static fn ($value) => $value !== null && $value !== '');
+    }
+    $schemaEventVenuePlace = $schemaEventPlace ?? [
+      '@type' => 'Place',
+      '@id' => $schemaUrl . '#venue',
+      'name' => $schemaEventVenueName !== '' ? $schemaEventVenueName : $title,
+      'address' => $schemaEventPostalAddress,
+      'image' => $schemaImages[0] ?? null,
+    ];
+    $schemaEventVenuePlaceId = trim((string) data_get($schemaEventVenuePlace, '@id', $schemaUrl . '#venue'));
+
+    foreach ($schemaEventScheduleDays as $dayIndex => $day) {
+      if (is_object($day)) {
+        $day = (array) $day;
+      }
+      if (! is_array($day)) {
+        continue;
+      }
+
+      $dayDate = trim((string) data_get($day, 'date', ''));
+      $rawSessions = data_get($day, 'sessions', []);
+      if ($rawSessions instanceof \Illuminate\Support\Collection) {
+        $rawSessions = $rawSessions->all();
+      }
+      if (! is_array($rawSessions)) {
+        $rawSessions = [];
+      }
+
+      foreach ($rawSessions as $sessionIndex => $session) {
+        if (is_object($session)) {
+          $session = (array) $session;
+        }
+        if (! is_array($session)) {
+          continue;
+        }
+
+        $spaceName = trim((string) data_get($session, 'space_area', ''));
+        $spaceKey = $spaceName !== '' ? \Illuminate\Support\Str::slug($spaceName) : 'space';
+        if ($spaceName !== '' && ! isset($schemaEventSpaceMap[$spaceKey])) {
+          $schemaEventSpaceMap[$spaceKey] = $schemaUrl . '#space-' . $spaceKey;
+          $schemaEventSpacePlaces[] = [
+            '@type' => 'Place',
+            '@id' => $schemaEventSpaceMap[$spaceKey],
+            'name' => $spaceName,
+            'address' => $schemaEventPostalAddress,
+            'image' => $schemaImages[0] ?? null,
+            'containedInPlace' => [
+              '@id' => $schemaEventVenuePlaceId,
+            ],
+          ];
+        }
+
+        $sessionTitle = trim((string) data_get($session, 'label', ''));
+        if ($sessionTitle === '') {
+          continue;
+        }
+        $startTimeValue = trim((string) data_get($session, 'start_time', ''));
+        $endTimeValue = trim((string) data_get($session, 'end_time', ''));
+        $sessionFacilitator = trim((string) data_get($session, 'facilitator', data_get($session, 'practitioner', data_get($session, 'facilitator_name', ''))));
+        $sessionNotes = trim((string) data_get($session, 'notes', ''));
+        $sessionDescription = $sessionNotes;
+        $sessionPerformer = null;
+        if ($sessionFacilitator !== '') {
+          $sessionPerformer = [
+            '@type' => 'Organization',
+            'name' => $sessionFacilitator,
+          ];
+          if ($sessionDescription === '') {
+            $sessionDescription = $sessionFacilitator;
+          }
+        }
+        if (preg_match('/Facilitator:\s*(.+?)(?:\.)?$/i', $sessionNotes, $sessionMatch)) {
+          $sessionPerformerName = trim((string) $sessionMatch[1]);
+          if ($sessionPerformerName !== '') {
+            $sessionPerformer = [
+              '@type' => 'Organization',
+              'name' => $sessionPerformerName,
+            ];
+            $sessionDescription = trim((string) preg_replace('/\s*Facilitator:\s*.+?\.?$/i', '', $sessionNotes));
+          }
+        }
+
+        $sessionId = $schemaUrl . '#' . \Illuminate\Support\Str::slug(trim(implode(' ', array_filter([
+          $dayDate,
+          $spaceName,
+          $sessionTitle,
+          $startTimeValue,
+        ]))), '-');
+        if ($sessionId === $schemaUrl . '#') {
+          $sessionId = $schemaUrl . '#session-' . $dayIndex . '-' . $sessionIndex;
+        }
+
+        $schemaEventSubEvents[] = [
+          '@id' => $sessionId,
+          '@type' => 'Event',
+          'name' => $sessionTitle,
+          'description' => $sessionDescription !== '' ? $sessionDescription : null,
+          'startDate' => $schemaEventDateTime($dayDate, $startTimeValue),
+          'endDate' => $schemaEventDateTime($dayDate, $endTimeValue !== '' ? $endTimeValue : $startTimeValue),
+          'eventStatus' => $isPastEvent ? 'https://schema.org/EventCompleted' : 'https://schema.org/EventScheduled',
+          'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+          'location' => $spaceName !== '' && isset($schemaEventSpaceMap[$spaceKey])
+            ? ['@id' => $schemaEventSpaceMap[$spaceKey]]
+            : ['@id' => $schemaEventVenuePlaceId],
+          'organizer' => [
+            '@id' => url('/') . '#organization',
+          ],
+          'performer' => $sessionPerformer,
+          'url' => $schemaUrl,
+          'image' => $schemaImages ?: null,
+          'offers' => $schemaOffers ?: null,
+          'isPartOf' => [
+            '@id' => $schemaUrl . '#event',
+          ],
+          'superEvent' => [
+            '@id' => $schemaUrl . '#event',
+          ],
+        ];
+      }
+    }
+
     $schemaEventGraphNodes = [
+      [
+        '@type' => 'Organization',
+        '@id' => url('/') . '#organization',
+        'name' => 'We Offer Wellness®',
+        'alternateName' => 'WOW',
+        'url' => url('/'),
+        'logo' => [
+          '@type' => 'ImageObject',
+          'url' => 'https://studio.weofferwellness.co.uk/storage/uploads/images/e9dc87f9-01bf-4ffd-be8f-e1f49a85bf41.png',
+        ],
+        'sameAs' => [
+          'https://studio.weofferwellness.co.uk/',
+          'https://times.weofferwellness.co.uk/',
+          'https://times.weofferwellness.co.uk/seeking-wellness',
+          'https://uk.trustpilot.com/review/weofferwellness.co.uk',
+          'https://www.facebook.com/p/We-Offer-Wellness-61551580484062/',
+          'https://www.instagram.com/we_offer_wellness/',
+          'https://uk.linkedin.com/company/we-offer-wellness-wow',
+          'https://www.youtube.com/@WeOfferWellness',
+          'https://www.eventbrite.co.uk/o/we-offer-wellness-88260749533',
+          'https://open.spotify.com/show/5L8zM83I4zTtQVl0UvsUt7',
+          'https://podcasts.apple.com/us/podcast/seeking-wellness-with-tash/id1804997207?uo=4',
+          'https://www.youtube.com/@SeekingWellnesswithTash',
+          'https://find-and-update.company-information.service.gov.uk/company/15323457',
+        ],
+      ],
+      [
+        '@type' => 'WebSite',
+        '@id' => url('/') . '#website',
+        'name' => 'We Offer Wellness®',
+        'url' => url('/'),
+        'publisher' => [
+          '@id' => url('/') . '#organization',
+        ],
+      ],
       [
         '@type' => 'WebPage',
         '@id' => $schemaUrl . '#webpage',
@@ -907,6 +1142,7 @@
         'mainEntity' => [
           '@id' => $schemaUrl . '#event',
         ],
+        'sameAs' => $schemaEventLinks ?: null,
         'breadcrumb' => [
           '@id' => $schemaUrl . '#breadcrumb',
         ],
@@ -918,9 +1154,12 @@
       [
         '@type' => 'BreadcrumbList',
         '@id' => $schemaUrl . '#breadcrumb',
+        'name' => $title . ' breadcrumb trail',
         'itemListElement' => $schemaEventBreadcrumbItems,
       ],
-      $schemaEventPlace,
+      $schemaEventVenuePlace,
+      $schemaEventSpacePlaces ?: null,
+      $schemaEventVideo,
       [
         '@type' => 'Event',
         '@id' => $schemaUrl . '#event',
@@ -938,22 +1177,26 @@
         'eventStatus' => $isPastEvent ? 'https://schema.org/EventCompleted' : 'https://schema.org/EventScheduled',
         'eventAttendanceMode' => $schemaEventAttendanceMode,
         'location' => $schemaEventLocation,
+        'sameAs' => $schemaEventLinks ?: null,
         'organizer' => [
-          '@type' => 'Organization',
           '@id' => url('/') . '#organization',
-          'name' => $schemaEventOrganizerName,
-          'url' => $schemaEventOrganizerUrl,
         ],
         'performer' => $schemaEventPerformers ?: null,
+        'video' => $schemaEventVideo ? ['@id' => $schemaUrl . '#video'] : null,
+        'subEvent' => $schemaEventSubEvents ?: null,
         'aggregateRating' => $schemaEventAggregate,
         'keywords' => array_values(array_filter([
-          trim((string) ($type !== '' ? $type : 'event')),
+          trim((string) ($p['title'] ?? '')),
+          trim((string) data_get($p, 'category.name', '')),
+          trim((string) ($p['type'] ?? 'event')),
           trim((string) (data_get($p, 'category.name') ?: '')),
           $schemaEventVenueName !== '' ? $schemaEventVenueName : null,
           $schemaEventHasOnline ? 'online' : 'in-person',
-          'holistic therapy',
-          'wellness event',
-          'wellness experience',
+          'sound baths',
+          'gong baths',
+          'breathwork',
+          'kirtan',
+          'yoga',
         ])),
         'offers' => $schemaEventOffers ?: null,
         'isAccessibleForFree' => false,

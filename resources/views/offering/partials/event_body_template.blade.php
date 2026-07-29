@@ -69,8 +69,8 @@
         $galleryItems[] = [
             'type' => 'image',
             'src' => $image,
-            'label' => $imageIndex === 0 ? 'Festival setting' : ($imageIndex === 1 ? 'Meditation' : 'Live sound'),
-            'alt' => $imageIndex === 0 ? 'Peaceful countryside festival setting' : ($imageIndex === 1 ? 'Meditation session' : 'Live music and festival atmosphere'),
+            'label' => $imageIndex === 0 ? 'Event setting' : ($imageIndex === 1 ? 'Meditation' : 'Live sound'),
+            'alt' => $imageIndex === 0 ? 'Event setting' : ($imageIndex === 1 ? 'Meditation session' : 'Live sound'),
         ];
     }
     if ($eventVideo !== '') {
@@ -78,8 +78,8 @@
             'type' => $eventVideoEmbedUrl !== '' ? 'youtube' : 'video',
             'src' => $eventVideoEmbedUrl !== '' ? $eventVideoEmbedUrl : $eventVideo,
             'poster' => $eventImage !== '' ? $eventImage : ($eventImages[0] ?? ''),
-            'label' => 'Festival film',
-            'alt' => 'Festival video preview',
+            'label' => 'Event film',
+            'alt' => 'Event video preview',
         ]);
     }
     if (empty($galleryItems)) {
@@ -127,7 +127,7 @@
         trim((string) ($primaryVenue['country'] ?? '')),
     ]));
     if (empty($venueAddressLines)) {
-        $venueAddressLines = ['Priory Road', 'Bilsington', 'TN25 7AU', 'United Kingdom'];
+        $venueAddressLines = ['Address to be confirmed'];
     }
 
     $eventVenueLabel = trim(implode(', ', array_filter([
@@ -136,7 +136,7 @@
         (string) ($primaryVenue['county'] ?? ''),
     ])));
     if ($eventVenueLabel === '') {
-        $eventVenueLabel = $eventLocation !== '' ? $eventLocation : 'Bilsington Priory Estate';
+        $eventVenueLabel = $eventLocation !== '' ? $eventLocation : 'Location to be confirmed';
     }
     $eventLocationLabel = $eventLocation !== '' ? $eventLocation : $eventVenueLabel;
 
@@ -144,9 +144,9 @@
     $eventStartTime = trim((string) ($product['start_time'] ?? data_get($event, 'start_time', '')));
     $eventEndDate = trim((string) ($product['end_date'] ?? data_get($event, 'end_date', '')));
     $eventEndTime = trim((string) ($product['end_time'] ?? data_get($event, 'end_time', '')));
-    $eventDateBadge = 'Sat 11 Jul – Sun 12 Jul 2026';
-    $eventMetaDate = '11–12 July 2026';
-    $eventSnapshotDate = '11–12 Jul';
+    $eventDateBadge = 'Date to be confirmed';
+    $eventMetaDate = 'Date to be confirmed';
+    $eventSnapshotDate = 'To be confirmed';
     $eventTimeLabel = '';
     if ($eventStartDate !== '') {
         try {
@@ -162,23 +162,58 @@
                 $eventSnapshotDate = $start->format('j M');
             }
 
-            $eventTimeLabel = trim(($eventStartTime !== '' ? $eventStartTime : '10:00 AM') . ($eventEndTime !== '' ? ' – ' . $eventEndTime : ' – 5:00 PM'));
+            $eventTimeLabel = trim(implode(' – ', array_filter([$eventStartTime, $eventEndTime])));
         } catch (\Throwable $e) {
             $eventDateBadge = trim(implode(' ', array_filter([$eventStartDate, $eventStartTime, $eventEndDate, $eventEndTime])));
         }
     }
     if ($eventTimeLabel === '') {
-        $eventTimeLabel = '10:00 AM – 5:00 PM';
+        $eventTimeLabel = 'Time to be confirmed';
     }
 
-    $eventCapacity = (int) ($product['capacity'] ?? data_get($event, 'capacity', 1000));
-    $eventCapacity = max(1, min(1000, $eventCapacity > 0 ? $eventCapacity : 1000));
+    $eventDayCount = 1;
+    if ($eventStartDate !== '') {
+        try {
+            $startDay = \Carbon\Carbon::parse($eventStartDate)->startOfDay();
+            $endDay = \Carbon\Carbon::parse($eventEndDate !== '' ? $eventEndDate : $eventStartDate)->startOfDay();
+            $eventDayCount = max(1, $startDay->diffInDays($endDay) + 1);
+        } catch (\Throwable $e) {
+            $eventDayCount = $eventEndDate !== '' && $eventEndDate !== $eventStartDate ? 2 : 1;
+        }
+    }
+    $eventScheduleHeadline = $eventDayCount === 1 ? 'Event schedule' : $eventDayCount . '-day event schedule';
+
+    $eventCapacityValue = $product['capacity'] ?? data_get($event, 'capacity');
+    $eventCapacity = is_numeric($eventCapacityValue) && (int) $eventCapacityValue > 0
+        ? max(1, min(1000, (int) $eventCapacityValue))
+        : null;
 
     $renderRichHtml = static function (string $value): string {
         return \App\Support\ContentFormatter::format($value);
     };
+    $mergeRichText = static function (array $values): string {
+        $parts = [];
+
+        foreach ($values as $value) {
+            $part = trim((string) $value);
+            if ($part === '' || in_array($part, $parts, true)) {
+                continue;
+            }
+
+            $parts[] = $part;
+        }
+
+        return trim(implode("\n\n", $parts));
+    };
     $eventIncludedHtml = $renderRichHtml($eventIncluded);
     $eventWhatHtml = $renderRichHtml($eventWhat);
+    $eventOverviewSource = $mergeRichText([
+        $product['description'] ?? '',
+        $product['body_html'] ?? '',
+        $eventWhat ?? '',
+        $eventIncluded ?? '',
+    ]);
+    $eventOverviewHtml = $renderRichHtml($eventOverviewSource);
 
     $eventScheduleSource = $event['schedule'] ?? [];
     if (is_object($eventScheduleSource)) {
@@ -226,11 +261,21 @@
 
             $label = trim((string) data_get($session, 'label', data_get($session, 'title', '')));
             $spaceArea = trim((string) data_get($session, 'space_area', data_get($session, 'spaceArea', '')));
+            $facilitator = trim((string) data_get($session, 'facilitator', data_get($session, 'practitioner', data_get($session, 'facilitator_name', ''))));
+            $facilitatorProfileUrl = trim((string) data_get($session, 'facilitator_profile_url', data_get($session, 'facilitatorProfileUrl', '')));
             $startTime = trim((string) data_get($session, 'start_time', data_get($session, 'startTime', '')));
             $endTime = trim((string) data_get($session, 'end_time', data_get($session, 'endTime', '')));
-            $notes = trim((string) data_get($session, 'notes', data_get($session, 'description', '')));
+            $description = trim((string) data_get($session, 'description', data_get($session, 'notes', '')));
+            if ($facilitator === '' && $description !== '' && preg_match('/Facilitator:\s*(.+?)(?:\.)?$/i', $description, $match)) {
+                $facilitator = trim((string) $match[1]);
+                $description = trim((string) preg_replace('/\s*Facilitator:\s*.+?\.?$/i', '', $description));
+            }
+            $notes = trim((string) data_get($session, 'notes', ''));
+            if ($notes !== '') {
+                $notes = trim((string) preg_replace('/\s*Facilitator:\s*.+?\.?$/i', '', $notes));
+            }
 
-            if ($label === '' && $spaceArea === '' && $startTime === '' && $endTime === '' && $notes === '') {
+            if ($label === '' && $spaceArea === '' && $facilitator === '' && $startTime === '' && $endTime === '' && $description === '' && $notes === '') {
                 continue;
             }
 
@@ -238,9 +283,11 @@
                 'id' => (string) (data_get($session, 'id', '') ?: sprintf('event_schedule_%s_%d_%d', $dayDate !== '' ? $dayDate : 'day', $dayIndex + 1, $sessionIndex + 1)),
                 'label' => $label !== '' ? $label : 'Session',
                 'space_area' => $spaceArea,
+                'facilitator' => $facilitator,
+                'facilitator_profile_url' => $facilitatorProfileUrl,
                 'start_time' => $startTime,
                 'end_time' => $endTime,
-                'notes' => $notes,
+                'notes' => $description !== '' ? $description : $notes,
             ];
         }
 
@@ -306,24 +353,86 @@
     $eventScheduleIntro = $eventScheduleSessionCount > 0
         ? 'Browse the published sessions for each day. Tap a tab to switch between them.'
         : (! empty($eventScheduleDays)
-            ? 'The dates are set, but the detailed timetable has not been published yet.'
+            ? ($eventDayCount === 1
+                ? 'The date is set, but the detailed timetable has not been published yet.'
+                : 'The dates are set, but the detailed timetable has not been published yet.')
             : 'Schedule coming soon.');
+    $parseTimeToMinutes = static function (string $value): ?int {
+        if (! preg_match('/(\d{1,2}):(\d{2})/', $value, $matches)) {
+            return null;
+        }
 
-    $eventWatermark = strtoupper(trim(preg_replace('/\s*[–-].*$/', '', $eventTitle)) ?: 'OUR VIBE');
-    $eventScheduleSummary = '35+ sessions';
+        return ((int) $matches[1] * 60) + (int) $matches[2];
+    };
+    $formatMinutes = static function (int $minutes): string {
+        $hours = intdiv($minutes, 60);
+        $mins = $minutes % 60;
+
+        return sprintf('%02d:%02d', $hours, $mins);
+    };
+    $getDayBounds = static function (array $day) use ($parseTimeToMinutes): array {
+        $times = [];
+
+        foreach ((array) ($day['sessions'] ?? []) as $session) {
+            if (! is_array($session)) {
+                continue;
+            }
+
+            $start = $parseTimeToMinutes(trim((string) ($session['start_time'] ?? '')));
+            $end = $parseTimeToMinutes(trim((string) ($session['end_time'] ?? '')));
+
+            if ($start !== null) {
+                $times[] = $start;
+            }
+
+            if ($end !== null) {
+                $times[] = $end;
+            }
+        }
+
+        if (! $times) {
+            return ['start' => 10 * 60, 'end' => 17 * 60, 'total' => 7 * 60];
+        }
+
+        $earliest = min($times);
+        $latest = max($times);
+        $start = intdiv($earliest, 30) * 30;
+        $end = (int) ceil($latest / 30) * 30;
+
+        return ['start' => $start, 'end' => $end, 'total' => max(60, $end - $start)];
+    };
+    $renderTicks = static function (array $bounds) use ($formatMinutes): string {
+        $html = [];
+        $firstTick = (int) ceil($bounds['start'] / 30) * 30;
+
+        for ($minute = $firstTick; $minute <= $bounds['end']; $minute += 30) {
+            $html[] = '<div class="room-tick" style="--tick-minute: ' . ($minute - $bounds['start']) . ';">'
+                . '<span class="room-tick__label">' . e($formatMinutes($minute)) . '</span>'
+                . '</div>';
+        }
+
+        return implode('', $html);
+    };
+
+    $eventWatermark = strtoupper(trim(preg_replace('/\s*[–-].*$/', '', $eventTitle)) ?: 'EVENT');
+    $eventScheduleSummary = $eventScheduleSessionCount > 0
+        ? $eventScheduleSessionCount . ' session' . ($eventScheduleSessionCount === 1 ? '' : 's')
+        : 'Schedule to be confirmed';
 
     $eventMetaCards = [
         ['label' => 'Dates', 'value' => $eventMetaDate],
         ['label' => 'Time', 'value' => $eventTimeLabel],
-        ['label' => 'Format', 'value' => $eventMode !== '' ? $eventMode : 'In-person festival'],
-        ['label' => 'Tickets', 'value' => count($product['variants'] ?? []) > 0 ? count($product['variants']) . ' ticket types' : '3 ticket types'],
+        ['label' => 'Format', 'value' => $eventMode !== '' ? $eventMode : 'To be confirmed'],
+        ['label' => 'Tickets', 'value' => count($product['variants'] ?? []) > 0 ? count($product['variants']) . ' ticket types' : 'To be confirmed'],
     ];
 
-    $eventDirectionsCoords = [0.913226, 51.085016];
+    $eventDirectionsCoords = null;
     if (! empty($venuePins) && isset($venuePins[0]['lng'], $venuePins[0]['lat']) && is_numeric($venuePins[0]['lng']) && is_numeric($venuePins[0]['lat'])) {
         $eventDirectionsCoords = [(float) $venuePins[0]['lng'], (float) $venuePins[0]['lat']];
     }
-    $eventDirectionsUrl = 'https://www.mapbox.com/directions?destination=' . $eventDirectionsCoords[0] . ',' . $eventDirectionsCoords[1];
+    $eventDirectionsUrl = $eventDirectionsCoords
+        ? 'https://www.google.com/maps/dir/?api=1&destination=' . rawurlencode($eventDirectionsCoords[1] . ',' . $eventDirectionsCoords[0])
+        : '';
     $relatedArticles = collect($relatedArticles ?? []);
     $featuredArticle = $relatedArticles->first();
     $editorArticles = $relatedArticles->slice(1, 3)->values();
@@ -351,6 +460,10 @@
         --shadow-soft: 0 10px 28px rgba(7, 29, 51, 0.08);
         --radius: 1px;
         --max: 1180px;
+        --timeline-minute-height: 4px;
+        --timeline-left-gutter: 44px;
+        --session-card-min-height: 132px;
+        --session-popover-width: 350px;
         min-height: 100vh;
         color: var(--ink);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -1434,7 +1547,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 1850;
+        z-index: 10000;
         display: none;
         align-items: center;
         justify-content: space-between;
@@ -1453,7 +1566,7 @@
     .festival-page .mobile-ticket-bar.is-docked {
         position: absolute;
         bottom: 16px;
-        z-index: 1850;
+        z-index: 10000;
     }
 
     .festival-page .mobile-ticket-bar strong {
@@ -1491,7 +1604,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 1900;
+        z-index: 10010;
         display: none;
         max-height: 92vh;
         overflow: auto;
@@ -1576,6 +1689,10 @@
         box-shadow: var(--shadow-soft);
     }
 
+    .festival-page .section#schedule {
+        position: relative;
+    }
+
     .festival-page .section.flat {
         box-shadow: none;
         background: transparent;
@@ -1613,6 +1730,22 @@
         font-size: 16px;
         line-height: 1.65;
         margin: 12px 0 0;
+    }
+
+    .festival-page .event-overview-copy {
+        max-width: 760px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.7;
+        margin: 12px 0 0;
+    }
+
+    .festival-page .event-overview-copy p {
+        margin: 0 0 10px;
+    }
+
+    .festival-page .event-overview-copy p:last-child {
+        margin-bottom: 0;
     }
 
     .festival-page .gallery {
@@ -1911,15 +2044,15 @@
     }
 
     .festival-page .room-card__slots {
-        display: grid;
-        grid-auto-rows: 292px;
-        gap: 12px;
-        padding: 12px;
+        position: relative;
+        height: calc(var(--timeline-total-minutes) * var(--timeline-minute-height) + 50px);
+        min-height: 920px;
+        padding: 0 10px 0 var(--timeline-left-gutter);
         background: transparent;
     }
 
     .festival-page .room-card__empty {
-        height: 292px;
+        min-height: 132px;
         display: flex;
         align-items: center;
         border: 1px solid var(--line);
@@ -1994,15 +2127,65 @@
         background: var(--button-blue);
     }
 
+    .festival-page .room-tick {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(var(--tick-minute) * var(--timeline-minute-height));
+        border-top: 1px solid rgba(96, 112, 134, 0.12);
+        pointer-events: none;
+    }
+
+    .festival-page .room-tick__label {
+        position: absolute;
+        left: 8px;
+        top: 5px;
+        color: rgba(96, 112, 134, 0.72);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
     .festival-page .session-card {
-        height: 100%;
+        position: absolute;
+        left: var(--timeline-left-gutter);
+        right: 10px;
+        top: calc(var(--session-top) * var(--timeline-minute-height));
+        height: max(calc(var(--session-duration) * var(--timeline-minute-height)), var(--session-card-min-height));
         display: flex;
         flex-direction: column;
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background: rgba(255, 255, 255, 0.82);
-        padding: 16px;
+        padding: 12px 14px;
         overflow: hidden;
+        isolation: isolate;
+        cursor: pointer;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease, background 0.16s ease;
+    }
+
+    .festival-page .session-card::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 26px;
+        z-index: 1;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.92));
+        pointer-events: none;
+    }
+
+    .festival-page .session-card:hover,
+    .festival-page .session-card:focus,
+    .festival-page .session-card.is-popover-source {
+        z-index: 25;
+        border-color: var(--button-blue);
+        box-shadow: 0 18px 34px rgba(7, 27, 54, 0.16);
+        transform: translateY(-1px);
+        background: #fff;
+        outline: none;
     }
 
     .festival-page .room-card--tone-1 .session-card {
@@ -2022,36 +2205,143 @@
     }
 
     .festival-page .session-card__time {
+        position: relative;
+        z-index: 2;
         display: block;
-        margin: 0 0 12px;
+        margin: 0 0 8px;
         color: var(--button-blue);
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1.2;
+        font-weight: 400;
+        flex: 0 0 auto;
     }
 
     .festival-page .session-card__title {
+        position: relative;
+        z-index: 2;
         margin: 0;
         color: var(--blue-950);
-        font-size: 20px;
-        line-height: 1.18;
-        letter-spacing: -0.05em;
+        font-size: 17px;
+        line-height: 1.16;
+        letter-spacing: -0.045em;
         font-weight: 400;
         display: -webkit-box;
-        -webkit-line-clamp: 4;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
 
     .festival-page .session-card__desc {
-        margin: 10px 0 0;
+        position: relative;
+        z-index: 2;
+        margin: 8px 0 0;
         color: var(--muted);
-        font-size: 16px;
-        line-height: 1.45;
+        font-size: 13.5px;
+        line-height: 1.32;
         font-weight: 400;
         display: -webkit-box;
-        -webkit-line-clamp: 5;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+
+    .festival-page .session-card__host {
+        position: relative;
+        z-index: 2;
+        margin: auto 0 0;
+        padding-top: 8px;
+        color: var(--muted);
+        font-size: 12.5px;
+        line-height: 1.35;
+        font-weight: 400;
+        flex: 0 0 auto;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .festival-page .session-card__host strong {
+        color: var(--blue-950);
+        font-weight: 500;
+    }
+
+    .festival-page .session-card__host-link,
+    .festival-page .session-popover__host-link {
+        color: var(--blue-950);
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .festival-page .session-card__host-link:hover,
+    .festival-page .session-card__host-link:focus-visible,
+    .festival-page .session-popover__host-link:hover,
+    .festival-page .session-popover__host-link:focus-visible {
+        text-decoration: underline;
+        outline: none;
+    }
+
+    .festival-page .session-card__host strong {
+        color: var(--blue-950);
+        font-weight: 500;
+    }
+
+    .festival-page .session-popover {
+        position: absolute;
+        z-index: 9999;
+        width: min(var(--session-popover-width), calc(100vw - 42px));
+        max-width: calc(100% - 24px);
+        border: 1px solid var(--button-blue);
+        border-radius: var(--radius);
+        background: #fff;
+        box-shadow: 0 26px 58px rgba(7, 27, 54, 0.22);
+        padding: 16px;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(8px);
+        transition: opacity 0.14s ease, visibility 0.14s ease, transform 0.14s ease;
+    }
+
+    .festival-page .session-popover.is-visible {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .festival-page .session-popover__time {
+        margin: 0 0 9px;
+        color: var(--button-blue);
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 500;
+    }
+
+    .festival-page .session-popover__title {
+        margin: 0;
+        color: var(--blue-950);
+        font-size: 21px;
+        line-height: 1.14;
+        letter-spacing: -0.045em;
+        font-weight: 400;
+    }
+
+    .festival-page .session-popover__desc {
+        margin: 11px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+        font-weight: 400;
+    }
+
+    .festival-page .session-popover__host {
+        margin: 13px 0 0;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 400;
     }
 
     .festival-page .split {
@@ -2269,6 +2559,62 @@
             padding-bottom: 82px;
         }
 
+        .festival-page .room-carousel {
+            grid-template-columns: 34px minmax(0, 1fr) 34px;
+            gap: 6px;
+        }
+
+        .festival-page .room-arrow {
+            width: 34px;
+            height: 50px;
+            font-size: 24px;
+        }
+
+        .festival-page .room-card {
+            flex-basis: 100%;
+        }
+
+        .festival-page .room-grid.has-two-rooms .room-card,
+        .festival-page .room-grid.has-many-rooms .room-card {
+            flex-basis: 100%;
+        }
+
+        .festival-page .room-card__slots {
+            --timeline-left-gutter: 38px;
+            padding-right: 8px;
+            min-height: 860px;
+        }
+
+        .festival-page .room-tick__label {
+            left: 6px;
+            font-size: 9px;
+        }
+
+        .festival-page .session-card {
+            left: var(--timeline-left-gutter);
+            right: 8px;
+            min-height: 124px;
+            padding: 11px 12px;
+        }
+
+        .festival-page .session-card__time {
+            font-size: 13px;
+        }
+
+        .festival-page .session-card__title {
+            font-size: 16px;
+            -webkit-line-clamp: 2;
+        }
+
+        .festival-page .session-card__desc {
+            font-size: 12.5px;
+            -webkit-line-clamp: 2;
+        }
+
+        .festival-page .session-card__host {
+            font-size: 12px;
+        }
+
         .festival-page .mobile-map-hero {
             display: block;
             position: fixed;
@@ -2332,6 +2678,14 @@
         .festival-page .hero-wrap,
         .festival-page .content-wrap {
             position: relative;
+            z-index: 2;
+        }
+
+        .festival-page .hero-wrap {
+            z-index: 3;
+        }
+
+        .festival-page .content-wrap {
             z-index: 2;
         }
 
@@ -2542,9 +2896,9 @@
 
                     <h1>{{ $eventTitle }}</h1>
 
-                    <p class="hero-subtitle">
-                        {{ $eventSummary !== '' ? $eventSummary : 'A calm, soul-resetting weekend of sound healing, meditation, breathwork, live music, wellness stalls and peaceful countryside energy at the historic Bilsington Priory Estate.' }}
-                    </p>
+                    @if($eventSummary !== '')
+                        <p class="hero-subtitle">{{ $eventSummary }}</p>
+                    @endif
 
                     <div class="hero-actions">
                         @if($showBookingUi ?? true)
@@ -2553,7 +2907,7 @@
                         <a class="btn btn-secondary" href="#schedule">View schedule</a>
                     </div>
 
-                    <div class="hero-meta" aria-label="Festival highlights">
+                    <div class="hero-meta" aria-label="Event highlights">
                         @foreach($eventMetaCards as $fact)
                             <div class="meta-card">
                                 <small>{{ $fact['label'] }}</small>
@@ -2577,30 +2931,30 @@
 
     <div class="content-wrap">
         <div class="content-main">
-            <section class="section flat" aria-label="Festival media">
+            <section class="section flat" aria-label="Event media">
                 <div class="gallery">
                     <div class="gallery-main">
                         @if(($galleryMain['type'] ?? '') === 'youtube')
-                            <iframe src="{{ $galleryMain['src'] }}" title="{{ $galleryMain['alt'] ?? 'Festival video preview' }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <iframe src="{{ $galleryMain['src'] }}" title="{{ $galleryMain['alt'] ?? 'Event video preview' }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         @elseif(($galleryMain['type'] ?? '') === 'video')
-                            <video src="{{ $galleryMain['src'] }}" poster="{{ $galleryMain['poster'] ?? '' }}" autoplay muted loop playsinline preload="metadata" aria-label="{{ $galleryMain['alt'] ?? 'Festival video preview' }}"></video>
+                            <video src="{{ $galleryMain['src'] }}" poster="{{ $galleryMain['poster'] ?? '' }}" autoplay muted loop playsinline preload="metadata" aria-label="{{ $galleryMain['alt'] ?? 'Event video preview' }}"></video>
                         @elseif(($galleryMain['type'] ?? '') === 'image')
-                            <img src="{{ $galleryMain['src'] }}" alt="{{ $galleryMain['alt'] ?? 'Peaceful countryside festival setting' }}" loading="eager" decoding="async">
+                            <img src="{{ $galleryMain['src'] }}" alt="{{ $galleryMain['alt'] ?? 'Event setting' }}" loading="eager" decoding="async">
                         @else
                             <div class="gallery-empty">
                                 <strong>{{ $galleryMain['label'] ?? 'More media coming soon' }}</strong>
                                 <span>We’ll add more event media once it’s published.</span>
                             </div>
                         @endif
-                        <span class="photo-label">{{ $galleryMain['label'] ?? 'Festival setting' }}</span>
+                        <span class="photo-label">{{ $galleryMain['label'] ?? 'Event setting' }}</span>
                     </div>
 
                     <div class="gallery-side">
                         <div class="gallery-tile">
                             @if(($gallerySide[0]['type'] ?? '') === 'youtube')
-                                <iframe src="{{ $gallerySide[0]['src'] }}" title="{{ $gallerySide[0]['alt'] ?? 'Festival video preview' }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                                <iframe src="{{ $gallerySide[0]['src'] }}" title="{{ $gallerySide[0]['alt'] ?? 'Event video preview' }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                             @elseif(($gallerySide[0]['type'] ?? '') === 'video')
-                                <video src="{{ $gallerySide[0]['src'] }}" poster="{{ $gallerySide[0]['poster'] ?? '' }}" autoplay muted loop playsinline preload="metadata" aria-label="{{ $gallerySide[0]['alt'] ?? 'Festival video preview' }}"></video>
+                                <video src="{{ $gallerySide[0]['src'] }}" poster="{{ $gallerySide[0]['poster'] ?? '' }}" autoplay muted loop playsinline preload="metadata" aria-label="{{ $gallerySide[0]['alt'] ?? 'Event video preview' }}"></video>
                             @elseif(($gallerySide[0]['type'] ?? '') === 'image')
                                 <img src="{{ $gallerySide[0]['src'] }}" alt="{{ $gallerySide[0]['alt'] ?? 'Meditation session' }}" loading="lazy" decoding="async">
                             @else
@@ -2614,11 +2968,11 @@
 
                         <div class="gallery-tile">
                             @if(($gallerySide[1]['type'] ?? '') === 'youtube')
-                                <iframe src="{{ $gallerySide[1]['src'] }}" title="{{ $gallerySide[1]['alt'] ?? 'Festival video preview' }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                                <iframe src="{{ $gallerySide[1]['src'] }}" title="{{ $gallerySide[1]['alt'] ?? 'Event video preview' }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                             @elseif(($gallerySide[1]['type'] ?? '') === 'video')
-                                <video src="{{ $gallerySide[1]['src'] }}" poster="{{ $gallerySide[1]['poster'] ?? '' }}" autoplay muted loop playsinline preload="metadata" aria-label="{{ $gallerySide[1]['alt'] ?? 'Festival video preview' }}"></video>
+                                <video src="{{ $gallerySide[1]['src'] }}" poster="{{ $gallerySide[1]['poster'] ?? '' }}" autoplay muted loop playsinline preload="metadata" aria-label="{{ $gallerySide[1]['alt'] ?? 'Event video preview' }}"></video>
                             @elseif(($gallerySide[1]['type'] ?? '') === 'image')
-                                <img src="{{ $gallerySide[1]['src'] }}" alt="{{ $gallerySide[1]['alt'] ?? 'Live music and festival atmosphere' }}" loading="lazy" decoding="async">
+                                <img src="{{ $gallerySide[1]['src'] }}" alt="{{ $gallerySide[1]['alt'] ?? 'Event setting' }}" loading="lazy" decoding="async">
                             @else
                                 <div class="gallery-empty">
                                     <strong>{{ $gallerySide[1]['label'] ?? 'More media coming soon' }}</strong>
@@ -2634,29 +2988,12 @@
             <section class="section">
                 <div class="section-heading">
                     <div>
-                        <p class="eyebrow">Festival overview</p>
-                        <h2>A weekend built for peace, connection and proper nervous-system recovery.</h2>
-                        <p class="section-intro">
-                            Step away from the noise and into two days of sound baths, gong baths, guided meditation, breathwork, mindful workshops, live music, holistic stalls and calm countryside atmosphere.
-                        </p>
+                        <h2>Event Overview</h2>
                     </div>
                 </div>
 
-                <div class="highlight-grid">
-                    <article class="highlight-card">
-                        <h3>Sound healing</h3>
-                        <p>Gong baths, sound baths and deep listening experiences designed to help you properly switch off.</p>
-                    </article>
-
-                    <article class="highlight-card">
-                        <h3>Mindful sessions</h3>
-                        <p>Guided meditation, breathwork and calming workshops across both days of the festival.</p>
-                    </article>
-
-                    <article class="highlight-card">
-                        <h3>Holistic marketplace</h3>
-                        <p>Explore wellness stalls, therapies, exhibitors, food and drink options between sessions.</p>
-                    </article>
+                <div class="event-overview-copy">
+                    {!! $eventOverviewHtml !== '' ? $eventOverviewHtml : '<p>Event details to be confirmed.</p>' !!}
                 </div>
             </section>
 
@@ -2664,13 +3001,13 @@
                 <div class="section-heading">
                     <div>
                         <p class="eyebrow">Event schedule</p>
-                        <h2>Two calm days, one big reset.</h2>
+                        <h2>{{ $eventScheduleHeadline }}</h2>
                         <p class="section-intro">{{ $eventScheduleIntro }}</p>
                     </div>
                 </div>
 
                 @if(! empty($eventScheduleDays))
-                    <div class="schedule-tabs" role="tablist" aria-label="Festival schedule days">
+                    <div class="schedule-tabs" role="tablist" aria-label="Event schedule days">
                         @foreach($eventScheduleDays as $day)
                             <button class="schedule-tab{{ $loop->first ? ' active' : '' }}" type="button" data-day="{{ $day['id'] }}" role="tab" aria-selected="{{ $loop->first ? 'true' : 'false' }}" aria-controls="schedule-{{ $day['id'] }}">
                                 {{ $day['label'] }}
@@ -2679,6 +3016,7 @@
                     </div>
 
                     @foreach($eventScheduleDays as $day)
+                        @php $bounds = $getDayBounds($day); @endphp
                         <div class="timeline" id="schedule-{{ $day['id'] }}" role="tabpanel" data-schedule="{{ $day['id'] }}" @if(! $loop->first) hidden @endif>
                             @if(! empty($day['has_multiple_spaces']))
                                 <div class="room-carousel" data-room-carousel>
@@ -2693,21 +3031,48 @@
                                                         <p class="room-card__note">{{ count($spaceGroup['sessions'] ?? []) }} session{{ count($spaceGroup['sessions'] ?? []) === 1 ? '' : 's' }}</p>
                                                     </header>
 
-                                                    <div class="room-card__slots">
+                                                    <div class="room-card__slots" style="--timeline-total-minutes: {{ $bounds['total'] }};">
+                                                        {!! $renderTicks($bounds) !!}
                                                         @forelse($spaceGroup['sessions'] ?? [] as $sessionIndex => $session)
                                                             @php
                                                                 $sessionLabel = trim((string) ($session['label'] ?? ''));
                                                                 $sessionStart = trim((string) ($session['start_time'] ?? ''));
                                                                 $sessionEnd = trim((string) ($session['end_time'] ?? ''));
                                                                 $sessionNotes = trim((string) ($session['notes'] ?? ''));
+                                                                $sessionFacilitator = trim((string) ($session['facilitator'] ?? ''));
+                                                                $sessionFacilitatorUrl = trim((string) ($session['facilitator_profile_url'] ?? ''));
+                                                                $sessionStartMinutes = $parseTimeToMinutes($sessionStart);
+                                                                $sessionEndMinutes = $parseTimeToMinutes($sessionEnd);
+                                                                $sessionDuration = ($sessionStartMinutes !== null && $sessionEndMinutes !== null)
+                                                                    ? max(15, $sessionEndMinutes - $sessionStartMinutes)
+                                                                    : 45;
+                                                                $sessionTop = $sessionStartMinutes !== null ? max(0, $sessionStartMinutes - $bounds['start']) : 0;
                                                             @endphp
-                                                            <article class="session-card">
-                                                                <div class="session-card__time">
-                                                                    {{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? 'Day') }}
-                                                                </div>
+                                                            <article
+                                                                class="session-card"
+                                                                tabindex="0"
+                                                                style="--session-top: {{ $sessionTop }}; --session-duration: {{ $sessionDuration }};"
+                                                                data-session-time="{{ e(trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' : '') . ($sessionEnd !== '' ? $sessionEnd : ''))) }}"
+                                                                data-session-title="{{ e($sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1)) }}"
+                                                                data-session-description="{{ e($sessionNotes !== '' ? $sessionNotes : 'Session details will appear here.') }}"
+                                                                data-session-facilitator="{{ e($sessionFacilitator) }}"
+                                                                data-session-facilitator-url="{{ e($sessionFacilitatorUrl) }}"
+                                                                data-session-room="{{ e($spaceGroup['label'] ?? 'General') }}"
+                                                            >
+                                                                <div class="session-card__time">{{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? 'Day') }}</div>
                                                                 <h3 class="session-card__title">{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
                                                                 @if($sessionNotes !== '')
                                                                     <p class="session-card__desc">{{ $sessionNotes }}</p>
+                                                                @endif
+                                                                @if($sessionFacilitator !== '')
+                                                                    <p class="session-card__host">
+                                                                        <strong>Facilitator:</strong>
+                                                                        @if($sessionFacilitatorUrl !== '')
+                                                                            <a class="session-card__host-link" href="{{ $sessionFacilitatorUrl }}">{{ $sessionFacilitator }}</a>
+                                                                        @else
+                                                                            {{ $sessionFacilitator }}
+                                                                        @endif
+                                                                    </p>
                                                                 @endif
                                                             </article>
                                                         @empty
@@ -2730,8 +3095,19 @@
                                         $sessionStart = trim((string) ($session['start_time'] ?? ''));
                                         $sessionEnd = trim((string) ($session['end_time'] ?? ''));
                                         $sessionNotes = trim((string) ($session['notes'] ?? ''));
+                                        $sessionFacilitator = trim((string) ($session['facilitator'] ?? ''));
+                                        $sessionFacilitatorUrl = trim((string) ($session['facilitator_profile_url'] ?? ''));
                                     @endphp
-                                    <article class="timeline-item">
+                                    <article
+                                        class="timeline-item"
+                                        data-session-time="{{ e(trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' : '') . ($sessionEnd !== '' ? $sessionEnd : ''))) }}"
+                                        data-session-title="{{ e($sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1)) }}"
+                                        data-session-description="{{ e($sessionNotes !== '' ? $sessionNotes : 'Session details will appear here.') }}"
+                                        data-session-facilitator="{{ e($sessionFacilitator) }}"
+                                        data-session-facilitator-url="{{ e($sessionFacilitatorUrl) }}"
+                                        data-session-room="{{ e($sessionSpaceArea !== '' ? $sessionSpaceArea : ($day['label'] ?? 'General')) }}"
+                                        tabindex="0"
+                                    >
                                         <div class="timeline-time">
                                             {{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? 'Day') }}
                                         </div>
@@ -2741,6 +3117,16 @@
                                                 <p style="margin: 0 0 8px; color: var(--blue-950); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">{{ $sessionSpaceArea }}</p>
                                             @endif
                                             <p>{{ $sessionNotes !== '' ? $sessionNotes : 'Session details will be added here soon.' }}</p>
+                                            @if($sessionFacilitator !== '')
+                                                <p class="session-card__host" style="margin: 8px 0 0; font-size: 14px;">
+                                                    <strong>Facilitator:</strong>
+                                                    @if($sessionFacilitatorUrl !== '')
+                                                        <a class="session-card__host-link" href="{{ $sessionFacilitatorUrl }}">{{ $sessionFacilitator }}</a>
+                                                    @else
+                                                        {{ $sessionFacilitator }}
+                                                    @endif
+                                                </p>
+                                            @endif
                                         </div>
                                     </article>
                                 @empty
@@ -2766,18 +3152,20 @@
                         </article>
                     </div>
                 @endif
+
+                <aside class="session-popover" id="sessionPopover" role="dialog" aria-live="polite" aria-hidden="true"></aside>
             </section>
 
             <section class="section">
                 <div class="split">
                     <article class="info-panel">
                         <h3>What’s included</h3>
-                        <div>{!! $eventIncludedHtml !== '' ? $eventIncludedHtml : e('Your ticket includes access to sound healing and meditation sessions, workshops, talks, DJ sets, live music and the wellness marketplace with exhibitors and therapists.') !!}</div>
+                        <div>{!! $eventIncludedHtml !== '' ? $eventIncludedHtml : '<p>Inclusions to be confirmed.</p>' !!}</div>
                     </article>
 
                     <article class="info-panel">
                         <h3>What happens on the day?</h3>
-                        <div>{!! $eventWhatHtml !== '' ? $eventWhatHtml : e('Expect a tranquil weekend of guided sessions, immersive sound, mindful experiences, exhibitor stalls and peaceful time outdoors.') !!}</div>
+                        <div>{!! $eventWhatHtml !== '' ? $eventWhatHtml : '<p>Event details to be confirmed.</p>' !!}</div>
                     </article>
                 </div>
             </section>
@@ -2788,7 +3176,7 @@
                         <p class="eyebrow">Venue</p>
                         <h2>{{ $eventVenueLabel }}</h2>
                         <p class="section-intro">
-                            A historic Kent venue with countryside surroundings, festival space and a peaceful backdrop for the weekend.
+                            {{ $eventLocationLabel !== 'Location to be confirmed' ? 'Event location and venue details.' : 'Venue details to be confirmed.' }}
                         </p>
                     </div>
                 </div>
@@ -2803,9 +3191,9 @@
                         </p>
                     </div>
 
-                    <a class="btn btn-primary" href="{{ $eventDirectionsUrl }}" target="_blank" rel="noopener">
-                        Open directions
-                    </a>
+                    @if($eventDirectionsUrl !== '')
+                        <a class="btn btn-primary" href="{{ $eventDirectionsUrl }}" target="_blank" rel="noopener">Open directions</a>
+                    @endif
                 </article>
             </section>
         </div>
@@ -2821,14 +3209,14 @@
                 <div class="side-map-body">
                     <h3>{{ $eventVenueLabel }}</h3>
                     <p>{{ $eventLocationLabel }}</p>
-                    <a class="btn btn-primary" href="{{ $eventDirectionsUrl }}" target="_blank" rel="noopener">
-                        Get directions
-                    </a>
+                    @if($eventDirectionsUrl !== '')
+                        <a class="btn btn-primary" href="{{ $eventDirectionsUrl }}" target="_blank" rel="noopener">Get directions</a>
+                    @endif
                 </div>
             </div>
 
             <div class="side-card">
-                <h3>Festival snapshot</h3>
+                <h3>Event snapshot</h3>
                 <div class="mini-list">
                     <div class="mini-row">
                         <span>Dates</span>
@@ -2840,7 +3228,7 @@
                     </div>
                     <div class="mini-row">
                         <span>Capacity</span>
-                        <strong>Up to {{ number_format($eventCapacity) }}</strong>
+                        <strong>{{ $eventCapacity !== null ? 'Up to ' . number_format($eventCapacity) : 'To be confirmed' }}</strong>
                     </div>
                     <div class="mini-row">
                         <span>Ticket delivery</span>
@@ -3278,34 +3666,59 @@
           #mindful-times .wow-section-heading h2{ font-size:46px; }
           #mindful-times .wow-lead-content h3{ font-size:34px; line-height:1; }
           #mindful-times .wow-lead-media{ min-height:220px; height:220px; }
+        #mindful-times .wow-article-grid{ grid-template-columns:1fr; }
+        }
+        @media (max-width:420px){
+          #mindful-times .wow-section-heading h2{ font-size:42px; }
+          #mindful-times .wow-lead-content h3{ font-size:30px; line-height:1; }
+          #mindful-times .wow-lead-media{ min-height:220px; height:220px; }
           #mindful-times .wow-article-grid{ grid-template-columns:1fr; }
+          #mindful-times .wow-coverage-item{
+              grid-template-columns:76px minmax(0, 1fr);
+          }
+          #mindful-times .wow-coverage-thumb{
+              width:76px;
+              height:58px;
+          }
+          .festival-page .room-carousel {
+              grid-template-columns: 30px minmax(0, 1fr) 30px;
+              gap: 5px;
+          }
+
+          .festival-page .room-arrow {
+              width: 30px;
+              height: 46px;
+              font-size: 22px;
+          }
+
+          .festival-page .room-card__header {
+              min-height: 82px;
+              padding: 12px;
+          }
+
+          .festival-page .room-card__slots {
+              --timeline-left-gutter: 38px;
+              min-height: 760px;
+          }
         }
     </style>
-    <section class="wow-mindful-times-section our-vibe-section" aria-label="OUR VIBE articles and coverage" id="mindful-times">
+    <section class="wow-mindful-times-section our-vibe-section" aria-label="Related articles" id="mindful-times">
         <div class="wow-mindful-container our-vibe-container">
             <header class="wow-section-heading">
                 <div>
                     <p class="wow-kicker">Latest updates</p>
-                    <h2>OUR VIBE articles, stories & coverage</h2>
-                    <p>Explore the latest OUR VIBE updates from We Offer Wellness® — including practitioner interviews, festival stories, wellbeing features and event coverage.</p>
+                    <h2>Related articles</h2>
+                    <p>Explore related wellbeing stories and event coverage.</p>
                 </div>
-
-                <a href="https://times.weofferwellness.co.uk/" class="btn-wow btn-wow--outline btn-sm btn-arrow wow-mindful-cta" target="_blank" rel="noopener" data-loader-init="1">
-                    <span class="btn-label">Visit Mindful Times</span>
-                    <span class="btn-icon-wrap" aria-hidden="true">
-                        <svg class="btn-icon-hover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"></path></svg>
-                        <svg class="btn-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12l-4 4m4-4-4-4"></path></svg>
-                    </span>
-                </a>
             </header>
 
             <div class="wow-news-board">
                 @php
                     $featuredImage = (string) data_get($featuredArticle, 'image', '');
-                    $featuredTitle = (string) data_get($featuredArticle, 'title', 'Featured story');
-                    $featuredExcerpt = (string) data_get($featuredArticle, 'excerpt', 'Read the latest story from Mindful Times.');
+                    $featuredTitle = (string) data_get($featuredArticle, 'title', 'Featured article');
+                    $featuredExcerpt = (string) data_get($featuredArticle, 'excerpt', 'Read the related article.');
                     $featuredHref = (string) data_get($featuredArticle, 'href', '#');
-                    $featuredCategory = (string) data_get($featuredArticle, 'category', 'OUR VIBE');
+                    $featuredCategory = (string) data_get($featuredArticle, 'category', 'Article');
                 @endphp
                 <a class="wow-lead-story wow-link" href="{{ $featuredHref }}" target="_blank" rel="noopener" id="mindful-times-featured" aria-label="Featured article: {{ $featuredTitle }}">
                     <div class="wow-lead-media">
@@ -3326,8 +3739,8 @@
                         </div>
 
                         <div class="wow-story-footer">
-                            <span>Latest from Mindful Times</span>
-                            <span class="wow-read-link">Read interviews &rarr;</span>
+                            <span>Related article</span>
+                            <span class="wow-read-link">Read more &rarr;</span>
                         </div>
                     </div>
                 </a>
@@ -3337,7 +3750,7 @@
                         <div class="wow-coverage-rail-head">
                             <p class="wow-kicker">More coverage</p>
                             <h3>Quick reads and related stories</h3>
-                            <p>More OUR VIBE pieces to browse without leaving the page.</p>
+                            <p>More related articles.</p>
                         </div>
                         <div class="wow-coverage-list">
                             @forelse($editorArticles as $article)
@@ -3411,6 +3824,7 @@
     const footerEl = document.querySelector('.wow-footer');
     const scheduleTabs = Array.from(document.querySelectorAll('.schedule-tab'));
     const schedules = Array.from(document.querySelectorAll('[data-schedule]'));
+    const scheduleSection = document.getElementById('schedule');
     const token = window.WOW_MAPS_KEY || @json(config('services.mapbox.token'));
     const fallbackCoords = @json($eventDirectionsCoords);
 
@@ -3435,6 +3849,17 @@
     let mobileMapInstance = null;
     let mobileFadeRaf = 0;
     let mobileTicketRaf = 0;
+    let activeSessionCard = null;
+    let sessionPopoverHideTimer = 0;
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
 
     function createMarker() {
         const markerEl = document.createElement('div');
@@ -3753,6 +4178,193 @@
         showSchedule(scheduleTabs[0].dataset.day || schedules[0].dataset.schedule || '');
     }
 
+    function getSessionPopover() {
+        if (!scheduleSection) {
+            return null;
+        }
+
+        let popover = document.getElementById('sessionPopover');
+        if (!popover) {
+            popover = document.createElement('aside');
+            popover.id = 'sessionPopover';
+            popover.className = 'session-popover';
+            popover.setAttribute('role', 'dialog');
+            popover.setAttribute('aria-live', 'polite');
+            popover.setAttribute('aria-hidden', 'true');
+            scheduleSection.appendChild(popover);
+        }
+
+        return popover;
+    }
+
+    function hideSessionPopover() {
+        window.clearTimeout(sessionPopoverHideTimer);
+        const popover = getSessionPopover();
+
+        if (activeSessionCard) {
+            activeSessionCard.classList.remove('is-popover-source');
+        }
+
+        activeSessionCard = null;
+
+        if (popover) {
+            popover.classList.remove('is-visible');
+            popover.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    function positionSessionPopover(card, popover) {
+        if (!scheduleSection || !popover) {
+            return;
+        }
+
+        const scheduleRect = scheduleSection.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+
+        popover.style.left = '0px';
+        popover.style.top = '0px';
+
+        const popoverRect = popover.getBoundingClientRect();
+        const gap = 10;
+        const maxLeft = scheduleSection.clientWidth - popoverRect.width - 12;
+
+        let left = cardRect.right - scheduleRect.left + gap;
+        let top = cardRect.top - scheduleRect.top;
+
+        if (left > maxLeft) {
+            left = cardRect.left - scheduleRect.left - popoverRect.width - gap;
+        }
+
+        if (left < 12) {
+            left = Math.min(Math.max(12, cardRect.left - scheduleRect.left), Math.max(12, maxLeft));
+            top = cardRect.bottom - scheduleRect.top + gap;
+        }
+
+        const minTop = 12;
+        const maxTop = Math.max(minTop, scheduleSection.scrollHeight - popoverRect.height - 12);
+        top = Math.max(minTop, Math.min(top, maxTop));
+
+        popover.style.left = `${left}px`;
+        popover.style.top = `${top}px`;
+    }
+
+    function showSessionPopover(card) {
+        const popover = getSessionPopover();
+        if (!popover || !card) {
+            return;
+        }
+
+        window.clearTimeout(sessionPopoverHideTimer);
+
+        if (activeSessionCard && activeSessionCard !== card) {
+            activeSessionCard.classList.remove('is-popover-source');
+        }
+
+        activeSessionCard = card;
+        activeSessionCard.classList.add('is-popover-source');
+
+        const time = card.dataset.sessionTime || 'Time TBC';
+        const title = card.dataset.sessionTitle || '';
+        const description = card.dataset.sessionDescription || '';
+        const facilitator = card.dataset.sessionFacilitator || '';
+        const facilitatorUrl = card.dataset.sessionFacilitatorUrl || '';
+        const room = card.dataset.sessionRoom || '';
+
+        popover.innerHTML = `
+            <p class="session-popover__time">${escapeHtml(time)}${room ? ` · ${escapeHtml(room)}` : ''}</p>
+            <h3 class="session-popover__title">${escapeHtml(title)}</h3>
+            ${description ? `<p class="session-popover__desc">${escapeHtml(description)}</p>` : ''}
+            ${facilitator ? `
+                <p class="session-popover__host">
+                    <strong>Facilitator:</strong>
+                    ${facilitatorUrl ? `<a class="session-popover__host-link" href="${escapeHtml(facilitatorUrl)}">${escapeHtml(facilitator)}</a>` : escapeHtml(facilitator)}
+                </p>
+            ` : ''}
+        `;
+
+        popover.classList.add('is-visible');
+        popover.setAttribute('aria-hidden', 'false');
+        positionSessionPopover(card, popover);
+    }
+
+    function bindSessionPopovers() {
+        if (!scheduleSection || scheduleSection.dataset.popoversBound === '1') {
+            return;
+        }
+
+        scheduleSection.dataset.popoversBound = '1';
+
+        scheduleSection.addEventListener('pointerover', (event) => {
+            const card = event.target.closest('.session-card, .timeline-item');
+            if (card) {
+                showSessionPopover(card);
+            }
+        });
+
+        scheduleSection.addEventListener('focusin', (event) => {
+            const card = event.target.closest('.session-card, .timeline-item');
+            if (card) {
+                showSessionPopover(card);
+            }
+        });
+
+        scheduleSection.addEventListener('pointerout', (event) => {
+            const card = event.target.closest('.session-card, .timeline-item');
+            if (!card) {
+                return;
+            }
+
+            const popover = getSessionPopover();
+            const related = event.relatedTarget;
+            if (related && (card.contains(related) || (popover && popover.contains(related)))) {
+                return;
+            }
+
+            sessionPopoverHideTimer = window.setTimeout(hideSessionPopover, 120);
+        });
+
+        scheduleSection.addEventListener('focusout', (event) => {
+            const popover = getSessionPopover();
+            const related = event.relatedTarget;
+            if (related && popover && popover.contains(related)) {
+                return;
+            }
+
+            sessionPopoverHideTimer = window.setTimeout(hideSessionPopover, 120);
+        });
+
+        scheduleSection.addEventListener('click', (event) => {
+            const card = event.target.closest('.session-card, .timeline-item');
+            if (card) {
+                event.stopPropagation();
+                showSessionPopover(card);
+                return;
+            }
+
+            if (!event.target.closest('.session-popover')) {
+                hideSessionPopover();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                hideSessionPopover();
+            }
+        });
+
+        window.addEventListener('scroll', () => {
+            if (activeSessionCard) {
+                positionSessionPopover(activeSessionCard, getSessionPopover());
+            }
+        }, { passive: true });
+
+        window.addEventListener('resize', () => {
+            if (activeSessionCard) {
+                positionSessionPopover(activeSessionCard, getSessionPopover());
+            }
+        });
+    }
+
     function refreshRoomCarousels() {
         document.querySelectorAll('[data-room-carousel]').forEach((carousel) => {
             const viewport = carousel.querySelector('[data-room-viewport]');
@@ -3824,6 +4436,7 @@
 
     window.addEventListener('resize', refreshRoomCarousels);
     refreshRoomCarousels();
+    bindSessionPopovers();
 
     if (token) {
         loadMapbox(async () => {
