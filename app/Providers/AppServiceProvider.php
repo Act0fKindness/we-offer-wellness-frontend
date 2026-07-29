@@ -7,6 +7,7 @@ use App\Support\Navigation\EventsMenuState;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
@@ -25,6 +26,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (! app()->runningInConsole()) {
+            $request = request();
+            $host = strtolower((string) $request->getHost());
+
+            if ($host !== '' && ! in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+                URL::forceRootUrl($request->getSchemeAndHttpHost());
+
+                if ($request->isSecure() || $request->header('X-Forwarded-Proto') === 'https') {
+                    URL::forceScheme('https');
+                }
+            }
+        }
+
         Vite::prefetch(concurrency: 3);
 
         View::composer('layouts.account', function ($view) {
