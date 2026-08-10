@@ -403,6 +403,34 @@ class TransactionalMail
         return $sent;
     }
 
+    public static function adminOrderNotification(Order $order, User $admin): bool
+    {
+        $email = trim((string) $admin->email);
+        if ($email === '') {
+            return false;
+        }
+
+        $order->loadMissing(['items.product.vendor.user', 'customerProfile']);
+        $items = $order->items->map(fn ($item) => self::formatVendorItem($item, $item->product?->vendor, $item->product_id))->values()->all();
+
+        MailService::send(
+            $email,
+            'Order completed — #'.$order->id,
+            'emails.studio.admin-order-notification',
+            [
+                'order' => $order,
+                'vendor' => (object) ['vendor_name' => 'We Offer Wellness'],
+                'items' => $items,
+                'customerEmail' => $order->email,
+            ],
+            null,
+            null,
+            ['tags' => ['order', 'admin', 'booking']]
+        );
+
+        return true;
+    }
+
     public static function paymentFailed(?CheckoutAttempt $attempt = null, ?Order $order = null, array $context = []): void
     {
         $order?->loadMissing('items');
@@ -506,6 +534,9 @@ class TransactionalMail
         $productIds = $items->map(function (OrderItem $item) {
             return self::extractProductId($item);
         })->filter()->unique()->values();
+        $offeringIds = $items->map(function (OrderItem $item) {
+            return self::extractOfferingId($item);
+        })->filter()->unique()->values();
 
         $vendors = $vendorIds->isEmpty()
             ? collect()
@@ -514,6 +545,9 @@ class TransactionalMail
         $products = $productIds->isEmpty()
             ? collect()
             : Product::with('vendor.user')->whereIn('id', $productIds)->get()->keyBy('id');
+        $offerings = $offeringIds->isEmpty()
+            ? collect()
+            : OfferingV3::with('vendor.user')->whereIn('id', $offeringIds)->get()->keyBy('id');
 
         $groups = [];
         foreach ($items as $item) {
@@ -524,6 +558,13 @@ class TransactionalMail
                 $productId = self::extractProductId($item);
                 if ($productId && $products->has($productId)) {
                     $vendor = optional($products->get($productId))->vendor;
+                }
+            }
+
+            if (!$vendor) {
+                $offeringId = self::extractOfferingId($item);
+                if ($offeringId && $offerings->has($offeringId)) {
+                    $vendor = optional($offerings->get($offeringId))->vendor;
                 }
             }
 
@@ -597,6 +638,21 @@ class TransactionalMail
         if ($item->sku && preg_match('/(\d+)/', (string) $item->sku, $matches)) {
             return (int) $matches[1];
         }
+        return null;
+    }
+
+    protected static function extractOfferingId(OrderItem $item): ?int
+    {
+        $meta = is_array($item->meta) ? $item->meta : [];
+        $raw = $meta['offering_id'] ?? null;
+        if (is_numeric($raw) && (int) $raw > 0) {
+            return (int) $raw;
+        }
+
+        if (strtolower(trim((string) ($meta['source_version'] ?? ''))) === 'v3' && is_numeric($item->product_id ?? null) && (int) $item->product_id > 0) {
+            return (int) $item->product_id;
+        }
+
         return null;
     }
 

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use App\Notifications\OrderCreatedNotification;
 
 class CheckoutOrderService
 {
@@ -211,6 +212,7 @@ class CheckoutOrderService
         return [
             'order_id' => $order->id,
             'product_id' => $sourceVersion === 'v3' ? null : ($productId ?: 0),
+            'vendor_id' => $this->resolveVendorIdForItemData($productId, $sourceVersion, $offeringId, $incomingMeta),
             'name' => $title,
             'sku' => (string) $id,
             'unit_amount' => $unit,
@@ -658,6 +660,24 @@ class CheckoutOrderService
         $user->roles()->syncWithoutDetaching([$roleId]);
     }
 
+    protected function resolveVendorIdForItemData(?int $productId, string $sourceVersion, mixed $offeringId, array $meta): ?int
+    {
+        $metaVendorId = $meta['vendor_id'] ?? null;
+        if (is_numeric($metaVendorId) && (int) $metaVendorId > 0) {
+            return (int) $metaVendorId;
+        }
+
+        if ($sourceVersion === 'v3' && is_numeric($offeringId) && (int) $offeringId > 0) {
+            return OfferingV3::query()->whereKey((int) $offeringId)->value('vendor_id');
+        }
+
+        if ($productId && (int) $productId > 0) {
+            return Product::query()->whereKey((int) $productId)->value('vendor_id');
+        }
+
+        return null;
+    }
+
     protected function hasTable(string $table): bool
     {
         static $known = [];
@@ -692,7 +712,72 @@ class CheckoutOrderService
             }
 
             $this->sendVendorEmailsOnce($freshOrder);
+            $this->sendOrderNotificationsOnce($freshOrder);
         });
+    }
+
+    protected function sendOrderNotificationsOnce(Order $order): void
+    {
+        if ($order->status !== 'paid' || $order->order_notifications_sent_at) {
+            return;
+        }
+
+        $order->loadMissing(['items.product.vendor.user', 'customerProfile']);
+
+        $customerUser = $order->customerProfile?->user;
+        if ($customerUser) {
+            try {
+                $customerUser->notify(new OrderCreatedNotification('client', $order));
+            } catch (\Throwable $e) {
+                logger()->error('Client order notification failed.', [
+                    'order_id' => $order->id,
+                    'user_id' => $customerUser->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $providerIds = $this->providerUserIdsForOrder($order);
+        foreach (User::query()->whereIn('id', $providerIds)->get() as $provider) {
+            try {
+                $provider->notify(new OrderCreatedNotification('practitioner', $order));
+            } catch (\Throwable $e) {
+                logger()->error('Practitioner order notification failed.', [
+                    'order_id' => $order->id,
+                    'user_id' => $provider->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $admins = User::query()
+            ->whereHas('roles', fn ($roles) => $roles->whereRaw('LOWER(name) = ?', ['admin']))
+            ->get();
+        foreach ($admins as $admin) {
+            try {
+                $admin->notify(new OrderCreatedNotification('admin', $order));
+            } catch (\Throwable $e) {
+                logger()->error('Admin order notification failed.', [
+                    'order_id' => $order->id,
+                    'user_id' => $admin->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            try {
+                TransactionalMail::adminOrderNotification($order, $admin);
+            } catch (\Throwable $e) {
+                logger()->error('Admin order email failed.', [
+                    'order_id' => $order->id,
+                    'user_id' => $admin->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (Schema::hasColumn('orders', 'order_notifications_sent_at')) {
+            $order->forceFill(['order_notifications_sent_at' => now()])->save();
+        }
     }
 
     protected function sendVendorEmailsOnce(Order $order): void
@@ -705,16 +790,30 @@ class CheckoutOrderService
         $canTrackVendorNotified = $this->hasColumn('orders', 'vendor_notified_at');
         $canTrackVendorIntro = $this->hasColumn('orders', 'vendor_introduction_sent_at');
 
-        if ((! $canTrackVendorNotified || ! $order->vendor_notified_at) && TransactionalMail::vendorOrderNotification($order)) {
-            if ($canTrackVendorNotified) {
-                $updates['vendor_notified_at'] = now();
+        try {
+            if ((! $canTrackVendorNotified || ! $order->vendor_notified_at) && TransactionalMail::vendorOrderNotification($order)) {
+                if ($canTrackVendorNotified) {
+                    $updates['vendor_notified_at'] = now();
+                }
             }
+        } catch (\Throwable $e) {
+            logger()->error('Practitioner order email failed.', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
-        if ((! $canTrackVendorIntro || ! $order->vendor_introduction_sent_at) && TransactionalMail::vendorIntroduction($order)) {
-            if ($canTrackVendorIntro) {
-                $updates['vendor_introduction_sent_at'] = now();
+        try {
+            if ((! $canTrackVendorIntro || ! $order->vendor_introduction_sent_at) && TransactionalMail::vendorIntroduction($order)) {
+                if ($canTrackVendorIntro) {
+                    $updates['vendor_introduction_sent_at'] = now();
+                }
             }
+        } catch (\Throwable $e) {
+            logger()->error('Practitioner booking introduction email failed.', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         if (! empty($updates)) {
