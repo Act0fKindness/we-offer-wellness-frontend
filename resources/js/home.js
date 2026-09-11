@@ -699,448 +699,525 @@ function mountHomeSearchBarV4() {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/'/g, '&#39;')
+
   const normalizeText = (value) => String(value || '')
     .toLowerCase()
-    .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
+    .replace(/[‘’“”]/g, "'")
     .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
+    .trim()
+
   const scoreItem = (query, item) => {
-    const q = normalizeText(query);
-    if (!q) return 999;
-    const title = normalizeText(item?.title || item?.label || item?.value || '');
-    const hay = normalizeText([item?.title, item?.label, item?.value, item?.slug, item?.search, item?.subtitle, item?.type].filter(Boolean).join(' '));
-    if (title === q) return 0;
-    if (title.startsWith(q)) return 1;
-    if (title.includes(q)) return 2;
-    if (hay.includes(q)) return 3;
-    const tokens = q.split(/\s+/).filter(Boolean);
-    if (tokens.length && tokens.every((token) => hay.includes(token))) return 4;
-    return 999;
-  };
-  const setVisible = (el, visible) => {
-    if (!el) return;
-    el.classList.toggle('hidden', !visible);
-    el.classList.toggle('flex', visible && el.id?.includes('modal'));
-  };
+    const q = normalizeText(query)
+    if (!q) return 999
+    const title = normalizeText(item?.title || item?.label || item?.value || '')
+    const hay = normalizeText([item?.title, item?.label, item?.value, item?.slug, item?.search, item?.subtitle, item?.type, item?.cat].filter(Boolean).join(' '))
+    if (title === q) return 0
+    if (title.startsWith(q)) return 1
+    if (title.includes(q)) return 2
+    if (hay.includes(q)) return 3
+    const tokens = q.split(/\s+/).filter(Boolean)
+    if (tokens.length && tokens.every((token) => hay.includes(token))) return 4
+    return 999
+  }
+
   const buildSearchUrl = (baseUrl, params) => {
-    const url = new URL(baseUrl || '/search', window.location.origin);
-    Object.entries(params).forEach(([key, value]) => {
-      if (value == null) return;
-      const str = String(value).trim();
-      if (!str) return;
-      url.searchParams.set(key, str);
-    });
-    return `${url.pathname}${url.search}${url.hash}`;
-  };
-  const renderWhatItems = (items, query) => {
-    const q = String(query || '').trim();
-    const filtered = q.length < 2
-      ? items.slice(0, 8)
-      : items
-        .map((item) => ({ item, score: scoreItem(q, item) }))
-        .filter((row) => row.score < 999)
-        .sort((a, b) => a.score - b.score || String(a.item.title || '').localeCompare(String(b.item.title || '')))
-        .slice(0, 10)
-        .map((row) => row.item);
+    const url = new URL(baseUrl || '/search', window.location.origin)
+    const whatValue = String(params?.what || '').trim()
+    const whereValue = String(params?.where || '').trim()
+    const modeValue = String(params?.mode || '').trim()
 
-    return filtered.map((item) => `
-      <li>
-        <button type="button" data-select-what="${escapeHtml(item.value || item.title || '')}" class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-[#F9FAFB]">
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F4F6FB] text-[#344054]">
-            <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
-              <path d="M13 4l2.2 5.6L21 12l-5.8 2.4L13 20l-2.2-5.6L5 12l5.8-2.4L13 4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <span class="min-w-0 flex-1">
-            <span class="block truncate text-sm font-semibold text-[#101828]">${escapeHtml(item.title || '')}</span>
-            <span class="block truncate text-xs text-[#667085]">${escapeHtml(item.subtitle || item.type || item.cat || 'Offerings')}</span>
-          </span>
-        </button>
-      </li>
-    `).join('');
-  };
-  const renderWhereItems = (items, query) => {
-    const q = String(query || '').trim();
-    const filtered = q.length < 2
-      ? items.slice(0, 8)
-      : items
-        .map((item) => ({ item, score: scoreItem(q, item) }))
-        .filter((row) => row.score < 999)
-        .sort((a, b) => a.score - b.score || String(a.item.title || '').localeCompare(String(b.item.title || '')))
-        .slice(0, 10)
-        .map((row) => row.item);
-
-    return filtered.map((item) => `
-      <li>
-        <button type="button" data-select-where="${escapeHtml(item.value || item.title || '')}" data-select-mode="${escapeHtml(item.online ? 'online' : 'in-person')}" class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-[#F9FAFB]">
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F4F6FB] text-[#344054]">
-            ${item.online ? `
-              <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
-                <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
-                <path d="M4 12h16M12 4c2.5 2.4 4 5.2 4 8s-1.5 5.6-4 8M12 4c-2.5 2.4-4 5.2-4 8s1.5 5.6 4 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              </svg>
-            ` : `
-              <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
-                <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                <circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.8"/>
-              </svg>
-            `}
-          </span>
-          <span class="min-w-0 flex-1">
-            <span class="block truncate text-sm font-semibold text-[#101828]">${escapeHtml(item.title || '')}</span>
-            <span class="block truncate text-xs text-[#667085]">${escapeHtml(item.subtitle || (item.online ? 'Virtual' : 'Popular place'))}</span>
-          </span>
-        </button>
-      </li>
-    `).join('');
-  };
-  const geocodeCurrentLocation = async (mapboxKey) => {
-    if (!navigator.geolocation) return '';
-    const position = await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 600000,
-      });
-    });
-    if (!position) return '';
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
-    if (!mapboxKey) return `${lat.toFixed(2)}, ${lng.toFixed(2)}`;
-    try {
-      const endpoint = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json`);
-      endpoint.searchParams.set('types', 'place,locality,region');
-      endpoint.searchParams.set('limit', '1');
-      endpoint.searchParams.set('access_token', mapboxKey);
-      const res = await fetch(endpoint.toString());
-      if (!res.ok) throw new Error(`reverse geocode ${res.status}`);
-      const data = await res.json();
-      const feature = Array.isArray(data?.features) ? data.features[0] : null;
-      return String(feature?.text || feature?.place_name || '').trim();
-    } catch (_error) {
-      return '';
+    if (whatValue) url.searchParams.set('what', whatValue)
+    if (whereValue && whereValue !== 'Near me') url.searchParams.set('where', whereValue)
+    if (modeValue && modeValue !== 'near-me' && whereValue !== 'Near me') {
+      url.searchParams.set('mode', modeValue)
     }
-  };
+
+    return `${url.pathname}${url.search}${url.hash}`
+  }
+
+  const categoryTone = (value) => {
+    switch (String(value || '').trim().toLowerCase()) {
+      case 'therapy':
+        return { bg: '#e8f5f1', text: '#2a5e52' }
+      case 'class':
+        return { bg: '#eff6ff', text: '#1d4ed8' }
+      case 'event':
+        return { bg: '#fffbeb', text: '#b45309' }
+      case 'retreat':
+        return { bg: '#fff1f2', text: '#be123c' }
+      case 'session':
+        return { bg: '#eef2ff', text: '#4338ca' }
+      case 'workshop':
+        return { bg: '#faf5ff', text: '#7e22ce' }
+      case 'gift':
+        return { bg: '#fefce8', text: '#a16207' }
+      default:
+        return { bg: '#f4f6fb', text: '#344054' }
+    }
+  }
+
+  const renderDesktopWhatItems = (items) => items.map((item) => {
+    const title = item.value || item.title || ''
+    const cat = item.cat || item.type || 'Experience'
+    const tone = categoryTone(cat)
+    return `
+      <li class="desktop-what-option" data-label="${escapeHtml(title)}" data-cat="${escapeHtml(cat)}">
+        <button type="button" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#f7f9fb] transition-colors text-left group">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles text-[#4f9381] shrink-0 opacity-60" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg>
+          <span class="flex-1 text-[13.5px] text-[#1a202c] font-medium">${escapeHtml(title)}</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:${tone.bg}; color:${tone.text};">${escapeHtml(cat)}</span>
+        </button>
+      </li>
+    `
+  }).join('')
+
+  const renderMobileWhatItems = (items, selected) => items.map((item) => {
+    const title = item.value || item.title || ''
+    const cat = item.cat || item.type || 'Experience'
+    const isSelected = title === selected
+    return `
+      <button type="button" class="mobile-what-option w-full flex items-center gap-3.5 px-3 py-[14px] border-b border-[#eef0f3] text-left last:border-0 ${isSelected ? 'bg-[#f0faf7]' : ''}" data-label="${escapeHtml(title)}" data-cat="${escapeHtml(cat)}">
+        <span class="w-8 h-8 flex items-center justify-center shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles text-[#4f9381]" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg></span>
+        <span class="text-[15px] text-[#1a202c] font-medium flex-1">${escapeHtml(title)}</span>
+        <span class="selection-check w-5 h-5 rounded-full bg-[#4f9381] ${isSelected ? 'flex' : 'hidden'} items-center justify-center"><span class="text-white text-[10px] font-bold">✓</span></span>
+      </button>
+    `
+  }).join('')
+
+  const renderDesktopWhereItems = (items) => items.map((item) => `
+    <li class="desktop-location-option" data-label="${escapeHtml(item.value || item.title || '')}">
+      <button type="button" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#f7f9fb] transition-colors text-left">
+        ${item.online
+          ? '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wifi text-blue-500 shrink-0" aria-hidden="true"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-building-2 text-[#8e9bb0] shrink-0" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg>'}
+        <span class="text-[13.5px] text-[#1a202c] font-medium">${escapeHtml(item.value || item.title || '')}</span>
+      </button>
+    </li>
+  `).join('')
+
+  const renderMobileWhereItems = (items, selected) => items.map((item) => {
+    const value = item.value || item.title || ''
+    const isSelected = value === selected
+    return `
+      <button type="button" class="mobile-location-option w-full flex items-center gap-3.5 px-3 py-[14px] border-b border-[#eef0f3] text-left last:border-0 ${isSelected ? 'bg-[#f0faf7]' : ''}" data-label="${escapeHtml(value)}">
+        <span class="w-8 h-8 flex items-center justify-center shrink-0">${item.online
+          ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wifi text-blue-500" aria-hidden="true"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-building-2 text-[#8e9bb0]" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg>'}</span>
+        <span class="text-[15px] text-[#1a202c] font-medium flex-1">${escapeHtml(value)}</span>
+        <span class="selection-check w-5 h-5 rounded-full bg-[#4f9381] ${isSelected ? 'flex' : 'hidden'} items-center justify-center"><span class="text-white text-[10px] font-bold">✓</span></span>
+      </button>
+    `
+  }).join('')
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      () => {},
+      () => {},
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    )
+  }
 
   try {
     document.querySelectorAll('[data-wow-home-searchbar-v4]').forEach((el) => {
-      if (!el || el.dataset.wowMounted === '1') return;
-      el.dataset.wowMounted = '1';
+      if (!el || el.dataset.wowMounted === '1') return
+      el.dataset.wowMounted = '1'
 
-      const searchUrl = el.dataset.searchUrl || '/search';
-      const mapboxKey = el.dataset.mapboxKey || '';
-      const desktopForm = el.querySelector('#wow-home-search-desktop');
-      const mobileForm = el.querySelector('#wow-home-search-mobile');
-      const desktopWhatInput = el.querySelector('#desktop-what');
-      const desktopWhereInput = el.querySelector('#desktop-where');
-      const desktopModeInput = el.querySelector('#desktop-mode');
-      const mobileWhatInput = el.querySelector('#mobile-what-input');
-      const mobileWhereInput = el.querySelector('#mobile-where-input');
-      const mobileModeInput = el.querySelector('#mobile-mode');
-      const desktopWhatDropdown = el.querySelector('#desktop-what-dropdown');
-      const desktopWhereDropdown = el.querySelector('#desktop-where-dropdown');
-      const desktopWhatList = el.querySelector('#desktop-what-list');
-      const desktopWhereList = el.querySelector('#desktop-location-list');
-      const mobileWhatModal = el.querySelector('#mobile-what-modal');
-      const mobileWhereModal = el.querySelector('#mobile-where-modal');
-      const mobileWhatList = el.querySelector('#mobile-what-list');
-      const mobileWhereList = el.querySelector('#mobile-where-list');
-      const desktopWhatField = el.querySelector('#desktop-what-field');
-      const desktopWhereField = el.querySelector('#desktop-where-field');
-      const desktopClearWhat = el.querySelector('#desktop-clear-what');
-      const desktopClearWhere = el.querySelector('#desktop-clear-where');
-      const desktopUseLocation = el.querySelector('#desktop-use-location');
-      const desktopOnline = el.querySelector('#desktop-online');
-      const mobileOpenWhat = el.querySelector('#mobile-open-what');
-      const mobileOpenWhere = el.querySelector('#mobile-open-where');
-      const mobileUseLocation = el.querySelector('#mobile-use-location');
-      const mobileOnline = el.querySelector('#mobile-online');
-      const mobileWhatLabel = el.querySelector('#mobile-what-label');
-      const mobileWhereLabel = el.querySelector('#mobile-where-label');
+      const $ = (selector, root = el) => root.querySelector(selector)
+      const $$ = (selector, root = el) => Array.from(root.querySelectorAll(selector))
+      const searchUrl = el.dataset.searchUrl || '/search'
+      const desktopForm = $('#desktop-search-form')
+      const mobileForm = $('#mobile-search-form')
+      const desktopShell = $('#desktop-search-shell')
+      const whatField = $('#desktop-what-field')
+      const whereField = $('#desktop-where-field')
+      const whatInput = $('#desktop-what')
+      const whereInput = $('#desktop-where')
+      const whatDropdown = $('#desktop-what-dropdown')
+      const whereDropdown = $('#desktop-where-dropdown')
+      const clearWhat = $('#desktop-clear-what')
+      const clearWhere = $('#desktop-clear-where')
+      const nearMeChip = $('#desktop-near-me-chip')
+      const whatHeading = $('#desktop-what-heading')
+      const locationHeading = $('#desktop-location-heading')
+      const locationHeadingWrap = $('#desktop-location-list-heading-wrap')
+      const whatIcon = $('.desktop-what-icon')
+      const whereIcon = $('.desktop-where-icon')
+      const desktopWhatList = $('#desktop-what-list')
+      const desktopLocationList = $('#desktop-location-list')
+      const desktopModeInput = $('#desktop-mode')
 
-      if (!desktopForm || !mobileForm || !desktopWhatInput || !desktopWhereInput || !desktopWhatList || !desktopWhereList || !mobileWhatList || !mobileWhereList) {
-        el.dataset.wowMounted = '0';
-        return;
+      const mobileWhatDisplay = $('#mobile-what-display')
+      const mobileWhereDisplay = $('#mobile-where-display')
+      const mobileNearMeChip = $('#mobile-near-me-chip')
+      const mobileWhatIcon = $('.mobile-what-main-icon')
+      const mobileWhereIcon = $('.mobile-where-main-icon')
+      const whatModal = $('#mobile-what-modal')
+      const whereModal = $('#mobile-where-modal')
+      const mobileWhatInput = $('#mobile-what-input')
+      const mobileWhereInput = $('#mobile-where-input')
+      const mobileWhatList = $('#mobile-what-list')
+      const mobileWhereList = $('#mobile-where-list')
+      const mobileModeInput = $('#mobile-mode')
+      const mobileOnline = $('#mobile-online')
+
+      if (!desktopForm || !mobileForm || !desktopShell || !whatInput || !whereInput || !desktopWhatList || !desktopLocationList || !mobileWhatList || !mobileWhereList) {
+        el.dataset.wowMounted = '0'
+        return
       }
 
+      const initialWhat = String(el.dataset.initialQuery || '').trim()
+      const initialWhere = String(el.dataset.initialWhere || '').trim()
+      const initialMode = String(el.dataset.initialMode || '').trim()
+
       const state = {
-        what: String(el.dataset.initialQuery || '').trim(),
-        where: String(el.dataset.initialWhere || '').trim(),
-        mode: String(el.dataset.initialMode || '').trim(),
+        activeDesktop: null,
+        activeModal: null,
+        what: initialWhat,
+        where: initialWhere,
+        mode: initialMode,
         whatItems: [],
         whereItems: [],
-      };
+      }
 
-      const closeDesktopDropdowns = () => {
-        setVisible(desktopWhatDropdown, false);
-        setVisible(desktopWhereDropdown, false);
-      };
-      const closeMobileModals = () => {
-        setVisible(mobileWhatModal, false);
-        setVisible(mobileWhereModal, false);
-      };
-      const updateDesktopClearButtons = () => {
-        if (desktopClearWhat) desktopClearWhat.classList.toggle('hidden', !state.what);
-        if (desktopClearWhere) desktopClearWhere.classList.toggle('hidden', !state.where && state.mode !== 'online');
-      };
-      const syncMobileLabels = () => {
-        if (mobileWhatLabel) mobileWhatLabel.textContent = state.what || 'Search offerings';
-        if (mobileWhereLabel) mobileWhereLabel.textContent = state.where || (state.mode === 'online' ? 'Online' : 'Online or location');
-      };
+      const syncHiddenInputs = () => {
+        if (desktopModeInput) desktopModeInput.value = state.mode
+        if (mobileModeInput) mobileModeInput.value = state.mode
+      }
+
+      const updateDesktopWhereDisplay = () => {
+        const isNearMe = state.where === 'Near me'
+        whereInput.hidden = isNearMe
+        nearMeChip.hidden = !isNearMe
+        clearWhere.hidden = !(state.where || state.mode === 'online')
+      }
+
+      const updateMobileMainDisplay = () => {
+        mobileWhatDisplay.textContent = state.what || 'Search therapies, events & more'
+        mobileWhatDisplay.classList.toggle('text-[#111827]', !!state.what)
+        mobileWhatDisplay.classList.toggle('text-[#687283]', !state.what)
+        mobileWhatDisplay.classList.toggle('font-normal', !state.what)
+        mobileWhatIcon.classList.toggle('is-active', !!state.what)
+
+        const isNearMe = state.where === 'Near me'
+        mobileNearMeChip.hidden = !isNearMe
+        mobileWhereDisplay.hidden = isNearMe
+        if (!isNearMe) {
+          mobileWhereDisplay.textContent = state.where || 'Near me, town or Online'
+          mobileWhereDisplay.classList.toggle('text-[#111827]', !!state.where)
+          mobileWhereDisplay.classList.toggle('text-[#687283]', !state.where)
+          mobileWhereDisplay.classList.toggle('font-normal', !state.where)
+        }
+        mobileWhereIcon.classList.toggle('is-active', !!state.where)
+      }
+
+      const renderDesktopWhat = () => {
+        const query = whatInput.value.trim().toLowerCase()
+        const source = query.length < 2
+          ? state.whatItems.slice(0, 8)
+          : state.whatItems
+            .map((item) => ({ item, score: scoreItem(query, item) }))
+            .filter((row) => row.score < 999)
+            .sort((a, b) => a.score - b.score || String(a.item.title || '').localeCompare(String(b.item.title || '')))
+            .slice(0, 8)
+            .map((row) => row.item)
+        whatHeading.textContent = query ? 'Suggestions' : 'Popular experiences'
+        desktopWhatList.innerHTML = renderDesktopWhatItems(source)
+        whatDropdown.hidden = state.activeDesktop !== 'what' || source.length === 0
+      }
+
+      const renderDesktopWhere = () => {
+        const query = whereInput.value.trim().toLowerCase()
+        const source = query.length < 2
+          ? state.whereItems.filter((item) => !item.online).slice(0, 8)
+          : state.whereItems
+            .filter((item) => !item.online)
+            .map((item) => ({ item, score: scoreItem(query, item) }))
+            .filter((row) => row.score < 999)
+            .sort((a, b) => a.score - b.score || String(a.item.title || '').localeCompare(String(b.item.title || '')))
+            .slice(0, 6)
+            .map((row) => row.item)
+        locationHeading.textContent = query ? 'Matching' : 'Popular'
+        locationHeadingWrap.hidden = query && source.length === 0
+        desktopLocationList.innerHTML = renderDesktopWhereItems(source)
+      }
+
+      const renderMobileWhat = () => {
+        const query = mobileWhatInput.value.trim().toLowerCase()
+        const source = query
+          ? state.whatItems
+            .filter((item) => scoreItem(query, item) < 999)
+            .slice(0, 20)
+          : state.whatItems.slice(0, 25)
+        mobileWhatList.innerHTML = renderMobileWhatItems(source, state.what)
+      }
+
+      const renderMobileWhere = () => {
+        const query = mobileWhereInput.value.trim().toLowerCase()
+        const source = query
+          ? state.whereItems.filter((item) => !item.online && scoreItem(query, item) < 999).slice(0, 20)
+          : state.whereItems.filter((item) => !item.online).slice(0, 12)
+        mobileWhereList.innerHTML = renderMobileWhereItems(source, state.where)
+        mobileOnline.classList.toggle('bg-[#f0faf7]', state.where === 'Online')
+      }
+
       const syncInputs = () => {
-        desktopWhatInput.value = state.what;
-        desktopWhereInput.value = state.where;
-        if (desktopModeInput) desktopModeInput.value = state.mode;
-        mobileWhatInput.value = state.what;
-        mobileWhereInput.value = state.where;
-        if (mobileModeInput) mobileModeInput.value = state.mode;
-        updateDesktopClearButtons();
-        syncMobileLabels();
-      };
-      const setWhat = (value) => {
-        state.what = String(value || '').trim();
-        syncInputs();
-      };
-      const setWhere = (value, mode = '') => {
-        state.where = String(value || '').trim();
-        state.mode = String(mode || '').trim();
-        syncInputs();
-      };
-      const openDesktopWhat = () => {
-        setVisible(desktopWhatDropdown, true);
-        setVisible(desktopWhereDropdown, false);
-      };
-      const openDesktopWhere = () => {
-        setVisible(desktopWhereDropdown, true);
-        setVisible(desktopWhatDropdown, false);
-      };
-      const openMobileWhat = () => {
-        setVisible(mobileWhatModal, true);
-        setVisible(mobileWhereModal, false);
-      };
-      const openMobileWhere = () => {
-        setVisible(mobileWhereModal, true);
-        setVisible(mobileWhatModal, false);
-      };
+        whatInput.value = state.what
+        if (state.where !== 'Near me') whereInput.value = state.where
+        mobileWhatInput.value = state.what
+        mobileWhereInput.value = state.where === 'Near me' ? '' : state.where
+        clearWhat.hidden = !(state.what && state.activeDesktop === 'what')
+        syncHiddenInputs()
+        updateDesktopWhereDisplay()
+        updateMobileMainDisplay()
+      }
+
+      const setDesktopActive = (which) => {
+        state.activeDesktop = which
+        desktopShell.classList.toggle('is-active', which === 'what' || which === 'where')
+        whatField.classList.toggle('is-active', which === 'what')
+        whereField.classList.toggle('is-active', which === 'where')
+        whatIcon.classList.toggle('is-active', which === 'what')
+        whereIcon.classList.toggle('is-active', which === 'where')
+        whatDropdown.hidden = which !== 'what'
+        whereDropdown.hidden = which !== 'where'
+        clearWhat.hidden = !(state.what && which === 'what')
+        updateDesktopWhereDisplay()
+        if (which === 'what') renderDesktopWhat()
+        if (which === 'where') renderDesktopWhere()
+      }
+
+      const openModal = (modal, input) => {
+        if (state.activeModal && state.activeModal !== modal) closeModal(state.activeModal)
+        state.activeModal = modal
+        modal.hidden = false
+        document.body.style.overflow = 'hidden'
+        if (modal === whatModal) {
+          mobileWhatInput.value = state.what
+          renderMobileWhat()
+        } else {
+          mobileWhereInput.value = ''
+          renderMobileWhere()
+        }
+        window.setTimeout(() => input.focus(), 100)
+      }
+
+      const closeModal = (modal) => {
+        if (!modal) return
+        modal.hidden = true
+        const sheet = $('.mobile-sheet', modal)
+        if (sheet) sheet.style.height = '88dvh'
+        if (state.activeModal === modal) state.activeModal = null
+        if (!state.activeModal) document.body.style.overflow = ''
+        if (modal === whereModal) mobileWhereInput.value = ''
+      }
+
+      const enableSheetDrag = (modal) => {
+        const handle = $('.mobile-sheet-handle', modal)
+        const sheet = $('.mobile-sheet', modal)
+        if (!handle || !sheet) return
+        let drag = null
+        handle.addEventListener('pointerdown', (event) => {
+          handle.setPointerCapture(event.pointerId)
+          drag = { y: event.clientY, height: parseFloat(sheet.style.height) || 88 }
+        })
+        handle.addEventListener('pointermove', (event) => {
+          if (!drag) return
+          const delta = ((drag.y - event.clientY) / window.innerHeight) * 100
+          const height = Math.min(100, Math.max(88, drag.height + delta))
+          sheet.style.height = `${height}dvh`
+        })
+        const finish = () => {
+          if (!drag) return
+          drag = null
+          const height = parseFloat(sheet.style.height) || 88
+          sheet.style.height = `${height > 94 ? 100 : 88}dvh`
+        }
+        handle.addEventListener('pointerup', finish)
+        handle.addEventListener('pointercancel', finish)
+      }
+
       const submitSearch = () => {
-        const url = buildSearchUrl(searchUrl, {
+        if (!state.what.trim()) return false
+        window.location.assign(buildSearchUrl(searchUrl, {
           what: state.what,
           where: state.where,
-          mode: state.mode,
-        });
-        window.location.assign(url);
-      };
-      const renderDesktopWhat = (query) => {
-        desktopWhatList.innerHTML = renderWhatItems(state.whatItems, query) || `
-          <li>
-            <div class="px-4 py-3 text-sm text-[#667085]">No matches found</div>
-          </li>
-        `;
-      };
-      const renderDesktopWhere = (query) => {
-        const q = String(query || '').trim();
-        const onlineChip = `
-          <li>
-            <button type="button" data-select-where="Online" data-select-mode="online" class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-[#F9FAFB]">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F4F6FB] text-[#344054]">
-                <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
-                  <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
-                  <path d="M4 12h16M12 4c2.5 2.4 4 5.2 4 8s-1.5 5.6-4 8M12 4c-2.5 2.4-4 5.2-4 8s1.5 5.6 4 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-              </span>
-              <span class="min-w-0 flex-1">
-                <span class="block text-sm font-semibold text-[#101828]">Online</span>
-                <span class="block text-xs text-[#667085]">Virtual sessions and classes</span>
-              </span>
-            </button>
-          </li>
-        `;
-        const locationItems = renderWhereItems(state.whereItems, q);
-        const headingWrap = el.querySelector('#desktop-location-list-heading-wrap');
-        if (headingWrap) headingWrap.classList.toggle('hidden', !locationItems);
-        desktopWhereList.innerHTML = [
-          desktopUseLocation ? '' : onlineChip,
-          desktopOnline ? '' : '',
-          locationItems || '<li><div class="px-4 py-3 text-sm text-[#667085]">No locations found</div></li>',
-        ].join('');
-      };
-      const renderMobileWhat = (query) => {
-        mobileWhatList.innerHTML = renderWhatItems(state.whatItems, query) || '<li><div class="px-4 py-3 text-sm text-[#667085]">No matches found</div></li>';
-      };
-      const renderMobileWhere = (query) => {
-        const q = String(query || '').trim();
-        mobileWhereList.innerHTML = renderWhereItems(state.whereItems, q) || '<li><div class="px-4 py-3 text-sm text-[#667085]">No locations found</div></li>';
-      };
+          mode: state.where === 'Online' ? 'online' : state.where === 'Near me' ? 'near-me' : '',
+        }))
+        return true
+      }
+
+      const applyWhat = (value) => {
+        state.what = String(value || '').trim()
+        syncInputs()
+        renderDesktopWhat()
+        renderMobileWhat()
+      }
+
+      const applyWhere = (value, mode = '') => {
+        state.where = String(value || '').trim()
+        state.mode = String(mode || '').trim()
+        syncInputs()
+        renderDesktopWhere()
+        renderMobileWhere()
+      }
 
       desktopForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        submitSearch();
-      });
+        event.preventDefault()
+        if (!submitSearch()) {
+          whatInput.focus()
+          setDesktopActive('what')
+        }
+      })
       mobileForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        submitSearch();
-      });
+        event.preventDefault()
+        submitSearch()
+      })
 
-      desktopWhatField?.addEventListener('click', () => {
-        desktopWhatInput.focus();
-        openDesktopWhat();
-      });
-      desktopWhereField?.addEventListener('click', () => {
-        desktopWhereInput.focus();
-        openDesktopWhere();
-      });
-      desktopWhatInput.addEventListener('focus', () => {
-        openDesktopWhat();
-        renderDesktopWhat(desktopWhatInput.value);
-      });
-      desktopWhatInput.addEventListener('input', () => {
-        setWhat(desktopWhatInput.value);
-        openDesktopWhat();
-        renderDesktopWhat(desktopWhatInput.value);
-      });
-      desktopWhereInput.addEventListener('focus', () => {
-        openDesktopWhere();
-        renderDesktopWhere(desktopWhereInput.value);
-      });
-      desktopWhereInput.addEventListener('input', () => {
-        setWhere(desktopWhereInput.value, state.mode === 'online' && desktopWhereInput.value !== 'Online' ? '' : state.mode);
-        openDesktopWhere();
-        renderDesktopWhere(desktopWhereInput.value);
-      });
-      desktopClearWhat?.addEventListener('click', () => {
-        setWhat('');
-        renderDesktopWhat('');
-        desktopWhatInput.focus();
-        openDesktopWhat();
-      });
-      desktopClearWhere?.addEventListener('click', () => {
-        setWhere('', '');
-        renderDesktopWhere('');
-        desktopWhereInput.focus();
-        openDesktopWhere();
-      });
-      desktopUseLocation?.addEventListener('click', async () => {
-        desktopUseLocation.disabled = true;
-        try {
-          const label = await geocodeCurrentLocation(mapboxKey);
-          setWhere(label || 'Current location', 'in-person');
-          desktopWhereInput.value = state.where;
-          renderDesktopWhere(state.where);
-          closeDesktopDropdowns();
-        } finally {
-          desktopUseLocation.disabled = false;
-        }
-      });
-      desktopOnline?.addEventListener('click', () => {
-        setWhere('Online', 'online');
-        desktopWhereInput.value = state.where;
-        renderDesktopWhere(state.where);
-        closeDesktopDropdowns();
-      });
+      whatField.addEventListener('click', (event) => {
+        if (event.target.closest('button')) return
+        whatInput.focus()
+      })
+      whereField.addEventListener('click', (event) => {
+        if (event.target.closest('button')) return
+        if (!whereInput.hidden) whereInput.focus()
+        setDesktopActive('where')
+      })
+      whatInput.addEventListener('focus', () => setDesktopActive('what'))
+      whereInput.addEventListener('focus', () => setDesktopActive('where'))
+      whatInput.addEventListener('input', () => {
+        state.what = whatInput.value.trim()
+        clearWhat.hidden = !(state.what && state.activeDesktop === 'what')
+        updateMobileMainDisplay()
+        renderDesktopWhat()
+      })
+      whereInput.addEventListener('input', () => {
+        state.where = whereInput.value.trim()
+        state.mode = state.where === 'Online' ? 'online' : ''
+        updateDesktopWhereDisplay()
+        updateMobileMainDisplay()
+        renderDesktopWhere()
+      })
 
-      mobileOpenWhat?.addEventListener('click', () => {
-        mobileWhatInput.value = state.what;
-        renderMobileWhat(mobileWhatInput.value);
-        openMobileWhat();
-      });
-      mobileOpenWhere?.addEventListener('click', () => {
-        mobileWhereInput.value = state.where;
-        renderMobileWhere(mobileWhereInput.value);
-        openMobileWhere();
-      });
-      mobileWhatInput.addEventListener('input', () => {
-        setWhat(mobileWhatInput.value);
-        renderMobileWhat(mobileWhatInput.value);
-      });
-      mobileWhereInput.addEventListener('input', () => {
-        setWhere(mobileWhereInput.value, state.mode === 'online' && mobileWhereInput.value !== 'Online' ? '' : state.mode);
-        renderMobileWhere(mobileWhereInput.value);
-      });
-      mobileUseLocation?.addEventListener('click', async () => {
-        mobileUseLocation.disabled = true;
-        try {
-          const label = await geocodeCurrentLocation(mapboxKey);
-          setWhere(label || 'Current location', 'in-person');
-          renderMobileWhere(state.where);
-          closeMobileModals();
-        } finally {
-          mobileUseLocation.disabled = false;
-        }
-      });
+      clearWhat.addEventListener('mousedown', (event) => {
+        event.preventDefault()
+        applyWhat('')
+        whatInput.focus()
+        setDesktopActive('what')
+      })
+      clearWhere.addEventListener('mousedown', (event) => {
+        event.preventDefault()
+        applyWhere('', '')
+        whereInput.hidden = false
+        whereInput.focus()
+        setDesktopActive('where')
+      })
+
+      $('#desktop-online')?.addEventListener('mousedown', (event) => {
+        event.preventDefault()
+        applyWhere('Online', 'online')
+        setDesktopActive(null)
+      })
+      $('#desktop-use-location')?.addEventListener('mousedown', (event) => {
+        event.preventDefault()
+        applyWhere('Near me', 'near-me')
+        requestLocation()
+        setDesktopActive(null)
+      })
+
+      $('#mobile-open-what')?.addEventListener('click', () => openModal(whatModal, mobileWhatInput))
+      $('#mobile-open-where')?.addEventListener('click', () => openModal(whereModal, mobileWhereInput))
+      $$('.mobile-modal-overlay, .mobile-modal-close').forEach((element) => {
+        element.addEventListener('click', () => closeModal(element.closest('[id$="-modal"]')))
+      })
+      enableSheetDrag(whatModal)
+      enableSheetDrag(whereModal)
+
+      mobileWhatInput.addEventListener('input', renderMobileWhat)
+      mobileWhereInput.addEventListener('input', renderMobileWhere)
+      $('#mobile-use-location')?.addEventListener('click', () => {
+        applyWhere('Near me', 'near-me')
+        requestLocation()
+        closeModal(whereModal)
+      })
       mobileOnline?.addEventListener('click', () => {
-        setWhere('Online', 'online');
-        renderMobileWhere(state.where);
-        closeMobileModals();
-      });
+        applyWhere('Online', 'online')
+        closeModal(whereModal)
+      })
+
+      el.addEventListener('mousedown', (event) => {
+        const desktopWhatButton = event.target.closest('.desktop-what-option button')
+        if (desktopWhatButton) {
+          event.preventDefault()
+          const item = desktopWhatButton.closest('.desktop-what-option')
+          applyWhat(item?.dataset.label || '')
+          whereInput.hidden = false
+          whereInput.focus()
+          setDesktopActive('where')
+          return
+        }
+        const desktopWhereButton = event.target.closest('.desktop-location-option button')
+        if (desktopWhereButton) {
+          event.preventDefault()
+          const item = desktopWhereButton.closest('.desktop-location-option')
+          applyWhere(item?.dataset.label || '', '')
+          setDesktopActive(null)
+          return
+        }
+      })
 
       el.addEventListener('click', (event) => {
-        const whatButton = event.target.closest('[data-select-what]');
-        if (whatButton) {
-          const value = whatButton.getAttribute('data-select-what') || '';
-          setWhat(value);
-          renderDesktopWhat(value);
-          renderMobileWhat(value);
-          closeDesktopDropdowns();
-          closeMobileModals();
-          desktopWhatInput.blur();
-          mobileWhatInput.blur();
-          return;
+        const mobileWhatButton = event.target.closest('.mobile-what-option')
+        if (mobileWhatButton) {
+          applyWhat(mobileWhatButton.dataset.label || '')
+          closeModal(whatModal)
+          return
         }
-        const whereButton = event.target.closest('[data-select-where]');
-        if (whereButton) {
-          const value = whereButton.getAttribute('data-select-where') || '';
-          const mode = whereButton.getAttribute('data-select-mode') || '';
-          setWhere(value, mode);
-          renderDesktopWhere(value);
-          renderMobileWhere(value);
-          closeDesktopDropdowns();
-          closeMobileModals();
-          desktopWhereInput.blur();
-          mobileWhereInput.blur();
-          return;
+        const mobileWhereButton = event.target.closest('.mobile-location-option')
+        if (mobileWhereButton) {
+          applyWhere(mobileWhereButton.dataset.label || '', '')
+          closeModal(whereModal)
         }
-        if (event.target.closest('[data-close-mobile-modal]')) {
-          closeMobileModals();
-        }
-      });
+      })
 
-      document.addEventListener('click', (event) => {
-        if (!el.contains(event.target)) {
-          closeDesktopDropdowns();
-          closeMobileModals();
-        }
-      });
+      document.addEventListener('mousedown', (event) => {
+        if (!desktopForm.contains(event.target)) setDesktopActive(null)
+      })
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
-          closeDesktopDropdowns();
-          closeMobileModals();
+          setDesktopActive(null)
+          if (state.activeModal) closeModal(state.activeModal)
         }
-      });
+      })
 
       Promise.all([
         fetchWhatCategories().catch(() => []),
-        fetchLocations(12, '').catch(() => []),
+        fetchLocations(24, '').catch(() => []),
       ]).then(([whatItems, whereItems]) => {
-        state.whatItems = Array.isArray(whatItems) ? whatItems : [];
-        state.whereItems = Array.isArray(whereItems) ? whereItems : [];
-        syncInputs();
-        renderDesktopWhat(state.what);
-        renderDesktopWhere(state.where);
-        renderMobileWhat(state.what);
-        renderMobileWhere(state.where);
+        state.whatItems = Array.isArray(whatItems) ? whatItems : []
+        state.whereItems = Array.isArray(whereItems) ? whereItems : []
+        syncInputs()
+        renderDesktopWhat()
+        renderDesktopWhere()
+        renderMobileWhat()
+        renderMobileWhere()
       }).catch(() => {
-        state.whatItems = [];
-        state.whereItems = [];
-        syncInputs();
-        renderDesktopWhat(state.what);
-        renderDesktopWhere(state.where);
-        renderMobileWhat(state.what);
-        renderMobileWhere(state.where);
-      });
-    });
+        syncInputs()
+        renderDesktopWhat()
+        renderDesktopWhere()
+        renderMobileWhat()
+        renderMobileWhere()
+      })
+
+      syncInputs()
+      renderDesktopWhat()
+      renderDesktopWhere()
+      renderMobileWhat()
+      renderMobileWhere()
+    })
   } catch (err) {
-    console.warn('[WOW] home search bar v4 bootstrap skipped', err);
+    console.warn('[WOW] home search bar v4 bootstrap skipped', err)
   }
 }
 
