@@ -435,3 +435,364 @@
     </div>
   </div>
 </div>
+
+<script>
+
+  (() => {
+    'use strict';
+
+    const state = {
+      desktopWhereSelected: '',
+      mobileWhat: '',
+      mobileWhere: '',
+      mobileWhereSelected: '',
+      activeDesktop: null,
+      activeModal: null
+    };
+
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+    function buildSearchUrl(what, where) {
+      const params = new URLSearchParams();
+      const whatValue = what.trim();
+      const whereValue = where.trim();
+      if (whatValue) params.set('what', whatValue);
+      if (whereValue && whereValue !== 'Near me') params.set('where', whereValue);
+      return `/search?${params.toString()}`;
+    }
+
+    function requestLocation() {
+      if (!navigator.geolocation) {
+        console.warn('Geolocation is not available in this browser.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+              () => {},
+              error => console.warn(`Unable to access your location: ${error.message}`),
+              { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+      );
+    }
+
+    function replaceClasses(element, remove, add) {
+      remove.forEach(c => element.classList.remove(c));
+      add.forEach(c => element.classList.add(c));
+    }
+
+    // ----- Desktop -----
+    const desktopForm = $('#wowsearch-desktop-search-form');
+    const desktopShell = $('#wowsearch-desktop-search-shell');
+    const whatField = $('#wowsearch-desktop-what-field');
+    const whereField = $('#wowsearch-desktop-where-field');
+    const whatInput = $('#wowsearch-desktop-what');
+    const whereInput = $('#wowsearch-desktop-where');
+    const whatDropdown = $('#wowsearch-desktop-what-dropdown');
+    const whereDropdown = $('#wowsearch-desktop-where-dropdown');
+    const clearWhat = $('#wowsearch-desktop-clear-what');
+    const clearWhere = $('#wowsearch-desktop-clear-where');
+    const nearMeChip = $('#wowsearch-desktop-near-me-chip');
+    const whatHeading = $('#wowsearch-desktop-what-heading');
+    const locationHeading = $('#wowsearch-desktop-location-heading');
+    const locationHeadingWrap = $('#wowsearch-desktop-location-list-heading-wrap');
+    const whatIcon = $('.wowsearch-desktop-what-icon');
+    const whereIcon = $('.wowsearch-desktop-where-icon');
+
+    function setDesktopActive(which) {
+      state.activeDesktop = which;
+      const active = which === 'what' || which === 'where';
+      desktopShell.classList.toggle('wowsearch-border-[rgba(155,165,180,0.45)]', !active);
+      desktopShell.classList.toggle('wowsearch-border-[rgba(155,165,180,0.6)]', active);
+      desktopShell.classList.toggle('wowsearch-shadow-[0_10px_30px_rgba(28,39,56,0.08)]', !active);
+      desktopShell.classList.toggle('wowsearch-shadow-[0_0_0_3px_rgba(79,147,129,0.15),0_10px_30px_rgba(28,39,56,0.10)]', active);
+
+      const whatActive = which === 'what';
+      const whereActive = which === 'where';
+      whatField.classList.toggle('wowsearch-bg-white', whatActive);
+      whatField.classList.toggle('wowsearch-shadow-[0_2px_12px_rgba(16,24,40,0.06)]', whatActive);
+      whatField.classList.toggle('wowsearch-hover:bg-black/[0.025]', !whatActive);
+      whereField.classList.toggle('wowsearch-bg-white', whereActive);
+      whereField.classList.toggle('wowsearch-shadow-[0_2px_12px_rgba(16,24,40,0.06)]', whereActive);
+      whereField.classList.toggle('wowsearch-hover:bg-black/[0.025]', !whereActive);
+      whatIcon.classList.toggle('wowsearch-text-[#4f9381]', whatActive);
+      whatIcon.classList.toggle('wowsearch-text-[#8e9bb0]', !whatActive);
+      whereIcon.classList.toggle('wowsearch-text-[#4f9381]', whereActive);
+      whereIcon.classList.toggle('wowsearch-text-[#8e9bb0]', !whereActive);
+      whatDropdown.hidden = !whatActive;
+      whereDropdown.hidden = !whereActive;
+      clearWhat.hidden = !(whatInput.value && whatActive);
+      clearWhere.hidden = !(whereInput.value || state.desktopWhereSelected);
+      if (whatActive) filterDesktopWhat();
+      if (whereActive) filterDesktopWhere();
+    }
+
+    function filterDesktopWhat() {
+      const query = whatInput.value.trim().toLowerCase();
+      whatHeading.textContent = query ? 'Suggestions' : 'Popular experiences';
+      let visible = 0;
+      $$('.wowsearch-desktop-what-option').forEach(item => {
+        const matches = !query || item.dataset.label.toLowerCase().includes(query) || item.dataset.cat.toLowerCase().includes(query);
+        const show = matches && visible < 8;
+        item.hidden = !show;
+        if (show) visible += 1;
+      });
+      whatDropdown.hidden = state.activeDesktop !== 'what' || visible === 0;
+    }
+
+    function filterDesktopWhere() {
+      const query = whereInput.value.trim().toLowerCase();
+      locationHeading.textContent = query ? 'Matching' : 'Popular';
+      let visible = 0;
+      $$('.wowsearch-desktop-location-option').forEach(item => {
+        const matches = !query || item.dataset.label.toLowerCase().includes(query);
+        const show = matches && visible < (query ? 6 : 8);
+        item.hidden = !show;
+        if (show) visible += 1;
+      });
+      locationHeadingWrap.hidden = !!query && visible === 0;
+    }
+
+    function updateDesktopWhereDisplay() {
+      const isNearMe = state.desktopWhereSelected === 'Near me';
+      whereInput.hidden = isNearMe;
+      nearMeChip.hidden = !isNearMe;
+      clearWhere.hidden = !(whereInput.value || state.desktopWhereSelected);
+    }
+
+    whatField.addEventListener('click', event => {
+      if (event.target.closest('button')) return;
+      whatInput.focus();
+    });
+    whereField.addEventListener('click', event => {
+      if (event.target.closest('button')) return;
+      whereInput.focus();
+    });
+    whatInput.addEventListener('focus', () => setDesktopActive('what'));
+    whereInput.addEventListener('focus', () => setDesktopActive('where'));
+    whatInput.addEventListener('input', () => { clearWhat.hidden = !(whatInput.value && state.activeDesktop === 'what'); filterDesktopWhat(); });
+    whereInput.addEventListener('input', () => { state.desktopWhereSelected = ''; clearWhere.hidden = !whereInput.value; filterDesktopWhere(); });
+
+    $$('.wowsearch-desktop-what-option button').forEach(button => button.addEventListener('mousedown', event => {
+      event.preventDefault();
+      const item = button.closest('.wowsearch-desktop-what-option');
+      whatInput.value = item.dataset.label;
+      setDesktopActive(null);
+      whereInput.focus();
+      setDesktopActive('where');
+    }));
+
+    $$('.wowsearch-desktop-location-option button').forEach(button => button.addEventListener('mousedown', event => {
+      event.preventDefault();
+      const value = button.closest('.wowsearch-desktop-location-option').dataset.label;
+      whereInput.value = value;
+      state.desktopWhereSelected = value;
+      updateDesktopWhereDisplay();
+      setDesktopActive(null);
+    }));
+
+    $('#wowsearch-desktop-online').addEventListener('mousedown', event => {
+      event.preventDefault();
+      whereInput.value = 'Online';
+      state.desktopWhereSelected = 'Online';
+      updateDesktopWhereDisplay();
+      setDesktopActive(null);
+    });
+
+    $('#wowsearch-desktop-use-location').addEventListener('mousedown', event => {
+      event.preventDefault();
+      whereInput.value = 'Near me';
+      state.desktopWhereSelected = 'Near me';
+      updateDesktopWhereDisplay();
+      setDesktopActive(null);
+      requestLocation();
+    });
+
+    clearWhat.addEventListener('mousedown', event => { event.preventDefault(); whatInput.value = ''; whatInput.focus(); setDesktopActive('what'); filterDesktopWhat(); });
+    clearWhere.addEventListener('mousedown', event => {
+      event.preventDefault();
+      whereInput.value = '';
+      state.desktopWhereSelected = '';
+      updateDesktopWhereDisplay();
+      whereInput.focus();
+      setDesktopActive('where');
+    });
+
+    desktopForm.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!whatInput.value.trim()) { whatInput.focus(); setDesktopActive('what'); return; }
+      window.location.href = buildSearchUrl(whatInput.value, whereInput.value);
+    });
+
+    document.addEventListener('mousedown', event => {
+      if (!desktopForm.contains(event.target)) setDesktopActive(null);
+    });
+
+    // ----- Mobile -----
+    const mobileForm = $('#wowsearch-mobile-search-form');
+    const mobileWhatDisplay = $('#wowsearch-mobile-what-display');
+    const mobileWhereDisplay = $('#wowsearch-mobile-where-display');
+    const mobileNearMeChip = $('#wowsearch-mobile-near-me-chip');
+    const mobileWhatIcon = $('.wowsearch-mobile-what-main-icon');
+    const mobileWhereIcon = $('.wowsearch-mobile-where-main-icon');
+    const whatModal = $('#wowsearch-mobile-what-modal');
+    const whereModal = $('#wowsearch-mobile-where-modal');
+    const mobileWhatInput = $('#wowsearch-mobile-what-input');
+    const mobileWhereInput = $('#wowsearch-mobile-where-input');
+
+    function updateMobileMainDisplay() {
+      if (state.mobileWhat) {
+        mobileWhatDisplay.textContent = state.mobileWhat;
+        replaceClasses(mobileWhatDisplay, ['wowsearch-text-[#687283]','wowsearch-font-normal'], ['wowsearch-text-[#111827]']);
+        replaceClasses(mobileWhatIcon, ['wowsearch-text-[#8e9bb0]'], ['wowsearch-text-[#4f9381]']);
+      } else {
+        mobileWhatDisplay.textContent = 'Search therapies, events & more';
+        replaceClasses(mobileWhatDisplay, ['wowsearch-text-[#111827]'], ['wowsearch-text-[#687283]','wowsearch-font-normal']);
+        replaceClasses(mobileWhatIcon, ['wowsearch-text-[#4f9381]'], ['wowsearch-text-[#8e9bb0]']);
+      }
+
+      const where = state.mobileWhereSelected || state.mobileWhere;
+      const isNearMe = where === 'Near me';
+      mobileNearMeChip.hidden = !isNearMe;
+      mobileWhereDisplay.hidden = isNearMe;
+      if (!isNearMe) {
+        mobileWhereDisplay.textContent = where || 'Near me, town or Online';
+        if (where) replaceClasses(mobileWhereDisplay, ['wowsearch-text-[#687283]','wowsearch-font-normal'], ['wowsearch-text-[#111827]']);
+        else replaceClasses(mobileWhereDisplay, ['wowsearch-text-[#111827]'], ['wowsearch-text-[#687283]','wowsearch-font-normal']);
+      }
+      replaceClasses(mobileWhereIcon, [where ? 'wowsearch-text-[#8e9bb0]' : 'wowsearch-text-[#4f9381]'], [where ? 'wowsearch-text-[#4f9381]' : 'wowsearch-text-[#8e9bb0]']);
+    }
+
+    function markMobileSelections() {
+      $$('.wowsearch-mobile-what-option').forEach(button => {
+        const selected = button.dataset.label === state.mobileWhat;
+        button.classList.toggle('wowsearch-bg-[#f0faf7]', selected);
+        const check = $('.wowsearch-selection-check', button);
+        check.hidden = !selected;
+        check.classList.toggle('wowsearch-flex', selected);
+      });
+      const where = state.mobileWhereSelected;
+      $('#wowsearch-mobile-online').classList.toggle('wowsearch-bg-[#f0faf7]', where === 'Online');
+      $$('.wowsearch-mobile-location-option').forEach(button => {
+        const selected = button.dataset.label === where;
+        button.classList.toggle('wowsearch-bg-[#f0faf7]', selected);
+        const check = $('.wowsearch-selection-check', button);
+        check.hidden = !selected;
+        check.classList.toggle('wowsearch-flex', selected);
+      });
+    }
+
+    function filterMobileWhat() {
+      const query = mobileWhatInput.value.trim().toLowerCase();
+      $$('.wowsearch-mobile-what-option').forEach(button => {
+        button.hidden = !!query && !(button.dataset.label.toLowerCase().includes(query) || button.dataset.cat.toLowerCase().includes(query));
+      });
+    }
+
+    function filterMobileWhere() {
+      const query = mobileWhereInput.value.trim().toLowerCase();
+      $$('.wowsearch-mobile-location-option').forEach(button => {
+        button.hidden = !!query && !button.dataset.label.toLowerCase().includes(query);
+      });
+    }
+
+    function openModal(modal, input) {
+      if (state.activeModal) closeModal(state.activeModal);
+      state.activeModal = modal;
+      modal.hidden = false;
+      $('.wowsearch-mobile-sheet', modal).style.height = '88dvh';
+      document.body.style.overflow = 'hidden';
+      if (modal === whatModal) { mobileWhatInput.value = state.mobileWhat; filterMobileWhat(); }
+      else { mobileWhereInput.value = ''; filterMobileWhere(); }
+      markMobileSelections();
+      window.setTimeout(() => input.focus(), 100);
+    }
+
+    function closeModal(modal) {
+      modal.hidden = true;
+      $('.wowsearch-mobile-sheet', modal).style.height = '88dvh';
+      if (state.activeModal === modal) state.activeModal = null;
+      if (!state.activeModal) document.body.style.overflow = '';
+      if (modal === whereModal) mobileWhereInput.value = '';
+    }
+
+    function enableSheetDrag(modal) {
+      const handle = $('.wowsearch-mobile-sheet-handle', modal);
+      const sheet = $('.wowsearch-mobile-sheet', modal);
+      let drag = null;
+      handle.addEventListener('pointerdown', event => {
+        handle.setPointerCapture(event.pointerId);
+        drag = { y: event.clientY, height: parseFloat(sheet.style.height) || 88 };
+      });
+      handle.addEventListener('pointermove', event => {
+        if (!drag) return;
+        const delta = ((drag.y - event.clientY) / window.innerHeight) * 100;
+        const height = Math.min(100, Math.max(88, drag.height + delta));
+        sheet.style.height = `${height}dvh`;
+      });
+      const finish = () => {
+        if (!drag) return;
+        drag = null;
+        const height = parseFloat(sheet.style.height) || 88;
+        sheet.style.height = `${height > 94 ? 100 : 88}dvh`;
+      };
+      handle.addEventListener('pointerup', finish);
+      handle.addEventListener('pointercancel', finish);
+    }
+
+    $('#wowsearch-mobile-open-what').addEventListener('click', () => openModal(whatModal, mobileWhatInput));
+    $('#wowsearch-mobile-open-where').addEventListener('click', () => openModal(whereModal, mobileWhereInput));
+    $$('.wowsearch-mobile-modal-overlay, .wowsearch-mobile-modal-close').forEach(element => element.addEventListener('click', () => closeModal(element.closest('[id$="-modal"]'))));
+    enableSheetDrag(whatModal);
+    enableSheetDrag(whereModal);
+
+    mobileWhatInput.addEventListener('input', filterMobileWhat);
+    mobileWhereInput.addEventListener('input', filterMobileWhere);
+
+    $$('.wowsearch-mobile-what-option').forEach(button => button.addEventListener('click', () => {
+      state.mobileWhat = button.dataset.label;
+      updateMobileMainDisplay();
+      markMobileSelections();
+      closeModal(whatModal);
+    }));
+
+    $('#wowsearch-mobile-use-location').addEventListener('click', () => {
+      state.mobileWhere = 'Near me';
+      state.mobileWhereSelected = 'Near me';
+      updateMobileMainDisplay();
+      markMobileSelections();
+      requestLocation();
+      closeModal(whereModal);
+    });
+
+    $('#wowsearch-mobile-online').addEventListener('click', () => {
+      state.mobileWhere = 'Online';
+      state.mobileWhereSelected = 'Online';
+      updateMobileMainDisplay();
+      markMobileSelections();
+      closeModal(whereModal);
+    });
+
+    $$('.wowsearch-mobile-location-option').forEach(button => button.addEventListener('click', () => {
+      state.mobileWhere = button.dataset.label;
+      state.mobileWhereSelected = button.dataset.label;
+      updateMobileMainDisplay();
+      markMobileSelections();
+      closeModal(whereModal);
+    }));
+
+    mobileForm.addEventListener('submit', event => {
+      event.preventDefault();
+      if (state.mobileWhat.trim()) window.location.href = buildSearchUrl(state.mobileWhat, state.mobileWhere);
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && state.activeModal) closeModal(state.activeModal);
+    });
+
+    updateDesktopWhereDisplay();
+    updateMobileMainDisplay();
+    markMobileSelections();
+    filterDesktopWhat();
+    filterDesktopWhere();
+  })();
+
+</script>
