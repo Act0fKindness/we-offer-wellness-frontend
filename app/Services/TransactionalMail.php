@@ -367,6 +367,18 @@ class TransactionalMail
             if (empty($items)) {
                 continue;
             }
+            $bookings = Booking::query()
+                ->where('order_id', $order->id)
+                ->where('user_id', (int) ($group['vendor']->user_id ?? 0))
+                ->orderBy('date')
+                ->orderBy('start_time')
+                ->get(['date', 'start_time', 'end_time'])
+                ->map(fn (Booking $booking): array => [
+                    'date' => $booking->date,
+                    'start_time' => $booking->start_time,
+                    'end_time' => $booking->end_time,
+                ])
+                ->all();
 
             $cc = array_values(array_filter([
                 ['email' => $customerEmail, 'name' => $customerName ?: $customerEmail],
@@ -400,6 +412,7 @@ class TransactionalMail
                     'customerEmail' => $customerEmail,
                     'customerName' => $customerName,
                     'supportEmail' => $supportEmail,
+                    'bookings' => $bookings,
                 ],
                 null,
                 null,
