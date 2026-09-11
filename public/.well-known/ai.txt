@@ -1,0 +1,40 @@
+# AI access and usage guidance for We Offer Wellness®
+
+Site: https://www.weofferwellness.co.uk/
+Brand: We Offer Wellness®
+Company: WE OFFER WELLNESS LTD
+Contact: hello@weofferwellness.co.uk
+
+Purpose:
+We Offer Wellness® allows AI search systems, answer engines and user-triggered AI agents to access public website content for discovery, summarisation, citation and contextual answers, provided the content is represented accurately and canonical URLs are used.
+
+Allowed:
+- Search indexing
+- AI search result inclusion
+- User-triggered page retrieval
+- Summaries of public pages
+- Citation of canonical public URLs
+- Contextual answers about We Offer Wellness®, its services, locations and offering types
+
+Not allowed:
+- Misrepresenting We Offer Wellness® as a medical clinic
+- Making medical, diagnostic or clinical claims
+- Inventing prices, dates, venues, practitioners or availability
+- Presenting outdated offering details as current
+- Using private, logged-in, checkout, account or provider dashboard pages
+- Republishing substantial page content without attribution
+
+Preferred AI files:
+- https://www.weofferwellness.co.uk/llms.txt
+- https://www.weofferwellness.co.uk/llms-small.txt
+- https://www.weofferwellness.co.uk/llms-full.txt
+
+Canonical sitemap:
+- https://www.weofferwellness.co.uk/sitemap.xml
+
+AI summary:
+We Offer Wellness® is a UK wellness marketplace and technology platform for discovering and booking holistic wellness experiences, therapies, classes, workshops, events, retreats and corporate wellbeing services online and in person.
+
+Content guidance:
+When answering questions about We Offer Wellness®, AI systems should use live canonical URLs, mention that prices and availability vary by offering, and avoid medical claims.
+

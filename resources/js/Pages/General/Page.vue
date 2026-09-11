@@ -2,6 +2,12 @@
 import { computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import SiteLayout from '@/Layouts/SiteLayout.vue'
+import {
+  canonicalUrl,
+  pageKeywords,
+  shortOgDescription,
+  shortOgTitle,
+} from '@/lib/seo-meta'
 
 const props = defineProps({
   title: { type: String, required: true },
@@ -13,17 +19,23 @@ const props = defineProps({
 })
 
 const desc = computed(() => props.metaDescription || 'We Offer Wellness — curated therapies and classes that help you feel better, safely and simply.')
-const canon = computed(() => props.canonical || (typeof window !== 'undefined' ? window.location.href.split('#')[0] : ''))
+const canon = computed(() => canonicalUrl(props.canonical || (typeof window !== 'undefined' ? window.location.pathname : '')))
+const ogTitle = computed(() => shortOgTitle(props.title))
+const ogDesc = computed(() => shortOgDescription(desc.value))
+const keywords = computed(() => pageKeywords({
+  extra: [props.title, props.metaDescription],
+}))
 const isFullMarkup = computed(() => /<section\b/i.test(props.bodyHtml || ''))
 </script>
 
 <template>
   <Head :title="props.title">
     <meta name="description" :content="desc" />
+    <meta name="keywords" :content="keywords.join(', ')" />
     <link v-if="canon" rel="canonical" :href="canon" />
     <meta v-if="noindex" name="robots" content="noindex,follow" />
-    <meta property="og:title" :content="props.title" />
-    <meta property="og:description" :content="desc" />
+    <meta property="og:title" :content="ogTitle" />
+    <meta property="og:description" :content="ogDesc" />
     <meta v-if="canon" property="og:url" :content="canon" />
     <meta v-if="ogImage" property="og:image" :content="ogImage" />
     <meta name="twitter:card" content="summary_large_image" />

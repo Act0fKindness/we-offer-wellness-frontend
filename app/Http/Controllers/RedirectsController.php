@@ -10,7 +10,7 @@ use App\Services\SeoStructureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class LandingRedirectsController extends Controller
+class RedirectsController extends Controller
 {
     public function shopifyProduct(Request $request, string $handle)
     {

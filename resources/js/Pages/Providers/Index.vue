@@ -2,6 +2,12 @@
 import { Head } from '@inertiajs/vue3'
 import SiteLayout from '@/Layouts/SiteLayout.vue'
 import WowButton from '@/Components/ui/WowButton.vue'
+import {
+  canonicalUrl,
+  pageKeywords,
+  shortOgDescription,
+  shortOgTitle,
+} from '@/lib/seo-meta'
 
 const props = defineProps({
   title: { type: String, default: 'Practitioners' },
@@ -9,12 +15,27 @@ const props = defineProps({
 })
 
 const practitionerSignupUrl = import.meta.env.VITE_ATEASE_SIGNUP_URL || 'https://atease.weofferwellness.co.uk/register'
+const canonical = canonicalUrl('/providers')
+const ogTitle = shortOgTitle(`${props.title} | WOW®`)
+const ogDesc = shortOgDescription(props.metaDescription)
+const keywords = pageKeywords({
+  type: 'providers',
+  extra: [props.title, 'practitioners', 'providers', 'wellness practitioners'],
+})
 </script>
 
 <template>
   <Head :title="props.title">
     <meta name="description" :content="props.metaDescription" />
-    <link rel="canonical" :href="(typeof window!=='undefined'?window.location.origin + '/providers':'/providers')" />
+    <meta name="keywords" :content="keywords.join(', ')" />
+    <link rel="canonical" :href="canonical" />
+    <meta property="og:title" :content="ogTitle" />
+    <meta property="og:description" :content="ogDesc" />
+    <meta property="og:url" :content="canonical" />
+    <meta name="twitter:site" content="@weofferwellness" />
+    <meta name="twitter:creator" content="@weofferwellness" />
+    <meta name="twitter:title" :content="ogTitle" />
+    <meta name="twitter:description" :content="ogDesc" />
   </Head>
   <SiteLayout>
     <section class="section">

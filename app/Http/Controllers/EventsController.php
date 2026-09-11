@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Article;
 use Carbon\Carbon;
 use App\Support\WowEventsFeed;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class EventsController extends Controller
 {
@@ -65,6 +67,8 @@ class EventsController extends Controller
             $canonical = url('/events/' . $slug);
         }
 
+        $relatedArticles = $this->relatedOurVibeArticles($event);
+
         return view('events.show', [
             'seo' => [
                 'title' => $title . ' | We Offer Wellness™',
@@ -73,6 +77,7 @@ class EventsController extends Controller
                 'canonical' => $canonical,
             ],
             'event' => $event,
+            'relatedArticles' => $relatedArticles,
         ]);
     }
 
@@ -207,5 +212,102 @@ class EventsController extends Controller
         $timezone = trim((string) data_get($item, 'when.event.timezone', data_get($item, 'event.timezone', data_get($item, 'timezone', config('app.timezone', 'UTC')))));
 
         return $timezone !== '' ? $timezone : config('app.timezone', 'UTC');
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function relatedOurVibeArticles(array $event): array
+    {
+        $haystack = strtolower(implode(' ', array_filter([
+            (string) ($event['title'] ?? ''),
+            (string) ($event['slug'] ?? ''),
+            (string) ($event['summary'] ?? ''),
+            (string) ($event['description'] ?? ''),
+            (string) ($event['body_html'] ?? ''),
+            (string) ($event['content'] ?? ''),
+        ])));
+
+        $normalized = Str::of($haystack)
+            ->replace([' ', '-', '_'], '')
+            ->toString();
+
+        if (! Str::contains($normalized, 'ourvibe')) {
+            return [];
+        }
+
+        $articles = Article::query()
+            ->with(['featuredMedia', 'backendFeaturedMedia', 'category'])
+            ->where(function ($query): void {
+                $query->whereRaw(
+                    "LOWER(REPLACE(REPLACE(CONCAT(COALESCE(title, ''), ' ', COALESCE(content, '')), ' ', ''), '-', '')) LIKE ?",
+                    ['%ourvibe%']
+                );
+            })
+            ->whereRaw("LOWER(COALESCE(status, '')) IN ('live', 'published', 'active')")
+            ->latest('created_at')
+            ->latest('id')
+            ->limit(6)
+            ->get();
+
+        if ($articles->isEmpty()) {
+            return [];
+        }
+
+        $timesBase = rtrim((string) env('TIMES_BASE_URL', 'https://times.weofferwellness.co.uk'), '/');
+        $backendBase = rtrim((string) env('BACKEND_ASSET_URL', env('BACKEND_URL', '')), '/');
+
+        return $articles->map(function (Article $article) use ($timesBase, $backendBase): array {
+            $image = $this->resolveArticleImage($article, $backendBase);
+            $href = $this->articleHref($article, $timesBase);
+            $excerpt = trim((string) Str::of((string) $article->content)->stripTags()->squish()->limit(180));
+
+            return [
+                'id' => $article->id,
+                'title' => (string) $article->title,
+                'excerpt' => $excerpt,
+                'href' => $href,
+                'image' => $image,
+                'category' => optional($article->category)->name ?? 'OUR VIBE',
+                'published_at' => $article->created_at?->format('d M Y'),
+            ];
+        })->all();
+    }
+
+    private function resolveArticleImage(Article $article, string $backendBase): ?string
+    {
+        $media = $article->backendFeaturedMedia ?: $article->featuredMedia;
+        if (! $media) {
+            $media = $article->backendMedia()->first() ?: $article->media()->first();
+        }
+
+        if (! $media) {
+            return null;
+        }
+
+        $path = $media->url ?? $media->path ?? $media->media_url ?? null;
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $clean = ltrim($path, '/');
+
+        return $backendBase !== ''
+            ? $backendBase . '/storage/' . $clean
+            : asset('storage/' . $clean);
+    }
+
+    private function articleHref(Article $article, string $timesBase): string
+    {
+        $category = optional($article->category)->name ?: 'journal';
+        $year = optional($article->created_at)->format('Y') ?: date('Y');
+        $month = optional($article->created_at)->format('m') ?: date('m');
+        $slug = Str::slug((string) ($article->title ?: 'article'));
+
+        return $timesBase . '/' . Str::slug($category) . '/' . $year . '/' . $month . '/' . $slug . '-' . $article->id;
     }
 }

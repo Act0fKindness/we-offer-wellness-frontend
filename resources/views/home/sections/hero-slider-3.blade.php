@@ -48,6 +48,7 @@
 
   .whero.whero--s3 .s3-copy {
     max-width: 720px;
+    margin-top: 60px;
   }
 
   .whero.whero--s3 .s3-eyebrow {
@@ -72,6 +73,7 @@
     font-size: clamp(1.9rem, 2.6vw + 0.75rem, 3.15rem);
     line-height: 0.98;
     font-weight: 500;
+    font-family: 'Instrument Sans', sans-serif;
     letter-spacing: -0.03em;
   }
 

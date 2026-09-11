@@ -23,8 +23,29 @@
     $renderRichHtml = static function (string $value): string {
         return \App\Support\ContentFormatter::format($value);
     };
+    $mergeRichText = static function (array $values): string {
+        $parts = [];
+
+        foreach ($values as $value) {
+            $part = trim((string) $value);
+            if ($part === '' || in_array($part, $parts, true)) {
+                continue;
+            }
+
+            $parts[] = $part;
+        }
+
+        return trim(implode("\n\n", $parts));
+    };
     $eventIncludedHtml = $renderRichHtml($eventIncluded);
     $eventWhatHtml = $renderRichHtml($eventWhat);
+    $eventOverviewSource = $mergeRichText([
+        $product['description'] ?? '',
+        $eventBody ?? '',
+        $eventWhat ?? '',
+        $eventIncluded ?? '',
+    ]);
+    $eventOverviewHtml = $renderRichHtml($eventOverviewSource);
     $eventCapacity = (int) ($product['capacity'] ?? data_get($product, 'event.capacity', 0));
     $eventCapacity = max(0, min(1000, $eventCapacity > 0 ? $eventCapacity : 0));
     $venueLocationsRaw = $product['venue_locations'] ?? [];
@@ -75,6 +96,13 @@
             'time' => $eventStartTime !== '' ? ($eventStartTime . ($eventEndTime !== '' ? ' – ' . $eventEndTime : '')) : '',
         ];
     }
+
+    $eventDayCount = max(1, count($eventTimelineDays));
+    $eventScheduleHeadline = match ($eventDayCount) {
+        1 => 'One calm day, one big reset.',
+        2 => 'Two calm days, one big reset.',
+        default => $eventDayCount . ' calm days, one big reset.',
+    };
 
     $eventTicketRows = [];
     foreach (array_values($product['variants'] ?? []) as $index => $variant) {
@@ -249,9 +277,21 @@
             $spaceArea = trim((string) data_get($session, 'space_area', data_get($session, 'spaceArea', '')));
             $startTime = trim((string) data_get($session, 'start_time', data_get($session, 'startTime', '')));
             $endTime = trim((string) data_get($session, 'end_time', data_get($session, 'endTime', '')));
-            $notes = trim((string) data_get($session, 'notes', data_get($session, 'description', '')));
+            $description = trim((string) data_get($session, 'description', data_get($session, 'notes', '')));
+            $facilitator = trim((string) data_get($session, 'facilitator', data_get($session, 'practitioner', data_get($session, 'facilitator_name', ''))));
+            $facilitatorProfileUrl = trim((string) data_get($session, 'facilitator_profile_url', data_get($session, 'facilitatorProfileUrl', '')));
 
-            if ($label === '' && $spaceArea === '' && $startTime === '' && $endTime === '' && $notes === '') {
+            if ($facilitator === '' && $description !== '' && preg_match('/Facilitator:\s*(.+?)(?:\.)?$/i', $description, $match)) {
+                $facilitator = trim((string) $match[1]);
+                $description = trim((string) preg_replace('/\s*Facilitator:\s*.+?\.?$/i', '', $description));
+            }
+
+            $notes = trim((string) data_get($session, 'notes', ''));
+            if ($notes !== '') {
+                $notes = trim((string) preg_replace('/\s*Facilitator:\s*.+?\.?$/i', '', $notes));
+            }
+
+            if ($label === '' && $spaceArea === '' && $startTime === '' && $endTime === '' && $description === '' && $notes === '' && $facilitator === '') {
                 continue;
             }
 
@@ -261,7 +301,10 @@
                 'space_area' => $spaceArea,
                 'start_time' => $startTime,
                 'end_time' => $endTime,
+                'description' => $description !== '' ? $description : $notes,
                 'notes' => $notes,
+                'facilitator' => $facilitator,
+                'facilitator_profile_url' => $facilitatorProfileUrl,
             ];
         }
 
@@ -343,11 +386,9 @@
         $eventScheduleSessionCount += count($day['sessions'] ?? []);
     }
 
-    $eventScheduleSummary = $eventScheduleLater && $eventScheduleSessionCount === 0
-        ? 'Schedule coming soon'
-        : ($eventScheduleSessionCount > 0
-        ? $eventScheduleSessionCount . ' session' . ($eventScheduleSessionCount === 1 ? '' : 's') . ' across ' . count($eventScheduleDays) . ' day' . (count($eventScheduleDays) === 1 ? '' : 's')
-        : ($eventScheduleDays ? count($eventScheduleDays) . ' day' . (count($eventScheduleDays) === 1 ? '' : 's') : 'Schedule coming soon'));
+    $eventScheduleSummary = $eventScheduleSessionCount > 0
+        ? $eventScheduleSessionCount . ' session' . ($eventScheduleSessionCount === 1 ? '' : 's') . ' across ' . $eventDayCount . ' day' . ($eventDayCount === 1 ? '' : 's')
+        : ($eventScheduleDays ? $eventDayCount . ' day' . ($eventDayCount === 1 ? '' : 's') : 'Schedule coming soon');
 
     $eventWatermark = trim((string) preg_replace('/\s*[–-].*$/', '', $eventTitle));
     if ($eventWatermark === '') {
@@ -1213,11 +1254,29 @@
     font-weight: 400;
   }
   .wow-room__slots {
-    display: grid;
-    grid-auto-rows: 292px;
-    gap: 12px;
-    padding: 12px;
+    position: relative;
+    height: calc(var(--timeline-total-minutes) * var(--timeline-minute-height));
+    min-height: 920px;
+    padding: 0 10px 0 var(--timeline-left-gutter);
     background: transparent;
+  }
+  .wow-room-tick {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--tick-minute) * var(--timeline-minute-height));
+    border-top: 1px solid rgba(96, 112, 134, 0.12);
+    pointer-events: none;
+  }
+  .wow-room-tick__label {
+    position: absolute;
+    left: 8px;
+    top: -8px;
+    color: rgba(96, 112, 134, 0.72);
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 500;
+    white-space: nowrap;
   }
   .wow-room-arrow {
     width: 38px;
@@ -1274,7 +1333,11 @@
     background: #478ee4;
   }
   .wow-session {
-    height: 100%;
+    position: absolute;
+    left: var(--timeline-left-gutter);
+    right: 10px;
+    top: calc(var(--session-top) * var(--timeline-minute-height));
+    height: max(calc(var(--session-duration) * var(--timeline-minute-height)), var(--session-card-min-height));
     display: flex;
     flex-direction: column;
     border: 1px solid rgba(2, 6, 23, .10);
@@ -1339,13 +1402,26 @@
     line-height: 1.35;
     font-weight: 400;
     flex: 0 0 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .wow-session__host strong {
     color: #071d33;
     font-weight: 500;
   }
+  .wow-session__host-link {
+    color: #071d33;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .wow-session__host-link:hover,
+  .wow-session__host-link:focus-visible {
+    text-decoration: underline;
+    outline: none;
+  }
   .wow-room__empty {
-    height: 292px;
+    min-height: 132px;
     display: flex;
     align-items: center;
     border: 1px solid rgba(2, 6, 23, .10);
@@ -1869,29 +1945,12 @@
       <section class="wow-event-body__section">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Festival overview</p>
-            <h2>A weekend built for peace, connection and proper nervous-system recovery.</h2>
-            <p class="section-intro">
-              Step away from the noise and into two days of sound baths, gong baths, guided meditation, breathwork, mindful workshops, live music, holistic stalls and calm countryside atmosphere.
-            </p>
+            <h2>Festival Overview</h2>
           </div>
         </div>
 
-        <div class="highlight-grid">
-          <article class="highlight-card">
-            <h3>Sound healing</h3>
-            <p>Gong baths, sound baths and deep listening experiences designed to help you properly switch off.</p>
-          </article>
-
-          <article class="highlight-card">
-            <h3>Mindful sessions</h3>
-            <p>Guided meditation, breathwork and calming workshops across both days of the festival.</p>
-          </article>
-
-          <article class="highlight-card">
-            <h3>Holistic marketplace</h3>
-            <p>Explore wellness stalls, therapies, exhibitors, food and drink options between sessions.</p>
-          </article>
+        <div class="wow-event-body__rich">
+          {!! $eventOverviewHtml !== '' ? $eventOverviewHtml : nl2br(e('Step away from the noise and into a restorative retreat with sound baths, gong baths, guided meditation, breathwork, mindful workshops, live music, holistic stalls and calm countryside atmosphere.')) !!}
         </div>
       </section>
 
@@ -1899,18 +1958,77 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">Event schedule</p>
-            <h2>Two calm days, one big reset.</h2>
+            <h2>{{ $eventScheduleHeadline }}</h2>
             <p class="section-intro">
               @if($eventScheduleSessionCount > 0)
                 A simple preview of the festival flow. The full timetable can be expanded or amended day by day.
               @elseif($eventScheduleDays)
-                The dates are fixed, but the detailed timetable will be added later.
+                {{ $eventDayCount === 1 ? 'The date is set, but the detailed timetable has not been published yet.' : 'The dates are set, but the detailed timetable has not been published yet.' }}
               @else
                 A simple preview of the event span so people can understand the dates before they book.
               @endif
             </p>
           </div>
         </div>
+
+        @php
+          $parseTimeToMinutes = static function (string $value): ?int {
+            if (! preg_match('/(\d{1,2}):(\d{2})/', $value, $matches)) {
+              return null;
+            }
+
+            return ((int) $matches[1] * 60) + (int) $matches[2];
+          };
+          $formatMinutes = static function (int $minutes): string {
+            $hours = intdiv($minutes, 60);
+            $mins = $minutes % 60;
+
+            return sprintf('%02d:%02d', $hours, $mins);
+          };
+          $getDayBounds = static function (array $day) use ($parseTimeToMinutes): array {
+            $times = [];
+
+            foreach ((array) ($day['sessions'] ?? []) as $session) {
+              if (! is_array($session)) {
+                continue;
+              }
+
+              $parts = explode('-', (string) ($session['start_time'] ?? '') . '-' . (string) ($session['end_time'] ?? ''));
+              $start = $parseTimeToMinutes(trim((string) ($session['start_time'] ?? ($parts[0] ?? ''))));
+              $end = $parseTimeToMinutes(trim((string) ($session['end_time'] ?? ($parts[1] ?? ''))));
+
+              if ($start !== null) {
+                $times[] = $start;
+              }
+              if ($end !== null) {
+                $times[] = $end;
+              }
+            }
+
+            if (! $times) {
+              return ['start' => 10 * 60, 'end' => 17 * 60, 'total' => 7 * 60];
+            }
+
+            $earliest = min($times);
+            $latest = max($times);
+            $start = intdiv($earliest, 30) * 30;
+            $end = (int) ceil($latest / 30) * 30;
+
+            return ['start' => $start, 'end' => $end, 'total' => max(60, $end - $start)];
+          };
+          $renderTicks = static function (array $bounds) use ($formatMinutes): string {
+            $html = [];
+            $firstTick = (int) ceil($bounds['start'] / 30) * 30;
+
+            for ($minute = $firstTick; $minute <= $bounds['end']; $minute += 30) {
+              $html[] = '<div class="wow-room-tick" style="--tick-minute: ' . ($minute - $bounds['start']) . ';">'
+                . '<span class="wow-room-tick__label">' . e($formatMinutes($minute)) . '</span>'
+                . '</div>';
+            }
+
+            return implode('', $html);
+          };
+        @endphp
 
         @if(! empty($eventScheduleDays))
           <div class="wow-event-body__schedule-tabs" role="tablist" aria-label="Festival schedule days">
@@ -1929,6 +2047,7 @@
           </div>
 
           @foreach($eventScheduleDays as $dayIndex => $day)
+            @php $bounds = $getDayBounds($day); @endphp
             <div
               class="wow-event-body__schedule-panel"
               id="schedule-day-{{ $dayIndex }}"
@@ -1942,6 +2061,9 @@
 
                   <div class="wow-room-carousel__viewport" data-room-viewport tabindex="0" aria-label="Event spaces">
                     <div class="wow-room-grid {{ count($day['grouped_sessions'] ?? []) === 1 ? 'has-one-room' : (count($day['grouped_sessions'] ?? []) === 2 ? 'has-two-rooms' : 'has-many-rooms') }}">
+                      <div class="wow-current-time-line" data-current-time-line>
+                        <span class="wow-current-time-line__label" data-current-time-label>Now</span>
+                      </div>
                       @foreach($day['grouped_sessions'] ?? [] as $spaceIndex => $spaceGroup)
                         <section class="wow-room wow-room--tone-{{ ($spaceIndex % 4) + 1 }}">
                           <header class="wow-room__header">
@@ -1949,19 +2071,40 @@
                             <p class="wow-room__note">{{ count($spaceGroup['sessions'] ?? []) }} session{{ count($spaceGroup['sessions'] ?? []) === 1 ? '' : 's' }}</p>
                           </header>
 
-                          <div class="wow-room__slots">
+                          <div class="wow-room__slots" style="--timeline-total-minutes: {{ $bounds['total'] }};">
+                            {!! $renderTicks($bounds) !!}
                             @forelse($spaceGroup['sessions'] ?? [] as $sessionIndex => $session)
                               @php
                                 $sessionLabel = trim((string) ($session['label'] ?? ''));
                                 $sessionStart = trim((string) ($session['start_time'] ?? ''));
                                 $sessionEnd = trim((string) ($session['end_time'] ?? ''));
                                 $sessionNotes = trim((string) ($session['notes'] ?? ''));
+                                $sessionDescription = trim((string) ($session['description'] ?? ''));
+                                $sessionFacilitator = trim((string) ($session['facilitator'] ?? ''));
+                                $sessionFacilitatorUrl = trim((string) ($session['facilitator_profile_url'] ?? ''));
+                                $sessionStartMinutes = $parseTimeToMinutes($sessionStart);
+                                $sessionEndMinutes = $parseTimeToMinutes($sessionEnd);
+                                $sessionDuration = ($sessionStartMinutes !== null && $sessionEndMinutes !== null)
+                                  ? max(15, $sessionEndMinutes - $sessionStartMinutes)
+                                  : 45;
+                                $sessionTop = $sessionStartMinutes !== null ? max(0, $sessionStartMinutes - $bounds['start']) : 0;
+                                $sessionBody = $sessionDescription !== '' ? $sessionDescription : $sessionNotes;
                               @endphp
-                              <article class="wow-session">
+                              <article class="wow-session" style="--session-top: {{ $sessionTop }}; --session-duration: {{ $sessionDuration }};" data-session-time="{{ e(trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' : '') . ($sessionEnd !== '' ? $sessionEnd : ''))) }}" data-session-title="{{ e($sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1)) }}" data-session-description="{{ e($sessionBody) }}" data-session-facilitator="{{ e($sessionFacilitator) }}" data-session-facilitator-url="{{ e($sessionFacilitatorUrl) }}">
                                 <div class="wow-session__time">{{ $sessionStart !== '' || $sessionEnd !== '' ? trim(($sessionStart !== '' ? $sessionStart : 'All day') . ($sessionEnd !== '' ? ' - ' . $sessionEnd : '')) : ($day['label'] ?? ('Day ' . ($dayIndex + 1))) }}</div>
                                 <h3 class="wow-session__title">{{ $sessionLabel !== '' ? $sessionLabel : 'Session ' . ($sessionIndex + 1) }}</h3>
-                                @if($sessionNotes !== '')
-                                  <p class="wow-session__desc">{{ $sessionNotes }}</p>
+                                @if($sessionBody !== '')
+                                  <p class="wow-session__desc">{{ $sessionBody }}</p>
+                                @endif
+                                @if($sessionFacilitator !== '')
+                                  <p class="wow-session__host">
+                                    <strong>Facilitator:</strong>
+                                    @if($sessionFacilitatorUrl !== '')
+                                      <a class="wow-session__host-link" href="{{ $sessionFacilitatorUrl }}">{{ $sessionFacilitator }}</a>
+                                    @else
+                                      {{ $sessionFacilitator }}
+                                    @endif
+                                  </p>
                                 @endif
                               </article>
                             @empty
@@ -1984,6 +2127,8 @@
                     $sessionStart = trim((string) ($session['start_time'] ?? ''));
                     $sessionEnd = trim((string) ($session['end_time'] ?? ''));
                     $sessionNotes = trim((string) ($session['notes'] ?? ''));
+                    $sessionFacilitator = trim((string) ($session['facilitator'] ?? ''));
+                    $sessionFacilitatorUrl = trim((string) ($session['facilitator_profile_url'] ?? ''));
                   @endphp
                   <article class="wow-event-body__timeline-item">
                     <div class="wow-event-body__timeline-time">
@@ -1995,6 +2140,16 @@
                         <div class="wow-event-body__timeline-space">{{ $sessionSpaceArea }}</div>
                       @endif
                       <p>{{ $sessionNotes !== '' ? $sessionNotes : ($day['label'] ?? 'Festival session') }}</p>
+                      @if($sessionFacilitator !== '')
+                        <p class="wow-session__host" style="margin-top: 8px;">
+                          <strong>Facilitator:</strong>
+                          @if($sessionFacilitatorUrl !== '')
+                            <a class="wow-session__host-link" href="{{ $sessionFacilitatorUrl }}">{{ $sessionFacilitator }}</a>
+                          @else
+                            {{ $sessionFacilitator }}
+                          @endif
+                        </p>
+                      @endif
                     </div>
                   </article>
                 @empty
@@ -2063,7 +2218,7 @@
             @endif
           </div>
 
-          <a class="btn btn-primary" href="https://www.mapbox.com/directions?destination=0.9177,51.1024" target="_blank" rel="noopener">
+          <a class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&destination=51.1024,0.9177" target="_blank" rel="noopener">
             Open directions
           </a>
         </article>
@@ -2081,7 +2236,7 @@
         <div class="wow-event-body__side-map-body">
           <h3>{{ $eventVenueLabel !== '' ? $eventVenueLabel : 'Venue' }}</h3>
           <p>{{ $eventLocationLabel }}</p>
-          <a class="btn btn-primary" href="https://www.mapbox.com/directions?destination=0.9177,51.1024" target="_blank" rel="noopener">
+          <a class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&destination=51.1024,0.9177" target="_blank" rel="noopener">
             Get directions
           </a>
         </div>

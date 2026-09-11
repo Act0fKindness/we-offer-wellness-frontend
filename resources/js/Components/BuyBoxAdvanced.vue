@@ -877,11 +877,11 @@ onMounted(() => {
   function hasGroupOption(){
     const pi = peopleIndex();
     const vals = (product.options?.[pi]?.values)||[]
-    return vals.some(v=>String(v).toLowerCase().includes('3+'))
+    return vals.some(v=>/group|3\+/.test(String(v).toLowerCase()))
   }
   function isGroup(){
     const pi = peopleIndex();
-    return hasGroupOption() && String(state.selected?.[pi]||'') === '3+ Group'
+    return hasGroupOption() && /group|3\+/.test(String(state.selected?.[pi]||'').toLowerCase())
   }
 
   /* ---------- Group pricing ---------- */
@@ -1067,7 +1067,7 @@ onMounted(() => {
     }
     if (addBtn) {
       const canBuy = !!(state.variant && Number(state.variant.price||0) > 0)
-      addBtn.disabled=!canBuy; addBtn.textContent=canBuy?'Add to basket':'Sold out'
+      addBtn.disabled=!canBuy; addBtn.textContent=canBuy?'Add to cart':'Sold out'
     }
     // Debug logging removed
     updatePriceUI();
@@ -1704,7 +1704,7 @@ onMounted(() => {
         </div>
 
         <div class="d-grid gap-2 mb-2" id="ctaWrap">
-          <button class="btn btn-main btn-lg" id="addBtn">Add to basket</button>
+          <button class="btn btn-main btn-lg" id="addBtn">Add to cart</button>
         </div>
 
         <div class="mode-note" id="modeNote"></div>
@@ -1733,14 +1733,14 @@ onMounted(() => {
         </div>
       </div>
       <div class="m-right">
-        <button class="btn btn-main" id="mobileAdd">Add to basket</button>
+        <button class="btn btn-main" id="mobileAdd">Add to cart</button>
       </div>
     </div>
 
   <!-- Toast -->
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
       <div id="addToast" class="toast text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
-        <div class="d-flex"><div class="toast-body">Added to your basket</div>
+        <div class="d-flex"><div class="toast-body">Added to your cart</div>
           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>

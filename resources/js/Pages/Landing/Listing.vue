@@ -7,6 +7,12 @@ import ProductCard from '@/Components/ProductCard.vue'
 import Pagination from '@/Components/Pagination.vue'
 import DistanceFilter from '@/Components/DistanceFilter.vue'
 import RecommendationsRail from '@/Components/RecommendationsRail.vue'
+import {
+  canonicalUrl,
+  pageKeywords,
+  shortOgDescription,
+  shortOgTitle,
+} from '@/lib/seo-meta'
 
 const props = defineProps({
   type: { type: String, required: false, default: '' },
@@ -47,10 +53,16 @@ function setMode(m) {
 }
 
 // SEO
-const canonical = computed(() => {
-  try { return window.location.href.split('#')[0] } catch { return '' }
-})
+const canonical = computed(() => canonicalUrl(typeof window !== 'undefined' ? window.location.pathname : '/'))
 const desc = computed(() => (heading.value ? `${heading.value} — curated by We Offer Wellness.` : 'Curated results from We Offer Wellness.'))
+const ogTitle = computed(() => shortOgTitle(`${heading.value || 'Results'} | WOW®`))
+const ogDesc = computed(() => shortOgDescription(desc.value))
+const keywords = computed(() => pageKeywords({
+  type: props.type,
+  category: props.category,
+  city: props.city,
+  extra: [heading.value, 'curated results', 'live listings'],
+}))
 const items = computed(() => Array.isArray(props.products) ? props.products : (props.products?.data || []))
 const filteredIds = ref([])
 const showItems = computed(() => {
@@ -78,9 +90,10 @@ const itemListLd = computed(() => ({
 <template>
   <Head :title="heading || 'Results'">
     <meta name="description" :content="desc" />
+    <meta name="keywords" :content="keywords.join(', ')" />
     <link v-if="canonical" rel="canonical" :href="canonical" />
-    <meta property="og:title" :content="heading || 'Results'" />
-    <meta property="og:description" :content="desc" />
+    <meta property="og:title" :content="ogTitle" />
+    <meta property="og:description" :content="ogDesc" />
     <meta v-if="canonical" property="og:url" :content="canonical" />
     <script type="application/ld+json">{{ JSON.stringify(breadcrumbLd) }}</script>
     <script type="application/ld+json">{{ JSON.stringify(itemListLd) }}</script>

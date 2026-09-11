@@ -6,17 +6,18 @@
         $productsCount = count($products);
     }
     $asyncBoot = (bool) ($searchAsyncBoot ?? false);
+    $ghostCount = max(1, (int) ($ghostCount ?? 3));
 @endphp
 
 @if($asyncBoot && $productsCount === 0)
-    @for($i = 0; $i < 3; $i++)
+    @for($i = 0; $i < $ghostCount; $i++)
         <div class="col-12 col-md-6">
             <div class="wow-card-sm-wrap">
                 <div class="result-view-map">
-                    @include('partials.product_card_v4_ghost')
+                    @include('partials.product_card_v4_1_ghost')
                 </div>
                 <div class="result-view-list">
-                    @include('partials.product_card_v4_ghost')
+                    @include('partials.product_card_v4_1_ghost')
                 </div>
             </div>
         </div>

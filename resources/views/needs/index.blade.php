@@ -294,7 +294,7 @@
           </div>
           <footer class="wow-need-card__footer">
             <small>Browse therapies and experiences for {{ $need['title'] }}.</small>
-            <a href="{{ route('needs.show', ['slug' => $need['slug']]) }}" class="btn-wow btn-wow--cta">View</a>
+            <a href="{{ route('needs.show', ['slug' => $need['slug']]) }}" class="btn-wow btn-wow--cta">View {{ $need['title'] }}</a>
           </footer>
         </article>
       @endforeach

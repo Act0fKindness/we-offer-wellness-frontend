@@ -1,6 +1,6 @@
 {
-    "generated_at": "2026-06-23T00:00:23+00:00",
-    "count": 105,
+    "generated_at": "2026-09-11T00:00:39+00:00",
+    "count": 106,
     "categories": [
         {
             "cat": "Modalities",
@@ -8,24 +8,9 @@
             "label": "Yoga",
             "value": "Yoga",
             "type": "Modality",
-            "subtitle": "45 offerings",
+            "subtitle": "44 offerings",
             "slug": "yoga",
             "search": "Yoga yoga",
-            "counts": {
-                "products": 45,
-                "offerings": 0,
-                "total": 45
-            }
-        },
-        {
-            "cat": "Modalities",
-            "title": "Breathwork",
-            "label": "Breathwork",
-            "value": "Breathwork",
-            "type": "Modality",
-            "subtitle": "44 offerings",
-            "slug": "breathwork",
-            "search": "Breathwork breathwork",
             "counts": {
                 "products": 44,
                 "offerings": 0,
@@ -34,17 +19,17 @@
         },
         {
             "cat": "Modalities",
-            "title": "Meditation",
-            "label": "Meditation",
-            "value": "Meditation",
+            "title": "Breathwork",
+            "label": "Breathwork",
+            "value": "Breathwork",
             "type": "Modality",
-            "subtitle": "37 offerings",
-            "slug": "meditation",
-            "search": "Meditation meditation",
+            "subtitle": "42 offerings",
+            "slug": "breathwork",
+            "search": "Breathwork breathwork",
             "counts": {
-                "products": 37,
+                "products": 42,
                 "offerings": 0,
-                "total": 37
+                "total": 42
             }
         },
         {
@@ -68,28 +53,28 @@
             "label": "Energy Healing",
             "value": "Energy Healing",
             "type": "Modality",
-            "subtitle": "34 offerings",
+            "subtitle": "35 offerings",
             "slug": "energy-healing",
             "search": "Energy Healing energy-healing",
             "counts": {
                 "products": 34,
-                "offerings": 0,
-                "total": 34
+                "offerings": 1,
+                "total": 35
             }
         },
         {
             "cat": "Modalities",
-            "title": "Mindfulness",
-            "label": "Mindfulness",
-            "value": "Mindfulness",
+            "title": "Meditation",
+            "label": "Meditation",
+            "value": "Meditation",
             "type": "Modality",
-            "subtitle": "22 offerings",
-            "slug": "mindfulness",
-            "search": "Mindfulness mindfulness",
+            "subtitle": "35 offerings",
+            "slug": "meditation",
+            "search": "Meditation meditation",
             "counts": {
-                "products": 22,
+                "products": 35,
                 "offerings": 0,
-                "total": 22
+                "total": 35
             }
         },
         {
@@ -98,13 +83,13 @@
             "label": "Sound Healing",
             "value": "Sound Healing",
             "type": "Modality",
-            "subtitle": "22 offerings",
+            "subtitle": "23 offerings",
             "slug": "sound-healing",
             "search": "Sound Healing sound-healing",
             "counts": {
                 "products": 21,
-                "offerings": 1,
-                "total": 22
+                "offerings": 2,
+                "total": 23
             }
         },
         {
@@ -116,6 +101,21 @@
             "subtitle": "21 offerings",
             "slug": "9d-breathwork",
             "search": "9D Breathwork 9d-breathwork",
+            "counts": {
+                "products": 21,
+                "offerings": 0,
+                "total": 21
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Mindfulness",
+            "label": "Mindfulness",
+            "value": "Mindfulness",
+            "type": "Modality",
+            "subtitle": "21 offerings",
+            "slug": "mindfulness",
+            "search": "Mindfulness mindfulness",
             "counts": {
                 "products": 21,
                 "offerings": 0,
@@ -169,21 +169,6 @@
         },
         {
             "cat": "Modalities",
-            "title": "Sound Bath",
-            "label": "Sound Bath",
-            "value": "Sound Bath",
-            "type": "Modality",
-            "subtitle": "13 offerings",
-            "slug": "sound-bath",
-            "search": "Sound Bath sound-bath",
-            "counts": {
-                "products": 13,
-                "offerings": 0,
-                "total": 13
-            }
-        },
-        {
-            "cat": "Modalities",
             "title": "Reiki Healing",
             "label": "Reiki Healing",
             "value": "Reiki Healing",
@@ -199,21 +184,6 @@
         },
         {
             "cat": "Modalities",
-            "title": "Angelic Reiki",
-            "label": "Angelic Reiki",
-            "value": "Angelic Reiki",
-            "type": "Modality",
-            "subtitle": "10 offerings",
-            "slug": "angelic-reiki",
-            "search": "Angelic Reiki angelic-reiki",
-            "counts": {
-                "products": 10,
-                "offerings": 0,
-                "total": 10
-            }
-        },
-        {
-            "cat": "Modalities",
             "title": "Hypnotherapy",
             "label": "Hypnotherapy",
             "value": "Hypnotherapy",
@@ -225,6 +195,21 @@
                 "products": 10,
                 "offerings": 0,
                 "total": 10
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Angelic Reiki",
+            "label": "Angelic Reiki",
+            "value": "Angelic Reiki",
+            "type": "Modality",
+            "subtitle": "9 offerings",
+            "slug": "angelic-reiki",
+            "search": "Angelic Reiki angelic-reiki",
+            "counts": {
+                "products": 9,
+                "offerings": 0,
+                "total": 9
             }
         },
         {
@@ -251,6 +236,36 @@
             "subtitle": "8 offerings",
             "slug": "indian-head-massage",
             "search": "Indian Head Massage indian-head-massage",
+            "counts": {
+                "products": 8,
+                "offerings": 0,
+                "total": 8
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Reflexology",
+            "label": "Reflexology",
+            "value": "Reflexology",
+            "type": "Modality",
+            "subtitle": "8 offerings",
+            "slug": "reflexology",
+            "search": "Reflexology reflexology",
+            "counts": {
+                "products": 7,
+                "offerings": 1,
+                "total": 8
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Sound Bath",
+            "label": "Sound Bath",
+            "value": "Sound Bath",
+            "type": "Modality",
+            "subtitle": "8 offerings",
+            "slug": "sound-bath",
+            "search": "Sound Bath sound-bath",
             "counts": {
                 "products": 8,
                 "offerings": 0,
@@ -299,21 +314,6 @@
             "counts": {
                 "products": 6,
                 "offerings": 1,
-                "total": 7
-            }
-        },
-        {
-            "cat": "Modalities",
-            "title": "Reflexology",
-            "label": "Reflexology",
-            "value": "Reflexology",
-            "type": "Modality",
-            "subtitle": "7 offerings",
-            "slug": "reflexology",
-            "search": "Reflexology reflexology",
-            "counts": {
-                "products": 7,
-                "offerings": 0,
                 "total": 7
             }
         },
@@ -634,6 +634,21 @@
         },
         {
             "cat": "Modalities",
+            "title": "Emotional Freedom Techniques",
+            "label": "Emotional Freedom Techniques",
+            "value": "Emotional Freedom Techniques",
+            "type": "Modality",
+            "subtitle": "3 offerings",
+            "slug": "emotional-freedom-techniques",
+            "search": "Emotional Freedom Techniques emotional-freedom-techniques",
+            "counts": {
+                "products": 2,
+                "offerings": 1,
+                "total": 3
+            }
+        },
+        {
+            "cat": "Modalities",
             "title": "Gong Sound Bath",
             "label": "Gong Sound Bath",
             "value": "Gong Sound Bath",
@@ -792,23 +807,8 @@
             "slug": "eft",
             "search": "Eft eft",
             "counts": {
-                "products": 2,
-                "offerings": 0,
-                "total": 2
-            }
-        },
-        {
-            "cat": "Modalities",
-            "title": "Emotional Freedom Techniques",
-            "label": "Emotional Freedom Techniques",
-            "value": "Emotional Freedom Techniques",
-            "type": "Modality",
-            "subtitle": "2 offerings",
-            "slug": "emotional-freedom-techniques",
-            "search": "Emotional Freedom Techniques emotional-freedom-techniques",
-            "counts": {
-                "products": 2,
-                "offerings": 0,
+                "products": 1,
+                "offerings": 1,
                 "total": 2
             }
         },
@@ -1001,21 +1001,6 @@
             "subtitle": "2 offerings",
             "slug": "tai-chi-qigong",
             "search": "Tai Chi Qigong tai-chi-qigong",
-            "counts": {
-                "products": 2,
-                "offerings": 0,
-                "total": 2
-            }
-        },
-        {
-            "cat": "Modalities",
-            "title": "Wellness Workshop",
-            "label": "Wellness Workshop",
-            "value": "Wellness Workshop",
-            "type": "Modality",
-            "subtitle": "2 offerings",
-            "slug": "wellness-workshop",
-            "search": "Wellness Workshop wellness-workshop",
             "counts": {
                 "products": 2,
                 "offerings": 0,
@@ -1324,6 +1309,21 @@
         },
         {
             "cat": "Modalities",
+            "title": "Holistic Wellbeing Coaching",
+            "label": "Holistic Wellbeing Coaching",
+            "value": "Holistic Wellbeing Coaching",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "holistic-wellbeing-coaching",
+            "search": "Holistic Wellbeing Coaching holistic-wellbeing-coaching",
+            "counts": {
+                "products": 0,
+                "offerings": 1,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
             "title": "Indian Head Massage & Back Neck & Shoulder Massage",
             "label": "Indian Head Massage & Back Neck & Shoulder Massage",
             "value": "Indian Head Massage & Back Neck & Shoulder Massage",
@@ -1541,6 +1541,21 @@
             "subtitle": "1 offerings",
             "slug": "spiritual-journey",
             "search": "Spiritual Journey spiritual-journey",
+            "counts": {
+                "products": 1,
+                "offerings": 0,
+                "total": 1
+            }
+        },
+        {
+            "cat": "Modalities",
+            "title": "Wellness Workshop",
+            "label": "Wellness Workshop",
+            "value": "Wellness Workshop",
+            "type": "Modality",
+            "subtitle": "1 offerings",
+            "slug": "wellness-workshop",
+            "search": "Wellness Workshop wellness-workshop",
             "counts": {
                 "products": 1,
                 "offerings": 0,

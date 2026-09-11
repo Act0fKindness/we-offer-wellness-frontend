@@ -15,6 +15,19 @@ Disallow: /profile
 Disallow: /search
 Disallow: /subscribe/
 
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+# Change this to Disallow if you want AI search visibility but want to opt out of training use.
+
+User-agent: Googlebot
+Allow: /
+
 # Primary sitemap index
 Sitemap: https://www.weofferwellness.co.uk/sitemap.xml
 
@@ -29,3 +42,9 @@ Sitemap: https://www.weofferwellness.co.uk/sitemaps/online.xml
 Sitemap: https://www.weofferwellness.co.uk/sitemaps/by-need.xml
 Sitemap: https://www.weofferwellness.co.uk/sitemaps/practitioners.xml
 Sitemap: https://www.weofferwellness.co.uk/sitemaps/guides.xml
+
+# AI discovery files
+# https://www.weofferwellness.co.uk/llms.txt
+# https://www.weofferwellness.co.uk/llms-small.txt
+# https://www.weofferwellness.co.uk/llms-full.txt
+# https://www.weofferwellness.co.uk/.well-known/ai.txt

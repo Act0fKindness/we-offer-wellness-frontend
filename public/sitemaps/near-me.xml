@@ -1,2783 +1,2772 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://localhost/classes/class/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/classes/class/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/classes/class/united-kingdom/berkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/classes/class/united-kingdom/berkshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/classes/class/united-kingdom/berkshire/thatcham</loc>
+    <loc>https://www.weofferwellness.co.uk/classes/class/united-kingdom/berkshire/thatcham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/classes/class/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/classes/class/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/classes/class/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/classes/class/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/events/austria</loc>
+    <loc>https://www.weofferwellness.co.uk/events/events/austria</loc>
     <lastmod>2026-06-05T18:49:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/events/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/events/events/united-kingdom</loc>
     <lastmod>2026-06-05T18:49:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/events/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/events/events/united-kingdom/kent</loc>
     <lastmod>2026-06-05T18:49:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/events/united-kingdom/kent/langton-green</loc>
+    <loc>https://www.weofferwellness.co.uk/events/events/united-kingdom/kent/langton-green</loc>
     <lastmod>2026-06-05T18:49:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/events/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/events/events/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-06-05T18:49:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/events/united-kingdom/kent/ram-lane</loc>
+    <loc>https://www.weofferwellness.co.uk/events/events/united-kingdom/kent/ram-lane</loc>
     <lastmod>2026-06-05T18:49:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/sound-healing/austria</loc>
-    <lastmod>2026-06-03T11:21:48+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/events/sound-healing/austria</loc>
+    <lastmod>2026-06-26T10:32:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/sound-healing/united-kingdom</loc>
-    <lastmod>2026-06-03T11:21:48+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/events/sound-healing/united-kingdom</loc>
+    <lastmod>2026-06-26T10:32:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/sound-healing/united-kingdom/kent</loc>
-    <lastmod>2026-06-03T11:21:48+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/events/sound-healing/united-kingdom/kent</loc>
+    <lastmod>2026-06-26T10:32:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/sound-healing/united-kingdom/kent/langton-green</loc>
-    <lastmod>2026-06-03T11:21:48+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/events/sound-healing/united-kingdom/kent/langton-green</loc>
+    <lastmod>2026-06-26T10:32:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/sound-healing/united-kingdom/kent/maidstone</loc>
-    <lastmod>2026-06-03T11:21:48+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/events/sound-healing/united-kingdom/kent/maidstone</loc>
+    <lastmod>2026-06-26T10:32:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events/sound-healing/united-kingdom/kent/ram-lane</loc>
-    <lastmod>2026-06-03T11:21:48+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/events/sound-healing/united-kingdom/kent/ram-lane</loc>
+    <lastmod>2026-06-26T10:32:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/retreats/forest-bathing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/retreats/forest-bathing/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/retreats/forest-bathing/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/retreats/forest-bathing/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/retreats/forest-bathing/united-kingdom/surrey/esher</loc>
+    <loc>https://www.weofferwellness.co.uk/retreats/forest-bathing/united-kingdom/surrey/esher</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/retreats/forest-bathing/united-kingdom/surrey/godalming</loc>
+    <loc>https://www.weofferwellness.co.uk/retreats/forest-bathing/united-kingdom/surrey/godalming</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/retreats/retreat/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/retreats/retreat/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/retreats/retreat/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/retreats/retreat/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/retreats/retreat/united-kingdom/kent/dartford</loc>
+    <loc>https://www.weofferwellness.co.uk/retreats/retreat/united-kingdom/kent/dartford</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/9d-breathwork/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/retreats/sound-healing/united-kingdom</loc>
+    <lastmod>2026-07-30T07:14:23+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/retreats/sound-healing/united-kingdom/kent</loc>
+    <lastmod>2026-07-30T07:14:23+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/retreats/sound-healing/united-kingdom/kent/ashford</loc>
+    <lastmod>2026-07-30T07:14:23+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/retreats/sound-healing/united-kingdom/kent/maidstone</loc>
+    <lastmod>2026-07-30T07:14:23+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/retreats/sound-healing/united-kingdom/kent/ruckinge</loc>
+    <lastmod>2026-07-30T07:14:23+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/retreats/sound-healing/united-kingdom/kent/west-malling</loc>
+    <lastmod>2026-07-30T07:14:23+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/9d-breathwork/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/9d-breathwork/united-kingdom/tyne-and-wear</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/9d-breathwork/united-kingdom/tyne-and-wear</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/9d-breathwork/united-kingdom/tyne-and-wear/south-shields</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/9d-breathwork/united-kingdom/tyne-and-wear/south-shields</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/active-resonance-technique/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/active-resonance-technique/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/active-resonance-technique/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/active-resonance-technique/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/active-resonance-technique/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/active-resonance-technique/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/acupuncture/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/acupuncture/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/acupuncture/united-kingdom/hertfordshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/acupuncture/united-kingdom/hertfordshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/acupuncture/united-kingdom/hertfordshire/abbots-langley</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/acupuncture/united-kingdom/hertfordshire/abbots-langley</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/acupuncture/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/acupuncture/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/acupuncture/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/acupuncture/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/angelic-reiki/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/angelic-reiki/united-kingdom</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/angelic-reiki/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/angelic-reiki/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/angelic-reiki/united-kingdom/kent/dartford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/angelic-reiki/united-kingdom/kent/dartford</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/angelic-reiki/united-kingdom/somerset</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/angelic-reiki/united-kingdom/somerset</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/angelic-reiki/united-kingdom/somerset/yeovil</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/angelic-reiki/united-kingdom/somerset/yeovil</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/cardiff</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/cardiff</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/devon</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/devon/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/devon/cranbrook</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/devon/exeter</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/devon/exeter</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/devon/topsham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/devon/topsham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/gloucestershire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/gloucestershire</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/gloucestershire/gloucester</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/gloucestershire/gloucester</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/aromatherapy/united-kingdom/kent/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/aromatherapy/united-kingdom/kent/cranbrook</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/art-for-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/art-for-healing/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/art-for-healing/united-kingdom/buckinghamshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/art-for-healing/united-kingdom/buckinghamshire</loc>
     <lastmod>2026-03-03T10:22:44+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/art-for-healing/united-kingdom/buckinghamshire/slough</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/art-for-healing/united-kingdom/buckinghamshire/slough</loc>
     <lastmod>2026-03-03T10:22:44+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/art-for-healing/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/art-for-healing/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/art-for-healing/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/art-for-healing/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/astrology-reading/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/astrology-reading/united-kingdom</loc>
     <lastmod>2026-06-01T17:54:55+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/astrology-reading/united-kingdom/tyne-and-wear</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/astrology-reading/united-kingdom/tyne-and-wear</loc>
     <lastmod>2026-06-01T17:54:55+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/astrology-reading/united-kingdom/tyne-and-wear/tynemouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/astrology-reading/united-kingdom/tyne-and-wear/tynemouth</loc>
     <lastmod>2026-06-01T17:54:55+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/thailand</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/thailand</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/thailand/ko-pha-ngan-district</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/thailand/ko-pha-ngan-district</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/united-kingdom/devon</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/united-kingdom/devon/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/united-kingdom/devon/cranbrook</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/united-kingdom/devon/exeter</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/united-kingdom/devon/exeter</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/united-kingdom/devon/topsham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/united-kingdom/devon/topsham</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ayurveda/united-kingdom/kent/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ayurveda/united-kingdom/kent/cranbrook</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/birth-chart-reading/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/birth-chart-reading/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/birth-chart-reading/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/birth-chart-reading/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/birth-chart-reading/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/birth-chart-reading/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/birth-chart-reading/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/birth-chart-reading/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork-yoga-sound-experience/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork-yoga-sound-experience/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork-yoga-sound-experience/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork-yoga-sound-experience/united-kingdom/devon</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/indonesia</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/indonesia</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/indonesia/bali</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/indonesia/bali</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom</loc>
-    <lastmod>2026-06-05T09:23:26+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom</loc>
+    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/east-sussex/uckfield</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/east-sussex/uckfield</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/hampshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/hampshire</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/hampshire/aldershot</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/hampshire/aldershot</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/shropshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/shropshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/shropshire/bridgnorth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/shropshire/bridgnorth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/shropshire/much-wenlock</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/shropshire/much-wenlock</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/surrey/chertsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/surrey/chertsey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/surrey/esher</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/surrey/esher</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/surrey/godalming</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/surrey/godalming</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/wiltshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/wiltshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/breathwork/united-kingdom/wiltshire/lake</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/breathwork/united-kingdom/wiltshire/lake</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony-with-sound-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony-with-sound-healing/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony-with-sound-healing/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony-with-sound-healing/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony-with-sound-healing/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony-with-sound-healing/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony-with-sound-healing/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony-with-sound-healing/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony/united-kingdom/dorset</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony/united-kingdom/dorset</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony/united-kingdom/norfolk</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony/united-kingdom/norfolk</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony/united-kingdom/norfolk/filby</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony/united-kingdom/norfolk/filby</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony/united-states</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cacao-ceremony/united-states/niagara-county</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cacao-ceremony/united-states/niagara-county</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/camping/austria</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/camping/austria</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/camping/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/camping/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/camping/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/camping/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/camping/united-kingdom/kent/langton-green</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/camping/united-kingdom/kent/langton-green</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/camping/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/camping/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/camping/united-kingdom/kent/ram-lane</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/camping/united-kingdom/kent/ram-lane</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cancer-treatment-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cancer-treatment-healing/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/card-reading/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/card-reading/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/card-reading/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/card-reading/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/card-reading/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/card-reading/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/card-reading/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/card-reading/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom/kent/whitstable</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom/kent/whitstable</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom/surrey/bisley</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom/surrey/bisley</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom/surrey/dorking</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom/surrey/dorking</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom/surrey/great-bookham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom/surrey/great-bookham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom/surrey/leatherhead</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom/surrey/leatherhead</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/ceremony/united-kingdom/surrey/reigate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/ceremony/united-kingdom/surrey/reigate</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/chinese-meridian-system/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/chinese-meridian-system/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/chinese-meridian-system/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/chinese-meridian-system/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/chinese-meridian-system/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/chinese-meridian-system/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/thailand</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/thailand</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/thailand/ko-pha-ngan-district</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/thailand/ko-pha-ngan-district</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom</loc>
     <lastmod>2026-06-01T17:55:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/devon</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/devon/tavistock</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/devon/tavistock</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/east-sussex/eastbourne</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/east-sussex/eastbourne</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/east-sussex/newhaven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/east-sussex/newhaven</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/essex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/essex</loc>
     <lastmod>2026-06-01T17:55:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/hertfordshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/hertfordshire</loc>
     <lastmod>2026-06-01T17:55:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-states</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-states/south-central-connecticut-planning-region</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-states/south-central-connecticut-planning-region</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-states/south-central-connecticut-planning-region/new-haven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-states/south-central-connecticut-planning-region/new-haven</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-states/wake-county</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-states/wake-county</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/coaching/united-states/wake-county/raleigh</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/coaching/united-states/wake-county/raleigh</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/corporate/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/corporate/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/corporate/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/corporate/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/corporate/united-kingdom/kent/ramsgate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/corporate/united-kingdom/kent/ramsgate</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cosmetic-acupuncture/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cosmetic-acupuncture/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cosmetic-acupuncture/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cosmetic-acupuncture/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/cosmetic-acupuncture/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/cosmetic-acupuncture/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/course/united-kingdom</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/course/united-kingdom</loc>
+    <lastmod>2026-08-23T15:16:21+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/course/united-kingdom/kent</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/course/united-kingdom/kent</loc>
+    <lastmod>2026-08-23T15:16:21+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/course/united-kingdom/kent/harrietsham</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/course/united-kingdom/kent/harrietsham</loc>
+    <lastmod>2026-08-23T15:16:21+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/course/united-kingdom/kent/maidstone</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/course/united-kingdom/kent/maidstone</loc>
+    <lastmod>2026-08-23T15:16:21+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/course/united-kingdom/kent/ramsgate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/course/united-kingdom/kent/ramsgate</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/course/united-kingdom/tyne-and-wear</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/course/united-kingdom/tyne-and-wear</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/course/united-kingdom/tyne-and-wear/newcastle-upon-tyne</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/course/united-kingdom/tyne-and-wear/newcastle-upon-tyne</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom</loc>
     <lastmod>2026-06-05T09:08:37+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/devon</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/devon/exmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/devon/exmouth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/devon/sidmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/devon/sidmouth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/devon/topsham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/devon/topsham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/east-sussex</loc>
     <lastmod>2026-06-05T09:08:37+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/east-sussex/newhaven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/east-sussex/newhaven</loc>
     <lastmod>2026-06-05T09:08:37+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/kent/faversham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/kent/faversham</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/kent/herne-bay</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/kent/herne-bay</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/kent/whitstable</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/kent/whitstable</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-kingdom/west-sussex/petworth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-kingdom/west-sussex/petworth</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-states</loc>
     <lastmod>2026-06-05T09:08:37+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-states/south-central-connecticut-planning-region</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-states/south-central-connecticut-planning-region</loc>
     <lastmod>2026-06-05T09:08:37+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/crystal-healing/united-states/south-central-connecticut-planning-region/new-haven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/crystal-healing/united-states/south-central-connecticut-planning-region/new-haven</loc>
     <lastmod>2026-06-05T09:08:37+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/east-sussex/newhaven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/east-sussex/newhaven</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/kent/faversham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/kent/faversham</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/kent/herne-bay</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/kent/herne-bay</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/kent/whitstable</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/kent/whitstable</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/shropshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/shropshire</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/shropshire/bridgnorth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/shropshire/bridgnorth</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-kingdom/shropshire/much-wenlock</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-kingdom/shropshire/much-wenlock</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-states</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-states/south-central-connecticut-planning-region</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-states/south-central-connecticut-planning-region</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/distance-reiki/united-states/south-central-connecticut-planning-region/new-haven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/distance-reiki/united-states/south-central-connecticut-planning-region/new-haven</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/domestic-survivors/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/domestic-survivors/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/drum-circle/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/drum-circle/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/drum-circle/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/drum-circle/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/dynamic-embodiment-session/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/dynamic-embodiment-session/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/dynamic-embodiment-session/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/dynamic-embodiment-session/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/dynamic-embodiment-session/united-kingdom/east-sussex/eastbourne</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/dynamic-embodiment-session/united-kingdom/east-sussex/eastbourne</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/dynamic-embodiment-session/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/dynamic-embodiment-session/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/eastern-flow/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/eastern-flow/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/eft-and-personalised-meditation/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/eft-and-personalised-meditation/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/eft-and-personalised-meditation/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/eft-and-personalised-meditation/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/eft-and-personalised-meditation/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/eft-and-personalised-meditation/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/eft/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/eft/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/eft/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/eft/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/eft/united-kingdom/kent/folkestone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/eft/united-kingdom/kent/folkestone</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/emotional-freedom-techniques/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/emotional-freedom-techniques/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/emotional-freedom-techniques/united-kingdom/tyne-and-wear</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/emotional-freedom-techniques/united-kingdom/tyne-and-wear</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/emotional-freedom-techniques/united-kingdom/tyne-and-wear/newcastle-upon-tyne</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/emotional-freedom-techniques/united-kingdom/tyne-and-wear/newcastle-upon-tyne</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/ireland</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/ireland</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/ireland/cavan</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/ireland/cavan</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/ireland/county-cavan</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/ireland/county-cavan</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/ireland/county-cavan/ballinagh</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/ireland/county-cavan/ballinagh</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/null</loc>
+    <lastmod>2026-09-10T16:08:46+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom</loc>
+    <lastmod>2026-09-10T16:08:46+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/buckinghamshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/buckinghamshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/buckinghamshire/slough</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/buckinghamshire/slough</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/buckinghamshire/stoke-poges</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/buckinghamshire/stoke-poges</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/cornwall</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/cornwall</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/cornwall/falmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/cornwall/falmouth</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/cornwall/helston</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/cornwall/helston</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/cornwall/porkellis</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/cornwall/porkellis</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/cornwall/truro</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/cornwall/truro</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/devon</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/devon/exmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/devon/exmouth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/devon/sidmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/devon/sidmouth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/devon/topsham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/devon/topsham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/dorset</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/dorset</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/essex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/essex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/hampshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/hampshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/hampshire/aldershot</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/hampshire/aldershot</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/hertfordshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/hertfordshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/kent</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/kent</loc>
+    <lastmod>2026-09-10T16:08:46+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/kent/chart-sutton</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/kent/chart-sutton</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/kent/folkestone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/kent/folkestone</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/tyne-and-wear</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/tyne-and-wear</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-kingdom/tyne-and-wear/south-shields</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-kingdom/tyne-and-wear/south-shields</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-states</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-healing/united-states/niagara-county</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-healing/united-states/niagara-county</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-medicine/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-medicine/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-medicine/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-medicine/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-medicine/united-kingdom/kent/ram-lane</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-medicine/united-kingdom/kent/ram-lane</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-medicine/united-kingdom/kent/ramsgate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-medicine/united-kingdom/kent/ramsgate</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-medicine/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-medicine/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-medicine/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-medicine/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/energy-medicine/united-kingdom/surrey/chertsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/energy-medicine/united-kingdom/surrey/chertsey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/facial-reflexology/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/facial-reflexology/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/facial-reflexology/united-kingdom/dorset</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/facial-reflexology/united-kingdom/dorset</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/facial-reflexology/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/facial-reflexology/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/facial-reflexology/united-kingdom/kent/loose</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/facial-reflexology/united-kingdom/kent/loose</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/facial-reflexology/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/facial-reflexology/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/facial-reflexology/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/facial-reflexology/united-states</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/facial-reflexology/united-states/niagara-county</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/facial-reflexology/united-states/niagara-county</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/forest-bathing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/forest-bathing/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/forest-bathing/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/forest-bathing/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/forest-bathing/united-kingdom/kent/edenbridge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/forest-bathing/united-kingdom/kent/edenbridge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/forest-bathing/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/forest-bathing/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/forest-bathing/united-kingdom/kent/tunbridge-wells</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/forest-bathing/united-kingdom/kent/tunbridge-wells</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/forest-bathing/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/forest-bathing/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/forest-bathing/united-kingdom/surrey/esher</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/forest-bathing/united-kingdom/surrey/esher</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/forest-bathing/united-kingdom/surrey/godalming</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/forest-bathing/united-kingdom/surrey/godalming</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/full-new-moon-holistic-health-empower-hour/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/full-new-moon-holistic-health-empower-hour/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/full-new-moon-holistic-health-empower-hour/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/full-new-moon-holistic-health-empower-hour/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/full-new-moon-holistic-health-empower-hour/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/full-new-moon-holistic-health-empower-hour/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/future-life-progression/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/future-life-progression/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/future-life-progression/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/future-life-progression/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/future-life-progression/united-kingdom/kent/dartford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/future-life-progression/united-kingdom/kent/dartford</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom</loc>
     <lastmod>2026-06-08T07:45:26+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/kent</loc>
     <lastmod>2026-06-01T17:48:33+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/kent/ashford</loc>
     <lastmod>2026-06-01T17:48:33+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-06-01T17:48:33+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-05-31T08:34:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-05-31T08:34:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/surrey</loc>
     <lastmod>2026-06-08T07:45:26+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/surrey/bisley</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/surrey/bisley</loc>
     <lastmod>2026-06-08T07:45:26+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/surrey/dorking</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/surrey/dorking</loc>
     <lastmod>2026-06-08T07:45:26+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/surrey/great-bookham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/surrey/great-bookham</loc>
     <lastmod>2026-06-08T07:45:26+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/surrey/leatherhead</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/surrey/leatherhead</loc>
     <lastmod>2026-06-08T07:45:26+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/gong-sound-bath/united-kingdom/surrey/reigate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/gong-sound-bath/united-kingdom/surrey/reigate</loc>
     <lastmod>2026-06-08T07:45:26+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hatha-yoga/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hatha-yoga/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hatha-yoga/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hatha-yoga/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hatha-yoga/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hatha-yoga/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hatha-yoga/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hatha-yoga/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hatha-yoga/united-kingdom/wiltshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hatha-yoga/united-kingdom/wiltshire</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hatha-yoga/united-kingdom/wiltshire/lake</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hatha-yoga/united-kingdom/wiltshire/lake</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/healing-through-horses/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/healing-through-horses/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/healing-through-horses/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/healing-through-horses/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/healing-through-horses/united-kingdom/kent/goudhurst</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/healing-through-horses/united-kingdom/kent/goudhurst</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/health-coaching/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/health-coaching/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/health-coaching/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/health-coaching/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/health-coaching/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/health-coaching/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/health-coaching/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/health-coaching/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/holistic-therapy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-therapy/united-kingdom</loc>
     <lastmod>2026-05-03T10:57:04+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/holistic-therapy/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-therapy/united-kingdom/kent</loc>
     <lastmod>2026-05-03T10:57:04+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/holistic-therapy/united-kingdom/kent/loose</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-therapy/united-kingdom/kent/loose</loc>
     <lastmod>2026-05-03T10:57:04+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/holistic-therapy/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-therapy/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-05-03T10:57:04+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/holistic-therapy/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-therapy/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/holistic-therapy/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-therapy/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/homeopathy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-wellbeing-coaching/null</loc>
+    <lastmod>2026-09-10T15:11:14+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-wellbeing-coaching/united-kingdom</loc>
+    <lastmod>2026-09-10T15:11:14+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/holistic-wellbeing-coaching/united-kingdom/kent</loc>
+    <lastmod>2026-09-10T15:11:14+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/homeopathy/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/australia</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/australia</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/australia/queensland</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/australia/queensland</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/australia/queensland/sunshine-coast</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/australia/queensland/sunshine-coast</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/surrey/molesey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/surrey/molesey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/tyne-and-wear</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/tyne-and-wear</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/tyne-and-wear/newcastle-upon-tyne</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/tyne-and-wear/newcastle-upon-tyne</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/tyne-and-wear/south-shields</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/tyne-and-wear/south-shields</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/hypnotherapy/united-kingdom/west-sussex/steyning</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/hypnotherapy/united-kingdom/west-sussex/steyning</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/incense/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/incense/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage-back-neck-shoulder-massage/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage-back-neck-shoulder-massage/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage-back-neck-shoulder-massage/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage-back-neck-shoulder-massage/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage-back-neck-shoulder-massage/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage-back-neck-shoulder-massage/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-kingdom/berkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-kingdom/berkshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-kingdom/dorset</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-kingdom/dorset</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-kingdom/west-yorkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-kingdom/west-yorkshire</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-kingdom/west-yorkshire/halifax</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-kingdom/west-yorkshire/halifax</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-states</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/indian-head-massage/united-states/niagara-county</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/indian-head-massage/united-states/niagara-county</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/kundalini-yoga/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/kundalini-yoga/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/kundalini-yoga/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/kundalini-yoga/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/kundalini-yoga/united-kingdom/surrey/chertsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/kundalini-yoga/united-kingdom/surrey/chertsey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/kundalini-yoga/united-kingdom/west-yorkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/kundalini-yoga/united-kingdom/west-yorkshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/kundalini-yoga/united-kingdom/west-yorkshire/halifax</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/kundalini-yoga/united-kingdom/west-yorkshire/halifax</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/life-coaching/united-kingdom</loc>
-    <lastmod>2026-06-11T07:33:19+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/life-coaching/united-kingdom</loc>
+    <lastmod>2026-09-01T15:58:34+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/life-coaching/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/life-coaching/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T00:53:46+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/life-coaching/united-kingdom/surrey/esher</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/life-coaching/united-kingdom/surrey/esher</loc>
     <lastmod>2026-03-03T00:53:46+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/life-coaching/united-kingdom/surrey/godalming</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/life-coaching/united-kingdom/surrey/godalming</loc>
     <lastmod>2026-03-03T00:53:46+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/luxury-facials/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/luxury-facials/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/luxury-facials/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/luxury-facials/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/luxury-facials/united-kingdom/kent/sutton-valence</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/luxury-facials/united-kingdom/kent/sutton-valence</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/manual-lymphatic-drainage/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/manual-lymphatic-drainage/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/manual-lymphatic-drainage/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/manual-lymphatic-drainage/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/manual-lymphatic-drainage/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/manual-lymphatic-drainage/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom</loc>
     <lastmod>2026-06-05T09:41:21+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/berkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/berkshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/devon</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/devon/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/devon/cranbrook</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/devon/exeter</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/devon/exeter</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/devon/topsham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/devon/topsham</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/kent/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/kent/cranbrook</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/kent/sutton-valence</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/kent/sutton-valence</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/massage/united-kingdom/surrey/chertsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/massage/united-kingdom/surrey/chertsey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/austria</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/austria</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/ireland</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/ireland</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/ireland/cavan</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/ireland/cavan</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/ireland/county-cavan</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/ireland/county-cavan</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/ireland/county-cavan/ballinagh</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/ireland/county-cavan/ballinagh</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom</loc>
+    <lastmod>2026-07-09T12:35:14+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/buckinghamshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/buckinghamshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/buckinghamshire/slough</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/buckinghamshire/slough</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/buckinghamshire/stoke-poges</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/buckinghamshire/stoke-poges</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/cambridgeshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/cambridgeshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/cambridgeshire/cambridge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/cambridgeshire/cambridge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/devon</loc>
+    <lastmod>2026-07-09T12:35:14+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/devon/exmouth</loc>
+    <lastmod>2026-07-09T12:35:14+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/devon/sidmouth</loc>
+    <lastmod>2026-07-09T12:35:14+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/devon/topsham</loc>
+    <lastmod>2026-07-09T12:35:14+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/hampshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/devon/exmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/hampshire/romsey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/devon/sidmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/devon/topsham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/dartford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/hampshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/gravesend</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/hampshire/romsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/higham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/ashford</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/dartford</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/edenbridge</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/gravesend</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/higham</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/langton-green</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/langton-green</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/ram-lane</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/ram-lane</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/sevenoaks-weald</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/sevenoaks-weald</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/tonbridge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/tonbridge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/tunbridge-wells</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/kent/west-malling</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/shropshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/shropshire</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/shropshire/bridgnorth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/shropshire/bridgnorth</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/shropshire/much-wenlock</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/shropshire/much-wenlock</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/west-sussex/bracklesham-bay</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/west-sussex/bracklesham-bay</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/west-sussex/steyning</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/west-sussex/steyning</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/west-yorkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/west-yorkshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/west-yorkshire/leeds</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/west-yorkshire/leeds</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/wiltshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/wiltshire</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/meditation/united-kingdom/wiltshire/lake</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/meditation/united-kingdom/wiltshire/lake</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/menopause/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/menopause/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/menopause/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/menopause/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/menopause/united-kingdom/east-sussex/crowborough</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/menopause/united-kingdom/east-sussex/crowborough</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/menopause/united-kingdom/east-sussex/forest-row</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/menopause/united-kingdom/east-sussex/forest-row</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/menopause/united-kingdom/east-sussex/lewes</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/menopause/united-kingdom/east-sussex/lewes</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/menopause/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/menopause/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/menopause/united-kingdom/west-sussex/east-grinstead</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/menopause/united-kingdom/west-sussex/east-grinstead</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/austria</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/austria</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/cambridgeshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/cambridgeshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/cambridgeshire/cambridge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/cambridgeshire/cambridge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/east-sussex/battle</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/ashford</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/edenbridge</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/langton-green</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/ashford</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/edenbridge</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/langton-green</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/ram-lane</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/ram-lane</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/sevenoaks-weald</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/tonbridge</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/kent/tunbridge-wells</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/northumberland</loc>
+    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/northumberland/ponteland</loc>
+    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/tyne-and-wear</loc>
+    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/tyne-and-wear/benton</loc>
+    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/tyne-and-wear/longbenton</loc>
+    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/mindfulness/united-kingdom/tyne-and-wear/newcastle-upon-tyne</loc>
+    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/movement-therapy/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/sevenoaks</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/sevenoaks-weald</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/tonbridge</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/kent/tunbridge-wells</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/northumberland</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/northumberland/ponteland</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/tyne-and-wear</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/tyne-and-wear/benton</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/tyne-and-wear/longbenton</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/mindfulness/united-kingdom/tyne-and-wear/newcastle-upon-tyne</loc>
-    <lastmod>2026-04-10T11:08:40+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/movement-therapy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/movement-therapy/united-kingdom/somerset</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/movement-therapy/united-kingdom/somerset</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/movement-therapy/united-kingdom/somerset/yeovil</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/movement-therapy/united-kingdom/somerset/yeovil</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/nutrition/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/nutrition/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/nutrition/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/nutrition/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/nutrition/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/nutrition/united-kingdom/kent/ashford</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/omni-energy-healing-sessions/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/omni-energy-healing-sessions/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/omni-energy-healing-sessions/united-kingdom/cornwall</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/omni-energy-healing-sessions/united-kingdom/cornwall</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/omni-energy-healing-sessions/united-kingdom/cornwall/falmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/omni-energy-healing-sessions/united-kingdom/cornwall/falmouth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/omni-energy-healing-sessions/united-kingdom/cornwall/helston</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/omni-energy-healing-sessions/united-kingdom/cornwall/helston</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/omni-energy-healing-sessions/united-kingdom/cornwall/porkellis</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/omni-energy-healing-sessions/united-kingdom/cornwall/porkellis</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/omni-energy-healing-sessions/united-kingdom/cornwall/truro</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/omni-energy-healing-sessions/united-kingdom/cornwall/truro</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/past-life-regression/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/past-life-regression/united-kingdom</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/past-life-regression/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/past-life-regression/united-kingdom/kent</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/past-life-regression/united-kingdom/kent/dartford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/past-life-regression/united-kingdom/kent/dartford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/past-life-regression/united-kingdom/kent/sandwich</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/past-life-regression/united-kingdom/kent/sandwich</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pellowah-energy-session/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pellowah-energy-session/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pellowah-energy-session/united-kingdom/cornwall</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pellowah-energy-session/united-kingdom/cornwall</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pellowah-energy-session/united-kingdom/cornwall/falmouth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pellowah-energy-session/united-kingdom/cornwall/falmouth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pellowah-energy-session/united-kingdom/cornwall/helston</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pellowah-energy-session/united-kingdom/cornwall/helston</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pellowah-energy-session/united-kingdom/cornwall/porkellis</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pellowah-energy-session/united-kingdom/cornwall/porkellis</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pellowah-energy-session/united-kingdom/cornwall/truro</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pellowah-energy-session/united-kingdom/cornwall/truro</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pilates/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pilates/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pilates/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pilates/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pilates/united-kingdom/kent/dartford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pilates/united-kingdom/kent/dartford</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pilates/united-kingdom/kent/gravesend</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pilates/united-kingdom/kent/gravesend</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pilates/united-kingdom/kent/higham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pilates/united-kingdom/kent/higham</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy-massage-pregnancy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy-massage-pregnancy/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy-massage-pregnancy/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy-massage-pregnancy/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy-massage-pregnancy/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy-massage-pregnancy/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy-massage/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy-massage/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy-massage/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy-massage/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy-massage/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy-massage/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy/united-kingdom/hampshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy/united-kingdom/hampshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy/united-kingdom/hampshire/aldershot</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy/united-kingdom/hampshire/aldershot</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/pregnancy/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/pregnancy/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/qigong/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/qigong/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/qigong/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/qigong/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:22:45+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/qigong/united-kingdom/east-sussex/wadhurst</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/qigong/united-kingdom/east-sussex/wadhurst</loc>
     <lastmod>2026-03-03T10:22:45+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/qigong/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/qigong/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/qigong/united-kingdom/kent/new-ash-green</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/qigong/united-kingdom/kent/new-ash-green</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/qigong/united-kingdom/kent/royal-tunbridge-wells</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/qigong/united-kingdom/kent/royal-tunbridge-wells</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/qigong/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/qigong/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/qigong/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/qigong/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/rahanni-celestial-healing/ireland</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/rahanni-celestial-healing/ireland</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/rahanni-celestial-healing/ireland/cavan</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/rahanni-celestial-healing/ireland/cavan</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/rahanni-celestial-healing/ireland/county-cavan</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/rahanni-celestial-healing/ireland/county-cavan</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/rahanni-celestial-healing/ireland/county-cavan/ballinagh</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/rahanni-celestial-healing/ireland/county-cavan/ballinagh</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-and-reiki/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-and-reiki/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-and-reiki/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-and-reiki/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-and-reiki/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-and-reiki/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-for-pregnancy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-for-pregnancy/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-for-pregnancy/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-for-pregnancy/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-for-pregnancy/united-kingdom/surrey/molesey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-for-pregnancy/united-kingdom/surrey/molesey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-for-supporting-the-menopause/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-for-supporting-the-menopause/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-for-supporting-the-menopause/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-for-supporting-the-menopause/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology-for-supporting-the-menopause/united-kingdom/surrey/molesey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology-for-supporting-the-menopause/united-kingdom/surrey/molesey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology/united-kingdom</loc>
+    <lastmod>2026-09-05T17:34:39+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology/united-kingdom/berkshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology/united-kingdom/berkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology/united-kingdom/berkshire/reading</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology/united-kingdom/berkshire/reading</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology/united-kingdom/kent</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/reflexology/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology/united-kingdom/kent/sutton-valence</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology/united-kingdom/kent/sutton-valence</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reflexology/united-kingdom/west-sussex/hurstpierpoint</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reflexology/united-kingdom/west-sussex/hurstpierpoint</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-and-breathwork/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-and-breathwork/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-and-breathwork/united-kingdom/hampshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-and-breathwork/united-kingdom/hampshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-and-breathwork/united-kingdom/hampshire/aldershot</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-and-breathwork/united-kingdom/hampshire/aldershot</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-and-breathwork/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-and-breathwork/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-and-breathwork/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-and-breathwork/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-and-breathwork/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-and-breathwork/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/australia</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/australia</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/australia/queensland</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/australia/queensland</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/australia/queensland/sunshine-coast</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/australia/queensland/sunshine-coast</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/berkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/berkshire</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/berkshire/reading</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/berkshire/reading</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/surrey/bisley</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/surrey/bisley</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/surrey/dorking</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/surrey/dorking</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/surrey/great-bookham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/surrey/great-bookham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/surrey/leatherhead</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/surrey/leatherhead</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/surrey/reigate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/surrey/reigate</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/wiltshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/wiltshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki-healing/united-kingdom/wiltshire/lake</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki-healing/united-kingdom/wiltshire/lake</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom</loc>
     <lastmod>2026-06-08T13:32:42+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent</loc>
     <lastmod>2026-06-05T09:40:04+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/faversham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/faversham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/herne-bay</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/herne-bay</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/royal-tunbridge-wells</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/royal-tunbridge-wells</loc>
     <lastmod>2026-06-05T09:34:46+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-06-05T09:40:04+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/sutton-valence</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/sutton-valence</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/kent/whitstable</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/kent/whitstable</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/shropshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/shropshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/shropshire/bridgnorth</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/shropshire/bridgnorth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/shropshire/much-wenlock</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/shropshire/much-wenlock</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/surrey/chertsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/surrey/chertsey</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/wiltshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/wiltshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/reiki/united-kingdom/wiltshire/lake</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/reiki/united-kingdom/wiltshire/lake</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/scar-work/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/scar-work/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/scar-work/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/scar-work/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/scar-work/united-kingdom/kent/canterbury</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/scar-work/united-kingdom/kent/canterbury</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/self-discovery-and-healing/austria</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/self-discovery-and-healing/austria</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/self-discovery-and-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/self-discovery-and-healing/united-kingdom</loc>
     <lastmod>2026-06-10T10:30:51+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/self-discovery-and-healing/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/self-discovery-and-healing/united-kingdom/kent</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/self-discovery-and-healing/united-kingdom/kent/harrietsham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/self-discovery-and-healing/united-kingdom/kent/harrietsham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/self-discovery-and-healing/united-kingdom/kent/langton-green</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/self-discovery-and-healing/united-kingdom/kent/langton-green</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/self-discovery-and-healing/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/self-discovery-and-healing/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/self-discovery-and-healing/united-kingdom/kent/ram-lane</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/self-discovery-and-healing/united-kingdom/kent/ram-lane</loc>
     <lastmod>2026-04-10T11:08:40+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shadow-work/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shadow-work/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/ireland</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/ireland</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/ireland/cavan</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/ireland/cavan</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/ireland/county-cavan</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/ireland/county-cavan</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/ireland/county-cavan/ballinagh</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/ireland/county-cavan/ballinagh</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom</loc>
     <lastmod>2026-06-05T09:37:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/east-sussex/newhaven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/east-sussex/newhaven</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/kent/folkestone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/kent/folkestone</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/kent/whitstable</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/kent/whitstable</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/surrey</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/surrey/bisley</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/surrey/bisley</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/surrey/dorking</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/surrey/dorking</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/surrey/great-bookham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/surrey/great-bookham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/surrey/leatherhead</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/surrey/leatherhead</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-kingdom/surrey/reigate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-kingdom/surrey/reigate</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-states</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-states/south-central-connecticut-planning-region</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-states/south-central-connecticut-planning-region</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/shamanic-healing/united-states/south-central-connecticut-planning-region/new-haven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/shamanic-healing/united-states/south-central-connecticut-planning-region/new-haven</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/silent-counselling/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/silent-counselling/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/silent-counselling/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/silent-counselling/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/silent-counselling/united-kingdom/kent/ramsgate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/silent-counselling/united-kingdom/kent/ramsgate</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/singing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/singing/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sleep/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sleep/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sleep/united-kingdom/cornwall</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sleep/united-kingdom/cornwall</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sleep/united-kingdom/cornwall/looe</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sleep/united-kingdom/cornwall/looe</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/east-sussex/newhaven</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-kingdom/east-sussex/newhaven</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/hampshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/hampshire/romsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-kingdom/kent/royal-tunbridge-wells</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/kent/royal-tunbridge-wells</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-kingdom/west-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-states</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-states/south-central-connecticut-planning-region</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-bath/united-states/south-central-connecticut-planning-region/new-haven</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-bath/united-kingdom/west-sussex/bracklesham-bay</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/sound-bath/united-states</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/sound-bath/united-states/south-central-connecticut-planning-region</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/sound-bath/united-states/south-central-connecticut-planning-region/new-haven</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom</loc>
     <lastmod>2026-04-10T11:13:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/berkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/berkshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/berkshire/thatcham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/berkshire/thatcham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/derbyshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/derbyshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/derbyshire/hadfield</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/derbyshire/hadfield</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/dorset</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/dorset</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/glasgow-city</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/glasgow-city</loc>
     <lastmod>2026-04-10T11:13:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/glasgow-city/glasgow</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/glasgow-city/glasgow</loc>
     <lastmod>2026-04-10T11:13:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/kent/minster-on-sea</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/kent/minster-on-sea</loc>
     <lastmod>2026-03-03T00:53:47+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/neath-port-talbot</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/neath-port-talbot</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/neath-port-talbot/port-talbot</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/neath-port-talbot/port-talbot</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/shetland-islands</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/shetland-islands</loc>
     <lastmod>2026-04-10T11:13:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-kingdom/shetland-islands/shetland</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-kingdom/shetland-islands/shetland</loc>
     <lastmod>2026-04-10T11:13:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-states</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-states/new-york</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-states/new-york</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-states/niagara-county</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-states/niagara-county</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-states/wake-county</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-states/wake-county</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/sound-healing/united-states/wake-county/raleigh</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/sound-healing/united-states/wake-county/raleigh</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/spiritual-journey/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/spiritual-journey/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/spiritual-journey/united-kingdom/essex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/spiritual-journey/united-kingdom/essex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/spiritual-journey/united-kingdom/essex/chelmsford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/spiritual-journey/united-kingdom/essex/chelmsford</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/swedish-massage/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/swedish-massage/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/swedish-massage/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/swedish-massage/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/swedish-massage/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/swedish-massage/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom</loc>
     <lastmod>2026-05-31T09:38:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom/east-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom/east-sussex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom/east-sussex/wadhurst</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom/east-sussex/wadhurst</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom/kent</loc>
     <lastmod>2026-05-31T09:38:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom/kent/ashford</loc>
     <lastmod>2026-05-31T09:38:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-05-31T09:38:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom/kent/royal-tunbridge-wells</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom/kent/royal-tunbridge-wells</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom/kent/ruckinge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom/kent/ruckinge</loc>
     <lastmod>2026-05-31T09:38:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/tai-chi-qigong/united-kingdom/kent/west-malling</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/tai-chi-qigong/united-kingdom/kent/west-malling</loc>
     <lastmod>2026-05-31T09:38:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/theta-healing/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/theta-healing/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/theta-healing/united-kingdom/essex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/theta-healing/united-kingdom/essex</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/theta-healing/united-kingdom/hertfordshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/theta-healing/united-kingdom/hertfordshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/theta-healing/united-kingdom/somerset</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/theta-healing/united-kingdom/somerset</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/theta-healing/united-kingdom/somerset/yeovil</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/theta-healing/united-kingdom/somerset/yeovil</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/wellness/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/wellness/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/wellness/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/wellness/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/wellness/united-kingdom/kent/ashford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/wellness/united-kingdom/kent/ashford</loc>
     <lastmod>2026-03-03T10:22:45+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/wellness/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/wellness/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/womens-health/thailand</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/womens-health/thailand</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/womens-health/thailand/ko-pha-ngan-district</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/womens-health/thailand/ko-pha-ngan-district</loc>
     <lastmod>2026-03-03T10:43:58+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/wudang-taiji-sword/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/wudang-taiji-sword/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/wudang-taiji-sword/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/wudang-taiji-sword/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/wudang-taiji-sword/united-kingdom/kent/new-ash-green</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/wudang-taiji-sword/united-kingdom/kent/new-ash-green</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/wudang-taiji-sword/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/wudang-taiji-sword/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yang-tai-chi/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yang-tai-chi/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yang-tai-chi/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yang-tai-chi/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yang-tai-chi/united-kingdom/kent/new-ash-green</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yang-tai-chi/united-kingdom/kent/new-ash-green</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yang-tai-chi/united-kingdom/kent/sevenoaks</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yang-tai-chi/united-kingdom/kent/sevenoaks</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom</loc>
-    <lastmod>2026-06-05T09:33:20+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom</loc>
+    <lastmod>2026-08-23T15:19:32+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/cambridgeshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/cambridgeshire</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/cambridgeshire/cambridge</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/cambridgeshire/cambridge</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/devon</loc>
     <lastmod>2026-06-05T09:33:20+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/devon/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/devon/cranbrook</loc>
     <lastmod>2026-06-05T09:33:20+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/devon/exeter</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/devon/exeter</loc>
     <lastmod>2026-06-05T09:33:20+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/devon/topsham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/devon/topsham</loc>
     <lastmod>2026-06-05T09:33:20+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/hampshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/hampshire</loc>
     <lastmod>2026-06-05T09:21:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/hampshire/romsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/hampshire/romsey</loc>
     <lastmod>2026-06-05T09:21:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent</loc>
+    <lastmod>2026-08-23T15:19:32+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent/cranbrook</loc>
     <lastmod>2026-06-05T09:33:20+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent/cranbrook</loc>
-    <lastmod>2026-06-05T09:33:20+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent/dartford</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent/dartford</loc>
     <lastmod>2026-06-05T09:30:18+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent/gravesend</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent/gravesend</loc>
     <lastmod>2026-06-05T09:30:18+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent/harrietsham</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent/harrietsham</loc>
+    <lastmod>2026-08-23T15:19:32+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent/higham</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent/higham</loc>
     <lastmod>2026-06-05T09:30:18+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent/maidstone</loc>
-    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent/maidstone</loc>
+    <lastmod>2026-08-23T15:19:32+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent/ramsgate</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent/ramsgate</loc>
     <lastmod>2026-06-01T17:48:02+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/kent/whitstable</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/kent/whitstable</loc>
     <lastmod>2026-06-01T14:31:45+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/surrey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/surrey</loc>
     <lastmod>2026-06-01T14:41:56+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/surrey/chertsey</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/surrey/chertsey</loc>
     <lastmod>2026-06-01T14:41:56+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/west-sussex</loc>
     <lastmod>2026-06-05T09:21:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/west-sussex/bracklesham-bay</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/west-sussex/bracklesham-bay</loc>
     <lastmod>2026-06-05T09:21:38+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/west-yorkshire</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/west-yorkshire</loc>
     <lastmod>2026-06-01T14:40:24+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/west-yorkshire/leeds</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/west-yorkshire/leeds</loc>
     <lastmod>2026-06-01T14:40:24+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/westmorland-and-furness</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/westmorland-and-furness</loc>
     <lastmod>2026-06-05T09:23:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-kingdom/westmorland-and-furness/penruddock</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-kingdom/westmorland-and-furness/penruddock</loc>
     <lastmod>2026-06-05T09:23:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-states</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-states</loc>
     <lastmod>2026-06-01T14:43:53+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-states/wake-county</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-states/wake-county</loc>
     <lastmod>2026-06-01T14:43:53+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies/yoga/united-states/wake-county/raleigh</loc>
+    <loc>https://www.weofferwellness.co.uk/therapies/yoga/united-states/wake-county/raleigh</loc>
     <lastmod>2026-06-01T14:43:53+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/aromatherapy/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/aromatherapy/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/aromatherapy/united-kingdom/devon</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/aromatherapy/united-kingdom/devon</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/aromatherapy/united-kingdom/devon/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/aromatherapy/united-kingdom/devon/cranbrook</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/aromatherapy/united-kingdom/devon/exeter</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/aromatherapy/united-kingdom/devon/exeter</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/aromatherapy/united-kingdom/devon/topsham</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/aromatherapy/united-kingdom/devon/topsham</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/aromatherapy/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/aromatherapy/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/aromatherapy/united-kingdom/kent/cranbrook</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/aromatherapy/united-kingdom/kent/cranbrook</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/low-tox-living-workshops/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/low-tox-living-workshops/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/low-tox-living-workshops/united-kingdom/kent</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/low-tox-living-workshops/united-kingdom/kent</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/low-tox-living-workshops/united-kingdom/kent/maidstone</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/low-tox-living-workshops/united-kingdom/kent/maidstone</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/mindful-wellness-workshop/united-kingdom</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/mindful-wellness-workshop/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:57+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/wellness-workshop/united-kingdom</loc>
-    <lastmod>2026-05-31T08:42:07+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/workshops/wellness-workshop/united-kingdom/kent</loc>
-    <lastmod>2026-05-31T08:42:07+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/workshops/wellness-workshop/united-kingdom/kent/ashford</loc>
-    <lastmod>2026-05-31T08:42:07+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/workshops/wellness-workshop/united-kingdom/kent/maidstone</loc>
-    <lastmod>2026-05-31T08:42:07+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/workshops/wellness-workshop/united-kingdom/kent/ruckinge</loc>
-    <lastmod>2026-05-31T08:42:07+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/workshops/wellness-workshop/united-kingdom/kent/west-malling</loc>
-    <lastmod>2026-05-31T08:42:07+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/workshops/wellness-workshop/united-kingdom/west-sussex</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/wellness-workshop/united-kingdom</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/workshops/wellness-workshop/united-kingdom/west-sussex/petworth</loc>
+    <loc>https://www.weofferwellness.co.uk/workshops/wellness-workshop/united-kingdom/west-sussex</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.weofferwellness.co.uk/workshops/wellness-workshop/united-kingdom/west-sussex/petworth</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
 </urlset>

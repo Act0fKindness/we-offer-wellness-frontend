@@ -54,7 +54,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'favicon_url' => env('APP_FAVICON_URL', 'https://testing.studio.weofferwellness.co.uk/workspace-favicon.png?v=2'),
+    'favicon_url' => '/favicon.png',
 
     /*
     |--------------------------------------------------------------------------

@@ -59,6 +59,14 @@
       ->values()
       ->all();
 
+    $primaryCta = (array) ($page['primary_cta'] ?? []);
+    $secondaryCta = (array) ($page['secondary_cta'] ?? []);
+    $supportingCta = (array) ($page['supporting_cta'] ?? []);
+    $locationSectionTitle = (string) ($page['location_section_title'] ?? 'Popular locations');
+    $locationSectionIntro = (string) ($page['location_section_intro'] ?? 'These location pages are useful starting points for finding live listings by county, town or region.');
+    $relatedLinksTitle = (string) ($page['related_links_title'] ?? 'Related pages');
+    $relatedLinksIntro = (string) ($page['related_links_intro'] ?? 'These pages support the same search intent without creating duplicate URL families.');
+
     if ($schemaBreadcrumbCrumbs === []) {
       $pageTitle = trim((string) ($page['title'] ?? $page['h1'] ?? 'Search'));
       $pageBreadcrumb = trim((string) preg_replace('/\s*\|.*$/', '', $pageTitle));
@@ -596,8 +604,11 @@
         </div>
 
         <div class="seo-money-actions">
-          <button type="button" class="btn btn-primary" data-scroll-target="results">Browse live listings</button>
-          <button type="button" class="btn btn-light" data-scroll-target="faq">Read FAQs</button>
+          <button type="button" class="btn btn-primary" data-scroll-target="results">{{ $primaryCta['label'] ?? 'Browse live listings' }}</button>
+          <button type="button" class="btn btn-light" data-scroll-target="{{ !empty($secondaryCta['href']) && $secondaryCta['href'] === '#related-pages' ? 'related-pages' : 'faq' }}">{{ $secondaryCta['label'] ?? 'Read FAQs' }}</button>
+          @if(!empty($supportingCta['label']))
+            <a href="{{ $supportingCta['href'] ?? '#' }}" class="btn btn-outline-secondary">{{ $supportingCta['label'] }}</a>
+          @endif
         </div>
       </div>
 
@@ -631,8 +642,8 @@
         </form>
 
         <div>
-          <h2 style="font-size:clamp(24px,2.8vw,32px);">Popular locations</h2>
-          <p>Use these as quick entry points if you want to browse faster.</p>
+          <h2 style="font-size:clamp(24px,2.8vw,32px);">{{ $locationSectionTitle }}</h2>
+          <p>{{ $locationSectionIntro }}</p>
         </div>
       </aside>
     </div>
@@ -643,8 +654,8 @@
     ])
 
     <section class="seo-money-section">
-      <h2>Popular locations</h2>
-      <p>These location pages are useful starting points for finding live listings by county, town or region.</p>
+      <h2>{{ $locationSectionTitle }}</h2>
+      <p>{{ $locationSectionIntro }}</p>
       <div class="seo-money-links">
         @foreach($popularLocations as $location)
           <a class="seo-money-linkcard" href="{{ $location['search_url'] ?? url($location['path'] ?? '/') }}">
@@ -674,9 +685,9 @@
       @endif
     </section>
 
-    <section class="seo-money-section">
-      <h2>Related pages</h2>
-      <p>These pages support the same search intent without creating duplicate URL families.</p>
+    <section class="seo-money-section" id="related-pages">
+      <h2>{{ $relatedLinksTitle }}</h2>
+      <p>{{ $relatedLinksIntro }}</p>
       <div class="seo-money-links">
         @foreach(($page['related_links'] ?? []) as $link)
           <a class="seo-money-linkcard" href="{{ $link['href'] ?? '#' }}">

@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\Reservation;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\VendorAvailability;
+use App\Services\AvailabilityWindowService;
 use App\Support\EventListing;
 use App\Support\ProductRanking;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -35,9 +40,18 @@ class TherapiesController extends Controller
                 $q->whereRaw("LOWER(COALESCE(product_type,'')) like '%therap%'");
             })
             ->latest('updated_at')
-            ->limit(60)
+            ->limit(240)
             ->get()
             ->reject(fn ($product) => EventListing::isPast($product))
+            ->map(function (Product $product) {
+                $nextAvailableAt = $this->nextAvailableAt($product);
+                $product->setAttribute('next_available_at', $nextAvailableAt?->toIso8601String());
+                $product->setAttribute('next_available_timestamp', $nextAvailableAt?->timestamp);
+                $product->setAttribute('has_availability_schedule', ProductRanking::availabilityPriority($product) > 0);
+
+                return $product;
+            })
+            ->filter(fn (Product $product) => filled($product->next_available_at ?? null) || (bool) ($product->has_availability_schedule ?? false))
             ->values();
 
         $featuredOfferings = ProductRanking::sortCollection($featuredOfferings)->take(8)->values();
@@ -105,8 +119,8 @@ class TherapiesController extends Controller
                 'key' => 'reiki',
                 'slug' => 'reiki',
                 'title' => 'Reiki',
-                'seo_title' => 'Reiki | We Offer Wellness™',
-                'seo_description' => 'Find Reiki sessions and energy-based experiences held by trusted practitioners.',
+                'seo_title' => 'Reiki Healing | Distance Reiki, In-Person Sessions & Online Support | We Offer Wellness™',
+                'seo_description' => 'Explore Reiki, distance Reiki and in-person sessions with trusted practitioners across the UK. Compare online and local options, then book with confidence.',
             ],
             [
                 'key' => 'reflexology',
@@ -126,8 +140,8 @@ class TherapiesController extends Controller
                 'key' => 'breathwork',
                 'slug' => 'breathwork',
                 'title' => 'Breathwork (1:1)',
-                'seo_title' => 'Breathwork | We Offer Wellness™',
-                'seo_description' => 'Browse breathwork sessions designed to support calm, clarity and regulation.',
+                'seo_title' => 'Breathwork | 1:1 Sessions, Workshops & Online Support | We Offer Wellness™',
+                'seo_description' => 'Browse breathwork sessions, workshops and online options from trusted practitioners. Find the right style for stress relief, regulation and deeper self-connection.',
             ],
             [
                 'key' => 'massage',
@@ -299,6 +313,128 @@ class TherapiesController extends Controller
             })
             ->pluck('id')
             ->all();
+    }
+
+    private function nextAvailableAt(Product $item): ?Carbon
+    {
+        static $nextAvailabilityCache = [];
+
+        $vendor = $item->vendor;
+        $user = $vendor?->user;
+        if (! $user) {
+            return null;
+        }
+
+        $settings = AvailabilityWindowService::extractAvailabilitySettings($user);
+        $timezone = (string) ($settings['timezone'] ?? config('app.timezone', 'Europe/London'));
+        $duration = $this->availabilityDurationMinutes($item, $settings);
+        $bookingHorizon = max(1, min(365, (int) ($settings['bookingHorizon'] ?? 30)));
+        $cacheKey = implode(':', [
+            (string) $user->id,
+            (string) $duration,
+            (string) $bookingHorizon,
+            $timezone,
+        ]);
+
+        if (array_key_exists($cacheKey, $nextAvailabilityCache)) {
+            return $nextAvailabilityCache[$cacheKey];
+        }
+
+        try {
+            $anchor = Carbon::now($timezone)->startOfDay();
+            $rangeEnd = $anchor->copy()->addDays($bookingHorizon)->endOfDay();
+            $weeklyWindows = AvailabilityWindowService::buildWeeklyWindows($user);
+            $specificRecords = VendorAvailability::where('user_id', $user->id)
+                ->whereBetween('date', [$anchor->toDateString(), $rangeEnd->toDateString()])
+                ->orderBy('date')
+                ->get();
+            $specificWindows = AvailabilityWindowService::buildSpecificWindows($specificRecords);
+
+            $holdCutoff = Carbon::now($timezone)->subMinutes(10);
+            $reservationRecords = Reservation::where('user_id', $user->id)
+                ->whereBetween('date', [$anchor->toDateString(), $rangeEnd->toDateString()])
+                ->where(function ($query) use ($holdCutoff) {
+                    $query->where('is_confirmed', true)
+                        ->orWhere('created_at', '>=', $holdCutoff);
+                })
+                ->orderBy('date')
+                ->get();
+
+            $bookingRecords = Booking::where('user_id', $user->id)
+                ->whereBetween('date', [$anchor->toDateString(), $rangeEnd->toDateString()])
+                ->orderBy('date')
+                ->get();
+
+            $slotsByDay = AvailabilityWindowService::generateSlots(
+                $weeklyWindows,
+                $settings,
+                $duration,
+                $bookingHorizon,
+                $anchor,
+                $specificWindows,
+                $reservationRecords->concat($bookingRecords)->all()
+            );
+
+            foreach ($slotsByDay as $day) {
+                $firstSlot = $day['slots'][0]['iso'] ?? null;
+                if (! $firstSlot) {
+                    continue;
+                }
+
+                $next = Carbon::parse($firstSlot, $timezone);
+                $nextAvailabilityCache[$cacheKey] = $next;
+
+                return $next;
+            }
+        } catch (\Throwable $e) {
+            // Fall through and cache the miss so repeated items don't keep recalculating.
+        }
+
+        $nextAvailabilityCache[$cacheKey] = null;
+
+        return null;
+    }
+
+    private function availabilityDurationMinutes(Product $item, array $settings): int
+    {
+        $meta = is_array($item->meta_json ?? null) ? $item->meta_json : [];
+        foreach (['duration_minutes', 'duration_mins', 'duration'] as $key) {
+            $duration = $this->parseDurationMinutes($meta[$key] ?? null);
+            if ($duration > 0) {
+                return max(15, $duration);
+            }
+        }
+
+        return max(15, (int) ($settings['slotInterval'] ?? 60) ?: 60);
+    }
+
+    private function parseDurationMinutes(mixed $value): int
+    {
+        if (is_numeric($value)) {
+            $value = (float) $value;
+            if ($value > 1000 && fmod($value, 100) === 0.0) {
+                $value /= 100;
+            }
+
+            return (int) round($value);
+        }
+
+        if (is_string($value)) {
+            $text = trim(strtolower($value));
+            if ($text === '') {
+                return 0;
+            }
+
+            if (preg_match('/(\d+(?:\.\d+)?)\s*(min|mins|minute|minutes)\b/', $text, $matches)) {
+                return (int) round((float) $matches[1]);
+            }
+
+            if (preg_match('/(\d+(?:\.\d+)?)\s*(hr|hrs|hour|hours)\b/', $text, $matches)) {
+                return (int) round(((float) $matches[1]) * 60);
+            }
+        }
+
+        return 0;
     }
 
 }

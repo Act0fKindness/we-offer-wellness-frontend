@@ -414,7 +414,7 @@
             data-variant-label="{{ $eventSelectedTicket['label'] ?? '' }}"
             data-source-version="v3"
         >
-            Add to basket
+                            Add to cart
         </button>
     </div>
 
@@ -423,97 +423,57 @@
     </p>
 </aside>
 
-<div class="mobile-ticket-bar" id="mobileTicketBar">
-    <div>
-        <strong id="mobilePrice">£{{ $eventSelectedTicket['price_formatted'] ?? '0.00' }}</strong>
-        <span id="mobileTicket">{{ $eventSelectedTicket['label'] ?? 'Select your festival dates' }}</span>
-    </div>
-    <button class="btn checkout-button" type="button" data-open-booking>
-        Pick dates
-    </button>
-</div>
-
-<div class="wow-booking-backdrop" id="bookingBackdrop"></div>
-
-<section class="wow-booking-modal" id="bookingModal" aria-label="Mobile booking modal">
-    <div class="booking-modal-head">
-        <h3>Select dates</h3>
-        <button class="booking-modal-close" type="button" id="closeBookingModal">×</button>
-    </div>
-
-    <div class="booking-modal-body">
-        <div class="modal-fields-slot" id="modalFieldsSlot"></div>
-    </div>
-
-    <div class="booking-modal-footer">
-        <button
-            class="btn checkout-button js-buy-now"
-            type="button"
-            id="eventModalBookNowBtn"
-            data-id="{{ $eventSelectedTicket['id'] ?? '' }}"
-            data-product-id="{{ $eventProductId }}"
-            data-title="{{ e($eventButtons['title']) }}"
-            data-price="{{ $eventSelectedTicket['price_formatted'] ?? '0.00' }}"
-            data-image="{{ $eventButtons['image'] }}"
-            data-url="{{ $eventButtons['url'] }}"
-            data-qty="{{ $eventQty }}"
-            data-variant-id="{{ $eventSelectedTicket['id'] ?? '' }}"
-            data-variant-label="{{ $eventSelectedTicket['label'] ?? '' }}"
-            data-source-version="v3"
-        >
-            Book now
-        </button>
-    </div>
-</section>
+@include('offering.partials.event_mobile_booking_ui')
 
 @push('scripts')
 <script>
 (function () {
-  const ticketData = @json($eventVariantRows);
-  const ticketPanel = document.getElementById('tickets');
-  const bookingFields = document.getElementById('bookingFields');
-  const modalFieldsSlot = document.getElementById('modalFieldsSlot');
-  const bookingModal = document.getElementById('bookingModal');
-  const bookingBackdrop = document.getElementById('bookingBackdrop');
-  const closeBookingModal = document.getElementById('closeBookingModal');
-  const mobileTicketBar = document.getElementById('mobileTicketBar');
-  const openBookingButtons = document.querySelectorAll('[data-open-booking]');
+  function init() {
+    const ticketData = @json($eventVariantRows);
+    const ticketPanel = document.getElementById('tickets');
+    const bookingFields = document.getElementById('bookingFields');
+    const modalFieldsSlot = document.getElementById('modalFieldsSlot');
+    const bookingModal = document.getElementById('bookingModal');
+    const bookingBackdrop = document.getElementById('bookingBackdrop');
+    const closeBookingModal = document.getElementById('closeBookingModal');
+    const mobileTicketBar = document.getElementById('mobileTicketBar');
+    const openBookingButtons = document.querySelectorAll('[data-open-booking]');
 
-  const ticketSelect = document.getElementById('ticketSelect');
-  const ticketDropdown = document.getElementById('ticketDropdown');
-  const ticketDropdownTrigger = document.getElementById('ticketDropdownTrigger');
-  const ticketDropdownMenu = document.getElementById('ticketDropdownMenu');
-  const ticketDropdownLabel = document.getElementById('ticketDropdownLabel');
-  const ticketDropdownMeta = document.getElementById('ticketDropdownMeta');
-  const ticketDropdownPrice = document.getElementById('ticketDropdownPrice');
-  const ticketDropdownOptions = Array.from(document.querySelectorAll('.custom-ticket-option'));
-  const calendarButtons = Array.from(document.querySelectorAll('.calendar-date'));
+    const ticketSelect = document.getElementById('ticketSelect');
+    const ticketDropdown = document.getElementById('ticketDropdown');
+    const ticketDropdownTrigger = document.getElementById('ticketDropdownTrigger');
+    const ticketDropdownMenu = document.getElementById('ticketDropdownMenu');
+    const ticketDropdownLabel = document.getElementById('ticketDropdownLabel');
+    const ticketDropdownMeta = document.getElementById('ticketDropdownMeta');
+    const ticketDropdownPrice = document.getElementById('ticketDropdownPrice');
+    const ticketDropdownOptions = Array.from(document.querySelectorAll('.custom-ticket-option'));
+    const calendarButtons = Array.from(document.querySelectorAll('.calendar-date'));
 
-  const panelPrice = document.getElementById('panelPrice');
-  const mobilePrice = document.getElementById('mobilePrice');
-  const mobileTicket = document.getElementById('mobileTicket');
-  const summaryTicket = document.getElementById('summaryTicket');
-  const summaryDate = document.getElementById('summaryDate');
-  const qtyValue = document.getElementById('qtyValue');
-  const minusQty = document.getElementById('minusQty');
-  const plusQty = document.getElementById('plusQty');
-  const holdBanner = document.getElementById('holdBanner');
-  const holdTimer = document.getElementById('holdTimer');
+    const panelPrice = document.getElementById('panelPrice');
+    const mobilePrice = document.getElementById('mobilePrice');
+    const mobileTicket = document.getElementById('mobileTicket');
+    const summaryTicket = document.getElementById('summaryTicket');
+    const summaryDate = document.getElementById('summaryDate');
+    const qtyValue = document.getElementById('qtyValue');
+    const minusQty = document.getElementById('minusQty');
+    const plusQty = document.getElementById('plusQty');
+    const holdBanner = document.getElementById('holdBanner');
+    const holdTimer = document.getElementById('holdTimer');
 
-  const desktopBookBtn = document.getElementById('eventBookNowBtn');
-  const addToBasketBtn = document.getElementById('eventAddToBasketBtn');
-  const modalBookBtn = document.getElementById('eventModalBookNowBtn');
+    const desktopBookBtn = document.getElementById('eventBookNowBtn');
+    const addToBasketBtn = document.getElementById('eventAddToBasketBtn');
+    const modalBookBtn = document.getElementById('eventModalBookNowBtn');
 
-  const productId = @json($eventProductId);
-  const productTitle = @json($eventTitle);
-  const productImage = @json($eventImage);
-  const productUrl = @json($eventUrl);
-  const maxQty = Math.max(1, Number(@json($eventCapacity ?? 1000)) || 1000);
+    const productId = @json($eventProductId);
+    const productTitle = @json($eventTitle);
+    const productImage = @json($eventImage);
+    const productUrl = @json($eventUrl);
+    const maxQty = Math.max(1, Number(@json($eventCapacity ?? 1000)) || 1000);
 
-  let selectedIndex = 0;
-  let qty = Math.max(1, Number(qtyValue?.textContent || 1) || 1);
-  let holdInterval = null;
-  let holdSeconds = 600;
+    let selectedIndex = 0;
+    let qty = Math.max(1, Number(qtyValue?.textContent || 1) || 1);
+    let holdInterval = null;
+    let holdSeconds = 600;
 
   function money(value) {
     const n = Number(value || 0);
@@ -794,8 +754,15 @@
     }
   });
 
-  setActiveTicket(0, false);
-  setupMobileStickyTicketBar();
+    setActiveTicket(0, false);
+    setupMobileStickyTicketBar();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();
 </script>
 @endpush

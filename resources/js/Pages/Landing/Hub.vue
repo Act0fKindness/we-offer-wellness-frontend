@@ -10,6 +10,12 @@ import DistanceFilter from '@/Components/DistanceFilter.vue'
 import Pagination from '@/Components/Pagination.vue'
 import ClassSchedule from '@/Components/ClassSchedule.vue'
 import WowButton from '@/Components/ui/WowButton.vue'
+import {
+  canonicalUrl,
+  pageKeywords,
+  shortOgDescription,
+  shortOgTitle,
+} from '@/lib/seo-meta'
 
 const props = defineProps({
   type: { type: String, required: true },
@@ -146,13 +152,19 @@ const heroPanelMap = {
 const meta = computed(() => heads[props.type] || { title: 'Discover Wellness', kicker: 'Explore', desc: 'Browse modalities and popular choices.' })
 const categoriesFiltered = computed(() => (Array.isArray(props.categories) ? props.categories : []).filter(c => Number(c.count||0) > 0))
 const productsTitle = computed(() => props.type === 'therapies' ? 'All therapies' : 'Popular right now')
-const canonical = computed(() => {
-  try { return window.location.href.split('#')[0] } catch {
-    const path = '/' + (props.type || '').toString()
-    return path
-  }
-})
+const canonical = computed(() => canonicalUrl(`/${props.type || ''}`))
 const desc = computed(() => meta.value.desc)
+const ogTitle = computed(() => shortOgTitle(`${meta.value.title} | WOW®`))
+const ogDesc = computed(() => shortOgDescription(desc.value))
+const keywords = computed(() => pageKeywords({
+  type: props.type,
+  categories: categoriesFiltered.value,
+  extra: [
+    meta.value.title,
+    meta.value.kicker,
+    'live listings',
+  ],
+}))
 const items = computed(() => Array.isArray(props.products) ? props.products : (props.products?.data || []))
 const filteredIds = ref([])
 const showItems = computed(() => {
@@ -198,9 +210,10 @@ function requestLocationAccess() {
 <template>
   <Head :title="meta.title">
     <meta name="description" :content="desc" />
+    <meta name="keywords" :content="keywords.join(', ')" />
     <link rel="canonical" :href="canonical" />
-    <meta property="og:title" :content="meta.title" />
-    <meta property="og:description" :content="desc" />
+    <meta property="og:title" :content="ogTitle" />
+    <meta property="og:description" :content="ogDesc" />
     <meta property="og:url" :content="canonical" />
     <script type="application/ld+json">{{ JSON.stringify(breadcrumbLd) }}</script>
     <script type="application/ld+json">{{ JSON.stringify(itemListLd) }}</script>

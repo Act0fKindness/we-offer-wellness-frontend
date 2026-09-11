@@ -2,7 +2,7 @@
     <div class="container-page py-10">
         <div class="footer-hero">
             <div class="brand-col">
-                <div class="logo" aria-label="We Offer Wellness" style="display:inline-block; line-height:0;">
+                <div class="logo" role="img" aria-label="We Offer Wellness" style="display:inline-block; line-height:0;">
                     <!-- Inline SVG footer logo -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240.46 141.78" height="28" aria-hidden="true">
     <defs>
@@ -104,6 +104,7 @@
                     <li><a href="/about">About</a></li>
                     <li><a href="/contact">Contact</a></li>
                     <li><a href="/corporate-wellness">Corporate wellness (coming 2026)</a></li>
+                    <li><a href="/sitemap.xml">Sitemap</a></li>
                     <li><a href="/partners">Partner spotlight</a></li>
                     <li><a href="https://times.weofferwellness.co.uk#practitioner-chats" target="_blank"
                            rel="noopener">Practitioner chats</a></li>

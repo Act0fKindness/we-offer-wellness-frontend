@@ -35,11 +35,13 @@ class Order extends Model
         'stripe_payment_intent_id',
         'vendor_notified_at',
         'vendor_introduction_sent_at',
+        'order_notifications_sent_at',
     ];
 
     protected $casts = [
         'vendor_notified_at' => 'datetime',
         'vendor_introduction_sent_at' => 'datetime',
+        'order_notifications_sent_at' => 'datetime',
     ];
 
     /**

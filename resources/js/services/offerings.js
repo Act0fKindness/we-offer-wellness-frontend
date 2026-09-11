@@ -102,6 +102,7 @@ export function normalizeOfferingsPayload(payload) {
     const vendor = vendorDetails[String(item?.vendor_id ?? '')] || item?.vendor || null;
     return {
       ...item,
+      image: item?.image || item?.image_url || null,
       vendor_details: normalizeVendorDetails(vendor),
     };
   }) : [];

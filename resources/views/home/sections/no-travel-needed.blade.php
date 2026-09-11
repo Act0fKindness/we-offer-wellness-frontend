@@ -1,5 +1,5 @@
 <section data-v-f43bb09d="" id="comfort-section" class="section" aria-labelledby="comfort-title">
-    <div data-v-f43bb09d="" class="container-page">
+    <div data-v-f43bb09d="">
         <div class="product-showcase-heading mb-6">
             <div class="product-showcase-heading__copy">
                 <div data-v-f43bb09d="" class="kicker">No travel needed</div>
@@ -58,7 +58,7 @@
             <div data-v-f43bb09d="" id="comfort-cards"
                  class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar snap-x snap-mandatory pt-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 bg-transparent">
                 @for($i = 0; $i < 4; $i++)
-                    @include('partials.product_card_v4_ghost')
+                    @include('partials.product_card_v4_1_ghost')
                 @endfor
             </div>
         </div>

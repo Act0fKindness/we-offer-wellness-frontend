@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('body-class', 'search-page-body')
+
 @push('head')
   @include('partials.search-jsonld')
 @endpush
@@ -7,7 +9,19 @@
 <style>
 /* Desktop split: page scrolls the list; map stays sticky */
 @media (min-width: 992px){
+  #search-v4-root{
+    position: sticky;
+    top: 127px;
+    z-index: 4900;
+  }
+  #search-v4-root .wow-search-filter{
+    position: relative;
+    top: 0px;
+  }
   .results-scroll{ padding-right: 6px; }
+  .search-layout.sr-list-only .results-scroll{
+    padding-right: 0px;
+  }
   .map-wrap{ position: relative; border-radius: 13px; overflow: hidden; }
   /* Adjust height to account for header + search bar */
   .map{ width: 100%; height: calc(100vh - 80px - 67px); border: 1px solid var(--ink-200); border-radius: 3px; overflow: hidden; }
@@ -20,6 +34,26 @@
   position:relative;
   overflow:visible;
 }
+.search-page-body #wow-header-container{
+  z-index: 5001;
+}
+.wow-ultra .bar{
+  z-index: 4900;
+}
+.wow-ultra .pane,
+.wow-ultra #search-top-what-pane,
+.wow-ultra #search-top-where-pane,
+.wow-ultra #search-top-when-pane,
+.wow-ultra #search-top-who-pane,
+.wow-ultra #search-top-group-pane{
+  z-index: 20000 !important;
+}
+body.wow-search-pane-open #search-v4-root,
+body.wow-search-pane-open .wow-ultra{
+  position: relative;
+  z-index: 60000 !important;
+  isolation: isolate;
+}
 /* Segmented controls (search controls only) */
 .search-controls .seg-group{ display:inline-flex; background:#f8fafc; border:1px solid var(--ink-200); border-radius:999px; padding:2px }
 .search-controls .seg{ appearance:none; border:0; background:transparent; padding:6px 12px; border-radius:999px; color: var(--ink-700); font-weight:600; font-size:.9rem; transition: all .15s ease; }
@@ -27,7 +61,7 @@
 .search-controls .seg.active, .search-controls .seg[aria-selected="true"]{ background: linear-gradient(180deg, #549483, #3b7768); color:#fff; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset }
 .search-controls .seg-group > .seg:first-of-type{ margin-right: 5px; }
 /* Custom map markers */
-.wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); box-shadow: 0 14px 34px rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; transform-origin: bottom center; will-change: transform; cursor: pointer; }
+.wow-marker{ width: 34px; height: 34px; border-radius: 999px; background:#fff; border:1px solid rgba(16,24,40,.18); display:flex; align-items:center; justify-content:center; position: relative; transform-origin: bottom center; will-change: transform; cursor: pointer; }
 .mapboxgl-marker{ pointer-events: auto; z-index: 5; }
 .wow-marker::after{ content:""; width:10px; height:10px; border-radius:999px; background:#549483; box-shadow: 0 0 0 5px rgba(84,56,255,.18); }
 /* Desktop-only temporary glass styling for search bar */
@@ -100,6 +134,17 @@
 .search-layout .result-view-list{ display:none; }
 .search-layout.sr-list-only .result-view-map{ display:none; }
 .search-layout.sr-list-only .result-view-list{ display:block; }
+.search-layout .result-view-map,
+.search-layout .result-view-list{
+  text-align:center;
+}
+.search-layout .result-view-map .product-v4-1-card-scope,
+.search-layout .result-view-list .product-v4-1-card-scope,
+.search-layout .result-view-map .product-v4-1-ghost-card-scope,
+.search-layout .result-view-list .product-v4-1-ghost-card-scope{
+  display:inline-block;
+  text-align:left;
+}
 /* Disabled seg buttons */
 .seg[disabled], .seg[aria-disabled="true"]{ opacity: .5; cursor: not-allowed; }
 @media (max-width: 991.98px){
@@ -141,7 +186,8 @@
 .search-layout .result-view-map .wow-card.md{
   width: 280px;
   max-width: 280px;
-  margin-inline: auto;
+  height: 609px;
+  margin: 0 auto !important;
 }
 .search-layout .result-view-map .therapy-card{
   width: 280px;

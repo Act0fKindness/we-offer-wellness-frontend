@@ -97,6 +97,14 @@ class SeoMoneyPageController extends Controller
         $queryKeys = array_values(array_diff(array_keys($request->query()), ['place', 'postcode', 'city', 'region', 'county', 'country', 'lat', 'lng']));
         $queryString = (string) $request->getQueryString();
         $locationLabel = $this->structuredNearMeLocationLabel($locationContext);
+        $routeLocationLabel = trim(implode(', ', array_filter([
+            $town !== null && trim($town) !== '' ? Str::headline($town) : '',
+            $county !== null && trim($county) !== '' ? Str::headline($county) : '',
+            $country !== null && trim($country) !== '' ? Str::headline($country) : '',
+        ])));
+        if ($routeLocationLabel !== '' && in_array(mb_strtolower($locationLabel), ['the united kingdom', 'united kingdom'], true)) {
+            $locationLabel = $routeLocationLabel;
+        }
 
         $page = $this->applyStructuredNearMeCopy($page, $format, $modality, $locationLabel, $products->isNotEmpty());
 
@@ -249,11 +257,11 @@ class SeoMoneyPageController extends Controller
     {
         return [
             'reiki' => [
-                'title' => 'Reiki Near Me | Find Trusted Reiki Practitioners',
-                'description' => 'Find Reiki near you with trusted practitioners. Browse online and in-person Reiki healing sessions across the UK through We Offer Wellness.',
+                'title' => 'Reiki Near Me | Distance Reiki & In-Person Sessions',
+                'description' => 'Find Reiki near you with trusted practitioners. Browse distance Reiki, in-person sessions and online options across the UK through We Offer Wellness.',
                 'h1' => 'Find Reiki Near You',
                 'kicker' => 'High-intent search',
-                'intro' => 'Use the search below to find Reiki practitioners near you, then browse live Reiki sessions, distance Reiki and online options.',
+                'intro' => 'Use the search below to find Reiki practitioners near you, then compare live Reiki sessions, distance Reiki and online options.',
                 'highlights' => [
                     'Online and in-person Reiki',
                     'Trusted practitioners',
@@ -267,7 +275,7 @@ class SeoMoneyPageController extends Controller
                 'mode' => 'therapy',
                 'fallback_mode' => true,
                 'result_label' => 'Reiki sessions',
-                'result_intro' => 'Browse the strongest Reiki matches available now.',
+                'result_intro' => 'Browse the strongest Reiki matches available now, including distance Reiki and local sessions.',
                 'popular_location_paths' => [
                     '/locations/united-kingdom/kent',
                     '/locations/united-kingdom/london',
@@ -291,6 +299,53 @@ class SeoMoneyPageController extends Controller
                     ],
                     [
                         'q' => 'Do I need to know my exact postcode?',
+                        'a' => 'No. A town, county or postcode is enough to start browsing local results.',
+                    ],
+                ],
+            ],
+            '9d-breathwork' => [
+                'title' => '9D Breathwork Near Me | Workshops & 1:1 Sessions',
+                'description' => 'Find 9D Breathwork near you with trusted practitioners. Browse workshops, 1:1 sessions and online options across the UK through We Offer Wellness.',
+                'h1' => 'Find 9D Breathwork Near You',
+                'kicker' => 'High-intent search',
+                'intro' => 'Use the search below to find 9D Breathwork practitioners near you, then compare live workshops, 1:1 sessions and online options.',
+                'highlights' => [
+                    'Workshops and 1:1 sessions',
+                    'Online and in-person options',
+                    'Search by town or postcode',
+                ],
+                'search_placeholder' => 'e.g. Maidstone or ME14',
+                'search_helper' => 'Enter a town, county or postcode to see what is available nearby.',
+                'query_terms' => ['9d breathwork', 'breathwork', 'breathing', '9d'],
+                'breadcrumb_search_query' => '9D Breathwork',
+                'category_slug' => '9d-breathwork',
+                'mode' => 'therapy',
+                'fallback_mode' => true,
+                'result_label' => '9D Breathwork sessions',
+                'result_intro' => 'Browse the strongest 9D Breathwork matches available now, including workshops and local sessions.',
+                'popular_location_paths' => [
+                    '/locations/united-kingdom/kent',
+                    '/locations/united-kingdom/london',
+                    '/locations/united-kingdom/surrey',
+                    '/locations/united-kingdom/west-yorkshire',
+                    '/locations/united-kingdom/dorset',
+                ],
+                'related_links' => [
+                    ['label' => '9D Breathwork sessions', 'href' => '/therapies/9d-breathwork'],
+                    ['label' => 'Breathwork sessions', 'href' => '/therapies/breathwork'],
+                    ['label' => 'Online breathwork', 'href' => '/online/breathwork'],
+                ],
+                'faqs' => [
+                    [
+                        'q' => 'What does 9D Breathwork near me mean?',
+                        'a' => 'It means you can browse 9D Breathwork sessions close to your location or choose online options if you prefer to book remotely.',
+                    ],
+                    [
+                        'q' => 'Can I book 9D Breathwork online?',
+                        'a' => 'Yes. Some practitioners offer online breathwork options, so you can book from anywhere in the UK.',
+                    ],
+                    [
+                        'q' => 'Do I need an exact postcode?',
                         'a' => 'No. A town, county or postcode is enough to start browsing local results.',
                     ],
                 ],
@@ -1100,6 +1155,7 @@ class SeoMoneyPageController extends Controller
             $modalityLabel = $seo->categoryLabel($modality) ?: $this->humanizeSlug($modality);
         }
 
+        $isSoundBathFamily = $this->isSoundBathFamily($modality);
         $formatLabel = $seo->typeDefinition($format)['page_label'] ?? Str::headline($format);
         $titleTail = match ($format) {
             'classes' => 'Local & Online Classes',
@@ -1108,6 +1164,11 @@ class SeoMoneyPageController extends Controller
             'retreats' => 'Wellness Retreats',
             default => 'Local & Online Therapies',
         };
+        if ($isSoundBathFamily) {
+            $titleTail = $modality === 'gong-bath'
+                ? 'Local & Online Gong Bath Events'
+                : 'Local & Online Sound Bath Events';
+        }
 
         $titlePrefix = match ($format) {
             'classes' => $modalityLabel . ' Classes Near Me in ' . $locationLabel,
@@ -1115,12 +1176,20 @@ class SeoMoneyPageController extends Controller
             'retreats' => $modalityLabel . ' Retreats Near Me in ' . $locationLabel,
             default => $modalityLabel . ' Near Me in ' . $locationLabel,
         };
+        if ($isSoundBathFamily) {
+            $titlePrefix = $modalityLabel . ' Near Me in ' . $locationLabel;
+        }
 
         $descriptionLocation = $locationLabel;
         $descriptionPrefix = match (true) {
             $locationLabel === 'the United Kingdom' => 'Find ' . $modalityLabel . ' across the United Kingdom',
             default => 'Find ' . $modalityLabel . ' near ' . $descriptionLocation,
         };
+        if ($isSoundBathFamily) {
+            $descriptionPrefix = $locationLabel === 'the United Kingdom'
+                ? 'Find sound bath and gong bath options across the United Kingdom'
+                : 'Find sound bath and gong bath options near ' . $descriptionLocation;
+        }
 
         $noun = match ($format) {
             'classes' => 'classes',
@@ -1129,39 +1198,97 @@ class SeoMoneyPageController extends Controller
             'retreats' => 'wellness retreats',
             default => 'therapy sessions',
         };
+        if ($isSoundBathFamily) {
+            $noun = $format === 'events' ? 'sound bath and gong bath events' : 'sound bath and gong bath sessions';
+        }
 
         $page['title'] = $titlePrefix . ' | ' . $titleTail . ' | We Offer Wellness®';
         $page['description'] = $descriptionPrefix . ' with We Offer Wellness®. Browse local, nearby and online ' . $noun . ' from trusted practitioners.';
         $page['h1'] = $modalityLabel . ' in ' . $locationLabel;
         $page['intro'] = $hasListings
-            ? 'Looking for ' . $modalityLabel . ' near ' . $locationLabel . '? Discover local and nearby options from trusted practitioners on We Offer Wellness®, plus online sessions where available.'
-            : 'We do not currently have in-person ' . $modalityLabel . ' sessions listed directly in ' . $locationLabel . ', but you can browse online options, nearby locations and related wellbeing experiences from trusted practitioners on We Offer Wellness®.';
+            ? ($isSoundBathFamily
+                ? 'Looking for ' . strtolower($modalityLabel) . ' near ' . $locationLabel . '? Compare live local pages, nearby county links and online options, then open the listing that fits your timing best.'
+                : 'Looking for ' . $modalityLabel . ' near ' . $locationLabel . '? Discover local and nearby options from trusted practitioners on We Offer Wellness®, plus online sessions where available.')
+            : ($isSoundBathFamily
+                ? 'We do not currently have in-person ' . strtolower($modalityLabel) . ' sessions listed directly in ' . $locationLabel . ', but you can browse online options, nearby locations and related wellbeing experiences from trusted practitioners on We Offer Wellness®.'
+                : 'We do not currently have in-person ' . $modalityLabel . ' sessions listed directly in ' . $locationLabel . ', but you can browse online options, nearby locations and related wellbeing experiences from trusted practitioners on We Offer Wellness®.');
         $page['highlights'] = $hasListings
-            ? [
-                'Local listings where available',
-                'Nearby towns and county pages',
-                'Online options for the same modality',
-            ]
-            : [
-                'Online options for the same modality',
-                'Nearby towns and county pages',
-                'Related wellbeing experiences',
-            ];
+            ? ($isSoundBathFamily
+                ? [
+                    'Bookable local sound bath pages',
+                    'Nearby towns and county pages',
+                    'Online sound bath and gong bath options',
+                ]
+                : [
+                    'Local listings where available',
+                    'Nearby towns and county pages',
+                    'Online options for the same modality',
+                ])
+            : ($isSoundBathFamily
+                ? [
+                    'Online sound bath and gong bath options',
+                    'Nearby towns and county pages',
+                    'Related wellbeing experiences',
+                ]
+                : [
+                    'Online options for the same modality',
+                    'Nearby towns and county pages',
+                    'Related wellbeing experiences',
+                ]);
         $page['search_helper'] = $hasListings
-            ? 'Enter a town, county or postcode to see what is available nearby.'
-            : 'Enter a town, county or postcode to see nearby and online options for this modality.';
-        $page['result_label'] = $hasListings ? 'Live listings' : 'Online & nearby options';
+            ? ($isSoundBathFamily
+                ? 'Enter a town, county or postcode to see which sound bath pages are available nearby.'
+                : 'Enter a town, county or postcode to see what is available nearby.')
+            : ($isSoundBathFamily
+                ? 'Enter a town, county or postcode to see nearby and online sound bath options.'
+                : 'Enter a town, county or postcode to see nearby and online options for this modality.');
+        $page['result_label'] = $hasListings
+            ? ($isSoundBathFamily ? 'Bookable sound bath listings' : 'Live listings')
+            : 'Online & nearby options';
         $page['result_intro'] = $hasListings
-            ? 'Browse the strongest matches available now.'
-            : 'Browse online options, nearby locations and related wellbeing experiences from trusted practitioners.';
+            ? ($isSoundBathFamily
+                ? 'Open a listing to view the live booking details, then compare the nearby location pages below if you want a closer fit.'
+                : 'Browse the strongest matches available now.')
+            : ($isSoundBathFamily
+                ? 'Browse online options, nearby locations and related wellbeing experiences from trusted practitioners.'
+                : 'Browse online options, nearby locations and related wellbeing experiences from trusted practitioners.');
         $page['empty_state'] = $hasListings
             ? 'No live listings matched this search yet. Use the therapy pages and location links above to keep browsing the current live catalogue.'
             : 'We do not currently have direct local listings for this exact search, so start with online options, nearby towns and related format pages above.';
-        $page['related_links'] = [
-            ['label' => $formatLabel, 'href' => '/' . $format],
-            ['label' => $modalityLabel . ' pages', 'href' => '/' . $format . '/' . $modality],
-            ['label' => 'Online ' . $modalityLabel, 'href' => '/online/' . $modality],
-        ];
+        $page['primary_cta'] = $isSoundBathFamily
+            ? ['label' => $hasListings ? 'Browse bookable sound bath listings' : 'Browse sound bath listings', 'href' => '#results']
+            : ['label' => 'Browse live listings', 'href' => '#results'];
+        $page['secondary_cta'] = $isSoundBathFamily
+            ? ['label' => 'See nearby sound bath pages', 'href' => '#related-pages']
+            : ['label' => 'Read FAQs', 'href' => '#faq'];
+        $page['supporting_cta'] = $isSoundBathFamily
+            ? ['label' => 'Explore online sound bath options', 'href' => '/online/' . $modality]
+            : null;
+        $page['location_section_title'] = $isSoundBathFamily
+            ? 'Nearby sound bath pages worth opening next'
+            : 'Popular locations';
+        $page['location_section_intro'] = $isSoundBathFamily
+            ? 'These are the local pages currently showing the best traction. They are worth keeping in the cluster while the rankings are still close to page one.'
+            : 'These location pages are useful starting points for finding live listings by county, town or region.';
+        $page['related_links_title'] = $isSoundBathFamily ? 'Sound bath routes to keep nearby' : 'Related pages';
+        $page['related_links_intro'] = $isSoundBathFamily
+            ? 'These pages support the same intent and help the cluster stay connected across sound bath and gong bath searches.'
+            : 'These pages support the same search intent without creating duplicate URL families.';
+        $page['related_links'] = $isSoundBathFamily
+            ? [
+                ['label' => 'Sound baths this week', 'href' => '/sound-baths/this-week'],
+                ['label' => 'Sound baths this weekend', 'href' => '/sound-baths/this-weekend'],
+                ['label' => 'Online sound bath options', 'href' => '/online/' . $modality],
+                ['label' => 'Gong bath near me', 'href' => '/events/gong-bath/united-kingdom'],
+            ]
+            : [
+                ['label' => $formatLabel, 'href' => '/' . $format],
+                ['label' => $modalityLabel . ' pages', 'href' => '/' . $format . '/' . $modality],
+                ['label' => 'Online ' . $modalityLabel, 'href' => '/online/' . $modality],
+            ];
+        if ($isSoundBathFamily) {
+            $page['popular_location_paths'] = $this->soundBathPriorityLocationPaths();
+        }
         $page['faqs'] = $this->structuredNearMeFaqs($format, $modalityLabel, $locationLabel, $hasListings);
         $page['seo_preserve_title'] = true;
 
@@ -1171,27 +1298,69 @@ class SeoMoneyPageController extends Controller
     private function structuredNearMeFaqs(string $format, string $modalityLabel, string $locationLabel, bool $hasListings): array
     {
         $formatLabel = app(\App\Services\SeoStructureService::class)->typeDefinition($format)['page_label'] ?? Str::headline($format);
+        $isSoundBathFamily = $this->isSoundBathFamilyFromLabel($modalityLabel);
         $opening = $hasListings
             ? 'Yes. This page helps you browse ' . $modalityLabel . ' connected to ' . $locationLabel . ', including local listings where available, nearby sessions and online options.'
             : 'This page still helps you browse ' . $modalityLabel . ' connected to ' . $locationLabel . ', including nearby sessions, online options and related wellbeing experiences.';
+
+        if ($isSoundBathFamily) {
+            $opening = $hasListings
+                ? 'Yes. This page helps you browse ' . strtolower($modalityLabel) . ' connected to ' . $locationLabel . ', including live local pages, nearby county pages and online options.'
+                : 'This page still helps you browse ' . strtolower($modalityLabel) . ' connected to ' . $locationLabel . ', including nearby pages, online options and related wellbeing experiences.';
+        }
+
+        $differenceAnswer = $modalityLabel === 'Gong Bath'
+            ? 'A gong bath is a sound bath that focuses on gongs and similar resonant instruments, while many sound bath pages also include bowls, chimes or mixed sound healing tools.'
+            : 'A sound bath is the wider category; gong baths are usually a more instrument-led version of the same relaxing experience.';
 
         return [
             [
                 'q' => 'Can I find ' . $modalityLabel . ' near ' . $locationLabel . '?',
                 'a' => $opening,
             ],
-            [
+            $isSoundBathFamily ? [
+                'q' => 'What is the difference between a sound bath and a gong bath?',
+                'a' => $differenceAnswer,
+            ] : [
                 'q' => 'What if there are no ' . $modalityLabel . ' sessions directly in ' . $locationLabel . '?',
                 'a' => 'If there are no in-person sessions listed directly in ' . $locationLabel . ', you can browse nearby locations, online sessions and related ' . strtolower($formatLabel) . ' from trusted practitioners.',
             ],
             [
                 'q' => 'Can I book ' . $modalityLabel . ' online?',
-                'a' => 'Many practitioners offer online sessions. Where online options are available, they appear alongside local and nearby listings.',
+                'a' => $isSoundBathFamily
+                    ? 'Yes. Many practitioners offer online sound bath options, and where they are available they appear alongside the local and nearby pages.'
+                    : 'Many practitioners offer online sessions. Where online options are available, they appear alongside local and nearby listings.',
             ],
             [
                 'q' => 'How do I choose a ' . $modalityLabel . ' practitioner?',
-                'a' => 'Compare the session description, practitioner profile, format, price, availability and suitability notes. If you have health concerns, check suitability before booking.',
+                'a' => $isSoundBathFamily
+                    ? 'Compare the session description, location, format, price, availability and booking notes. If you have health concerns, check suitability before booking.'
+                    : 'Compare the session description, practitioner profile, format, price, availability and suitability notes. If you have health concerns, check suitability before booking.',
             ],
+        ];
+    }
+
+    private function isSoundBathFamily(string $modality): bool
+    {
+        return in_array($modality, ['sound-bath', 'gong-bath'], true);
+    }
+
+    private function isSoundBathFamilyFromLabel(string $modalityLabel): bool
+    {
+        $label = strtolower(trim($modalityLabel));
+
+        return $label === 'sound bath' || $label === 'gong bath';
+    }
+
+    private function soundBathPriorityLocationPaths(): array
+    {
+        return [
+            '/locations/united-kingdom/kent/west-malling',
+            '/locations/united-kingdom/kent/gillingham',
+            '/locations/united-kingdom/kent/herne-bay',
+            '/locations/united-kingdom/surrey/chertsey',
+            '/locations/united-kingdom/kent',
+            '/locations/united-kingdom/surrey',
         ];
     }
 

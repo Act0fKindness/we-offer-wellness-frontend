@@ -221,6 +221,8 @@ class SubscriberController extends Controller
             'first_name' => $subscriber->first_name,
             'last_name' => $subscriber->last_name,
             'business_name' => $subscriber->business_name,
+            'notes' => $subscriber->notes,
+            'tags' => $subscriber->tags ?? null,
             'source' => 'frontend:v3-subscribers',
             'status' => $subscriber->status ?: 'pending',
         ], fn ($value) => !is_null($value) && $value !== '');

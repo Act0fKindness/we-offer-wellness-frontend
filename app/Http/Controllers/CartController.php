@@ -9,11 +9,23 @@ use App\Services\SeoStructureService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Services\StoreAbandonedCartService;
 class CartController extends Controller
 {
     public function page(Request $request)
     {
-        $this->getCartItems();
+        $items = $this->getCartItems();
+        if (!empty($items) && ($request->user()?->email || $request->user())) {
+            try {
+                app(StoreAbandonedCartService::class)->record(
+                    array_values($items),
+                    $request->user()?->id,
+                    $request->user()?->email,
+                    $request->user()?->name,
+                    $request->session()->getId()
+                );
+            } catch (\Throwable $e) { report($e); }
+        }
         return view('cart.index');
     }
 

@@ -1,71 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://localhost/about</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/contact</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/about</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/cookies</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/contact</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/corporate</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/cookies</loc>
+    <lastmod>2026-06-29T10:33:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/giftcards</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/corporate</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/help</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/giftcards</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/help/faq</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/help</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/help/gift-cards</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/help/faq</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/holistic-therapies-uk</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/holistic-therapies-uk</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/mindful-times</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/partners</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/partners</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/plan</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/plan</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/privacy</loc>
+    <lastmod>2026-06-29T10:33:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/privacy</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/refunds-and-cancellations</loc>
+    <lastmod>2026-06-29T11:12:25+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/refunds-and-cancellations</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/returns</loc>
+    <lastmod>2026-06-29T10:33:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/reviews</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/reviews</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/safety-and-contraindications</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/safety-and-contraindications</loc>
+    <lastmod>2026-09-11T00:00:39+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/terms</loc>
-    <lastmod>2026-06-23T00:00:23+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/terms</loc>
+    <lastmod>2026-06-29T10:33:59+00:00</lastmod>
   </url>
 </urlset>

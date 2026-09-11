@@ -133,6 +133,7 @@
 
 <div
     id="{{ $idPrefix }}-root"
+    class="container"
     data-wow-searchbar-v4
     data-id-prefix="{{ $idPrefix }}"
     data-search-url="{{ $searchUrl }}"
@@ -141,8 +142,6 @@
     data-initial-query='@json(request()->query())'
 >
     <div class="wow-search-filter-shell">
-        <div class="wow-search-filter-spacer" aria-hidden="true" style="height: 176px;"></div>
-
         <section class="wow-search-filter" aria-label="Search filters">
             <div class="wow-search-top-row" aria-label="Search tools">
                 <button class="wow-filter-icon-btn" type="button" aria-expanded="false" aria-label="Open filters">
@@ -183,6 +182,9 @@
                                 name="what"
                                 autocomplete="off"
                                 placeholder="Massage, yoga, breathwork..."
+                                role="combobox"
+                                aria-autocomplete="list"
+                                aria-haspopup="listbox"
                                 aria-expanded="false"
                                 aria-controls="{{ $idPrefix }}-what-pane"
                                 value="{{ $what }}"
@@ -202,6 +204,9 @@
                                 name="where"
                                 autocomplete="off"
                                 placeholder="City, region, or Online"
+                                role="combobox"
+                                aria-autocomplete="list"
+                                aria-haspopup="listbox"
                                 aria-expanded="false"
                                 aria-controls="{{ $idPrefix }}-where-pane"
                                 value="{{ $where }}"

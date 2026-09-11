@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Services\SitemapService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\URL;
 
 class GenerateSitemaps extends Command
 {
@@ -19,6 +20,8 @@ class GenerateSitemaps extends Command
         if (function_exists('ini_set')) {
             @ini_set('max_execution_time', '0');
         }
+
+        $this->forcePublicSiteUrl();
 
         $previousTotal = 0;
         $previousFileCount = 0;
@@ -35,12 +38,15 @@ class GenerateSitemaps extends Command
         $result = $service->buildAndWriteAll($outputDir !== '' ? $outputDir : null);
 
         $files = (array) ($result['files'] ?? []);
+        $aiFiles = (array) ($result['ai_files'] ?? []);
         $manifest = (array) ($result['manifest'] ?? []);
         $submissionUrls = (array) data_get($manifest, 'submission_urls', []);
         $totalUrls = (int) data_get($manifest, 'total_urls', 0);
         $fileCount = (int) data_get($manifest, 'file_count', count($files));
+        $aiFileCount = count($aiFiles);
 
         $this->info(sprintf('Generated %d sitemap segment file(s).', count($files)));
+        $this->info(sprintf('Generated %d AI guide file(s).', $aiFileCount));
         $this->line(sprintf('Total sitemap URLs: %d', $totalUrls));
         $this->line(sprintf('Search Console submission URLs: %d', count($submissionUrls)));
 
@@ -49,6 +55,15 @@ class GenerateSitemaps extends Command
                 '- %s (%d URLs) -> %s',
                 (string) ($file['filename'] ?? ''),
                 (int) ($file['count'] ?? 0),
+                (string) ($file['url'] ?? '')
+            ));
+        }
+
+        foreach ($aiFiles as $file) {
+            $this->line(sprintf(
+                '- %s (%d bytes) -> %s',
+                (string) ($file['filename'] ?? ''),
+                (int) ($file['bytes'] ?? 0),
                 (string) ($file['url'] ?? '')
             ));
         }
@@ -74,5 +89,17 @@ class GenerateSitemaps extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    private function forcePublicSiteUrl(): void
+    {
+        $baseUrl = rtrim((string) config('services.public_site_url', 'https://www.weofferwellness.co.uk'), '/');
+
+        if ($baseUrl === '') {
+            $baseUrl = 'https://www.weofferwellness.co.uk';
+        }
+
+        URL::forceRootUrl($baseUrl);
+        URL::forceScheme('https');
     }
 }

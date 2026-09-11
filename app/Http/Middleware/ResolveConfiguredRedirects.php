@@ -70,6 +70,11 @@ class ResolveConfiguredRedirects
 
             if ($target !== null && $target !== $path) {
                 $target = $this->appendQueryString($target, $request, (bool) ($redirect->preserve_query ?? true));
+                $status = (int) ($redirect->http_code ?? 301);
+                $response = $this->isAbsoluteUrl($target)
+                    ? redirect()->away($target, $status)
+                    : redirect()->to($target, $status);
+                $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
 
                 try {
                     if (Schema::hasColumn((new PageRedirect())->getTable(), 'hit_count')) {
@@ -82,7 +87,7 @@ class ResolveConfiguredRedirects
                     // Redirects must stay fast; ignore tracking errors.
                 }
 
-                return redirect()->to($target, (int) ($redirect->http_code ?? 301));
+                return $response;
             }
         }
 
@@ -186,14 +191,7 @@ class ResolveConfiguredRedirects
 
         $parts = parse_url($target);
         if (is_array($parts) && isset($parts['scheme']) && isset($parts['host'])) {
-            $targetPath = (string) ($parts['path'] ?? '/');
-            $targetQuery = isset($parts['query']) ? '?' . $parts['query'] : '';
-
-            if ($targetPath === '') {
-                $targetPath = '/';
-            }
-
-            return $targetPath . $targetQuery;
+            return $target;
         }
 
         if (! str_starts_with($target, '/')) {
@@ -201,5 +199,12 @@ class ResolveConfiguredRedirects
         }
 
         return $target;
+    }
+
+    private function isAbsoluteUrl(string $target): bool
+    {
+        $parts = parse_url($target);
+
+        return is_array($parts) && isset($parts['scheme'], $parts['host']);
     }
 }

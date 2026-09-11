@@ -28,6 +28,14 @@ class SitemapController extends Controller
         );
     }
 
+    public function schedules(SitemapService $service)
+    {
+        return $this->serveXml(
+            public_path('sitemap-schedules.xml'),
+            fn (): string => $service->buildScheduleSitemapXml(),
+        );
+    }
+
     public function segment(SitemapService $service, string $segment)
     {
         $segment = trim($segment);
@@ -51,6 +59,11 @@ class SitemapController extends Controller
             return response()->file($path, [
                 'Content-Type' => 'application/xml; charset=UTF-8',
             ]);
+        }
+
+        $xml = trim($fallback());
+        if ($xml !== '') {
+            return response($xml, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
         }
 
         abort(404);

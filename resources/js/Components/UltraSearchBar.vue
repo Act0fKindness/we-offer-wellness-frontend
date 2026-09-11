@@ -126,6 +126,12 @@ function closeAll() {
   qa('.pane').forEach((p) => hidePane(p))
 }
 
+function updatePaneOverlayState() {
+  if (typeof document === 'undefined') return
+  const anyPaneVisible = qa('.pane').some((pane) => !pane.classList.contains('d-none'))
+  document.body.classList.toggle('wow-search-pane-open', anyPaneVisible)
+}
+
 function hidePane(pane, immediate = false) {
   if (!pane) return
 
@@ -146,6 +152,7 @@ function hidePane(pane, immediate = false) {
   if (immediate) {
     pane.classList.add('d-none')
     pane.classList.remove('is-open', 'is-closing')
+    updatePaneOverlayState()
     return
   }
 
@@ -158,6 +165,7 @@ function hidePane(pane, immediate = false) {
     pane.classList.add('d-none')
     pane.classList.remove('is-closing')
     paneHideTimers.delete(pane)
+    updatePaneOverlayState()
   }, 180)
 
   paneHideTimers.set(pane, timer)
@@ -178,6 +186,7 @@ function showPane(pane) {
   const openFrame = requestAnimationFrame(() => {
     pane.classList.add('is-open')
     paneOpenFrames.delete(pane)
+    updatePaneOverlayState()
   })
   paneOpenFrames.set(pane, openFrame)
 }
@@ -691,6 +700,54 @@ function bindInteractions() {
   })
 }
 
+function openFromHost(segment = 'what') {
+  const target = String(segment || 'what').trim() || 'what'
+  closeAll()
+  if (target === 'what') {
+    const whatInputEl = q(`#${id('what')}`)
+    const whatPane = q(`#${id('what-pane')}`)
+    if (whatInputEl) {
+      whatInputEl.focus({ preventScroll: true })
+      renderWhat(whatInputEl.value || whatValue.value || '')
+      showPane(whatPane)
+    }
+    return
+  }
+
+  if (target === 'where') {
+    const whereEditor = q(`#${id('where-editor')}`)
+    const wherePane = q(`#${id('where-pane')}`)
+    if (whereEditor) {
+      whereEditor.focus({ preventScroll: true })
+      showPane(wherePane)
+    }
+    return
+  }
+
+  if (target === 'when') {
+    const whenInput = q(`#${id('when')}`)
+    const whenPane = q(`#${id('when-pane')}`)
+    if (whenInput) {
+      whenInput.focus({ preventScroll: true })
+      showPane(whenPane)
+    }
+    return
+  }
+
+  if (target === 'who') {
+    const whoSeg = q(`#${id('seg-who')}`)
+    const whoPane = q(`#${id('who-pane')}`)
+    if (whoSeg) {
+      whoSeg.focus({ preventScroll: true })
+      showPane(whoPane)
+    }
+  }
+}
+
+function closeFromHost() {
+  closeAll()
+}
+
 onMounted(async () => {
   syncDesktopNativeWhen()
   whatCategories = []
@@ -701,6 +758,14 @@ onMounted(async () => {
   } catch {}
 
   bindInteractions()
+
+  if (typeof window !== 'undefined') {
+    window.__WOWSearchBarV4 = window.__WOWSearchBarV4 || {}
+    window.__WOWSearchBarV4[props.idPrefix] = {
+      open: openFromHost,
+      close: closeFromHost,
+    }
+  }
 
   // Load locations for WHERE list
   try {
@@ -768,6 +833,12 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (detachGlobal) detachGlobal()
+  if (typeof window !== 'undefined' && window.__WOWSearchBarV4) {
+    delete window.__WOWSearchBarV4[props.idPrefix]
+  }
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove('wow-search-pane-open')
+  }
 })
 </script>
 
@@ -779,7 +850,7 @@ onBeforeUnmount(() => {
         <i class="bi bi-stars fs-5 text-muted"></i>
         <div class="flex-grow-1">
           <div class="seg-label">What</div>
-          <input :id="id('what')" name="what" type="text" autocomplete="off" placeholder="Massage, yoga, breathwork…" aria-expanded="false" :aria-controls="id('what-pane')" required :aria-invalid="!whatFilled">
+          <input :id="id('what')" name="what" type="text" autocomplete="off" placeholder="Massage, yoga, breathwork…" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" :aria-controls="id('what-pane')" required :aria-invalid="!whatFilled">
         </div>
         <!-- Inline Search button when onlyWhat mode -->
         <button v-if="props.onlyWhat" type="submit" class="btn-wow is-squarish btn-xl d-flex align-items-center gap-2" aria-label="Search" :disabled="!whatFilled" :aria-disabled="!whatFilled">
@@ -1049,7 +1120,7 @@ onBeforeUnmount(() => {
 .wow-ultra .btn-counter:hover{ background:#f9fafb }
 .wow-ultra .btn-counter .bi{ font-size:14px; line-height:1 }
 
-.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; width:min(680px, 96vw); max-width:min(980px, 96vw); border-radius:18px }
+.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; width:min(700px, 96vw); max-width:min(980px, 96vw); border-radius:18px }
 .wow-ultra [id$='who-pane']{ left:auto; right:0; max-width:min(560px, 96vw); border-radius:18px }
 @media (max-width: 768px){
   /* On small screens, make WHO pane span the segment width to avoid overflow */

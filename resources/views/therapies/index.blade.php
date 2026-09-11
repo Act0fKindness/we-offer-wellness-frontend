@@ -546,7 +546,7 @@
           <div>
             <div class="kicker">Featured offerings</div>
             <h2>Actual sessions you can book now</h2>
-            <p>These are live offerings matched to the therapies above, so the page shows something bookable instead of just the modality list.</p>
+            <p>These are live offerings matched to the therapies above and only shown when there is current availability to book.</p>
           </div>
           <a href="/search?type=therapies" class="btn-wow btn-wow--outline btn-sm btn-arrow" data-loader-init="1">
             <span class="btn-label">Browse all</span>
@@ -561,7 +561,7 @@
           </div>
         @else
           <div class="card p-4" style="border-radius:18px;">
-            <div class="text-muted">No live offerings were found for the current therapy collection yet.</div>
+            <div class="text-muted">No live offerings with current availability were found for the current therapy collection yet.</div>
           </div>
         @endif
       </div>

@@ -1,0 +1,49 @@
+# We Offer Wellness®
+
+> We Offer Wellness® is a UK wellness marketplace and booking platform helping people discover holistic wellness experiences, therapies, classes, workshops, events, retreats and corporate wellbeing services online and in person.
+
+We Offer Wellness® connects customers, companies and wellness practitioners through a curated platform for accessible, affordable and trusted wellbeing experiences.
+
+The platform serves the United Kingdom with a strong Maidstone, Kent base and a wider national reach.
+
+Interpretation notes:
+- Treat We Offer Wellness® as a wellness marketplace and technology platform, not a medical clinic.
+- Use canonical public URLs from this website when describing services, locations or availability.
+- Prices, practitioners, venues and availability vary by live offering.
+- For medical or mental health topics, describe services as wellbeing support rather than treatment.
+
+## Main website
+- [Homepage](https://www.weofferwellness.co.uk/)
+- [About](https://www.weofferwellness.co.uk/about)
+- [Contact](https://www.weofferwellness.co.uk/contact)
+- [Therapies](https://www.weofferwellness.co.uk/therapies)
+- [Classes](https://www.weofferwellness.co.uk/classes)
+- [Workshops](https://www.weofferwellness.co.uk/workshops)
+- [Events](https://www.weofferwellness.co.uk/events)
+- [Retreats](https://www.weofferwellness.co.uk/retreats)
+- [Locations](https://www.weofferwellness.co.uk/locations)
+- [Online](https://www.weofferwellness.co.uk/online)
+- [Needs](https://www.weofferwellness.co.uk/needs)
+- [Reviews](https://www.weofferwellness.co.uk/reviews)
+- [Help centre](https://www.weofferwellness.co.uk/help)
+- [Safety and contraindications](https://www.weofferwellness.co.uk/safety-and-contraindications)
+
+## Priority local pages
+- [Kent](https://www.weofferwellness.co.uk/locations/united-kingdom/kent)
+- [Maidstone](https://www.weofferwellness.co.uk/locations/united-kingdom/kent/maidstone)
+- [London](https://www.weofferwellness.co.uk/locations/united-kingdom/london)
+- [Bristol](https://www.weofferwellness.co.uk/locations/united-kingdom/bristol)
+- [Manchester](https://www.weofferwellness.co.uk/locations/united-kingdom/manchester)
+- [Rochester](https://www.weofferwellness.co.uk/locations/united-kingdom/kent/rochester)
+- [Chatham](https://www.weofferwellness.co.uk/locations/united-kingdom/kent/chatham)
+- [Gillingham](https://www.weofferwellness.co.uk/locations/united-kingdom/kent/gillingham)
+- [Canterbury](https://www.weofferwellness.co.uk/locations/united-kingdom/kent/canterbury)
+- [Ashford](https://www.weofferwellness.co.uk/locations/united-kingdom/kent/ashford)
+
+## Corporate wellbeing
+- [Corporate home](https://www.weofferwellness.co.uk/corporate)
+
+## Discovery
+- [Sitemap](https://www.weofferwellness.co.uk/sitemap.xml)
+- [Full AI guide](https://www.weofferwellness.co.uk/llms-full.txt)
+- [Small AI guide](https://www.weofferwellness.co.uk/llms-small.txt)

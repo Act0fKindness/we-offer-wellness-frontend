@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Support\EventListing;
 use App\Support\ProductRanking;
 use App\Support\ProductSearchFilters;
+use App\Services\AvailabilityWindowService;
 use App\Services\SeoStructureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -22,7 +23,7 @@ class ProductController extends Controller
             ->withAvg('reviews', 'rating')
             ->withMin('variants', 'price')
             ->withMax('variants', 'price')
-            ->with(['media', 'options.values', 'category', 'vendor.tiers', 'vendor.user.settings']);
+            ->with(['media', 'options.values', 'category', 'vendor.tiers', 'vendor.user.defaultAvailability', 'vendor.user.settings']);
 
         $what = $request->string('what')->toString();
         $applySearch = function ($query) use ($what) {
@@ -30,15 +31,7 @@ class ProductController extends Controller
                 return;
             }
 
-            $query->where(function ($q) use ($what) {
-                $pattern = "%{$what}%";
-                $q->where('title', 'like', $pattern)
-                  ->orWhere('summary', 'like', $pattern)
-                  ->orWhere('body_html', 'like', $pattern)
-                  ->orWhere('what_to_expect', 'like', $pattern)
-                  ->orWhere('included', 'like', $pattern)
-                  ->orWhere('tags_list', 'like', $pattern);
-            });
+            $this->applyWhatSearchConstraint($query, $what);
         };
 
         // Filters
@@ -228,6 +221,27 @@ class ProductController extends Controller
             $locations = $p->getLocations();
             $isOnline = in_array('Online', $locations, true);
             $physicalLocations = array_values(array_filter($locations, fn($l) => $l !== 'Online'));
+            $vendor = $p->vendor;
+            $vendorUser = $vendor?->user;
+            $availabilityDays = collect(AvailabilityWindowService::buildWeeklyWindows($vendorUser))
+                ->filter(fn (array $rule) => ! empty($rule['enabled']) && ! empty($rule['windows']))
+                ->keys()
+                ->map(fn (string $day) => [
+                    'mon' => 1,
+                    'tue' => 2,
+                    'wed' => 3,
+                    'thu' => 4,
+                    'fri' => 5,
+                    'sat' => 6,
+                    'sun' => 0,
+                ][$day] ?? null)
+                ->filter(fn ($day) => $day !== null)
+                ->unique()
+                ->values()
+                ->all();
+            $planKey = $vendor?->tiers
+                ?->sortByDesc(fn ($tier) => $tier->plan_started_at ?? $tier->id)
+                ->first()?->tier;
 
             $meta = $p->meta_json ?? [];
             $lat = $meta['lat'] ?? null;
@@ -251,11 +265,15 @@ class ProductController extends Controller
             return [
                 'id' => $p->id,
                 'title' => $p->title,
+                'summary' => $p->summary,
                 'type' => $p->product_type ?: 'experience',
                 'category' => $p->category ? ['id' => $p->category->id, 'name' => $p->category->name] : null,
                 'mode' => $isOnline && count($physicalLocations) === 0 ? 'Online' : (count($physicalLocations) ? 'In-person' : null),
                 'location' => $physicalLocations[0] ?? ($isOnline ? 'Online' : null),
                 'locations' => $locations,
+                'vendor_name' => $vendor?->vendor_name,
+                'plan_key' => $planKey ?: ($vendorUser?->account_type ?? null),
+                'availability_days' => $availabilityDays,
                 'lat' => is_numeric($lat) ? (float)$lat : null,
                 'lng' => is_numeric($lng) ? (float)$lng : null,
                 'date' => $date,
@@ -275,6 +293,33 @@ class ProductController extends Controller
         });
 
         return response()->json($items);
+    }
+
+    private function applyWhatSearchConstraint($query, string $what): void
+    {
+        $pattern = '%' . $what . '%';
+        $starterKeys = ['starter', 'standard', 'community', 'free-starter', 'starter-package', ''];
+        $starterSql = implode("', '", array_map(
+            static fn (string $value): string => str_replace("'", "''", $value),
+            $starterKeys
+        ));
+        $latestTierSql = "(SELECT LOWER(COALESCE(vt.tier, '')) FROM vendor_tiers vt WHERE vt.vendor_id = vendor_details.id ORDER BY COALESCE(vt.plan_started_at, vt.id) DESC, vt.id DESC LIMIT 1)";
+
+        $query->where(function ($q) use ($pattern, $starterSql, $latestTierSql) {
+            $q->where('title', 'like', $pattern)
+                ->orWhere('summary', 'like', $pattern)
+                ->orWhere('body_html', 'like', $pattern)
+                ->orWhere('what_to_expect', 'like', $pattern)
+                ->orWhere('included', 'like', $pattern)
+                ->orWhere('tags_list', 'like', $pattern)
+                ->orWhereHas('vendor', function ($vendorQ) use ($pattern, $starterSql, $latestTierSql) {
+                    $vendorQ->where('vendor_name', 'like', $pattern)
+                        ->whereHas('user', function ($userQ) use ($starterSql) {
+                            $userQ->whereRaw("LOWER(COALESCE(account_type, '')) NOT IN ('{$starterSql}')");
+                        })
+                        ->whereRaw("LOWER(COALESCE($latestTierSql, '')) NOT IN ('{$starterSql}')");
+                });
+        });
     }
 
     // Flexible type filtering consistent with LandingController

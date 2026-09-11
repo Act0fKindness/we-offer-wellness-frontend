@@ -8,7 +8,7 @@
             <i class="bi bi-stars fs-5 text-muted" aria-hidden="true"></i>
             <div class="flex-grow-1">
         <div class="seg-label">What</div>
-        <input id="{{ $prefix }}-what" type="text" name="what" autocomplete="off" placeholder="Massage, yoga, breathwork…" aria-expanded="false" aria-controls="{{ $prefix }}-what-pane" required>
+        <input id="{{ $prefix }}-what" type="text" name="what" autocomplete="off" placeholder="Massage, yoga, breathwork…" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="{{ $prefix }}-what-pane" required>
       </div>
             <div id="{{ $prefix }}-what-pane" class="pane narrow d-none" role="listbox" aria-label="What suggestions">
                 <div id="{{ $prefix }}-what-list" class="listy"></div>

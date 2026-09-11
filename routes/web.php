@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\StoreProductsController;
 use Inertia\Inertia;
 use App\Http\Controllers\LandingController;
 use Illuminate\Http\Request;
@@ -24,10 +26,11 @@ use App\Http\Controllers\SeoLandingController;
 use App\Http\Controllers\OnlineController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\OnlineNearMeController;
+use App\Http\Controllers\ScheduleDiscoveryController;
+use App\Http\Controllers\WellnessEventsController;
 use App\Http\Controllers\SeoMoneyPageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SearchController;
-use App\Http\Controllers\MindfulTimesController;
 use App\Http\Controllers\ProvidersController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CorporateController;
@@ -38,11 +41,26 @@ use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\HelpPagesController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\LandingRedirectsController;
+use App\Http\Controllers\RedirectsController;
 use App\Http\Controllers\CustomerAccountController;
+use App\Http\Controllers\AiDiscoveryController;
 use App\Http\Controllers\SubscriberController;
 use App\Services\LocationCatalogService;
 use App\Services\IndexNowService;
+
+// Direct preview route for the branded not-found page. Keep this before the
+// catch-all SEO routes so it can never be treated as a page slug.
+Route::view('/404', 'errors.404');
+
+Route::get('/favicon.png', function () {
+    $image = Http::timeout(5)->get('https://studio.weofferwellness.co.uk/storage/uploads/images/a4a125ff-e25a-48e3-bdf2-12af9182cdce.png');
+    abort_unless($image->successful(), 404);
+    return response($image->body(), 200, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=86400, s-maxage=86400',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+})->name('favicon');
 
 Route::get('/', [HomeController::class, 'index']);
 
@@ -66,6 +84,45 @@ $seoSlugPattern = '[A-Za-z0-9][A-Za-z0-9\-]*';
 
 // Online & Near Me hub
 Route::get('/online-near-me', [OnlineNearMeController::class, 'index'])->name('onlineNearMe.index');
+Route::get('/schedule-discovery', [ScheduleDiscoveryController::class, 'index'])->name('schedule-discovery.index');
+
+$wellnessEventTopicRoutes = [
+    'wellness-events' => [
+        'timeframes' => ['this-week', 'this-weekend', 'today', 'tomorrow', 'next-week', 'online'],
+        'locations' => ['kent', 'london'],
+    ],
+    'sound-baths' => [
+        'timeframes' => ['this-week', 'this-weekend'],
+    ],
+    'meditation-events' => [
+        'timeframes' => ['this-week', 'this-weekend'],
+    ],
+    'breathwork-events' => [
+        'timeframes' => ['this-week', 'this-weekend'],
+    ],
+    'yoga-workshops' => [
+        'timeframes' => ['this-week', 'this-weekend'],
+    ],
+];
+
+foreach ($wellnessEventTopicRoutes as $topic => $config) {
+    foreach ($config['timeframes'] as $timeframe) {
+        Route::get("/{$topic}/{$timeframe}", [WellnessEventsController::class, 'show'])
+            ->defaults('topic', $topic)
+            ->defaults('timeframe', $timeframe)
+            ->name("wellness-events.{$topic}.{$timeframe}");
+    }
+
+    foreach (($config['locations'] ?? []) as $location) {
+        foreach (['this-week', 'this-weekend'] as $timeframe) {
+            Route::get("/{$topic}/{$timeframe}/{$location}", [WellnessEventsController::class, 'show'])
+                ->defaults('topic', $topic)
+                ->defaults('timeframe', $timeframe)
+                ->defaults('location', $location)
+                ->name("wellness-events.{$topic}.{$timeframe}.{$location}");
+        }
+    }
+}
 
 /** Guides */
 Route::get('/guides', [GuideController::class, 'index'])->name('guides.index');
@@ -146,19 +203,26 @@ Route::get('/locations/{slug}', [LocationsController::class, 'show'])
     ->where('slug', '[A-Za-z][A-Za-z0-9\-]*')
     ->name('locations.show');
 Route::get('/near-me', [LocationsController::class, 'nearMe'])->name('nearMe');
-Route::get('/products/{handle}', [LandingRedirectsController::class, 'shopifyProduct'])
-    ->where('handle', '[^/]+');
-Route::get('/{prefix}/custom/{pixel}/sandbox/modern/products/{handle}', [LandingRedirectsController::class, 'shopifyProductSandbox'])
+Route::get('/products', [StoreProductsController::class, 'index'])->name('store.products.index');
+Route::get('/product/{category}/{slug}', [StoreProductsController::class, 'show'])
+    ->where(['category' => '[^/]+', 'slug' => '[^/]+'])
+    ->name('store.product.show');
+Route::post('/product/{category}/{slug}/reviews', [StoreProductsController::class, 'storeReview'])
+    ->middleware('auth')
+    ->where(['category' => '[^/]+', 'slug' => '[^/]+'])
+    ->name('store.product.reviews.store');
+Route::get('/products/{slug}', [StoreProductsController::class, 'legacyShow'])->where('slug', '[^/]+')->name('store.products.show');
+Route::get('/{prefix}/custom/{pixel}/sandbox/modern/products/{handle}', [RedirectsController::class, 'shopifyProductSandbox'])
     ->where([
         'prefix' => '[^/]+',
         'pixel' => '[^/]+',
         'handle' => '[^/]+',
     ]);
-Route::get('/collections/{slug?}', [LandingRedirectsController::class, 'shopifyCollection'])
+Route::get('/collections/{slug?}', [RedirectsController::class, 'shopifyCollection'])
     ->where('slug', '[^/]*');
-Route::get('/pages/{path}', [LandingRedirectsController::class, 'shopifyPage'])
+Route::get('/pages/{path}', [RedirectsController::class, 'shopifyPage'])
     ->where('path', '.*');
-Route::get('/account/login', [LandingRedirectsController::class, 'shopifyAccountLogin']);
+Route::get('/account/login', [RedirectsController::class, 'shopifyAccountLogin']);
 // Misc redirects are handled by the backend redirect table.
 
 // V3 holding page
@@ -344,10 +408,10 @@ Route::get('/{city}/{type}/{category}', [LocationsController::class, 'cityCatego
     ->name('locations.city-category');
 
 // Legacy experiences routes remain controller-backed for compatibility.
-Route::get('/experiences', [LandingRedirectsController::class, 'experiencesIndex']);
-Route::get('/experience', [LandingRedirectsController::class, 'experienceIndex']);
-Route::get('/experience/{slug}', [LandingRedirectsController::class, 'experienceSlug']);
-Route::get('/experiences/{slug}', [LandingRedirectsController::class, 'experiencesSlug']);
+Route::get('/experiences', [RedirectsController::class, 'experiencesIndex']);
+Route::get('/experience', [RedirectsController::class, 'experienceIndex']);
+Route::get('/experience/{slug}', [RedirectsController::class, 'experienceSlug']);
+Route::get('/experiences/{slug}', [RedirectsController::class, 'experiencesSlug']);
 
 Route::get('/reviews', [ReviewsController::class, 'index'])->name('reviews.index');
 if (config('wow.enable_static_pages')) {
@@ -423,7 +487,6 @@ Route::get('/corporate/{slug}', function (string $slug) {
         'page' => $pages[$slug],
     ]);
 });
-Route::view('/404', 'app');
 }
 
 // Cart page
@@ -445,9 +508,14 @@ Route::get('/partners', [StaticPagesController::class, 'partners']);
 // XML sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
+Route::get('/sitemap-schedules.xml', [SitemapController::class, 'schedules']);
 Route::get('/sitemap-index.xml', [SitemapController::class, 'indexFile']);
 Route::get('/sitemaps/{segment}.xml', [SitemapController::class, 'segment'])
     ->where('segment', '[A-Za-z0-9\-]+');
+Route::get('/llms.txt', [AiDiscoveryController::class, 'llms']);
+Route::get('/llms-small.txt', [AiDiscoveryController::class, 'llmsSmall']);
+Route::get('/llms-full.txt', [AiDiscoveryController::class, 'llmsFull']);
+Route::get('/.well-known/ai.txt', [AiDiscoveryController::class, 'policy']);
 Route::get('/indexnow.txt', function (IndexNowService $indexNow) {
     return response($indexNow->key(), 200)->header('Content-Type', 'text/plain; charset=utf-8');
 });
@@ -472,10 +540,10 @@ Route::get('/search-console/oauth/callback', function (Request $request) {
 });
 
 // General content pages (always available)
-Route::get('/privacy', [StaticPagesController::class, 'privacy']);
-Route::get('/terms', [StaticPagesController::class, 'terms']);
-Route::get('/cookies', [StaticPagesController::class, 'cookies']);
-Route::get('/refunds-and-cancellations', [StaticPagesController::class, 'refunds']);
+Route::get('/privacy', [StaticPagesController::class, 'show'])->defaults('slug', 'privacy');
+Route::get('/terms', [StaticPagesController::class, 'show'])->defaults('slug', 'terms');
+Route::get('/cookies', [StaticPagesController::class, 'show'])->defaults('slug', 'cookies');
+Route::get('/refunds-and-cancellations', [StaticPagesController::class, 'show'])->defaults('slug', 'refunds-and-cancellations');
 
 Route::get('/safety-and-contraindications', [SafetyContraindicationsController::class, 'index'])
     ->name('safety-and-contraindications');
@@ -488,9 +556,6 @@ Route::get('/about', [AboutController::class, 'index'])
     ->name('about');
 Route::get('/about/team/{slug}', [AboutController::class, 'team'])
     ->where('slug', '[A-Za-z0-9\-]+');
-
-// Mindful Times (simple hub)
-Route::get('/mindful-times', [MindfulTimesController::class, 'index']);
 
 // Providers directory
 Route::get('/providers', [ProvidersController::class, 'index']);
@@ -509,6 +574,10 @@ Route::get('/corporate-wellness', [CorporateController::class, 'comingSoon']);
 
 // Gift cards
 Route::get('/gift-cards', [StaticPagesController::class, 'giftCards']);
+
+// Final one-segment fallback for DB-driven legal pages, then legacy pages
+Route::get('/{slug}', [StaticPagesController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*');
 
 // Dynamic CMS-like pages stored in shared DB (from Backend admin)
 Route::fallback([\App\Http\Controllers\PageController::class, 'show'])

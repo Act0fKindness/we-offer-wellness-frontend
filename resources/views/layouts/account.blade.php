@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
@@ -24,13 +24,15 @@
         $favicon = config('app.favicon_url', '/favicon.ico');
     @endphp
     <link rel="icon" type="image/png" href="{{ $favicon }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ $favicon }}">
     <link rel="shortcut icon" href="{{ $favicon }}">
     <link rel="apple-touch-icon" href="{{ $favicon }}">
+    <meta name="msapplication-TileImage" content="{{ $favicon }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="manifest" href="/manifest.json?v=2">
+    <link rel="manifest" href="/manifest.json?v=4">
     <meta name="theme-color" content="#90b9a9">  
 
     <style>
@@ -215,7 +217,7 @@
 <body class="account-auth-body">
 <main class="account-auth-window">
     <section class="account-auth-left" aria-label="Authentication form">
-        <div class="brand-mark" aria-label="We Offer Wellness">
+        <div class="brand-mark" role="img" aria-label="We Offer Wellness">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240.46 141.78" height="28" aria-hidden="true">
                 <defs><style>.cls-1-header {fill:#599d91}.cls-2-header {fill:#000}</style></defs>
                 <g><g>

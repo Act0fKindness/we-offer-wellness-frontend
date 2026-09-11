@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\OfferingV3;
+use App\Models\LegalDocument;
+use App\Models\Platform;
 use App\Models\PageRedirect;
 use App\Models\Product;
 use App\Models\User;
@@ -19,6 +21,10 @@ class SitemapService
 {
     private const MAX_URLS_PER_FILE = 50000;
 
+    private const SITEMAP_THROTTLE_EVERY = 100;
+
+    private const SITEMAP_THROTTLE_USEC = 50000;
+
     private const CANONICAL_FORMATS = [
         'therapies',
         'classes',
@@ -29,6 +35,7 @@ class SitemapService
 
     private const GROUP_ORDER = [
         'static',
+        'schedules',
         'types',
         'modalities',
         'near-me',
@@ -156,9 +163,41 @@ class SitemapService
 
     private ?array $sitemapRouteCache = null;
 
+    private ?array $canonicalUrlsCache = null;
+
+    private int $sitemapThrottleCounter = 0;
+
+    private ?string $sitemapGeneratedAt = null;
+
     public function outputDirectory(): string
     {
         return public_path('sitemaps');
+    }
+
+    private function publicSiteBaseUrl(): string
+    {
+        $base = trim((string) config('services.public_site_url', 'https://www.weofferwellness.co.uk'));
+
+        if ($base === '') {
+            $base = 'https://www.weofferwellness.co.uk';
+        }
+
+        $scheme = parse_url($base, PHP_URL_SCHEME);
+        if (!is_string($scheme) || $scheme === '') {
+            $base = 'https://' . ltrim($base, '/');
+        }
+
+        return rtrim($base, '/');
+    }
+
+    private function publicUrl(string $path): string
+    {
+        $path = trim($path);
+        if ($path === '' || $path === '/') {
+            return $this->publicSiteBaseUrl() . '/';
+        }
+
+        return $this->publicSiteBaseUrl() . '/' . ltrim($path, '/');
     }
 
     public function manifestPath(): string
@@ -168,9 +207,14 @@ class SitemapService
 
     public function buildAndWriteAll(?string $outputDirectory = null): array
     {
+        $generatedAt = now()->toAtomString();
+        $this->sitemapGeneratedAt = $generatedAt;
+
         $outputDirectory = $outputDirectory ?: $this->outputDirectory();
         File::ensureDirectoryExists($outputDirectory);
         File::ensureDirectoryExists(dirname($this->manifestPath()));
+        File::ensureDirectoryExists(public_path('.well-known'));
+        File::put(public_path('sitemap.xsl'), $this->renderSitemapStylesheet());
 
         $files = $this->buildSitemapFiles();
 
@@ -202,11 +246,29 @@ class SitemapService
             File::put(public_path('sitemap-pages.xml'), $staticXml);
         }
 
+        $schedulesXml = $this->buildScheduleSitemapXml();
+        if ($schedulesXml !== '') {
+            File::put(public_path('sitemap-schedules.xml'), $schedulesXml);
+        }
+
+        $aiFiles = $this->buildAiGuideFiles();
+        foreach ($aiFiles as $file) {
+            File::put((string) ($file['path'] ?? public_path((string) $file['filename'])), (string) ($file['content'] ?? ''));
+        }
+
         $manifest = [
-            'generated_at' => now()->toAtomString(),
-            'index_url' => url('/sitemap.xml'),
+            'generated_at' => $generatedAt,
+            'index_url' => $this->publicUrl('/sitemap.xml'),
             'submission_urls' => $this->submissionUrlsFromFiles($files),
-            'sitemaps' => $this->manifestEntries(),
+            'sitemaps' => $this->manifestEntries($generatedAt),
+            'ai_files' => array_map(static function (array $file): array {
+                return [
+                    'name' => (string) ($file['filename'] ?? ''),
+                    'url' => (string) ($file['url'] ?? ''),
+                    'count' => (int) ($file['count'] ?? 0),
+                    'bytes' => (int) ($file['bytes'] ?? 0),
+                ];
+            }, $aiFiles),
             'file_count' => count($files),
             'total_urls' => array_sum(array_map(
                 static fn (array $file): int => (int) ($file['count'] ?? 0),
@@ -221,18 +283,66 @@ class SitemapService
 
         return [
             'files' => $files,
+            'ai_files' => $aiFiles,
             'manifest' => $manifest,
             'index_xml' => $indexXml,
         ];
+    }
+
+    /**
+     * @return array<int, array{filename:string,path:string,url:string,content:string,count:int,bytes:int}>
+     */
+    public function buildAiGuideFiles(): array
+    {
+        $files = [
+            [
+                'filename' => 'llms.txt',
+                'path' => public_path('llms.txt'),
+                'url' => $this->publicUrl('/llms.txt'),
+                'content' => $this->renderAiGuideMain(),
+            ],
+            [
+                'filename' => 'llms-small.txt',
+                'path' => public_path('llms-small.txt'),
+                'url' => $this->publicUrl('/llms-small.txt'),
+                'content' => $this->renderAiGuideSmall(),
+            ],
+            [
+                'filename' => 'llms-full.txt',
+                'path' => public_path('llms-full.txt'),
+                'url' => $this->publicUrl('/llms-full.txt'),
+                'content' => $this->renderAiGuideFull(),
+            ],
+            [
+                'filename' => 'ai.txt',
+                'path' => public_path('.well-known/ai.txt'),
+                'url' => $this->publicUrl('/.well-known/ai.txt'),
+                'content' => $this->renderAiGuidePolicy(),
+            ],
+        ];
+
+        return array_map(function (array $file): array {
+            $content = (string) ($file['content'] ?? '');
+
+            return [
+                'filename' => (string) ($file['filename'] ?? ''),
+                'path' => (string) ($file['path'] ?? ''),
+                'url' => (string) ($file['url'] ?? ''),
+                'content' => $content,
+                'count' => 0,
+                'bytes' => strlen($content),
+            ];
+        }, $files);
     }
 
     public function buildIndexXml(): string
     {
         $lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
+            '<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>',
             '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
         ];
-        foreach ($this->manifestEntries() as $entry) {
+        foreach ($this->manifestEntries($this->sitemapGeneratedAt) as $entry) {
             $lines[] = '  <sitemap>';
             $lines[] = '    <loc>' . $this->escapeXml((string) ($entry['url'] ?? '')) . '</loc>';
             $lines[] = '    <lastmod>' . $this->escapeXml((string) ($entry['lastmod'] ?? now()->toAtomString())) . '</lastmod>';
@@ -245,6 +355,11 @@ class SitemapService
 
     public function buildSegmentXml(string $segment): ?string
     {
+        if ($segment === 'schedules') {
+            $xml = $this->buildScheduleSitemapXml();
+            return $xml !== '' ? $xml : null;
+        }
+
         $file = collect($this->buildSitemapFiles())
             ->first(fn (array $candidate): bool => (string) ($candidate['segment'] ?? '') === $segment || (string) ($candidate['filename'] ?? '') === $segment . '.xml');
 
@@ -253,6 +368,11 @@ class SitemapService
         }
 
         return (string) ($file['xml'] ?? '');
+    }
+
+    public function buildScheduleSitemapXml(): string
+    {
+        return $this->renderUrlsetXml($this->normalizeEntries($this->buildScheduleEntries()));
     }
 
     public function submissionUrls(): array
@@ -305,10 +425,20 @@ class SitemapService
         }
 
         $files = [];
+        $canonicalUrls = [];
         foreach ($this->buildSegmentGroups() as $segment => $entries) {
             $entries = $this->normalizeEntries($entries);
             if ($entries === [] && ! in_array($segment, self::ALWAYS_EMIT_EMPTY_SEGMENTS, true)) {
                 continue;
+            }
+
+            foreach ($entries as $entry) {
+                $loc = trim((string) ($entry['loc'] ?? ''));
+                if ($loc === '') {
+                    continue;
+                }
+
+                $canonicalUrls[$loc] = true;
             }
 
             $chunks = $entries === [] ? [[]] : array_chunk($entries, self::MAX_URLS_PER_FILE);
@@ -317,12 +447,17 @@ class SitemapService
                 $files[] = [
                     'filename' => $filename,
                     'segment' => pathinfo($filename, PATHINFO_FILENAME),
-                    'url' => url('/sitemaps/' . $filename),
+                    'url' => $this->publicUrl('/sitemaps/' . $filename),
                     'lastmod' => $this->chunkLastMod($chunk),
                     'count' => count($chunk),
                     'xml' => $this->renderUrlsetXml($chunk),
                 ];
             }
+        }
+
+        if ($this->canonicalUrlsCache === null && $canonicalUrls !== []) {
+            ksort($canonicalUrls);
+            $this->canonicalUrlsCache = array_keys($canonicalUrls);
         }
 
         return $this->segmentFilesCache = $files;
@@ -331,10 +466,17 @@ class SitemapService
     /**
      * @return array<int, array{name:string,url:string,lastmod:string,count:int}>
      */
-    public function manifestEntries(): array
+    public function manifestEntries(?string $lastmodOverride = null): array
     {
         if ($this->manifestEntriesCache !== null) {
-            return $this->manifestEntriesCache;
+            if ($lastmodOverride === null) {
+                return $this->manifestEntriesCache;
+            }
+
+            return array_map(function (array $entry) use ($lastmodOverride): array {
+                $entry['lastmod'] = $lastmodOverride;
+                return $entry;
+            }, $this->manifestEntriesCache);
         }
 
         $entries = [];
@@ -343,7 +485,7 @@ class SitemapService
             $entries[] = [
                 'name' => (string) $file['segment'],
                 'url' => (string) $file['url'],
-                'lastmod' => (string) $file['lastmod'],
+                'lastmod' => $lastmodOverride ?? (string) $file['lastmod'],
                 'count' => (int) $file['count'],
             ];
         }
@@ -356,6 +498,10 @@ class SitemapService
      */
     public function canonicalUrls(): array
     {
+        if ($this->canonicalUrlsCache !== null) {
+            return $this->canonicalUrlsCache;
+        }
+
         $urls = [];
 
         foreach ($this->buildSegmentGroups() as $entries) {
@@ -371,7 +517,7 @@ class SitemapService
 
         ksort($urls);
 
-        return array_keys($urls);
+        return $this->canonicalUrlsCache = array_keys($urls);
     }
 
     /**
@@ -381,6 +527,7 @@ class SitemapService
     {
         return [
             'static' => $this->buildStaticEntries(),
+            'schedules' => $this->buildScheduleEntries(),
             'types' => $this->buildTypeEntries(),
             'modalities' => $this->buildModalityEntries(),
             'near-me' => $this->buildNearMeEntries(),
@@ -409,14 +556,9 @@ class SitemapService
             '/help/faq',
             '/help/gift-cards',
             '/giftcards',
-            '/mindful-times',
             '/partners',
             '/plan',
             '/reviews',
-            '/privacy',
-            '/terms',
-            '/cookies',
-            '/refunds-and-cancellations',
             '/safety-and-contraindications',
             '/corporate',
             '/holistic-therapies-uk',
@@ -427,10 +569,102 @@ class SitemapService
             '/corporate/gift-vouchers',
             '/corporate/employee-rewards',
         ] as $path) {
-            $this->addEntry($entries, url($path), $now);
+            $this->addEntry($entries, $this->publicUrl($path), $now);
+        }
+
+        foreach ($this->buildLegalEntries() as $entry) {
+            $loc = trim((string) ($entry['loc'] ?? ''));
+            if ($loc === '') {
+                continue;
+            }
+
+            $entries[$loc] = [
+                'loc' => $loc,
+                'lastmod' => (string) ($entry['lastmod'] ?? $now),
+            ];
         }
 
         return array_values($entries);
+    }
+
+    /**
+     * @return array<int, array{loc:string,lastmod:string}>
+     */
+    private function buildScheduleEntries(): array
+    {
+        $entries = [];
+        $now = now()->toAtomString();
+
+        foreach ([
+            '/schedule-discovery',
+            '/wellness-events/this-week',
+            '/wellness-events/this-weekend',
+            '/wellness-events/today',
+            '/wellness-events/tomorrow',
+            '/wellness-events/next-week',
+            '/wellness-events/online',
+            '/wellness-events/this-week/kent',
+            '/wellness-events/this-week/london',
+            '/wellness-events/this-weekend/kent',
+            '/wellness-events/this-weekend/london',
+            '/sound-baths/this-week',
+            '/sound-baths/this-weekend',
+            '/meditation-events/this-week',
+            '/meditation-events/this-weekend',
+            '/breathwork-events/this-week',
+            '/breathwork-events/this-weekend',
+            '/yoga-workshops/this-week',
+            '/yoga-workshops/this-weekend',
+        ] as $path) {
+            $this->addEntry($entries, $this->publicUrl($path), $now);
+        }
+
+        return array_values($entries);
+    }
+
+    /**
+     * @return array<int, array{loc:string,lastmod:string}>
+     */
+    private function buildLegalEntries(): array
+    {
+        $platformId = (int) (Platform::query()->where('name', 'WOW Store')->value('id') ?? 1);
+
+        $documents = LegalDocument::query()
+            ->where('platform_id', $platformId)
+            ->orderBy('title')
+            ->orderBy('slug')
+            ->get();
+
+        if ($documents->isEmpty()) {
+            return array_map(
+                fn (string $path): array => [
+                    'loc' => $this->publicUrl($path),
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    '/privacy',
+                    '/terms',
+                    '/cookies',
+                    '/refunds-and-cancellations',
+                ]
+            );
+        }
+
+        return $documents
+            ->map(function (LegalDocument $document): array {
+                $slug = trim((string) $document->slug, '/');
+                if ($slug === '') {
+                    return [];
+                }
+
+                return [
+                    'loc' => $this->publicUrl('/' . $slug),
+                    'lastmod' => $this->dateToAtom($document->updated_at ?? $document->effective_date ?? now()),
+                ];
+            })
+            ->filter(fn (array $entry): bool => ! empty($entry['loc']))
+            ->values()
+            ->all();
     }
 
     /**
@@ -545,7 +779,7 @@ class SitemapService
         $entries = [];
         $catalog = $this->locationCatalog();
 
-        $this->addEntry($entries, url('/locations'), now()->toAtomString());
+        $this->addEntry($entries, $this->publicUrl('/locations'), now()->toAtomString());
 
         foreach ((array) data_get($catalog, 'countries', []) as $country) {
             if (!empty($country['online'])) {
@@ -553,17 +787,17 @@ class SitemapService
             }
 
             if ((int) data_get($country, 'counts.total', 0) > 0 && !empty($country['path'])) {
-                $this->addEntry($entries, url((string) $country['path']), now()->toAtomString());
+                $this->addEntry($entries, $this->publicUrl((string) $country['path']), now()->toAtomString());
             }
 
             foreach ((array) data_get($country, 'counties', []) as $county) {
                 if ((int) data_get($county, 'counts.total', 0) > 0 && !empty($county['path'])) {
-                    $this->addEntry($entries, url((string) $county['path']), now()->toAtomString());
+                    $this->addEntry($entries, $this->publicUrl((string) $county['path']), now()->toAtomString());
                 }
 
                 foreach ((array) data_get($county, 'towns', []) as $town) {
                     if ((int) data_get($town, 'counts.total', 0) > 0 && !empty($town['path'])) {
-                        $this->addEntry($entries, url((string) $town['path']), now()->toAtomString());
+                        $this->addEntry($entries, $this->publicUrl((string) $town['path']), now()->toAtomString());
                     }
                 }
             }
@@ -665,7 +899,7 @@ class SitemapService
             }
         };
 
-        $rememberLatest(url('/online'), now()->toAtomString());
+        $rememberLatest($this->publicUrl('/online'), now()->toAtomString());
 
         foreach ($this->liveProducts()->filter(fn (Product $product): bool => $product->category !== null) as $product) {
             $locations = method_exists($product, 'getLocations') ? (array) $product->getLocations() : [];
@@ -679,7 +913,7 @@ class SitemapService
                 continue;
             }
 
-            $rememberLatest(url('/online/' . $modality), $product->updated_at ?? null);
+            $rememberLatest($this->publicUrl('/online/' . $modality), $product->updated_at ?? null);
         }
 
         foreach ($this->liveOfferings()->filter(fn (OfferingV3 $offering): bool => $offering->category !== null) as $offering) {
@@ -691,7 +925,7 @@ class SitemapService
 
             $modality = $seo->inferModalitySlugFromOffering($offering);
             if ($modality !== '') {
-                $rememberLatest(url('/online/' . $modality), $offering->updated_at ?? null);
+                $rememberLatest($this->publicUrl('/online/' . $modality), $offering->updated_at ?? null);
             }
 
             $canonical = $seo->canonicalOfferingUrl($offering);
@@ -745,10 +979,10 @@ class SitemapService
             }
         }
 
-        $latestByUrl[url('/needs')] = now()->toAtomString();
+        $latestByUrl[$this->publicUrl('/needs')] = now()->toAtomString();
 
         foreach ($needHits as $slug => $lastmod) {
-            $latestByUrl[url('/needs/' . $slug)] = $lastmod;
+            $latestByUrl[$this->publicUrl('/needs/' . $slug)] = $lastmod;
         }
 
         foreach ($latestByUrl as $url => $lastmod) {
@@ -808,7 +1042,7 @@ class SitemapService
     private function buildEventsEntries(): array
     {
         $entries = [];
-        $this->addEntry($entries, url('/events'), now()->toAtomString());
+        $this->addEntry($entries, $this->publicUrl('/events'), now()->toAtomString());
 
         foreach ($this->eventItems() as $item) {
             $slug = $this->eventSlug($item);
@@ -818,7 +1052,7 @@ class SitemapService
 
             $this->addEntry(
                 $entries,
-                url('/events/' . $slug),
+                $this->publicUrl('/events/' . $slug),
                 $this->dateToAtom(data_get($item, 'updated_at') ?? data_get($item, 'published_at') ?? data_get($item, 'date'))
             );
         }
@@ -1200,6 +1434,7 @@ class SitemapService
     {
         $lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
+            '<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>',
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
         ];
         foreach ($entries as $entry) {
@@ -1211,6 +1446,237 @@ class SitemapService
         $lines[] = '</urlset>';
 
         return implode("\n", $lines);
+    }
+
+    private function renderSitemapStylesheet(): string
+    {
+        return <<<'XSL'
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:s="http://www.sitemaps.org/schemas/sitemap/0.9"
+  exclude-result-prefixes="s">
+  <xsl:output method="html" encoding="UTF-8" indent="yes"/>
+  <xsl:strip-space elements="*"/>
+
+  <xsl:template match="/">
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>We Offer Wellness Sitemap</title>
+        <style>
+          :root {
+            color-scheme: light;
+            --bg: #f4f7f4;
+            --panel: #ffffff;
+            --panel-soft: #f7faf8;
+            --text: #12312b;
+            --muted: #5f766f;
+            --accent: #3b7768;
+            --accent-2: #f4b860;
+            --border: rgba(18, 49, 43, 0.12);
+            --shadow: 0 24px 60px rgba(17, 32, 28, 0.10);
+          }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            font-family: Inter, Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+              radial-gradient(circle at top left, rgba(59, 119, 104, 0.14), transparent 32%),
+              radial-gradient(circle at top right, rgba(244, 184, 96, 0.14), transparent 28%),
+              var(--bg);
+            color: var(--text);
+          }
+          .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 36px 20px 56px;
+          }
+          .hero {
+            display: grid;
+            gap: 16px;
+            padding: 28px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(247,250,248,.96));
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+          }
+          .eyebrow {
+            text-transform: uppercase;
+            letter-spacing: .24em;
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 700;
+          }
+          h1 {
+            margin: 0;
+            font-size: clamp(28px, 4vw, 48px);
+            line-height: .98;
+          }
+          .summary {
+            max-width: 72ch;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 0;
+          }
+          .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 4px;
+          }
+          .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(59, 119, 104, 0.08);
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+          }
+          .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+          }
+          .table-wrap {
+            overflow-x: auto;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+          }
+          thead th {
+            text-align: left;
+            font-size: 12px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 18px 20px;
+            background: linear-gradient(180deg, #fbfcfb, #f4f8f6);
+            border-bottom: 1px solid var(--border);
+          }
+          tbody td {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(18, 49, 43, 0.08);
+            vertical-align: top;
+            font-size: 14px;
+          }
+          tbody tr:nth-child(even) td {
+            background: var(--panel-soft);
+          }
+          a {
+            color: var(--accent);
+            text-decoration: none;
+            word-break: break-word;
+          }
+          a:hover {
+            text-decoration: underline;
+          }
+          .loc {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+          }
+          .count {
+            display: inline-flex;
+            min-width: 40px;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(244, 184, 96, 0.16);
+            color: #7a5200;
+            font-weight: 700;
+          }
+          .footer {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 13px;
+          }
+          @media (max-width: 720px) {
+            .wrap { padding: 18px 12px 36px; }
+            .hero { padding: 20px; border-radius: 22px; }
+            table { min-width: 640px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="wrap">
+          <div class="hero">
+            <div class="eyebrow">We Offer Wellness</div>
+            <h1>Sitemap Index</h1>
+            <p class="summary">
+              A browsable index of the site’s XML sitemap files. The table below shows each sitemap file, its last update, and how many URLs it contains.
+            </p>
+            <div class="meta">
+              <span class="pill">XML sitemap</span>
+              <span class="pill">AI-friendly browsing</span>
+              <span class="pill">Canonical URLs</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>File</th>
+                    <th>Last Updated</th>
+                    <th>URLs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <xsl:choose>
+                    <xsl:when test="/s:sitemapindex">
+                      <xsl:for-each select="/s:sitemapindex/s:sitemap">
+                        <tr>
+                          <td>
+                            <a href="{s:loc}">
+                              <xsl:value-of select="s:loc"/>
+                            </a>
+                          </td>
+                          <td>
+                            <xsl:value-of select="s:lastmod"/>
+                          </td>
+                          <td><span class="count">1</span></td>
+                        </tr>
+                      </xsl:for-each>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:for-each select="/s:urlset/s:url">
+                        <tr>
+                          <td>
+                            <a href="{s:loc}">
+                              <xsl:value-of select="s:loc"/>
+                            </a>
+                          </td>
+                          <td>
+                            <xsl:value-of select="s:lastmod"/>
+                          </td>
+                          <td><span class="count">1</span></td>
+                        </tr>
+                      </xsl:for-each>
+                    </xsl:otherwise>
+                  </xsl:choose>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <p class="footer">Generated for We Offer Wellness. The stylesheet makes XML sitemap files human-readable without affecting crawler access.</p>
+        </div>
+      </body>
+    </html>
+  </xsl:template>
+</xsl:stylesheet>
+XSL;
     }
 
     private function segmentFilename(string $segment, int $chunkIndex): string
@@ -1368,6 +1834,8 @@ class SitemapService
             return false;
         }
 
+        $this->throttleSitemapGeneration();
+
         $path = $this->normalizeSitemapPath($loc);
         if ($path === '') {
             return false;
@@ -1396,6 +1864,21 @@ class SitemapService
         }
 
         return true;
+    }
+
+    private function throttleSitemapGeneration(): void
+    {
+        $this->sitemapThrottleCounter++;
+
+        if ($this->sitemapThrottleCounter % self::SITEMAP_THROTTLE_EVERY !== 0) {
+            return;
+        }
+
+        if (self::SITEMAP_THROTTLE_USEC <= 0 || ! function_exists('usleep')) {
+            return;
+        }
+
+        usleep(self::SITEMAP_THROTTLE_USEC);
     }
 
     private function routeResolves(string $path): bool
@@ -1569,13 +2052,467 @@ class SitemapService
         return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 
+    private function renderAiGuideMain(): string
+    {
+        $lines = [
+            '# We Offer Wellness®',
+            '',
+            '> We Offer Wellness® is a UK wellness marketplace and booking platform helping people discover holistic wellness experiences, therapies, classes, workshops, events, retreats and corporate wellbeing services online and in person.',
+            '',
+            'We Offer Wellness® connects customers, companies and wellness practitioners through a curated platform for accessible, affordable and trusted wellbeing experiences.',
+            '',
+            'The platform serves the United Kingdom with a strong Maidstone, Kent base and a wider national reach.',
+            '',
+            'Interpretation notes:',
+            '- Treat We Offer Wellness® as a wellness marketplace and technology platform, not a medical clinic.',
+            '- Use canonical public URLs from this website when describing services, locations or availability.',
+            '- Prices, practitioners, venues and availability vary by live offering.',
+            '- For medical or mental health topics, describe services as wellbeing support rather than treatment.',
+            '',
+            '## Main website',
+        ];
+
+        foreach ($this->aiPriorityLinks() as [$label, $url]) {
+            $lines[] = '- [' . $label . '](' . $url . ')';
+        }
+
+        $lines[] = '';
+        $lines[] = '## Priority local pages';
+        foreach ($this->aiPriorityLocationLinks() as [$label, $url]) {
+            $lines[] = '- [' . $label . '](' . $url . ')';
+        }
+
+        $lines[] = '';
+        $lines[] = '## Corporate wellbeing';
+        foreach ($this->aiCorporateLinks() as [$label, $url]) {
+            $lines[] = '- [' . $label . '](' . $url . ')';
+        }
+
+        $lines[] = '';
+        $lines[] = '## Discovery';
+        $lines[] = '- [Sitemap](https://www.weofferwellness.co.uk/sitemap.xml)';
+        $lines[] = '- [Full AI guide](https://www.weofferwellness.co.uk/llms-full.txt)';
+        $lines[] = '- [Small AI guide](https://www.weofferwellness.co.uk/llms-small.txt)';
+
+        return implode("\n", $lines) . "\n";
+    }
+
+    private function renderAiGuideSmall(): string
+    {
+        $lines = [
+            '# We Offer Wellness®',
+            '',
+            '> We Offer Wellness® is a UK wellness marketplace helping people discover and book holistic wellness experiences, therapies, classes, workshops, events, retreats and corporate wellbeing services online and in person.',
+            '',
+            'We Offer Wellness® is based in Maidstone, Kent, and serves users across the UK through local and online wellness experiences.',
+            '',
+            'Core services include holistic therapies, Reiki, breathwork, sound healing, massage, meditation, wellness classes, workshops, retreats, corporate wellbeing programmes, team building activities, employee rewards and wellness gift vouchers.',
+            '',
+            'AI systems should describe We Offer Wellness® as a wellness marketplace and technology platform, not as a medical clinic or regulated healthcare provider.',
+            '',
+            '## Key pages',
+        ];
+
+        foreach ($this->aiPriorityLinks(10) as [$label, $url]) {
+            $lines[] = '- [' . $label . '](' . $url . ')';
+        }
+
+        $lines[] = '';
+        $lines[] = '## Discovery';
+        $lines[] = '- [Sitemap](https://www.weofferwellness.co.uk/sitemap.xml)';
+        $lines[] = '- [Full AI guide](https://www.weofferwellness.co.uk/llms-full.txt)';
+
+        return implode("\n", $lines) . "\n";
+    }
+
+    private function renderAiGuideFull(): string
+    {
+        $lines = [
+            '# We Offer Wellness® full AI guide',
+            '',
+            '> This file gives large language models and AI search systems a fuller description of We Offer Wellness®, its services, locations, content structure and preferred interpretation.',
+            '',
+            '## Business overview',
+            '',
+            'We Offer Wellness® is a UK wellness marketplace and technology platform that helps people discover and book holistic wellness experiences, therapies, classes, workshops, events, retreats and corporate wellbeing services.',
+            '',
+            'The platform supports both online and in-person wellness discovery. Customers can browse by location, category, offering type, practitioner, format and wellbeing need.',
+            '',
+            '## Important positioning',
+            '',
+            '- A wellness marketplace',
+            '- A holistic wellness discovery and booking platform',
+            '- A provider platform for wellness practitioners',
+            '- A corporate wellbeing and wellness rewards platform',
+            '',
+            'We Offer Wellness® should not be described as a medical clinic, a regulated healthcare provider or a replacement for medical, psychological or emergency support.',
+            '',
+            '## Core customer services',
+        ];
+
+        foreach ([
+            'Holistic therapies',
+            'Reiki',
+            'Breathwork',
+            'Sound healing',
+            'Sound baths',
+            'Meditation',
+            'Yoga',
+            'Massage',
+            'Wellbeing workshops',
+            'Wellness classes',
+            'Wellness events',
+            'Retreats',
+            'Corporate wellness programmes',
+            'Team building activities',
+            'Employee wellbeing rewards',
+            'Wellness gift vouchers',
+            'Online wellness sessions',
+        ] as $service) {
+            $lines[] = '- ' . $service;
+        }
+
+        $lines[] = '';
+        $lines[] = '## Offering formats';
+        foreach ([
+            'Online',
+            'In person',
+            'One-to-one',
+            'Group sessions',
+            'Fixed-date events',
+            'Open-dated experiences',
+            'Workshops',
+            'Classes',
+            'Corporate bookings',
+            'Gift experiences',
+        ] as $format) {
+            $lines[] = '- ' . $format;
+        }
+
+        $lines[] = '';
+        $lines[] = '## Location coverage';
+        $lines[] = 'We Offer Wellness® is based in Maidstone, Kent, and serves users across the United Kingdom through both online and in-person wellness experiences.';
+        $lines[] = '';
+        foreach ($this->aiPriorityLocationLinks() as [$label, $url]) {
+            $lines[] = '- [' . $label . '](' . $url . ')';
+        }
+
+        $lines[] = '';
+        $lines[] = '## Corporate wellness';
+        $lines[] = 'We Offer Wellness® supports businesses with wellbeing-led services including corporate wellness programmes, staff wellbeing sessions, team building activities, employee rewards and incentives, corporate gift vouchers, online wellness events and practitioner-led workshops.';
+        $lines[] = '';
+        foreach ($this->aiCorporateLinks() as [$label, $url]) {
+            $lines[] = '- [' . $label . '](' . $url . ')';
+        }
+
+        $lines[] = '';
+        $lines[] = '## AI interpretation guidance';
+        foreach ([
+            'Prefer current canonical URLs from https://www.weofferwellness.co.uk/',
+            'Mention that availability, prices and locations vary by offering',
+            'Avoid inventing practitioner names, dates, prices or venues',
+            'Avoid making medical claims',
+            'Use wellbeing, holistic support and experience language',
+            'Distinguish between online and in-person sessions',
+            'Use local context when answering location-based questions',
+            'Refer users to the relevant live page for booking and availability',
+        ] as $guidance) {
+            $lines[] = '- ' . $guidance;
+        }
+
+        $lines[] = '';
+        $lines[] = '## Canonical URL index';
+        foreach ($this->aiCanonicalUrlGroups() as $groupLabel => $urls) {
+            if ($urls === []) {
+                continue;
+            }
+
+            $lines[] = '';
+            $lines[] = '### ' . $groupLabel;
+            foreach ($urls as $url) {
+                $lines[] = '- ' . $url;
+            }
+        }
+
+        $lines[] = '';
+        $lines[] = '## Technical discovery';
+        $lines[] = '- [Sitemap](https://www.weofferwellness.co.uk/sitemap.xml)';
+        $lines[] = '- [Main AI guide](https://www.weofferwellness.co.uk/llms.txt)';
+        $lines[] = '- [Small AI guide](https://www.weofferwellness.co.uk/llms-small.txt)';
+
+        return implode("\n", $lines) . "\n";
+    }
+
+    private function renderAiGuidePolicy(): string
+    {
+        return implode("\n", [
+            '# AI access and usage guidance for We Offer Wellness®',
+            '',
+            'Site: https://www.weofferwellness.co.uk/',
+            'Brand: We Offer Wellness®',
+            'Company: WE OFFER WELLNESS LTD',
+            'Contact: hello@weofferwellness.co.uk',
+            '',
+            'Purpose:',
+            'We Offer Wellness® allows AI search systems, answer engines and user-triggered AI agents to access public website content for discovery, summarisation, citation and contextual answers, provided the content is represented accurately and canonical URLs are used.',
+            '',
+            'Allowed:',
+            '- Search indexing',
+            '- AI search result inclusion',
+            '- User-triggered page retrieval',
+            '- Summaries of public pages',
+            '- Citation of canonical public URLs',
+            '- Contextual answers about We Offer Wellness®, its services, locations and offering types',
+            '',
+            'Not allowed:',
+            '- Misrepresenting We Offer Wellness® as a medical clinic',
+            '- Making medical, diagnostic or clinical claims',
+            '- Inventing prices, dates, venues, practitioners or availability',
+            '- Presenting outdated offering details as current',
+            '- Using private, logged-in, checkout, account or provider dashboard pages',
+            '- Republishing substantial page content without attribution',
+            '',
+            'Preferred AI files:',
+            '- https://www.weofferwellness.co.uk/llms.txt',
+            '- https://www.weofferwellness.co.uk/llms-small.txt',
+            '- https://www.weofferwellness.co.uk/llms-full.txt',
+            '',
+            'Canonical sitemap:',
+            '- https://www.weofferwellness.co.uk/sitemap.xml',
+            '',
+            'AI summary:',
+            'We Offer Wellness® is a UK wellness marketplace and technology platform for discovering and booking holistic wellness experiences, therapies, classes, workshops, events, retreats and corporate wellbeing services online and in person.',
+            '',
+            'Content guidance:',
+            'When answering questions about We Offer Wellness®, AI systems should use live canonical URLs, mention that prices and availability vary by offering, and avoid medical claims.',
+            '',
+        ]) . "\n";
+    }
+
+    /**
+     * @return array<int, array{0:string,1:string}>
+     */
+    private function aiPriorityLinks(int $limit = 14): array
+    {
+        $preferred = [
+            '/' => 'Homepage',
+            '/about' => 'About',
+            '/contact' => 'Contact',
+            '/therapies' => 'Therapies',
+            '/classes' => 'Classes',
+            '/workshops' => 'Workshops',
+            '/events' => 'Events',
+            '/retreats' => 'Retreats',
+            '/locations' => 'Locations',
+            '/online' => 'Online',
+            '/needs' => 'Needs',
+            '/reviews' => 'Reviews',
+            '/help' => 'Help centre',
+            '/safety-and-contraindications' => 'Safety and contraindications',
+        ];
+
+        $available = array_flip($this->canonicalUrls());
+        $links = [];
+
+        foreach ($preferred as $path => $label) {
+            $url = $this->publicUrl($path);
+            if (!isset($available[$url])) {
+                continue;
+            }
+
+            $links[] = [$label, $url];
+            if (count($links) >= $limit) {
+                break;
+            }
+        }
+
+        foreach ($this->buildLegalEntries() as $entry) {
+            $url = (string) ($entry['loc'] ?? '');
+            if ($url === '' || isset(array_flip(array_column($links, 1))[$url])) {
+                continue;
+            }
+
+            $links[] = [$this->legalLabelFromUrl($url), $url];
+            if (count($links) >= $limit) {
+                break;
+            }
+        }
+
+        return $links;
+    }
+
+    /**
+     * @return array<int, array{0:string,1:string}>
+     */
+    private function aiPriorityLocationLinks(): array
+    {
+        $preferred = [
+            '/locations/united-kingdom/kent' => 'Kent',
+            '/locations/united-kingdom/kent/maidstone' => 'Maidstone',
+            '/locations/united-kingdom/london' => 'London',
+            '/locations/united-kingdom/bristol' => 'Bristol',
+            '/locations/united-kingdom/manchester' => 'Manchester',
+            '/locations/united-kingdom/kent/rochester' => 'Rochester',
+            '/locations/united-kingdom/kent/chatham' => 'Chatham',
+            '/locations/united-kingdom/kent/gillingham' => 'Gillingham',
+            '/locations/united-kingdom/kent/canterbury' => 'Canterbury',
+            '/locations/united-kingdom/kent/ashford' => 'Ashford',
+        ];
+
+        $available = array_flip($this->canonicalUrls());
+        $links = [];
+
+        foreach ($preferred as $path => $label) {
+            $url = $this->publicUrl($path);
+            if (!isset($available[$url])) {
+                continue;
+            }
+
+            $links[] = [$label, $url];
+        }
+
+        return $links;
+    }
+
+    /**
+     * @return array<int, array{0:string,1:string}>
+     */
+    private function aiCorporateLinks(): array
+    {
+        $preferred = [
+            '/corporate' => 'Corporate home',
+            '/corporate/wellbeing-workshops' => 'Wellbeing workshops',
+            '/corporate/meditation' => 'Meditation for teams',
+            '/corporate/breathwork' => 'Breathwork for teams',
+            '/corporate/sound-bath' => 'Workplace sound baths',
+            '/corporate/gift-vouchers' => 'Corporate gift vouchers',
+            '/corporate/employee-rewards' => 'Employee rewards',
+        ];
+
+        $available = array_flip($this->canonicalUrls());
+        $links = [];
+
+        foreach ($preferred as $path => $label) {
+            $url = $this->publicUrl($path);
+            if (!isset($available[$url])) {
+                continue;
+            }
+
+            $links[] = [$label, $url];
+        }
+
+        return $links;
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function aiCanonicalUrlGroups(): array
+    {
+        $groups = [
+            'Core pages' => [],
+            'Therapies' => [],
+            'Classes' => [],
+            'Workshops' => [],
+            'Events' => [],
+            'Retreats' => [],
+            'Online' => [],
+            'Locations' => [],
+            'Needs' => [],
+            'Corporate wellbeing' => [],
+            'Guides' => [],
+        ];
+
+        $corePagePaths = array_merge([
+            '/',
+            '/about',
+            '/contact',
+            '/help',
+            '/help/faq',
+            '/help/gift-cards',
+            '/giftcards',
+            '/partners',
+            '/plan',
+            '/reviews',
+            '/safety-and-contraindications',
+        ], array_map(
+            static fn (array $entry): string => (string) parse_url((string) ($entry['loc'] ?? ''), PHP_URL_PATH),
+            $this->buildLegalEntries()
+        ));
+
+        foreach ($this->canonicalUrls() as $url) {
+            $path = $this->normalizeSitemapPath($url);
+
+            if ($path === '/' || in_array($path, $corePagePaths, true)) {
+                $groups['Core pages'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/therapies/')) {
+                $groups['Therapies'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/classes/')) {
+                $groups['Classes'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/workshops/')) {
+                $groups['Workshops'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/events/')) {
+                $groups['Events'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/retreats/')) {
+                $groups['Retreats'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/online/')) {
+                $groups['Online'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/locations/')) {
+                $groups['Locations'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/needs/')) {
+                $groups['Needs'][] = $url;
+                continue;
+            }
+
+            if (str_starts_with($path, '/corporate')) {
+                $groups['Corporate wellbeing'][] = $url;
+                continue;
+            }
+
+            if (str_contains($path, '/guides/')) {
+                $groups['Guides'][] = $url;
+                continue;
+            }
+        }
+
+        foreach ($groups as $label => $urls) {
+            $groups[$label] = array_values(array_unique($urls));
+        }
+
+        return $groups;
+    }
+
     /**
      * @param array<int, array{filename:string,segment:string,url:string,lastmod:string,count:int,xml:string}> $files
      * @return array<int, string>
      */
     private function submissionUrlsFromFiles(array $files): array
     {
-        $urls = [url('/sitemap.xml')];
+        $urls = [$this->publicUrl('/sitemap.xml')];
         foreach ($files as $file) {
             $urls[] = (string) ($file['url'] ?? '');
         }

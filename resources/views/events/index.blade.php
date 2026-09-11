@@ -11,12 +11,15 @@
 @include('partials.breadcrumbs', [
   'crumbs' => [
     ['label' => 'Home', 'url' => url('/')],
-    ['label' => 'Events'],
+    ['label' => $pageCrumb ?? 'Events'],
   ],
-  'schemaUrl' => url('/events'),
+  'schemaUrl' => $pageCanonicalPath ?? url('/events'),
 ])
 
 @php
+  $pageHeading = (string) ($pageHeading ?? 'Events');
+  $pageTitle = (string) ($pageTitle ?? $pageHeading);
+  $pageDescription = (string) ($pageDescription ?? 'Upcoming and past sessions, workshops, and community gatherings — online and near you.');
   $upcomingEvents = $upcomingEvents ?? [];
   $pastEvents = $pastEvents ?? [];
   $sortValue = (string) ($filters['sort'] ?? '');
@@ -257,9 +260,9 @@
   <div class="container-page">
     <div class="mb-4">
       <div class="kicker">Browse</div>
-      <h1>Events</h1>
+      <h1>{{ $pageHeading }}</h1>
       <p class="text-ink-600 mt-2" style="max-width:70ch;">
-        Upcoming and past sessions, workshops, and community gatherings — online and near you.
+        {{ $pageDescription }}
       </p>
     </div>
 

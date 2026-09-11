@@ -209,7 +209,7 @@
         }
       }
 
-      @media (max-width: 575px) {
+      @media (max-width: 991px) {
         .wow-breadcrumb-list,
         .wow-breadcrumb-meta {
           display: none;

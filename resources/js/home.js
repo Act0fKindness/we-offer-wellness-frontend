@@ -3,9 +3,9 @@ import { createApp } from 'vue';
 import ui from '@nuxt/ui/vue-plugin';
 import { initSubscriberForms } from './lib/subscriber-forms';
 import SearchRangeCalendar from './Components/SearchRangeCalendar.vue';
-import HomeSearchBarV4 from './Components/HomeSearchBarV4.vue';
 import SearchBarV4 from './Components/SearchBarV4.vue';
 import { fetchWhatCategories } from './services/whatCategories';
+import { fetchLocations } from './services/locations';
 
 function runIdle(fn) {
   try {
@@ -287,8 +287,8 @@ function initMegaMenu() {
 }
 
 function initMobileMenu() {
-  const toggle = document.querySelector('[data-wow-mobile-toggle]') || document.querySelector('header button[aria-label="Toggle menu"]');
-  if (!toggle) return;
+  const toggle = document.querySelector('[data-wow-mobile-toggle]') || document.querySelector('header button[aria-label="Menu"]');
+  if (!toggle || !toggle.classList.contains('hamburger')) return;
   setupHamburgerController(toggle);
 }
 
@@ -579,6 +579,7 @@ function initAccountDropdown() {
   let hideTimer = null;
 
   function openPanel() {
+    closeHeaderDropdownExcept('account');
     panel.hidden = false;
     panel.classList.add('show');
     trigger.setAttribute('aria-expanded', 'true');
@@ -621,6 +622,10 @@ function initAccountDropdown() {
       closePanel();
     }
   });
+
+  try {
+    window.__WOWCloseAccountDropdown = closePanel;
+  } catch (_err) {}
 }
 
 function mountSearchRangeCalendars() {
@@ -655,12 +660,25 @@ function mountSearchBarV4() {
         initialQuery = {};
       }
 
+      const readBool = (value, fallback = false) => {
+        if (value === undefined || value === null || value === '') return fallback;
+        return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
+      };
+
       const props = {
         idPrefix: el.dataset.idPrefix || 'search-v4',
         searchUrl: el.dataset.searchUrl || '/search',
         resultCount: Number(el.dataset.resultCount || 0),
         mobileTopOffset: el.dataset.mobileTopOffset || 12,
         initialQuery,
+        staticLayout: readBool(el.dataset.staticLayout, false),
+        showChrome: readBool(el.dataset.showChrome, true),
+        mobileChrome: readBool(el.dataset.mobileChrome, false),
+        navigateOnSubmit: readBool(el.dataset.navigateOnSubmit, false),
+        forceMobileLayout: readBool(el.dataset.forceMobileLayout, false),
+        defaultActiveSegment: el.dataset.defaultActiveSegment || '',
+        hideTopRow: readBool(el.dataset.hideTopRow, false),
+        hideMobileClose: readBool(el.dataset.hideMobileClose, false),
       };
 
       try {
@@ -676,36 +694,467 @@ function mountSearchBarV4() {
 }
 
 function mountHomeSearchBarV4() {
+  const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+  const normalizeText = (value) => String(value || '')
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+  const scoreItem = (query, item) => {
+    const q = normalizeText(query);
+    if (!q) return 999;
+    const title = normalizeText(item?.title || item?.label || item?.value || '');
+    const hay = normalizeText([item?.title, item?.label, item?.value, item?.slug, item?.search, item?.subtitle, item?.type].filter(Boolean).join(' '));
+    if (title === q) return 0;
+    if (title.startsWith(q)) return 1;
+    if (title.includes(q)) return 2;
+    if (hay.includes(q)) return 3;
+    const tokens = q.split(/\s+/).filter(Boolean);
+    if (tokens.length && tokens.every((token) => hay.includes(token))) return 4;
+    return 999;
+  };
+  const setVisible = (el, visible) => {
+    if (!el) return;
+    el.classList.toggle('hidden', !visible);
+    el.classList.toggle('flex', visible && el.id?.includes('modal'));
+  };
+  const buildSearchUrl = (baseUrl, params) => {
+    const url = new URL(baseUrl || '/search', window.location.origin);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value == null) return;
+      const str = String(value).trim();
+      if (!str) return;
+      url.searchParams.set(key, str);
+    });
+    return `${url.pathname}${url.search}${url.hash}`;
+  };
+  const renderWhatItems = (items, query) => {
+    const q = String(query || '').trim();
+    const filtered = q.length < 2
+      ? items.slice(0, 8)
+      : items
+        .map((item) => ({ item, score: scoreItem(q, item) }))
+        .filter((row) => row.score < 999)
+        .sort((a, b) => a.score - b.score || String(a.item.title || '').localeCompare(String(b.item.title || '')))
+        .slice(0, 10)
+        .map((row) => row.item);
+
+    return filtered.map((item) => `
+      <li>
+        <button type="button" data-select-what="${escapeHtml(item.value || item.title || '')}" class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-[#F9FAFB]">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F4F6FB] text-[#344054]">
+            <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+              <path d="M13 4l2.2 5.6L21 12l-5.8 2.4L13 20l-2.2-5.6L5 12l5.8-2.4L13 4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-semibold text-[#101828]">${escapeHtml(item.title || '')}</span>
+            <span class="block truncate text-xs text-[#667085]">${escapeHtml(item.subtitle || item.type || item.cat || 'Offerings')}</span>
+          </span>
+        </button>
+      </li>
+    `).join('');
+  };
+  const renderWhereItems = (items, query) => {
+    const q = String(query || '').trim();
+    const filtered = q.length < 2
+      ? items.slice(0, 8)
+      : items
+        .map((item) => ({ item, score: scoreItem(q, item) }))
+        .filter((row) => row.score < 999)
+        .sort((a, b) => a.score - b.score || String(a.item.title || '').localeCompare(String(b.item.title || '')))
+        .slice(0, 10)
+        .map((row) => row.item);
+
+    return filtered.map((item) => `
+      <li>
+        <button type="button" data-select-where="${escapeHtml(item.value || item.title || '')}" data-select-mode="${escapeHtml(item.online ? 'online' : 'in-person')}" class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-[#F9FAFB]">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F4F6FB] text-[#344054]">
+            ${item.online ? `
+              <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+                <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M4 12h16M12 4c2.5 2.4 4 5.2 4 8s-1.5 5.6-4 8M12 4c-2.5 2.4-4 5.2-4 8s1.5 5.6 4 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            ` : `
+              <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+                <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+            `}
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-semibold text-[#101828]">${escapeHtml(item.title || '')}</span>
+            <span class="block truncate text-xs text-[#667085]">${escapeHtml(item.subtitle || (item.online ? 'Virtual' : 'Popular place'))}</span>
+          </span>
+        </button>
+      </li>
+    `).join('');
+  };
+  const geocodeCurrentLocation = async (mapboxKey) => {
+    if (!navigator.geolocation) return '';
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 600000,
+      });
+    });
+    if (!position) return '';
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    if (!mapboxKey) return `${lat.toFixed(2)}, ${lng.toFixed(2)}`;
+    try {
+      const endpoint = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json`);
+      endpoint.searchParams.set('types', 'place,locality,region');
+      endpoint.searchParams.set('limit', '1');
+      endpoint.searchParams.set('access_token', mapboxKey);
+      const res = await fetch(endpoint.toString());
+      if (!res.ok) throw new Error(`reverse geocode ${res.status}`);
+      const data = await res.json();
+      const feature = Array.isArray(data?.features) ? data.features[0] : null;
+      return String(feature?.text || feature?.place_name || '').trim();
+    } catch (_error) {
+      return '';
+    }
+  };
+
   try {
     document.querySelectorAll('[data-wow-home-searchbar-v4]').forEach((el) => {
       if (!el || el.dataset.wowMounted === '1') return;
       el.dataset.wowMounted = '1';
 
-      let initialQuery = {};
-      try {
-        initialQuery = JSON.parse(el.dataset.initialQuery || '{}') || {};
-      } catch (_err) {
-        initialQuery = {};
+      const searchUrl = el.dataset.searchUrl || '/search';
+      const mapboxKey = el.dataset.mapboxKey || '';
+      const desktopForm = el.querySelector('#wow-home-search-desktop');
+      const mobileForm = el.querySelector('#wow-home-search-mobile');
+      const desktopWhatInput = el.querySelector('#desktop-what');
+      const desktopWhereInput = el.querySelector('#desktop-where');
+      const desktopModeInput = el.querySelector('#desktop-mode');
+      const mobileWhatInput = el.querySelector('#mobile-what-input');
+      const mobileWhereInput = el.querySelector('#mobile-where-input');
+      const mobileModeInput = el.querySelector('#mobile-mode');
+      const desktopWhatDropdown = el.querySelector('#desktop-what-dropdown');
+      const desktopWhereDropdown = el.querySelector('#desktop-where-dropdown');
+      const desktopWhatList = el.querySelector('#desktop-what-list');
+      const desktopWhereList = el.querySelector('#desktop-location-list');
+      const mobileWhatModal = el.querySelector('#mobile-what-modal');
+      const mobileWhereModal = el.querySelector('#mobile-where-modal');
+      const mobileWhatList = el.querySelector('#mobile-what-list');
+      const mobileWhereList = el.querySelector('#mobile-where-list');
+      const desktopWhatField = el.querySelector('#desktop-what-field');
+      const desktopWhereField = el.querySelector('#desktop-where-field');
+      const desktopClearWhat = el.querySelector('#desktop-clear-what');
+      const desktopClearWhere = el.querySelector('#desktop-clear-where');
+      const desktopUseLocation = el.querySelector('#desktop-use-location');
+      const desktopOnline = el.querySelector('#desktop-online');
+      const mobileOpenWhat = el.querySelector('#mobile-open-what');
+      const mobileOpenWhere = el.querySelector('#mobile-open-where');
+      const mobileUseLocation = el.querySelector('#mobile-use-location');
+      const mobileOnline = el.querySelector('#mobile-online');
+      const mobileWhatLabel = el.querySelector('#mobile-what-label');
+      const mobileWhereLabel = el.querySelector('#mobile-where-label');
+
+      if (!desktopForm || !mobileForm || !desktopWhatInput || !desktopWhereInput || !desktopWhatList || !desktopWhereList || !mobileWhatList || !mobileWhereList) {
+        el.dataset.wowMounted = '0';
+        return;
       }
 
-      const props = {
-        idPrefix: el.dataset.idPrefix || 'home-search-v4',
-        searchUrl: el.dataset.searchUrl || '/search',
-        resultCount: Number(el.dataset.resultCount || 0),
-        mobileTopOffset: el.dataset.mobileTopOffset || 12,
-        initialQuery,
+      const state = {
+        what: String(el.dataset.initialQuery || '').trim(),
+        where: String(el.dataset.initialWhere || '').trim(),
+        mode: String(el.dataset.initialMode || '').trim(),
+        whatItems: [],
+        whereItems: [],
       };
 
-      try {
-        createApp(HomeSearchBarV4, props).use(ui).mount(el);
-      } catch (err) {
-        el.dataset.wowMounted = '0';
-        console.warn('[WOW] home search bar v4 mount failed', err);
-      }
+      const closeDesktopDropdowns = () => {
+        setVisible(desktopWhatDropdown, false);
+        setVisible(desktopWhereDropdown, false);
+      };
+      const closeMobileModals = () => {
+        setVisible(mobileWhatModal, false);
+        setVisible(mobileWhereModal, false);
+      };
+      const updateDesktopClearButtons = () => {
+        if (desktopClearWhat) desktopClearWhat.classList.toggle('hidden', !state.what);
+        if (desktopClearWhere) desktopClearWhere.classList.toggle('hidden', !state.where && state.mode !== 'online');
+      };
+      const syncMobileLabels = () => {
+        if (mobileWhatLabel) mobileWhatLabel.textContent = state.what || 'Search offerings';
+        if (mobileWhereLabel) mobileWhereLabel.textContent = state.where || (state.mode === 'online' ? 'Online' : 'Online or location');
+      };
+      const syncInputs = () => {
+        desktopWhatInput.value = state.what;
+        desktopWhereInput.value = state.where;
+        if (desktopModeInput) desktopModeInput.value = state.mode;
+        mobileWhatInput.value = state.what;
+        mobileWhereInput.value = state.where;
+        if (mobileModeInput) mobileModeInput.value = state.mode;
+        updateDesktopClearButtons();
+        syncMobileLabels();
+      };
+      const setWhat = (value) => {
+        state.what = String(value || '').trim();
+        syncInputs();
+      };
+      const setWhere = (value, mode = '') => {
+        state.where = String(value || '').trim();
+        state.mode = String(mode || '').trim();
+        syncInputs();
+      };
+      const openDesktopWhat = () => {
+        setVisible(desktopWhatDropdown, true);
+        setVisible(desktopWhereDropdown, false);
+      };
+      const openDesktopWhere = () => {
+        setVisible(desktopWhereDropdown, true);
+        setVisible(desktopWhatDropdown, false);
+      };
+      const openMobileWhat = () => {
+        setVisible(mobileWhatModal, true);
+        setVisible(mobileWhereModal, false);
+      };
+      const openMobileWhere = () => {
+        setVisible(mobileWhereModal, true);
+        setVisible(mobileWhatModal, false);
+      };
+      const submitSearch = () => {
+        const url = buildSearchUrl(searchUrl, {
+          what: state.what,
+          where: state.where,
+          mode: state.mode,
+        });
+        window.location.assign(url);
+      };
+      const renderDesktopWhat = (query) => {
+        desktopWhatList.innerHTML = renderWhatItems(state.whatItems, query) || `
+          <li>
+            <div class="px-4 py-3 text-sm text-[#667085]">No matches found</div>
+          </li>
+        `;
+      };
+      const renderDesktopWhere = (query) => {
+        const q = String(query || '').trim();
+        const onlineChip = `
+          <li>
+            <button type="button" data-select-where="Online" data-select-mode="online" class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-[#F9FAFB]">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F4F6FB] text-[#344054]">
+                <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+                  <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M4 12h16M12 4c2.5 2.4 4 5.2 4 8s-1.5 5.6-4 8M12 4c-2.5 2.4-4 5.2-4 8s1.5 5.6 4 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-semibold text-[#101828]">Online</span>
+                <span class="block text-xs text-[#667085]">Virtual sessions and classes</span>
+              </span>
+            </button>
+          </li>
+        `;
+        const locationItems = renderWhereItems(state.whereItems, q);
+        const headingWrap = el.querySelector('#desktop-location-list-heading-wrap');
+        if (headingWrap) headingWrap.classList.toggle('hidden', !locationItems);
+        desktopWhereList.innerHTML = [
+          desktopUseLocation ? '' : onlineChip,
+          desktopOnline ? '' : '',
+          locationItems || '<li><div class="px-4 py-3 text-sm text-[#667085]">No locations found</div></li>',
+        ].join('');
+      };
+      const renderMobileWhat = (query) => {
+        mobileWhatList.innerHTML = renderWhatItems(state.whatItems, query) || '<li><div class="px-4 py-3 text-sm text-[#667085]">No matches found</div></li>';
+      };
+      const renderMobileWhere = (query) => {
+        const q = String(query || '').trim();
+        mobileWhereList.innerHTML = renderWhereItems(state.whereItems, q) || '<li><div class="px-4 py-3 text-sm text-[#667085]">No locations found</div></li>';
+      };
+
+      desktopForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        submitSearch();
+      });
+      mobileForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        submitSearch();
+      });
+
+      desktopWhatField?.addEventListener('click', () => {
+        desktopWhatInput.focus();
+        openDesktopWhat();
+      });
+      desktopWhereField?.addEventListener('click', () => {
+        desktopWhereInput.focus();
+        openDesktopWhere();
+      });
+      desktopWhatInput.addEventListener('focus', () => {
+        openDesktopWhat();
+        renderDesktopWhat(desktopWhatInput.value);
+      });
+      desktopWhatInput.addEventListener('input', () => {
+        setWhat(desktopWhatInput.value);
+        openDesktopWhat();
+        renderDesktopWhat(desktopWhatInput.value);
+      });
+      desktopWhereInput.addEventListener('focus', () => {
+        openDesktopWhere();
+        renderDesktopWhere(desktopWhereInput.value);
+      });
+      desktopWhereInput.addEventListener('input', () => {
+        setWhere(desktopWhereInput.value, state.mode === 'online' && desktopWhereInput.value !== 'Online' ? '' : state.mode);
+        openDesktopWhere();
+        renderDesktopWhere(desktopWhereInput.value);
+      });
+      desktopClearWhat?.addEventListener('click', () => {
+        setWhat('');
+        renderDesktopWhat('');
+        desktopWhatInput.focus();
+        openDesktopWhat();
+      });
+      desktopClearWhere?.addEventListener('click', () => {
+        setWhere('', '');
+        renderDesktopWhere('');
+        desktopWhereInput.focus();
+        openDesktopWhere();
+      });
+      desktopUseLocation?.addEventListener('click', async () => {
+        desktopUseLocation.disabled = true;
+        try {
+          const label = await geocodeCurrentLocation(mapboxKey);
+          setWhere(label || 'Current location', 'in-person');
+          desktopWhereInput.value = state.where;
+          renderDesktopWhere(state.where);
+          closeDesktopDropdowns();
+        } finally {
+          desktopUseLocation.disabled = false;
+        }
+      });
+      desktopOnline?.addEventListener('click', () => {
+        setWhere('Online', 'online');
+        desktopWhereInput.value = state.where;
+        renderDesktopWhere(state.where);
+        closeDesktopDropdowns();
+      });
+
+      mobileOpenWhat?.addEventListener('click', () => {
+        mobileWhatInput.value = state.what;
+        renderMobileWhat(mobileWhatInput.value);
+        openMobileWhat();
+      });
+      mobileOpenWhere?.addEventListener('click', () => {
+        mobileWhereInput.value = state.where;
+        renderMobileWhere(mobileWhereInput.value);
+        openMobileWhere();
+      });
+      mobileWhatInput.addEventListener('input', () => {
+        setWhat(mobileWhatInput.value);
+        renderMobileWhat(mobileWhatInput.value);
+      });
+      mobileWhereInput.addEventListener('input', () => {
+        setWhere(mobileWhereInput.value, state.mode === 'online' && mobileWhereInput.value !== 'Online' ? '' : state.mode);
+        renderMobileWhere(mobileWhereInput.value);
+      });
+      mobileUseLocation?.addEventListener('click', async () => {
+        mobileUseLocation.disabled = true;
+        try {
+          const label = await geocodeCurrentLocation(mapboxKey);
+          setWhere(label || 'Current location', 'in-person');
+          renderMobileWhere(state.where);
+          closeMobileModals();
+        } finally {
+          mobileUseLocation.disabled = false;
+        }
+      });
+      mobileOnline?.addEventListener('click', () => {
+        setWhere('Online', 'online');
+        renderMobileWhere(state.where);
+        closeMobileModals();
+      });
+
+      el.addEventListener('click', (event) => {
+        const whatButton = event.target.closest('[data-select-what]');
+        if (whatButton) {
+          const value = whatButton.getAttribute('data-select-what') || '';
+          setWhat(value);
+          renderDesktopWhat(value);
+          renderMobileWhat(value);
+          closeDesktopDropdowns();
+          closeMobileModals();
+          desktopWhatInput.blur();
+          mobileWhatInput.blur();
+          return;
+        }
+        const whereButton = event.target.closest('[data-select-where]');
+        if (whereButton) {
+          const value = whereButton.getAttribute('data-select-where') || '';
+          const mode = whereButton.getAttribute('data-select-mode') || '';
+          setWhere(value, mode);
+          renderDesktopWhere(value);
+          renderMobileWhere(value);
+          closeDesktopDropdowns();
+          closeMobileModals();
+          desktopWhereInput.blur();
+          mobileWhereInput.blur();
+          return;
+        }
+        if (event.target.closest('[data-close-mobile-modal]')) {
+          closeMobileModals();
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!el.contains(event.target)) {
+          closeDesktopDropdowns();
+          closeMobileModals();
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeDesktopDropdowns();
+          closeMobileModals();
+        }
+      });
+
+      Promise.all([
+        fetchWhatCategories().catch(() => []),
+        fetchLocations(12, '').catch(() => []),
+      ]).then(([whatItems, whereItems]) => {
+        state.whatItems = Array.isArray(whatItems) ? whatItems : [];
+        state.whereItems = Array.isArray(whereItems) ? whereItems : [];
+        syncInputs();
+        renderDesktopWhat(state.what);
+        renderDesktopWhere(state.where);
+        renderMobileWhat(state.what);
+        renderMobileWhere(state.where);
+      }).catch(() => {
+        state.whatItems = [];
+        state.whereItems = [];
+        syncInputs();
+        renderDesktopWhat(state.what);
+        renderDesktopWhere(state.where);
+        renderMobileWhat(state.what);
+        renderMobileWhere(state.where);
+      });
     });
   } catch (err) {
     console.warn('[WOW] home search bar v4 bootstrap skipped', err);
   }
+}
+
+function closeHeaderDropdownExcept(source) {
+  try {
+    if (source !== 'account' && typeof window.__WOWCloseAccountDropdown === 'function') {
+      window.__WOWCloseAccountDropdown();
+    }
+  } catch (_err) {}
+  try {
+    if (source !== 'cart' && typeof window.__WOWCloseCartDropdown === 'function') {
+      window.__WOWCloseCartDropdown();
+    }
+  } catch (_err) {}
 }
 
 onDocumentReady(() => {
@@ -815,6 +1264,7 @@ onDocumentReady(() => {
             product_id: it.product_id || null,
             variant_id: it.variant_id || null,
             variant_label: it.variant_label || '',
+            source_version: it.source_version || it.meta?.source_version || null,
             title: it.title || '',
             price: Number(it.price || it.unit || 0),
             qty: Number(it.qty || 1) || 1,
@@ -846,13 +1296,35 @@ onDocumentReady(() => {
       fetch('/api/cart/mini?t='+Date.now(), { headers:{ 'Accept':'application/json' }, credentials:'same-origin' })
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(data => {
-          var items = Array.isArray(data?.items) ? data.items : [];
+          var serverItems = Array.isArray(data?.items) ? data.items : [];
+          var localItems = readLocalCart();
+          var byId = new Map();
+          var storeProductIds = new Set(localItems.filter(function(item){ return String(item?.source_version || item?.meta?.source_version || '').toLowerCase() === 'store'; }).map(function(item){ return String(item.product_id || item.id || ''); }));
+          serverItems.forEach(function(item){
+            if(!item || item.id == null) return;
+            if(storeProductIds.has(String(item.product_id || item.id))) return;
+            byId.set(String(item.id), item);
+          });
+          localItems.forEach(function(item){
+            if(!item || item.id == null) return;
+            var key = String(item.id);
+            // Store products are browser-cart lines until checkout; never let
+            // an empty/legacy server response erase them.
+            if(String(item.source_version || item.meta?.source_version || '').toLowerCase() === 'store' || !byId.has(key)) byId.set(key, item);
+          });
+          var items = Array.from(byId.values());
           writeLocalCart(items);
           renderItems(items);
         })
         .catch(() => { renderItems(readLocalCart()); });
     }
-      function show(){ if(!isDesktop()) return; loadMini(); try{ var hint = panel.querySelector('#freeShipHint'); if(hint) hint.textContent = 'Instant delivery'; }catch(_){} panel.hidden = false; }
+      function show(){
+        if(!isDesktop()) return;
+        closeHeaderDropdownExcept('cart');
+        loadMini();
+        try{ var hint = panel.querySelector('#freeShipHint'); if(hint) hint.textContent = 'Instant delivery'; }catch(_){}
+        panel.hidden = false;
+      }
     function hide(){ panel.hidden = true; }
     // Defer showing/rotation to the upsell-aware handler below
     wrap.addEventListener('mouseenter', () => { if (hideTimer) { clearTimeout(hideTimer); hideTimer=null; } });
@@ -861,6 +1333,7 @@ onDocumentReady(() => {
     link.addEventListener('click', (e) => { if (isDesktop()) { e.preventDefault(); show(); } });
     // Expose helpers for external triggers (e.g., add-to-cart)
     try { window.__cartDropdownShow = show; } catch(_){ }
+    try { window.__WOWCloseCartDropdown = hide; } catch(_){ }
     try { window.__cartDropdownRender = function(items){ try{ renderItems(items); panel.hidden=false; }catch(_){ } } } catch(_){ }
     // Remove handler inside dropdown
     try{

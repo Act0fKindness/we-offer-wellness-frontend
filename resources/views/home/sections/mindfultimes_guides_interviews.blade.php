@@ -198,8 +198,9 @@
       font-weight:700;
     }
     #mindful-times .wow-news-pill--red{
-      background:#fff1f3;
-      color:#e60023;
+      background:#f6d5dc;
+      color:#8f1532;
+      border:1px solid rgba(143, 21, 50, 0.16);
     }
     #mindful-times .wow-lead-content h3{
       margin:0;
@@ -229,8 +230,8 @@
       font-size:13px;
     }
     #mindful-times .wow-read-link{
-      color:#4f9381;
-      font-weight:700;
+      color:#24594d;
+      font-weight:800;
       white-space:nowrap;
     }
     #mindful-times .wow-editor-list{
@@ -283,7 +284,7 @@
     #mindful-times .wow-editor-item span{
       display:block;
       margin-top:6px;
-      color:#e60023;
+      color:#8f1532;
       font-size:12px;
       font-weight:700;
     }

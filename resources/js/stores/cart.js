@@ -4,6 +4,7 @@ import { trackCommerce } from '@/lib/wow-analytics'
 const LS_KEY = 'wow_cart_v1'
 const LEGACY_LS_KEY = 'wow_cart'
 const COOKIE_KEY = 'wow_cart'
+const JOURNEY_KEY = 'wow_store_journey_key'
 
 function readCookie(name){
   try {
@@ -112,6 +113,7 @@ function compactCookieItem(item){
     product_id: item.product_id || meta.product_id || null,
     variant_id: item.variant_id || meta.variant_id || null,
     variant_label: item.variant_label || meta.variant_label || '',
+    source_version: item.source_version || meta.source_version || null,
     title: item.title || '',
     price: Number(item.price || 0) || 0,
     qty: Math.max(1, Number(item.qty || 1) || 1),
@@ -128,6 +130,19 @@ function load() {
 }
 
 const state = reactive(load())
+
+function identifyEmailJourney(){
+  if (typeof window === 'undefined') return
+  try {
+    const token = new URLSearchParams(window.location.search).get('wow_email_token')
+    if (!token) return
+    const key = journeyKey()
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || ''
+    fetch('/api/store/abandoned-cart/identify', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', ...(csrf ? {'X-CSRF-TOKEN': csrf} : {}) }, body: JSON.stringify({ token, visitor_key: key }), keepalive: true }).catch(() => {})
+  } catch {}
+}
+
+identifyEmailJourney()
 
 function currentSubtotal(items = state.items) {
   return items.reduce((sum, it) => sum + (Number(it.price) * (Number(it.qty) || 0)), 0)
@@ -154,6 +169,26 @@ function persist(){
   } catch {}
 }
 
+function journeyKey(){
+  try {
+    let key = localStorage.getItem(JOURNEY_KEY)
+    if (!key) { key = `${Date.now()}-${Math.random().toString(36).slice(2)}`; localStorage.setItem(JOURNEY_KEY, key) }
+    return key
+  } catch { return '' }
+}
+
+function syncAbandonedCart(){
+  if (typeof window === 'undefined' || !state.items.length) return
+  try {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || ''
+    fetch('/api/store/abandoned-cart', {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', ...(token ? {'X-CSRF-TOKEN': token} : {}) },
+      body: JSON.stringify({ visitor_key: journeyKey(), items: state.items, cart_total: currentSubtotal() }),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {}
+}
+
 watch(state, () => { persist() }, { deep: true })
 
 function normalizeItem(input) {
@@ -174,6 +209,7 @@ function normalizeItem(input) {
     product_id: input?.product_id || meta.product_id || null,
     variant_id: input?.variant_id || input?.variantId || meta.variant_id || null,
     variant_label: input?.variant_label || input?.variantLabel || meta.variant_label || '',
+    source_version: input?.source_version || input?.sourceVersion || meta.source_version || null,
     title: input?.title || '',
     price: Number(input?.price) || 0,
     image: input?.image || input?.image_url || null,
@@ -195,6 +231,7 @@ export function useCart() {
     const addedQty = Math.max(1, Number(item.qty) || 1)
     if (existing) existing.qty += item.qty
     else state.items.push(item)
+    syncAbandonedCart()
     try {
       trackCommerce('wow_v3_add_to_cart', {
         items: [{ ...item, qty: addedQty }],
@@ -230,6 +267,7 @@ export function useCart() {
     const nextQty = Math.max(1, Number(qty) || 1)
     if (nextQty === previousQty) return
     it.qty = nextQty
+    syncAbandonedCart()
     try {
       trackCommerce('wow_v3_update_cart_quantity', {
         items: [{ ...it, qty: nextQty }],

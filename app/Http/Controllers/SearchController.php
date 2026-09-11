@@ -122,18 +122,7 @@ class SearchController extends Controller
 
         $what = $request->string('what')->toString();
         if ($what) {
-            $pattern = "%{$what}%";
-            $query->where(function ($q) use ($pattern) {
-                $q->where('title', 'like', $pattern)
-                  ->orWhereHas('vendor', function ($vq) use ($pattern) {
-                      $vq->where('vendor_name', 'like', $pattern);
-                  })
-                  ->orWhere('summary', 'like', $pattern)
-                  ->orWhere('body_html', 'like', $pattern)
-                  ->orWhere('what_to_expect', 'like', $pattern)
-                  ->orWhere('included', 'like', $pattern)
-                  ->orWhere('tags_list', 'like', $pattern);
-            });
+            $this->applyWhatSearchConstraint($query, $what);
         }
 
         // Type filter
@@ -336,24 +325,7 @@ class SearchController extends Controller
             ->whereIn('status', ['live', 'approved']);
 
         if ($what !== '') {
-            $pattern = "%{$what}%";
-            $query->where(function ($q) use ($pattern) {
-                $q->where('title', 'like', $pattern)
-                  ->orWhereHas('vendor', function ($vq) use ($pattern) {
-                      $vq->where('vendor_name', 'like', $pattern);
-                  })
-                  ->orWhere('summary', 'like', $pattern)
-                  ->orWhereExists(function ($dq) use ($pattern) {
-                      $dq->selectRaw('1')
-                         ->from('offering_details')
-                         ->whereColumn('offering_details.offering_id', 'offerings.id')
-                         ->where(function ($inner) use ($pattern) {
-                             $inner->where('description', 'like', $pattern)
-                                   ->orWhere('what_to_expect', 'like', $pattern)
-                                   ->orWhere('whats_included', 'like', $pattern);
-                         });
-                  });
-            });
+            $this->applyWhatSearchConstraint($query, $what, true);
         }
 
         if ($type) {
@@ -409,6 +381,47 @@ class SearchController extends Controller
         }
 
         return $query->get();
+    }
+
+    private function applyWhatSearchConstraint($query, string $what, bool $includeOfferingDetails = false): void
+    {
+        $pattern = '%' . $what . '%';
+        $starterKeys = ['starter', 'standard', 'community', 'free-starter', 'starter-package', ''];
+        $starterSql = implode("', '", array_map(
+            static fn (string $value): string => str_replace("'", "''", $value),
+            $starterKeys
+        ));
+        $latestTierSql = "(SELECT LOWER(COALESCE(vt.tier, '')) FROM vendor_tiers vt WHERE vt.vendor_id = vendor_details.id ORDER BY COALESCE(vt.plan_started_at, vt.id) DESC, vt.id DESC LIMIT 1)";
+
+        $query->where(function ($q) use ($pattern, $starterSql, $latestTierSql, $includeOfferingDetails) {
+            $q->where('title', 'like', $pattern)
+                ->orWhere('summary', 'like', $pattern)
+                ->orWhereHas('vendor', function ($vendorQ) use ($pattern, $starterSql, $latestTierSql) {
+                    $vendorQ->where('vendor_name', 'like', $pattern)
+                        ->whereHas('user', function ($userQ) use ($starterSql) {
+                            $userQ->whereRaw("LOWER(COALESCE(account_type, '')) NOT IN ('{$starterSql}')");
+                        })
+                        ->whereRaw("LOWER(COALESCE($latestTierSql, '')) NOT IN ('{$starterSql}')");
+                });
+
+            if ($includeOfferingDetails) {
+                $q->orWhereExists(function ($dq) use ($pattern) {
+                    $dq->selectRaw('1')
+                        ->from('offering_details')
+                        ->whereColumn('offering_details.offering_id', 'offerings.id')
+                        ->where(function ($inner) use ($pattern) {
+                            $inner->where('description', 'like', $pattern)
+                                ->orWhere('what_to_expect', 'like', $pattern)
+                                ->orWhere('whats_included', 'like', $pattern);
+                        });
+                });
+            } else {
+                $q->orWhere('body_html', 'like', $pattern)
+                    ->orWhere('what_to_expect', 'like', $pattern)
+                    ->orWhere('included', 'like', $pattern)
+                    ->orWhere('tags_list', 'like', $pattern);
+            }
+        });
     }
 
     private function requestedAvailabilityRange(Request $request): ?array
@@ -1108,6 +1121,10 @@ class SearchController extends Controller
                     'lat' => (float) $lat,
                     'lng' => (float) $lng,
                     'label' => trim((string) ($location->city ?? '') . ', ' . (string) ($location->address ?? '')),
+                    'price_label' => $this->searchMapPriceLabel($item),
+                    'image' => (string) data_get($item, 'image', ''),
+                    'rating' => data_get($item, 'rating', data_get($item, 'vendor_rating', null)),
+                    'review_count' => (int) data_get($item, 'review_count', data_get($item, 'vendor_review_count', 0)),
                     'url' => $url,
                 ];
                 $added++;
@@ -1130,11 +1147,61 @@ class SearchController extends Controller
                 'lat' => (float) $lat,
                 'lng' => (float) $lng,
                 'label' => (string) data_get($item, 'category.name', 'Location'),
+                'price_label' => $this->searchMapPriceLabel($item),
+                'image' => (string) data_get($item, 'image', ''),
+                'rating' => data_get($item, 'rating', data_get($item, 'vendor_rating', null)),
+                'review_count' => (int) data_get($item, 'review_count', data_get($item, 'vendor_review_count', 0)),
                 'url' => $url,
             ];
         }
 
         return $mapData;
+    }
+
+    private function searchMapPriceLabel(Product|OfferingV3 $item): ?string
+    {
+        $minCandidates = [
+            data_get($item, 'price_min'),
+            data_get($item, 'variants_min_price'),
+            data_get($item, 'price'),
+            data_get($item, 'base_price'),
+        ];
+
+        $maxCandidates = [
+            data_get($item, 'price_max'),
+            data_get($item, 'variants_max_price'),
+        ];
+
+        $minPrice = null;
+        foreach ($minCandidates as $candidate) {
+            if (is_numeric($candidate)) {
+                $minPrice = (float) $candidate;
+                break;
+            }
+        }
+
+        if ($minPrice === null) {
+            return null;
+        }
+
+        if ($minPrice <= 0) {
+            return 'Free';
+        }
+
+        $maxPrice = null;
+        foreach ($maxCandidates as $candidate) {
+            if (is_numeric($candidate)) {
+                $maxPrice = (float) $candidate;
+                break;
+            }
+        }
+
+        $formatted = '£' . rtrim(rtrim(number_format($minPrice, 2, '.', ''), '0'), '.');
+        if ($maxPrice !== null && abs($maxPrice - $minPrice) > 0.01) {
+            return 'From ' . $formatted;
+        }
+
+        return $formatted;
     }
 
     private function isEventLikeProduct(Product $product): bool

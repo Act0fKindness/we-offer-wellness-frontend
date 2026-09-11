@@ -1,5 +1,28 @@
 @extends('layouts.app')
 
+@php
+    $seo = [
+        'title' => 'Holistic Therapy That Works | We Offer Wellness®',
+        'description' => 'Holistic therapy, classes, workshops and retreats from trusted practitioners across the UK, online and in person, with live availability and local options.',
+        'keywords' => [
+            'We Offer Wellness',
+            'WOW',
+            'holistic therapy',
+            'classes',
+            'workshops',
+            'events',
+            'retreats',
+            'reiki',
+            'sound healing',
+            'breathwork',
+            'massage',
+            'wellness marketplace',
+        ],
+        'twitter_title' => 'Holistic Therapy That Works | Events & Classes | We Offer Wellness®',
+        'twitter_description' => 'Holistic therapy, classes, workshops and retreats from trusted practitioners across the UK, online and in person, with live availability, local options and booking paths.',
+    ];
+@endphp
+
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -132,14 +155,14 @@
     }
 
     .wow-btn-primary {
-        border: 1px solid var(--wow-green);
-        background: var(--wow-green);
+        border: 1px solid #2f6f60;
+        background: #2f6f60;
         color: #fff;
     }
 
     .wow-btn-primary:hover {
-        background: var(--wow-green-dark);
-        border-color: var(--wow-green-dark);
+        background: #214f44;
+        border-color: #214f44;
         color: #fff;
     }
 
@@ -391,8 +414,8 @@
         justify-content: center;
         border-radius: 999px;
         background: #fff;
-        border: 1px solid rgba(79, 147, 129, 0.24);
-        color: var(--wow-green);
+        border: 1px solid rgba(47, 111, 96, 0.34);
+        color: #24594d;
         font-size: 14px;
         font-weight: 800;
     }
@@ -730,9 +753,10 @@
     .wow-card-link {
         display: inline-flex;
         margin-top: 14px;
-        color: var(--wow-green);
+        color: #24594d;
         font-size: 14px;
-        font-weight: 700;
+        font-weight: 800;
+        text-underline-offset: 0.18em;
     }
 
     .wow-gift-panel {
@@ -929,7 +953,7 @@
     }
 
     .wow-gift-card-preview__footer strong {
-        color: var(--wow-green);
+        color: #24594d;
     }
 
     @media (max-width: 980px) {
@@ -1045,14 +1069,47 @@
             text-align: left;
         }
     }
+
+    @media (max-width: 767.98px) {
+        .wow-section-wrap {
+            --wow-green: #2f6f60;
+            --wow-green-dark: #24594d;
+        }
+
+        .wow-gift-actions .btn-wow--cta,
+        .wow-chat-actions .wow-btn-primary,
+        .wow-approach-actions .wow-btn-primary {
+            background: #2f6f60;
+            border-color: #2f6f60;
+            color: #fff;
+        }
+
+        .wow-gift-actions .btn-wow--cta:hover,
+        .wow-chat-actions .wow-btn-primary:hover,
+        .wow-approach-actions .wow-btn-primary:hover {
+            background: #214f44;
+            border-color: #214f44;
+            color: #fff;
+        }
+
+        .wow-gift-amounts span.is-active {
+            background: var(--wow-green-dark);
+            border-color: var(--wow-green-dark);
+            color: #fff;
+        }
+
+        #mindful-times .wow-news-pill--red {
+            background: #f6d5dc;
+            color: #8f1532;
+            border: 1px solid rgba(143, 21, 50, 0.16);
+        }
+    }
 </style>
 @endpush
 
 @section('content')
 
 @include('home.sections.hero-slider')
-
-@include('home.sections.mindful_times_ribbon')
 
 @include('home.sections.popular_searches')
 

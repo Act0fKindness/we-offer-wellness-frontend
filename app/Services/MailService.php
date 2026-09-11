@@ -142,7 +142,9 @@ class MailService
 
         $plain = strip_tags($html);
         $fromEmail = $from ?? config('mail.from.address');
-        $fromName = $fromName ?? config('mail.from.name');
+        $isStore = str_starts_with((string) ($options['template_view'] ?? ''), 'emails.store.')
+            || str_starts_with((string) ($options['source_type'] ?? data_get($options, 'tracking_source.type', '')), 'store-');
+        $fromName = $isStore ? 'We Offer Wellness®' : 'WOW Studio by We Offer Wellness®';
 
         $payload = [
             'sender' => [

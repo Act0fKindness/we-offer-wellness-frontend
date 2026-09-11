@@ -60,6 +60,9 @@ function productVisible(p) {
   const approved = inferApproved(p)
   if (live === false) return false
   if (approved === false) return false
+  // Physical Store products can be listed before an image has been uploaded;
+  // their V4.1 card has an intentional fallback tile.
+  if (p?.kind === 'physical_product' || p?.source_type === 'physical_product') return true
   const imageCandidates = [
     p?.image,
     p?.image_url,
@@ -75,20 +78,39 @@ function productVisible(p) {
 export async function fetchProducts(params = {}, options = {}) {
   const opts = typeof options === 'object' && options !== null ? options : {}
   const qs = new URLSearchParams(params).toString();
-  const base = import.meta.env.VITE_PRODUCTS_URL || '/api/products';
-  const url = qs ? `${base}?${qs}` : base;
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to load products: ${res.status}`);
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.products || []);
-    const filtered = list.filter(productVisible);
-    return sortFavorability(filtered, params?.sort);
-  } catch (e) {
-    console.warn('[products] fallback to empty list', e);
-    if (opts.throwOnError) throw e;
-    return [];
+  const candidates = [
+    import.meta.env.VITE_OFFERINGS_URL || '/api/offerings',
+    import.meta.env.VITE_PRODUCTS_URL || '/api/products',
+  ]
+
+  let lastError = null
+
+  for (const base of candidates) {
+    const url = qs ? `${base}?${qs}` : base
+    try {
+      const res = await fetch(url, { cache: 'no-store', credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      if (!res.ok) throw new Error(`Failed to load products: ${res.status}`)
+      const data = await res.json()
+      const list = Array.isArray(data)
+        ? data
+        : (Array.isArray(data?.data)
+          ? data.data
+          : (Array.isArray(data?.items)
+            ? data.items
+            : (Array.isArray(data?.products) ? data.products : (Array.isArray(data?.offerings) ? data.offerings : []))))
+      const filtered = list.filter(productVisible)
+      return sortFavorability(filtered.map((item) => ({
+        ...item,
+        image: item?.image || item?.image_url || null,
+      })), params?.sort)
+    } catch (e) {
+      lastError = e
+    }
   }
+
+  console.warn('[products] fallback to empty list', lastError)
+  if (opts.throwOnError) throw lastError
+  return []
 }
 
 export function byTag(products, tag) {

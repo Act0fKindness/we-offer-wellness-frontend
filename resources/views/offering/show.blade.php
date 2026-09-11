@@ -11,6 +11,8 @@
   $priceMin = $p['price_min'] ?? ($p['price'] ?? null);
   if (is_numeric($priceMin) && $priceMin >= 1000) { $priceMin = $priceMin / 100; }
   $summary = trim((string)($p['summary'] ?? ''));
+  $seoTitle = trim((string)($p['seo_title'] ?? ''));
+  $seoDescriptionOverride = trim((string)($p['seo_description'] ?? ''));
   $body = trim((string)($p['body_html'] ?? ''));
   $what = trim((string)($p['what_to_expect'] ?? ''));
   $included = trim((string)($p['included'] ?? ''));
@@ -18,11 +20,15 @@
   $contra = trim((string)($p['contraindications'] ?? ''));
   $imageValue = (string) ($p['image'] ?? '');
   $images = $p['images'] ?? ($imageValue !== '' ? [ $imageValue ] : []);
-  $pageTitle = trim((string) ($title !== '' ? $title . ' | We Offer Wellness®' : 'We Offer Wellness®'));
+  $pageTitle = $seoTitle !== ''
+    ? $seoTitle
+    : trim((string) ($title !== '' ? $title . ' | We Offer Wellness®' : 'We Offer Wellness®'));
   $metaSource = trim((string) ($summary ?: $what ?: $included ?: $body ?: ''));
-  $metaDescription = $metaSource !== ''
-    ? \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($metaSource)) ?? $metaSource), 160, '…')
-    : ('Book ' . $title . ' with trusted practitioners at We Offer Wellness®.');
+  $metaDescription = $seoDescriptionOverride !== ''
+    ? $seoDescriptionOverride
+    : ($metaSource !== ''
+      ? \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($metaSource)) ?? $metaSource), 160, '…')
+      : ('Book ' . $title . ' with trusted practitioners at We Offer Wellness®.'));
   $ogImage = '';
   $firstImage = trim((string) ($images[0] ?? ''));
   if ($firstImage !== '') {

@@ -15,6 +15,8 @@ class V3Subscriber extends Model
         'first_name',
         'last_name',
         'business_name',
+        'notes',
+        'tags',
         'offers_online',
         'offers_in_person',
         'in_person_locations',
@@ -50,6 +52,7 @@ class V3Subscriber extends Model
     protected $casts = [
         'offers_online' => 'boolean',
         'offers_in_person' => 'boolean',
+        'tags' => 'array',
         'session_started_at' => 'datetime',
         'last_seen_at' => 'datetime',
         'confirmation_sent_at' => 'datetime',

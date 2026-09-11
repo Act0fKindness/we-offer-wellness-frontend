@@ -9,7 +9,7 @@ import ProductCarousel from '@/Components/ProductCarousel.vue'
 import ProductCard from '@/Components/ProductCard.vue'
 import { fetchProducts, byTag, underPrice, sortByRating, sortByNewest } from '@/services/products'
 import { fetchArticles } from '@/services/articles'
-import UltraSearchBar from '@/Components/UltraSearchBar.vue'
+import HomeSearchBarV4 from '@/Components/HomeSearchBarV4.vue'
 import LocationAutocomplete from '@/Components/LocationAutocomplete.vue'
 import ClassSchedule from '@/Components/ClassSchedule.vue'
 import PainpointTiles from '@/Components/PainpointTiles.vue'
@@ -19,6 +19,12 @@ import { fetchPainpoints } from '@/services/painpoints'
 import WellnessQuiz from '@/Components/WellnessQuiz.vue'
 import ResetStarterCTA from '@/Components/ResetStarterCTA.vue'
 import { fetchFeaturedReviews } from '@/services/reviews'
+import {
+  canonicalUrl,
+  pageKeywords,
+  shortOgDescription,
+  shortOgTitle,
+} from '@/lib/seo-meta'
 // SmartDuoToggle replaced with segmented tabs on homepage
 // import CategorySection from '@/Components/CategorySection.vue'
 // import { fetchCatalog } from '@/services/catalog'
@@ -52,8 +58,22 @@ function detectMarket(){
   return 'uk'
 }
 const market = computed(() => detectMarket())
-const homeTitle = computed(() => `Holistic Therapies That Work for You | ${appName}`)
-const metaDescription = 'Holistic therapy, done right: new classes daily, frequent workshops & events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®.'
+const homeTitle = computed(() => 'Holistic Therapy That Works | WOW®')
+const twitterTitle = computed(() => 'Holistic Therapy That Works | Events & Classes | We Offer Wellness®')
+const metaDescription = 'Holistic therapy, classes, workshops and retreats from trusted practitioners across the UK, online and in person.'
+const twitterDescription = 'Holistic therapy, classes, workshops and retreats from trusted practitioners across the UK, online and in person, with live availability, local locations and booking options.'
+const canonical = computed(() => canonicalUrl('/'))
+const ogTitle = computed(() => shortOgTitle(homeTitle.value))
+const ogDesc = computed(() => shortOgDescription(metaDescription))
+const keywords = computed(() => pageKeywords({
+  categories: shopCategories,
+  extra: [
+    'homepage',
+    'holistic therapy',
+    'trusted practitioners',
+    'wellness experiences',
+  ],
+}))
 
 const heroSecondaryCopy = ref('Therapies, classes, and workshops curated by practitioners you can trust so you can feel better, faster.')
 const heroPromo = ref(null)
@@ -79,7 +99,7 @@ const shopCategories = [
   {
     title: 'Sound Healing',
     href: '/sound-healing',
-    img: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1200&auto=format&fit=crop',
+    img: 'https://images.pexels.com/photos/6997998/pexels-photo-6997998.jpeg',
   },
   {
     title: 'Massage Therapy',
@@ -688,16 +708,21 @@ onBeforeUnmount(() => {
 <template>
   <Head :title="homeTitle">
     <meta name="description" :content="metaDescription" />
-    <link rel="canonical" :href="(typeof window!=='undefined'?window.location.origin + '/' : '/')" />
-    <meta property="og:title" :content="homeTitle" />
-    <meta property="og:description" :content="metaDescription" />
-    <meta property="og:url" :content="(typeof window!=='undefined'?window.location.href:'')" />
+    <meta name="keywords" :content="keywords.join(', ')" />
+    <link rel="canonical" :href="canonical" />
+    <meta property="og:title" :content="ogTitle" />
+    <meta property="og:description" :content="ogDesc" />
+    <meta property="og:url" :content="canonical" />
+    <meta name="twitter:site" content="@weofferwellness" />
+    <meta name="twitter:creator" content="@weofferwellness" />
+    <meta name="twitter:title" :content="twitterTitle" />
+    <meta name="twitter:description" :content="twitterDescription" />
   </Head>
   <SiteLayout>
     <!-- Sticky Search (desktop only) -->
     <div v-show="stickyVisible" class="hidden lg:block fixed left-0 right-0 z-30 transition-all" :style="{ top: navHeight + 'px' }">
       <div class="container-page py-2">
-        <UltraSearchBar id-prefix="home-sticky" :compact="true" />
+        <HomeSearchBarV4 id-prefix="home-sticky" />
       </div>
     </div>
 
@@ -781,7 +806,7 @@ onBeforeUnmount(() => {
     <!-- Inline Search under hero -->
     <section class="py-4">
       <div class="container">
-        <UltraSearchBar id-prefix="home-template" />
+        <HomeSearchBarV4 id-prefix="home-template" />
       </div>
     </section>
 

@@ -37,7 +37,7 @@
             <div class="wow-modality-grid">
                 <a href="{{ url('/sound-healing') }}" class="wow-modality-card" data-loader-init="1">
                     <div class="wow-modality-card__image">
-                        <img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80" alt="Sound healing">
+                        <img src="https://images.pexels.com/photos/6997998/pexels-photo-6997998.jpeg" alt="Sound healing">
                     </div>
                     <div class="wow-modality-card__body">
                         <h3>Sound Healing</h3>

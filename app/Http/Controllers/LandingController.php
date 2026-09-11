@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Article;
+use App\Models\LegalDocument;
 use App\Models\OfferingV3;
+use App\Models\Platform;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Review;
@@ -39,6 +42,13 @@ class LandingController extends Controller
         }
 
         return redirect()->to($target, $status);
+    }
+
+    private function temporaryCategoryRedirect(string $target)
+    {
+        return response()
+            ->view('redirecting', ['target' => $target], 302)
+            ->header('Location', $target);
     }
 
     public function hub(Request $request, string $type)
@@ -145,6 +155,12 @@ class LandingController extends Controller
     public function categoryHub(Request $request, string $category)
     {
         $category = trim($category);
+
+        $document = $this->findLegalDocument($category);
+        if ($document) {
+            return $this->renderLegalDocument($document);
+        }
+
         $cat = $this->findCategoryBySlug($category);
 
         if (! $cat) {
@@ -152,6 +168,53 @@ class LandingController extends Controller
         }
 
         return $this->redirectWithQuery($request, $this->seo()->modalityPageUrl('therapies', (string) $cat->name), 301);
+    }
+
+    private function findLegalDocument(string $slug): ?LegalDocument
+    {
+        $slug = strtolower(trim($slug));
+        $slug = match ($slug) {
+            'terms-of-service' => 'terms',
+            'privacy-policy' => 'privacy',
+            default => $slug,
+        };
+
+        $platform = $this->resolvePlatform();
+
+        $document = LegalDocument::query()
+            ->where('platform_id', $platform->id)
+            ->where('slug', $slug)
+            ->first();
+
+        if ($document) {
+            return $document;
+        }
+
+        return LegalDocument::query()
+            ->where('slug', $slug)
+            ->orderByRaw('CASE WHEN platform_id = ? THEN 0 ELSE 1 END', [$platform->id])
+            ->first();
+    }
+
+    private function renderLegalDocument(LegalDocument $document)
+    {
+        $platform = $document->platform ?: $this->resolvePlatform();
+
+        return view('legal.document', [
+            'document' => $document,
+            'platform' => $platform,
+            'slug' => $document->slug,
+        ]);
+    }
+
+    private function resolvePlatform(): Platform
+    {
+        $platformName = match (true) {
+            str_contains(request()->getHost(), 'studio.weofferwellness.co.uk') => 'WOW Studio',
+            default => 'WOW Store',
+        };
+
+        return Platform::query()->firstOrCreate(['name' => $platformName]);
     }
 
     public function formatModality(Request $request, string $format, string $modality)
@@ -896,6 +959,14 @@ class LandingController extends Controller
         }
 
         $sets = [];
+        if (count($tokens) > 1 && ctype_digit($tokens[0])) {
+            // A canonical title such as "1:1 ..." normalizes to a URL that
+            // begins "11-...", while the stored title still contains the
+            // punctuation. Search on the meaningful trailing words and use
+            // normalizeLookupKey() below to confirm the exact candidate.
+            $sets[] = array_slice($tokens, 1);
+        }
+
         $shortTokens = array_values(array_filter($tokens, static fn ($token): bool => strlen($token) <= 8));
         if ($shortTokens !== []) {
             $sets[] = $shortTokens;
@@ -1055,10 +1126,16 @@ class LandingController extends Controller
         $physical = array_values(array_filter($locations, fn ($l) => $l !== 'Online'));
         $meta = $p->meta_json ?? [];
         $seo = $this->seo();
+        $eventPayload = data_get($meta, 'event', []);
+        $primaryDate = $this->extractPrimaryDateValue($eventPayload)
+            ?? $this->extractPrimaryDateValue(data_get($meta, 'when.event', []))
+            ?? $this->extractPrimaryDateValue($meta);
 
         return [
             'id' => $p->id,
             'title' => $p->title,
+            'seo_title' => trim((string) data_get($meta, 'seo_title', '')),
+            'seo_description' => trim((string) data_get($meta, 'seo_description', '')),
             'source_version' => 'legacy',
             'type' => $p->product_type ?: 'experience',
             'format' => $seo->inferFormatKeyFromProduct($p),
@@ -1075,8 +1152,74 @@ class LandingController extends Controller
             'image' => method_exists($p, 'getFirstImageUrl') ? $p->getFirstImageUrl() : null,
             'tags' => $p->tags_list ? array_map('trim', explode(',', $p->tags_list)) : [],
             'booking_flow' => $this->legacyProductBookingFlow($p),
+            'date' => $primaryDate,
+            'start_date' => $primaryDate,
+            'event' => is_array($eventPayload) ? $eventPayload : [],
             'url' => $seo->canonicalProductUrl($p),
         ];
+    }
+
+    private function extractPrimaryDateValue(mixed $payload): ?string
+    {
+        $queue = [$payload];
+        $visited = 0;
+
+        while ($queue !== [] && $visited < 64) {
+            $visited++;
+            $current = array_shift($queue);
+
+            if ($current instanceof \Illuminate\Support\Collection) {
+                $current = $current->all();
+            } elseif ($current instanceof \Traversable) {
+                $current = iterator_to_array($current, false);
+            } elseif (is_object($current)) {
+                $current = (array) $current;
+            }
+
+            if (is_string($current) || is_numeric($current)) {
+                $candidate = trim((string) $current);
+                if ($candidate !== '') {
+                    try {
+                        return Carbon::parse($candidate)->toDateString();
+                    } catch (\Throwable $e) {
+                        // continue scanning nested payloads
+                    }
+                }
+                continue;
+            }
+
+            if (! is_array($current)) {
+                continue;
+            }
+
+            foreach (['start_date', 'date', 'starts_at', 'start', 'day'] as $key) {
+                $candidate = trim((string) data_get($current, $key, ''));
+                if ($candidate === '') {
+                    continue;
+                }
+
+                try {
+                    return Carbon::parse($candidate)->toDateString();
+                } catch (\Throwable $e) {
+                    // try nested structures below
+                }
+            }
+
+            foreach (['dates', 'upcoming_dates', 'schedule', 'days', 'event', 'when'] as $key) {
+                $nested = data_get($current, $key);
+                if ($nested !== null && $nested !== []) {
+                    $queue[] = $nested;
+                }
+            }
+
+            foreach ($current as $nested) {
+                if (is_array($nested) || is_object($nested) || $nested instanceof \Traversable) {
+                    $queue[] = $nested;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function typeSegment(Product $p): string
@@ -1139,8 +1282,20 @@ class LandingController extends Controller
 
         $product = $this->resolveProductForOffering($id, (string) $handle);
         if (! $product) {
+            $draftProduct = $this->resolveProductForOffering($id, (string) $handle, true);
+            if ($draftProduct && strtolower((string) ($draftProduct->status?->status ?? '')) === 'draft') {
+                return $this->temporaryCategoryRedirect($this->draftOfferingCategoryUrl($draftProduct));
+            }
+
             $offering = $this->resolveV3Offering($id, (string) $handle);
             if (! $offering) {
+                $draftOffering = $this->resolveV3Offering($id, (string) $handle, true);
+                if ($draftOffering
+                    && strtolower((string) $draftOffering->status) === 'draft'
+                    && $this->seo()->inferFormatKeyFromOffering($draftOffering) === 'events') {
+                    return $this->temporaryCategoryRedirect($this->draftOfferingCategoryUrl($draftOffering));
+                }
+
                 abort(404);
             }
 
@@ -1154,10 +1309,13 @@ class LandingController extends Controller
                 return $this->redirectWithQuery($request, (string) ($productData['url'] ?? url('/therapies')));
             }
 
+            $relatedArticles = $this->relatedOurVibeArticles($productData);
+
             return view('offering.show', [
                 'type' => $format,
                 'product' => $productData,
                 'seo' => $this->offeringSeoData($productData),
+                'relatedArticles' => $relatedArticles,
             ]);
         }
 
@@ -1219,6 +1377,112 @@ class LandingController extends Controller
         $locations = $metaVenueLocationLabels ?: $product->getLocations();
         $isOnline = in_array('Online', $locations, true);
         $phys = array_values(array_filter($locations, fn ($l) => $l !== 'Online'));
+        $legacyVenueLocations = [];
+        try {
+            if (Schema::hasTable('vendor_locations')) {
+                $legacyVenueLocations = DB::table('vendor_locations')
+                    ->where('product_id', $product->id)
+                    ->orderBy('id')
+                    ->get([
+                        'label',
+                        'line1',
+                        'line2',
+                        'city',
+                        'county',
+                        'postcode',
+                        'country',
+                        'formatted_address',
+                        'lat',
+                        'lng',
+                    ])
+                    ->map(static function ($location): array {
+                        return [
+                            'label' => trim((string) ($location->label ?? '')),
+                            'address_line_1' => trim((string) ($location->line1 ?? '')),
+                            'address_line_2' => trim((string) ($location->line2 ?? '')),
+                            'city' => trim((string) ($location->city ?? '')),
+                            'county' => trim((string) ($location->county ?? '')),
+                            'postcode' => trim((string) ($location->postcode ?? '')),
+                            'country' => trim((string) ($location->country ?? '')),
+                            'formatted_address' => trim((string) ($location->formatted_address ?? '')),
+                            'lat' => is_numeric($location->lat ?? null) ? (float) $location->lat : null,
+                            'lng' => is_numeric($location->lng ?? null) ? (float) $location->lng : null,
+                            'online' => false,
+                        ];
+                    })
+                    ->filter(static fn (array $location): bool => $location['label'] !== '')
+                    ->values()
+                    ->all();
+            }
+        } catch (\Throwable $e) {
+            $legacyVenueLocations = [];
+        }
+        $legacyVenueLocations = array_map(function (array $location): array {
+            if (! empty($location['online']) || (is_numeric($location['lat'] ?? null) && is_numeric($location['lng'] ?? null))) {
+                return $location;
+            }
+
+            $resolved = $this->geocodeVenueLocation([
+                'label' => $location['label'] ?? '',
+                'address_line_1' => $location['address_line_1'] ?? '',
+                'address_line_2' => $location['address_line_2'] ?? '',
+                'city' => $location['city'] ?? '',
+                'county' => $location['county'] ?? '',
+                'postcode' => $location['postcode'] ?? '',
+                'country' => $location['country'] ?? 'United Kingdom',
+            ]);
+            if (is_array($resolved)) {
+                $location['lat'] = $resolved['lat'] ?? $location['lat'] ?? null;
+                $location['lng'] = $resolved['lng'] ?? $location['lng'] ?? null;
+            }
+
+            return $location;
+        }, $legacyVenueLocations);
+        $knownLegacyVenueLabels = array_fill_keys(array_map(
+            static fn (array $location): string => strtolower(trim((string) ($location['label'] ?? ''))),
+            $legacyVenueLocations
+        ), true);
+        foreach ($phys as $locationLabel) {
+            $locationLabel = trim((string) $locationLabel);
+            $locationKey = strtolower($locationLabel);
+            if ($locationLabel === '' || isset($knownLegacyVenueLabels[$locationKey])) {
+                continue;
+            }
+
+            $resolved = $this->geocodeVenueLocation([
+                'label' => $locationLabel,
+                'country' => 'United Kingdom',
+            ]);
+            $legacyVenueLocations[] = [
+                'label' => $locationLabel,
+                'address_line_1' => '',
+                'address_line_2' => '',
+                'city' => '',
+                'county' => '',
+                'postcode' => '',
+                'country' => 'United Kingdom',
+                'formatted_address' => $locationLabel.', United Kingdom',
+                'lat' => is_array($resolved) ? ($resolved['lat'] ?? null) : null,
+                'lng' => is_array($resolved) ? ($resolved['lng'] ?? null) : null,
+                'online' => false,
+            ];
+            $knownLegacyVenueLabels[$locationKey] = true;
+        }
+        if ($isOnline) {
+            $legacyVenueLocations[] = [
+                'label' => 'Online session',
+                'address_line_1' => '',
+                'address_line_2' => '',
+                'city' => '',
+                'county' => '',
+                'postcode' => '',
+                'country' => '',
+                'formatted_address' => 'Live session link sent after booking',
+                'lat' => null,
+                'lng' => null,
+                'online' => true,
+            ];
+        }
         $images = $product->media->map(function ($m) {
             $url = (string) ($m->media_url ?? '');
             if ($url === '') {
@@ -1420,6 +1684,15 @@ class LandingController extends Controller
         } catch (\Throwable $e) { /* swallow fallback errors */
         }
 
+        $selectedLegacyVariant = $priceOptionId !== null
+            ? collect($variantsArr)->first(fn (array $variant): bool => (int) ($variant['id'] ?? 0) === (int) $priceOptionId)
+            : null;
+        $selectedLegacyVariantSelection = is_array($selectedLegacyVariant['options'] ?? null)
+            ? array_values(array_filter(array_map('trim', $selectedLegacyVariant['options'])))
+            : [];
+        $selectedLegacyVariantLabel = $variantLabel
+            ?: (is_array($selectedLegacyVariant) ? implode(' • ', $selectedLegacyVariantSelection) : null);
+
         $vendor = $product->vendor;
         $clientReviews = [];
         $vendorReviewCount = 0;
@@ -1485,6 +1758,9 @@ class LandingController extends Controller
             'images' => $images,
             'options' => $optionsArr,
             'variants' => $variantsArr,
+            'selectedVariantId' => $selectedLegacyVariant['id'] ?? ($variantsArr[0]['id'] ?? null),
+            'selectedVariantLabel' => $selectedLegacyVariantLabel,
+            'selectedVariantSelection' => $selectedLegacyVariantSelection,
             'mode' => $isOnline && count($phys) === 0 ? 'Online' : (count($phys) ? 'In-person' : null),
             'location' => $phys[0] ?? ($isOnline ? 'Online' : (trim((string) data_get($meta, 'location', data_get($meta, 'venue.name', ''))) ?: null)),
             'locations' => $locations,
@@ -1510,7 +1786,7 @@ class LandingController extends Controller
             'timezone' => $metaTimezone,
             'capacity' => data_get($metaEvent, 'capacity', data_get($meta, 'capacity')),
             'event' => $metaEvent,
-            'venue_locations' => $metaVenueLocations,
+            'venue_locations' => $metaVenueLocations ?: $legacyVenueLocations,
             'video_url' => $metaVideoUrl,
             'practitioner' => $this->practitionerPayload($vendor, $vendor?->user),
             'reviews' => $product->reviews->map(function ($r) {
@@ -1531,18 +1807,23 @@ class LandingController extends Controller
             'is_past_event' => EventListing::isPast($product),
         ];
 
+        $relatedArticles = $this->relatedOurVibeArticles($data);
+
         return view('offering.show', [
             'type' => $format,
             'product' => $data,
             'seo' => $this->offeringSeoData($data),
+            'relatedArticles' => $relatedArticles,
         ]);
     }
 
     private function offeringSeoData(array $product): array
     {
         $title = trim((string) ($product['title'] ?? 'Offering'));
+        $seoTitle = trim((string) ($product['seo_title'] ?? ''));
         $descriptionSource = trim((string) strip_tags((string) (
-            $product['summary']
+            $product['seo_description']
+            ?? $product['summary']
             ?? $product['what_to_expect']
             ?? $product['description']
             ?? $product['body_html']
@@ -1554,7 +1835,7 @@ class LandingController extends Controller
             : ('Book '.$title.' with trusted practitioners at We Offer Wellness®.');
 
         return [
-            'title' => $title.' | We Offer Wellness®',
+            'title' => $seoTitle !== '' ? $seoTitle : $title.' | We Offer Wellness®',
             'description' => $description,
             'canonical' => trim((string) ($product['url'] ?? url()->current())),
             'og_image' => $this->resolveOfferingSeoImage($product),
@@ -1632,8 +1913,28 @@ class LandingController extends Controller
         return url('/'.ltrim($value, '/'));
     }
 
-    private function resolveV3Offering(?int $id, string $handle): ?OfferingV3
+    private function resolveV3Offering(?int $id, string $handle, bool $includeUnpublished = false): ?OfferingV3
     {
+        $canonicalId = false;
+        if (preg_match('/^offering-(\d+)(?:-.+)?$/', trim($handle), $canonicalMatch)) {
+            $id = (int) $canonicalMatch[1];
+            $canonicalId = true;
+        } elseif (str_starts_with(trim($handle), 'product-')) {
+            return null;
+        }
+
+        // Canonical title slugs can legitimately begin with a number (for
+        // example "21-day-...", "7-breathwork-..." or "11-..." from
+        // "1:1"). Resolve that complete slug before treating its prefix as a
+        // legacy database ID. Genuine "{id}-{old-slug}" URLs still fall back
+        // to the ID lookup below when no matching title/slug exists.
+        if ($id && ! $canonicalId && ! ctype_digit(trim($handle))) {
+            $matchedByHandle = $this->resolveV3Offering(null, $handle, $includeUnpublished);
+            if ($matchedByHandle) {
+                return $matchedByHandle;
+            }
+        }
+
         $query = OfferingV3::query()->with(['category', 'type', 'vendor.user.tier', 'vendor.locations', 'media', 'coverMedia']);
 
         if ($id) {
@@ -1649,7 +1950,7 @@ class LandingController extends Controller
         }
 
         $offering = $query->first();
-        if ($offering && in_array((string) $offering->status, ['live', 'approved'], true)) {
+        if ($offering && ($includeUnpublished || in_array((string) $offering->status, ['live', 'approved'], true))) {
             return $offering;
         }
 
@@ -1666,7 +1967,7 @@ class LandingController extends Controller
                 ->where(function ($builder) use ($tokens): void {
                     foreach ($tokens as $token) {
                         $builder->where(function ($tokenBuilder) use ($token): void {
-                            $like = '%' . $token . '%';
+                            $like = '%'.$token.'%';
                             $tokenBuilder->whereRaw('LOWER(COALESCE(slug, "")) LIKE ?', [$like])
                                 ->orWhereRaw('LOWER(COALESCE(title, "")) LIKE ?', [$like]);
                         });
@@ -1685,7 +1986,7 @@ class LandingController extends Controller
                     || $this->slugify((string) ($candidate->title ?? '')) === $normalizedHandle;
             });
 
-            if ($preferred && in_array((string) $preferred->status, ['live', 'approved'], true)) {
+            if ($preferred && ($includeUnpublished || in_array((string) $preferred->status, ['live', 'approved'], true))) {
                 return $preferred;
             }
         }
@@ -1720,7 +2021,7 @@ class LandingController extends Controller
             return null;
         }
 
-        $cacheKey = 'wow.offering.geocode.' . md5(Str::lower($query));
+        $cacheKey = 'wow.offering.geocode.'.md5(Str::lower($query));
 
         return Cache::remember($cacheKey, now()->addDays(30), function () use ($query, $location) {
             $token = trim((string) config('services.mapbox.token'));
@@ -1742,7 +2043,7 @@ class LandingController extends Controller
                 }
 
                 $response = Http::timeout(8)->get(
-                    'https://api.mapbox.com/geocoding/v5/mapbox.places/' . rawurlencode($query) . '.json',
+                    'https://api.mapbox.com/geocoding/v5/mapbox.places/'.rawurlencode($query).'.json',
                     $params
                 );
 
@@ -1802,6 +2103,13 @@ class LandingController extends Controller
         $details = DB::table('offering_details')->where('offering_id', $offering->id)->first();
         $schedule = DB::table('offering_schedule')->where('offering_id', $offering->id)->first();
         $eventPayload = (array) ($offering->event ?? []);
+        $eventPayloadDate = $this->extractPrimaryDateValue($eventPayload);
+        if ($startDate === '' && $eventPayloadDate !== null) {
+            $startDate = $eventPayloadDate;
+            if ($endDate === '') {
+                $endDate = $eventPayloadDate;
+            }
+        }
         $descriptionHtml = \App\Support\ContentFormatter::format((string) ($details->description ?? ''));
         $whatToExpectHtml = \App\Support\ContentFormatter::format((string) ($details->what_to_expect ?? ''));
         $includedHtml = \App\Support\ContentFormatter::format((string) ($details->whats_included ?? ''));
@@ -2182,8 +2490,31 @@ class LandingController extends Controller
                 'end_time' => $endTime,
                 'practitioner' => $this->practitionerPayload($offering->vendor, $offering->vendor?->user),
                 'video_url' => trim((string) ($details->video_url ?? '')),
+                'event_links' => array_values(array_filter(array_map(static function ($link) {
+                    if (is_string($link)) {
+                        $link = json_decode($link, true);
+                    }
+                    if (is_object($link)) {
+                        $link = (array) $link;
+                    }
+                    if (! is_array($link)) {
+                        return null;
+                    }
+
+                    $url = trim((string) ($link['url'] ?? ''));
+                    if ($url === '') {
+                        return null;
+                    }
+
+                    return [
+                        'id' => trim((string) ($link['id'] ?? '')),
+                        'label' => trim((string) ($link['label'] ?? '')),
+                        'url' => $url,
+                    ];
+                }, is_string($details->event_links ?? null) ? (json_decode((string) $details->event_links, true) ?: []) : (is_array($details->event_links ?? null) ? $details->event_links : [])))),
                 'capacity' => is_numeric(data_get($eventPayload, 'capacity')) ? (int) data_get($eventPayload, 'capacity') : null,
                 'event' => $eventPayload,
+                'when' => ['event' => $eventPayload],
                 'venue_locations' => $venueLocations,
                 'reviews' => collect(),
                 'client_reviews' => $this->vendorClientReviews($offering->vendor),
@@ -2397,6 +2728,8 @@ class LandingController extends Controller
         return [
             'id' => $offering->id,
             'title' => $offering->title,
+            'seo_title' => trim((string) data_get($meta, 'seo_title', '')),
+            'seo_description' => trim((string) data_get($meta, 'seo_description', '')),
             'source_version' => 'v3',
             'booking_flow' => $this->offeringBookingFlow($offering),
             'type' => $offering->type?->name ?: 'experience',
@@ -2535,12 +2868,59 @@ class LandingController extends Controller
         abort(404);
     }
 
-    private function resolveProductForOffering(?int $id, string $handle): ?Product
+    private function draftOfferingCategoryUrl(mixed $offering): string
     {
+        if ($offering instanceof OfferingV3) {
+            $format = $this->seo()->inferFormatKeyFromOffering($offering);
+            $modality = $this->seo()->inferModalitySlugFromOffering($offering);
+        } else {
+            $format = $this->seo()->inferFormatKeyFromProduct($offering);
+            $modality = $this->seo()->inferModalitySlugFromProduct($offering);
+        }
+
+        if ($modality === '' || $modality === $format) {
+            return $this->seo()->formatPageUrl($format);
+        }
+
+        return $this->seo()->modalityPageUrl($format, $modality);
+    }
+
+    private function resolveProductForOffering(?int $id, string $handle, bool $includeUnpublished = false): ?Product
+    {
+        $canonicalId = false;
+        if (preg_match('/^product-(\d+)(?:-.+)?$/', trim($handle), $canonicalMatch)) {
+            $id = (int) $canonicalMatch[1];
+            $canonicalId = true;
+        } elseif (str_starts_with(trim($handle), 'offering-')) {
+            return null;
+        }
+
+        // A leading number is often part of the canonical title rather than a
+        // record ID. Prefer the complete title/handle match, then retain the
+        // historical ID-based fallback for old "{id}-{slug}" links.
+        if ($id && ! $canonicalId && ! ctype_digit(trim($handle))) {
+            $matchedByHandle = $this->resolveProductForOffering(null, $handle, $includeUnpublished);
+            if ($matchedByHandle) {
+                return $matchedByHandle;
+            }
+        }
+
         $query = Product::query()
-            ->with(['media', 'options.values', 'variants', 'reviews.user', 'category', 'vendor.user.tier'])
+            ->with(['media', 'options.values', 'variants', 'reviews.user', 'category', 'status', 'vendor.user.tier'])
             ->withCount('reviews')
             ->withAvg('reviews', 'rating');
+
+        if (! $includeUnpublished) {
+            // Direct offering URLs must follow the same public visibility
+            // contract as listing/search queries. Without this constraint, a
+            // draft product could still render when its numeric ID or legacy
+            // handle was requested.
+            $query->where(function ($visible) {
+                $visible->whereHas('status', function ($status) {
+                    $status->whereIn('status', ['live', 'approved']);
+                })->orWhereNull('product_status_id');
+            });
+        }
 
         if ($id) {
             return $query->where('id', $id)->first();
@@ -2570,7 +2950,7 @@ class LandingController extends Controller
                 ->where(function ($builder) use ($tokens): void {
                     foreach ($tokens as $token) {
                         $builder->where(function ($tokenBuilder) use ($token): void {
-                            $like = '%' . $token . '%';
+                            $like = '%'.$token.'%';
                             $tokenBuilder->whereRaw('LOWER(COALESCE(title, "")) LIKE ?', [$like])
                                 ->orWhereRaw('LOWER(COALESCE(handle, "")) LIKE ?', [$like]);
                         });
@@ -2700,6 +3080,105 @@ class LandingController extends Controller
         return $parts ? implode(' • ', $parts) : null;
     }
 
+    /**
+     * @param  array<string, mixed>  $event
+     * @return array<int, array<string, mixed>>
+     */
+    private function relatedOurVibeArticles(array $event): array
+    {
+        $haystack = strtolower(implode(' ', array_filter([
+            (string) ($event['title'] ?? ''),
+            (string) ($event['slug'] ?? ''),
+            (string) ($event['handle'] ?? ''),
+            (string) ($event['summary'] ?? ''),
+            (string) ($event['description'] ?? ''),
+            (string) ($event['body_html'] ?? ''),
+            (string) ($event['content'] ?? ''),
+        ])));
+
+        $normalized = Str::of($haystack)
+            ->replace([' ', '-', '_'], '')
+            ->toString();
+
+        if (! Str::contains($normalized, 'ourvibe')) {
+            return [];
+        }
+
+        $articles = Article::query()
+            ->with(['featuredMedia', 'backendFeaturedMedia', 'category'])
+            ->where(function ($query): void {
+                $query->whereRaw(
+                    "LOWER(REPLACE(REPLACE(CONCAT(COALESCE(title, ''), ' ', COALESCE(content, '')), ' ', ''), '-', '')) LIKE ?",
+                    ['%ourvibe%']
+                );
+            })
+            ->whereRaw("LOWER(COALESCE(status, '')) IN ('live', 'published', 'active')")
+            ->latest('created_at')
+            ->latest('id')
+            ->limit(10)
+            ->get();
+
+        if ($articles->isEmpty()) {
+            return [];
+        }
+
+        $timesBase = rtrim((string) env('TIMES_BASE_URL', 'https://times.weofferwellness.co.uk'), '/');
+        $backendBase = rtrim((string) env('BACKEND_ASSET_URL', env('BACKEND_URL', '')), '/');
+
+        return $articles->map(function (Article $article) use ($timesBase, $backendBase): array {
+            $image = $this->resolveArticleImage($article, $backendBase);
+            $href = $this->articleHref($article, $timesBase);
+            $excerpt = trim((string) Str::of((string) $article->content)->stripTags()->squish()->limit(180));
+
+            return [
+                'id' => $article->id,
+                'title' => (string) $article->title,
+                'excerpt' => $excerpt,
+                'href' => $href,
+                'image' => $image,
+                'category' => optional($article->category)->name ?? 'OUR VIBE',
+                'published_at' => $article->created_at?->format('d M Y'),
+            ];
+        })->all();
+    }
+
+    private function resolveArticleImage(Article $article, string $backendBase): ?string
+    {
+        $media = $article->backendFeaturedMedia ?: $article->featuredMedia;
+        if (! $media) {
+            $media = $article->backendMedia()->first() ?: $article->media()->first();
+        }
+
+        if (! $media) {
+            return null;
+        }
+
+        $path = $media->url ?? $media->path ?? $media->media_url ?? null;
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $clean = ltrim($path, '/');
+
+        return $backendBase !== ''
+            ? $backendBase.'/storage/'.$clean
+            : asset('storage/'.$clean);
+    }
+
+    private function articleHref(Article $article, string $timesBase): string
+    {
+        $category = optional($article->category)->name ?: 'journal';
+        $year = optional($article->created_at)->format('Y') ?: date('Y');
+        $month = optional($article->created_at)->format('m') ?: date('m');
+        $slug = Str::slug((string) ($article->title ?: 'article'));
+
+        return $timesBase.'/'.Str::slug($category).'/'.$year.'/'.$month.'/'.$slug.'-'.$article->id;
+    }
+
     private function offeringBookingFlow(OfferingV3 $offering): string
     {
         try {
@@ -2736,10 +3215,10 @@ class LandingController extends Controller
             }
 
             if (str_starts_with($digits, '0') && strlen($digits) === 11) {
-                $digits = '44' . substr($digits, 1);
+                $digits = '44'.substr($digits, 1);
             }
 
-            return '+' . ltrim($digits, '+');
+            return '+'.ltrim($digits, '+');
         };
         $normalizeCountryCode = static function (?string $value): ?string {
             $country = strtolower(trim((string) $value));
@@ -2829,15 +3308,36 @@ class LandingController extends Controller
             }
         }
 
+        $credentials = $vendor?->credentials ?? $vendor?->qualifications ?? '';
+        if (is_string($credentials)) {
+            $decodedCredentials = json_decode($credentials, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedCredentials)) {
+                $credentials = $decodedCredentials;
+            }
+        }
+        if (! is_array($credentials)) {
+            $credentials = [$credentials];
+        }
+        $credentials = array_values(array_unique(array_filter(array_map(
+            static function ($credential): string {
+                if (is_array($credential)) {
+                    return trim((string) ($credential['title'] ?? $credential['name'] ?? $credential['label'] ?? ''));
+                }
+
+                return trim((string) $credential);
+            },
+            $credentials
+        ))));
+
         return [
             'name' => $fullName !== '' ? $fullName : ($vendor?->vendor_name ?? ''),
             'first_name' => $firstName !== '' ? $firstName : $fullName,
             'bio' => $vendor?->bio ?? $vendor?->about ?? '',
-            'credentials' => $vendor?->credentials ?? $vendor?->qualifications ?? '',
+            'credentials' => $credentials,
             'photo' => $profilePicture ?? ($vendor?->photo_url ?? $vendor?->headshot_url ?? $vendor?->avatar_url ?? null),
             'profile_url' => $user?->practitioner_profile_url ?? null,
             'review_url' => filled($user?->practitioner_profile_url ?? null)
-                ? rtrim((string) ($user?->practitioner_profile_url ?? ''), '/') . '/reviews'
+                ? rtrim((string) ($user?->practitioner_profile_url ?? ''), '/').'/reviews'
                 : null,
             'location' => $vendor?->location ?? '',
             'telephone' => $normalizeTelephone($user?->phone ?? null),

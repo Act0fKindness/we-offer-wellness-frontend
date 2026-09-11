@@ -56,8 +56,8 @@
     text-align: left;
   }
 
-  .whero.whero--s1 .s1-search .wow-search-filter,
-  .whero.whero--s1 .s1-search .wow-panel {
+  .whero.whero--s1 .s1-search .wow-ultra,
+  .whero.whero--s1 .s1-search .pane {
     z-index: 3000;
   }
 

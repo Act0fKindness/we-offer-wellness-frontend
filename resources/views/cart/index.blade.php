@@ -341,7 +341,7 @@
           reservationId: meta.reservationId ?? meta.reservation_id ?? null,
           holdExpiresAt: meta.holdExpiresAt ?? meta.hold_expires_at ?? null,
           location: meta.location || null,
-          source_version: meta.source_version || null,
+          source_version: it.source_version || meta.source_version || null,
           options: Array.isArray(meta.variant_options) ? meta.variant_options : []
         };
       });

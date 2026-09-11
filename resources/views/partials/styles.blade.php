@@ -22989,7 +22989,7 @@
     .wow-ultra .item:hover, .wow-ultra .item[aria-selected="true"]{ background:#f2f5ff }
     .wow-ultra .item .title{ font-weight:600; color:#0f172a }
     .wow-ultra .item .type{ font-size:.75rem; padding:.1rem .5rem; border-radius:999px; background:#eef2ff; color:#2536eb; margin-left:.5rem }
-    .wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; width:min(680px, 96vw); max-width:min(980px, 96vw); border-radius:18px }
+.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; width:min(700px, 96vw); max-width:min(980px, 96vw); border-radius:18px }
     .wow-ultra [id$='who-pane']{ left:auto; right:0; max-width:min(560px, 96vw); border-radius:18px }
     @media (max-width: 768px){ .wow-ultra [id$='who-pane']{ left:0; right:0; max-width:100%; } }
     /* Utility bar */
@@ -25371,8 +25371,8 @@
         --btn-ring: #d3d8e6;
 
         /* CTA */
-        --cta-bg: #549483;
-        --cta-hover: #000000;
+        --cta-bg: #2f6f60;
+        --cta-hover: #214f44;
         --cta-ring: #cfe6df;
 
         /* Secondary / Neutral */

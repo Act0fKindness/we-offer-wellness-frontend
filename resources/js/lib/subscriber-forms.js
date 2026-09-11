@@ -82,6 +82,42 @@ function basePayload(source) {
   };
 }
 
+function collectFormPayload(form) {
+  const payload = {};
+  const formData = new FormData(form);
+
+  for (const [rawKey, rawValue] of formData.entries()) {
+    if (!rawKey) continue;
+    if (rawValue instanceof File) continue;
+
+    const key = rawKey.endsWith('[]') ? rawKey.slice(0, -2) : rawKey;
+    const value = typeof rawValue === 'string' ? rawValue.trim() : rawValue;
+    if (value === '') continue;
+
+    if (Object.prototype.hasOwnProperty.call(payload, key)) {
+      payload[key] = Array.isArray(payload[key]) ? payload[key].concat(value) : [payload[key], value];
+    } else if (rawKey.endsWith('[]')) {
+      payload[key] = [value];
+    } else {
+      payload[key] = value;
+    }
+  }
+
+  const tagAttr = form.getAttribute('data-subscriber-tags') || '';
+  const tagList = tagAttr
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+  if (tagList.length) {
+    payload.tags = Array.isArray(payload.tags)
+      ? Array.from(new Set(payload.tags.concat(tagList)))
+      : tagList;
+  }
+
+  return payload;
+}
+
 async function submitSubscriber(additionalPayload = {}) {
   const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
   const payload = Object.assign({}, additionalPayload);
@@ -245,7 +281,7 @@ async function handleSubscriberSubmit(form) {
   setLoading(form, true);
 
   try {
-    const payload = Object.assign(basePayload(source), { email });
+    const payload = Object.assign(basePayload(source), collectFormPayload(form), { email });
     const result = await submitSubscriber(payload);
     form.reset?.();
     const successMessage = result?.message || DEFAULT_SUCCESS_MESSAGE;

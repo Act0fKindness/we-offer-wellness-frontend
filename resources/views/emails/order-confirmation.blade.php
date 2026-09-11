@@ -2,9 +2,23 @@
 
 @section('title','Order #'.$order->id.' confirmed')
 @section('content')
-  @php($money = fn ($value) => '£'.number_format(max(0, (int) $value) / 100, 2))
+  @php
+    $money = fn ($value) => '£'.number_format(max(0, (int) $value) / 100, 2);
+    $recipientName = trim((string) ($customerName ?? data_get($order, 'customerProfile.first_name', data_get($order, 'customer.first_name', ''))));
+    if (filter_var($recipientName, FILTER_VALIDATE_EMAIL)) {
+      $profileName = trim(implode(' ', array_filter([
+        data_get($order, 'customerProfile.first_name', data_get($order, 'customer.first_name')),
+        data_get($order, 'customerProfile.last_name', data_get($order, 'customer.last_name')),
+      ])));
+      $recipientName = $profileName !== '' ? $profileName : 'there';
+    }
+  @endphp
   <span class="eyebrow">Order confirmed</span>
-  <h1>Thanks for your booking</h1>
+  @if($recipientName !== '')
+    <h1>Thanks, {{ $recipientName }}</h1>
+  @else
+    <h1>Thanks for your booking</h1>
+  @endif
   <p>We received your payment and reserved every item below. You’ll find the full receipt anytime inside your account.</p>
   <div class="info-card">
     <p style="margin:0;">Order ID: #{{ $order->id }}</p>

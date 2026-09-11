@@ -57,6 +57,7 @@ import { trackCommerce } from './wow-analytics'
       product_id: newItem.productId || newItem.product_id || null,
       variant_id: newItem.variantId || newItem.variant_id || null,
       variant_label: newItem.variantLabel || newItem.variant_label || '',
+      source_version: newItem.sourceVersion || newItem.source_version || null,
     };
     const qty = Number(newItem.qty||1)||1;
     if(idx>=0){
@@ -99,12 +100,18 @@ import { trackCommerce } from './wow-analytics'
   };
 
   function serverAdd(payload){
+    // Store V3 products are owned by the Studio backend and are carried by
+    // the browser cart until checkout; the legacy frontend cart endpoint
+    // cannot resolve their IDs as legacy products.
+    if (String(payload.sourceVersion || payload.source_version || '').toLowerCase() === 'store') {
+      return Promise.resolve({ ok: true, local_only: true });
+    }
     const qty = Number(payload.qty || 1) || 1;
     return fetch('/api/cart/add', {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN': csrf() },
       credentials:'same-origin',
-      body: JSON.stringify({ id: payload.productId || payload.id, variant_id: payload.variantId || null, variant_label: payload.variantLabel || null, qty })
+      body: JSON.stringify({ id: payload.productId || payload.id, variant_id: payload.variantId || null, variant_label: payload.variantLabel || null, source_version: payload.sourceVersion || payload.source_version || null, qty })
     }).then(r => r.json()).catch(()=>{ throw new Error('server failed'); });
   }
 
@@ -114,8 +121,10 @@ import { trackCommerce } from './wow-analytics'
     // Always update local storage for resilience
     upsertItem({ ...payload, qty });
     // Try server add; on success refresh count; on failure, use LS count
-    const request = serverAdd({ productId: payload.productId || payload.id, variantId: payload.variantId || null, variantLabel: payload.variantLabel || null, qty }).then(()=>{
-      fetchCountAndUpdateBadge();
+    const isStoreProduct = String(payload.sourceVersion || payload.source_version || '').toLowerCase() === 'store';
+    const request = serverAdd({ productId: payload.productId || payload.id, variantId: payload.variantId || null, variantLabel: payload.variantLabel || null, sourceVersion: payload.sourceVersion || payload.source_version || null, qty }).then(()=>{
+      if (isStoreProduct) updateBadgeUI(countItems());
+      else fetchCountAndUpdateBadge();
       return true;
     }).catch(()=>{
       updateBadgeUI(countItems());
@@ -180,7 +189,7 @@ import { trackCommerce } from './wow-analytics'
         source: 'mini',
       })
     } catch(_){}
-    return addToCart({ id: resolvedId, cartKey: resolvedId, productId: productId || id, variantId: variantId || null, variantLabel, title, price, image, url, qty }, { openCart });
+    return addToCart({ id: resolvedId, cartKey: resolvedId, productId: productId || id, variantId: variantId || null, variantLabel, sourceVersion: btn.getAttribute('data-source-version') || null, title, price, image, url, qty }, { openCart });
   }
   // Delegate add-to-cart clicks (capture to beat anchor navigation)
   document.addEventListener('click', function(e){

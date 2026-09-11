@@ -312,17 +312,17 @@ class SeoStructureService
 
     public function formatPageUrl(string $format): string
     {
-        return url('/' . $this->canonicalFormatKey($format));
+        return url('/'.$this->canonicalFormatKey($format));
     }
 
     public function modalityPageUrl(string $format, string $modality): string
     {
-        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality));
+        return url('/'.$this->canonicalFormatKey($format).'/'.$this->categorySlug($modality));
     }
 
     public function modalityLocationPageUrl(string $format, string $modality, string $country, string $county, string $town): string
     {
-        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/' . implode('/', array_map(
+        return url('/'.$this->canonicalFormatKey($format).'/'.$this->categorySlug($modality).'/'.implode('/', array_map(
             fn (string $segment): string => $this->locationSlugSegment($segment),
             [$country, $county, $town]
         )));
@@ -330,20 +330,20 @@ class SeoStructureService
 
     public function onlineModalityOfferingUrl(string $modality, string $offeringSlug): string
     {
-        return url('/online/' . $this->categorySlug($modality) . '/' . $this->slugify($offeringSlug));
+        return url('/online/'.$this->categorySlug($modality).'/'.$this->slugify($offeringSlug));
     }
 
     public function modalityOfferingUrl(string $format, string $modality, string $offeringSlug): string
     {
-        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/' . $this->slugify($offeringSlug));
+        return url('/'.$this->canonicalFormatKey($format).'/'.$this->categorySlug($modality).'/'.$this->slugify($offeringSlug));
     }
 
     public function modalityOfferingLocationUrl(string $format, string $modality, string $country, string $county, string $town, string $offeringSlug): string
     {
-        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/' . implode('/', array_map(
+        return url('/'.$this->canonicalFormatKey($format).'/'.$this->categorySlug($modality).'/'.implode('/', array_map(
             fn (string $segment): string => $this->locationSlugSegment($segment),
             [$country, $county, $town]
-        )) . '/' . $this->slugify($offeringSlug));
+        )).'/'.$this->slugify($offeringSlug));
     }
 
     public function canonicalProductUrl(mixed $product): string
@@ -355,6 +355,9 @@ class SeoStructureService
         $format = $this->inferFormatKeyFromProduct($product);
         $modality = $this->inferModalitySlugFromProduct($product);
         $slug = $this->offeringSlugFromProduct($product);
+        if (preg_match('/^\d+(?:-|$)/', $slug) && (int) data_get($product, 'id') > 0) {
+            $slug = 'product-'.(int) data_get($product, 'id').'-'.$slug;
+        }
 
         // Product and offering detail canonicals always use the public
         // format/modality path. /online/... remains a legacy redirect source.
@@ -366,9 +369,12 @@ class SeoStructureService
         $format = $this->inferFormatKeyFromOffering($offering);
         $modality = $this->inferModalitySlugFromOffering($offering);
         $slug = $this->offeringSlugFromOffering($offering);
+        if (preg_match('/^\d+(?:-|$)/', $slug)) {
+            $slug = 'offering-'.$offering->id.'-'.$slug;
+        }
 
         if ($format === 'events' && $modality === 'events') {
-            return url('/events/' . $slug);
+            return url('/events/'.$slug);
         }
 
         return $this->modalityOfferingUrl($format, $modality, $slug);
@@ -381,17 +387,17 @@ class SeoStructureService
 
     public function formatGuidesUrl(string $format): string
     {
-        return url('/' . $this->canonicalFormatKey($format) . '/guides');
+        return url('/'.$this->canonicalFormatKey($format).'/guides');
     }
 
     public function modalityGuidesUrl(string $format, string $modality): string
     {
-        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/guides');
+        return url('/'.$this->canonicalFormatKey($format).'/'.$this->categorySlug($modality).'/guides');
     }
 
     public function guideUrl(string $format, string $modality, string $guideSlug): string
     {
-        return url('/' . $this->canonicalFormatKey($format) . '/' . $this->categorySlug($modality) . '/guides/' . $this->slugify($guideSlug));
+        return url('/'.$this->canonicalFormatKey($format).'/'.$this->categorySlug($modality).'/guides/'.$this->slugify($guideSlug));
     }
 
     public function typePageCopy(string $type): array
@@ -404,15 +410,15 @@ class SeoStructureService
         return [
             'kicker' => Str::headline($definition['page_label']),
             'title' => $title,
-            'description' => 'Explore ' . $seoLabel . ' from trusted ' . $entity . '. Browse live online and in-person options across We Offer Wellness.',
-            'intro' => 'Browse live ' . $seoLabel . ' from trusted ' . $entity . '. Use the filters to find the right option by location, format or focus.',
+            'description' => 'Explore '.$seoLabel.' from trusted '.$entity.'. Browse live online and in-person options across We Offer Wellness.',
+            'intro' => 'Browse live '.$seoLabel.' from trusted '.$entity.'. Use the filters to find the right option by location, format or focus.',
             'points' => [
                 'Live listings first',
                 'Online and in-person options',
                 'Trusted providers and clear discovery',
             ],
-            'primary_cta' => ['label' => 'Browse ' . $definition['plural'], 'href' => '#landing-products'],
-            'secondary_cta' => ['label' => 'Search all results', 'href' => '/search?type=' . $definition['plural']],
+            'primary_cta' => ['label' => 'Browse '.$definition['plural'], 'href' => '#landing-products'],
+            'secondary_cta' => ['label' => 'Search all results', 'href' => '/search?type='.$definition['plural']],
             'schema' => $definition['schema'],
             'entity_label' => $entity,
             'noun' => $definition['noun'],
@@ -451,7 +457,7 @@ class SeoStructureService
     }
 
     /**
-     * @param array<string, mixed> $context
+     * @param  array<string, mixed>  $context
      * @return array<int, string>
      */
     public function keywordsForPage(array $context = []): array
@@ -487,7 +493,7 @@ class SeoStructureService
                 (string) ($definition['singular'] ?? $type),
                 (string) ($definition['plural'] ?? $type),
                 (string) ($definition['seo_label'] ?? ''),
-                'book ' . ((string) ($definition['page_label'] ?? ucfirst($type))),
+                'book '.((string) ($definition['page_label'] ?? ucfirst($type))),
             ] as $seed) {
                 $push($seed);
             }
@@ -500,6 +506,7 @@ class SeoStructureService
         ] as $candidate) {
             if (is_string($candidate)) {
                 $categorySeeds[] = $candidate;
+
                 continue;
             }
 
@@ -548,7 +555,7 @@ class SeoStructureService
             data_get($context, 'county'),
             data_get($context, 'town'),
         ] as $candidate) {
-            $label = trim((string) $candidate);
+            $label = $this->locationSeedLabel($candidate);
             if ($label !== '') {
                 $locationSeeds[] = $label;
             }
@@ -598,7 +605,7 @@ class SeoStructureService
         $suffix = ' | WOW®';
         $limit = max(1, $maxLength - mb_strlen($suffix));
 
-        return rtrim((string) Str::limit($title, $limit, '')) . $suffix;
+        return rtrim((string) Str::limit($title, $limit, '')).$suffix;
     }
 
     public function shortOgDescription(string $description, int $maxLength = 62): string
@@ -619,7 +626,7 @@ class SeoStructureService
         }
 
         if ($path === null || trim($path) === '') {
-            return $base . '/';
+            return $base.'/';
         }
 
         $path = trim($path);
@@ -629,10 +636,10 @@ class SeoStructureService
         }
 
         if (! str_starts_with($path, '/')) {
-            $path = '/' . ltrim($path, '/');
+            $path = '/'.ltrim($path, '/');
         }
 
-        return $base . rtrim($path, '/') ?: '/';
+        return $base.rtrim($path, '/') ?: '/';
     }
 
     public function categoryNoun(string $type, string $category): string
@@ -662,21 +669,21 @@ class SeoStructureService
         $entity = $this->categoryEntityLabel($type, $category);
         $locationLabel = $location !== null && trim($location) !== '' ? $this->locationLabel($location) : null;
 
-        $baseTitle = trim($categoryLabel . ' ' . $noun);
-        $title = $locationLabel ? $baseTitle . ' in ' . $locationLabel : $baseTitle;
+        $baseTitle = trim($categoryLabel.' '.$noun);
+        $title = $locationLabel ? $baseTitle.' in '.$locationLabel : $baseTitle;
 
         return [
             'title' => $title,
             'h1' => $title,
             'meta_title' => $locationLabel
-                ? $title . ' | Find Trusted ' . $categoryLabel . ' ' . Str::headline($entity)
-                : $title . ' | Find Trusted ' . $categoryLabel . ' ' . Str::headline($entity),
+                ? $title.' | Find Trusted '.$categoryLabel.' '.Str::headline($entity)
+                : $title.' | Find Trusted '.$categoryLabel.' '.Str::headline($entity),
             'description' => $locationLabel
-                ? 'Find ' . $baseTitle . ' in ' . $locationLabel . ' with trusted ' . $entity . '. Browse online and in-person options, prices and availability.'
-                : 'Explore ' . $baseTitle . ' with trusted ' . $entity . '. Browse online and in-person options, prices and availability.',
+                ? 'Find '.$baseTitle.' in '.$locationLabel.' with trusted '.$entity.'. Browse online and in-person options, prices and availability.'
+                : 'Explore '.$baseTitle.' with trusted '.$entity.'. Browse online and in-person options, prices and availability.',
             'intro' => $locationLabel
-                ? 'Browse live ' . $baseTitle . ' in ' . $locationLabel . '. Compare online and in-person options from trusted ' . $entity . '.'
-                : 'Browse live ' . $baseTitle . '. Compare online and in-person options from trusted ' . $entity . '.',
+                ? 'Browse live '.$baseTitle.' in '.$locationLabel.'. Compare online and in-person options from trusted '.$entity.'.'
+                : 'Browse live '.$baseTitle.'. Compare online and in-person options from trusted '.$entity.'.',
             'kicker' => Str::headline($this->typeDefinition($type)['page_label'] ?? ucfirst($type)),
             'entity_label' => $entity,
             'noun' => $noun,
@@ -692,6 +699,43 @@ class SeoStructureService
         $location = str_replace('-', ' ', $location);
 
         return Str::headline($location);
+    }
+
+    /**
+     * Normalize mixed location inputs into a safe label string.
+     */
+    private function locationSeedLabel(mixed $candidate): string
+    {
+        if (is_string($candidate) || is_int($candidate) || is_float($candidate) || is_bool($candidate)) {
+            return trim((string) $candidate);
+        }
+
+        if (is_object($candidate)) {
+            $candidate = (array) $candidate;
+        }
+
+        if (! is_array($candidate)) {
+            return '';
+        }
+
+        foreach (['label', 'name', 'title', 'place', 'formatted_address', 'address', 'city', 'county', 'town', 'value'] as $key) {
+            $value = data_get($candidate, $key);
+            if (is_string($value) || is_int($value) || is_float($value) || is_bool($value)) {
+                $label = trim((string) $value);
+                if ($label !== '') {
+                    return $label;
+                }
+            }
+        }
+
+        foreach ($candidate as $value) {
+            $label = $this->locationSeedLabel($value);
+            if ($label !== '') {
+                return $label;
+            }
+        }
+
+        return '';
     }
 
     public function inferTypeKeyFromText(string $value): string

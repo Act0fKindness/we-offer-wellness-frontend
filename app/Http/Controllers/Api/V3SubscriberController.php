@@ -21,6 +21,11 @@ class V3SubscriberController extends Controller
             'first_name' => 'nullable|string|max:120',
             'last_name' => 'nullable|string|max:120',
             'business_name' => 'nullable|string|max:255',
+            'team_size' => 'nullable|string|max:80',
+            'interest' => 'nullable|string|max:120',
+            'notes' => 'nullable|string|max:500',
+            'tags' => 'nullable|array',
+            'tags.*' => 'nullable|string|max:80',
             'offers_online' => 'nullable|boolean',
             'offers_in_person' => 'nullable|boolean',
             'in_person_locations' => 'nullable|string|max:255',
@@ -117,6 +122,20 @@ class V3SubscriberController extends Controller
         }
         if (!empty($data['business_name'])) {
             $subscriber->business_name = $data['business_name'];
+        }
+        if (!empty($data['notes'])) {
+            $subscriber->notes = $data['notes'];
+        } elseif (!empty($data['team_size']) || !empty($data['interest'])) {
+            $notesParts = array_filter([
+                !empty($data['team_size']) ? 'Team size: ' . $data['team_size'] : null,
+                !empty($data['interest']) ? 'Interest: ' . $data['interest'] : null,
+            ]);
+            $subscriber->notes = implode(' | ', $notesParts);
+        }
+
+        $normalizedTags = $this->normalizeTags($data['tags'] ?? []);
+        if (!empty($normalizedTags)) {
+            $subscriber->tags = $normalizedTags;
         }
 
         if ($hasOffersOnline) {
@@ -314,6 +333,8 @@ class V3SubscriberController extends Controller
             'first_name' => $subscriber->first_name,
             'last_name' => $subscriber->last_name,
             'business_name' => $subscriber->business_name,
+            'notes' => $subscriber->notes,
+            'tags' => $subscriber->tags ?? null,
             'source' => 'frontend:v3-subscribers',
             'status' => $subscriber->status ?: 'pending',
         ];
@@ -334,7 +355,42 @@ class V3SubscriberController extends Controller
             ]);
         }
 
+        if (!empty($data['notes']) && empty($payload['notes'])) {
+            $payload['notes'] = trim((string) $data['notes']);
+        } elseif (empty($payload['notes']) && (!empty($data['team_size']) || !empty($data['interest']))) {
+            $notesParts = array_filter([
+                !empty($data['team_size']) ? 'Team size: ' . $data['team_size'] : null,
+                !empty($data['interest']) ? 'Interest: ' . $data['interest'] : null,
+            ]);
+            $payload['notes'] = implode(' | ', $notesParts);
+        }
+
+        if (!empty($data['tags'])) {
+            $payload['tags'] = $this->normalizeTags($data['tags']);
+        } elseif (!empty($subscriber->tags)) {
+            $payload['tags'] = $subscriber->tags;
+        }
+
         return array_filter($payload, fn ($value) => !is_null($value) && $value !== '');
+    }
+
+    protected function normalizeTags(mixed $value): array
+    {
+        if (is_string($value)) {
+            $value = preg_split('/[,\s]+/', $value) ?: [];
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return collect($value)
+            ->map(fn ($tag) => trim((string) $tag))
+            ->filter()
+            ->map(fn ($tag) => strtolower(preg_replace('/[^a-z0-9]+/', '_', $tag)))
+            ->filter()
+            ->values()
+            ->all();
     }
 
     protected function syncBackendSubscriber(V3Subscriber $subscriber, array $payload, bool $isPractitioner): void

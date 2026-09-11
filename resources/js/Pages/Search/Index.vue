@@ -6,6 +6,12 @@ import UltraSearchBar from '@/Components/UltraSearchBar.vue'
 import ProductCard from '@/Components/ProductCard.vue'
 import MapPanel from '@/Components/MapPanel.vue'
 import { fetchProducts } from '@/services/products'
+import {
+  canonicalUrl,
+  pageKeywords,
+  shortOgDescription,
+  shortOgTitle,
+} from '@/lib/seo-meta'
 
 const props = defineProps({
   mapsKey: { type: String, required: true },
@@ -31,6 +37,7 @@ function syncViewportState() {
 
 const showMap = computed(() => view.value === 'list-map' && !isMobile.value)
 const showMapControls = computed(() => !isMobile.value)
+const showMobileMap = computed(() => isMobile.value)
 
 function paramsFromUrl() {
   const u = new URLSearchParams(window.location.search || '')
@@ -70,6 +77,23 @@ const headline = computed(() => {
   const term = filters.value?.what
   return term ? `“${term}”` : 'all experiences'
 })
+const searchTitle = computed(() => 'Search Wellness Sessions')
+const canonical = computed(() => canonicalUrl('/search'))
+const ogTitle = computed(() => shortOgTitle(`${searchTitle.value} | WOW®`))
+const ogDesc = computed(() => shortOgDescription('Find therapies, classes and events that match how you feel.'))
+const keywords = computed(() => pageKeywords({
+  type: filters.value?.type || 'search',
+  extra: [
+    filters.value?.what || '',
+    filters.value?.where || '',
+    filters.value?.mode === 'online' ? 'online sessions' : '',
+    filters.value?.type || '',
+    filters.value?.tag || '',
+    'search therapies',
+    'search classes',
+    'search events',
+  ],
+}))
 const filterTags = computed(() => {
   const tags = []
   if (filters.value?.where) tags.push(filters.value.where)
@@ -99,11 +123,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <Head title="Search">
+  <Head :title="searchTitle">
     <meta name="robots" content="noindex,follow" />
-    <link rel="canonical" :href="(typeof window!=='undefined'? (window.location.origin + '/search') : '')" />
-    <meta property="og:title" content="Search Therapies" />
-    <meta property="og:description" content="Find therapies, classes and events that match how you feel." />
+    <meta name="keywords" :content="keywords.join(', ')" />
+    <link rel="canonical" :href="canonical" />
+    <meta property="og:title" :content="ogTitle" />
+    <meta property="og:description" :content="ogDesc" />
+    <meta property="og:url" :content="canonical" />
+    <meta name="twitter:site" content="@weofferwellness" />
+    <meta name="twitter:creator" content="@weofferwellness" />
+    <meta name="twitter:title" :content="ogTitle" />
+    <meta name="twitter:description" :content="ogDesc" />
   </Head>
   <SiteLayout>
     <div class="wow-search-results-page">
@@ -114,6 +144,10 @@ onBeforeUnmount(() => {
       </section>
 
       <section v-if="isMobile" class="wow-search-results-mobile" aria-label="Search results">
+        <div v-if="showMobileMap" class="wow-search-results-mobile-map" aria-hidden="true">
+          <MapPanel :api-key="props.mapsKey" :products="products" :user-location="userLoc" />
+        </div>
+
         <div class="container-page wow-search-results-mobile-content">
           <div class="wow-search-results-heading wow-search-results-heading--mobile">
             <div class="kicker mb-1 text-ink-600 uppercase tracking-[0.2em]">Search results</div>
@@ -317,8 +351,24 @@ onBeforeUnmount(() => {
 .wow-search-results-mobile{
   position:relative;
   z-index:2;
+  padding-top:260px;
   padding-bottom:80px;
   background:linear-gradient(180deg, rgba(248,250,252,.98) 0%, rgba(248,250,252,.95) 100%);
+}
+
+.wow-search-results-mobile-map{
+  position:fixed;
+  top:calc(var(--wow-header-offset, 0px) + 88px);
+  left:0;
+  right:0;
+  z-index:4;
+  padding:0 12px;
+}
+
+.wow-search-results-mobile-map :deep(.maps-panel){
+  width:100%;
+  height:220px;
+  border-radius:20px;
 }
 
 .wow-search-results-mobile-content{
@@ -369,6 +419,10 @@ onBeforeUnmount(() => {
 @media (max-width: 767.98px){
   .wow-search-results-stage{
     min-height:auto;
+  }
+
+  .wow-search-results-mobile{
+    padding-top:244px;
   }
 
   .wow-search-results-content{

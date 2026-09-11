@@ -2,33 +2,39 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
         @php
+          $seoService = app(\App\Services\SeoStructureService::class);
           $appName = config('app.name', 'We Offer Wellness');
-          $defaultDesc = 'Book trusted therapies, classes, and wellness sessions that actually help: massage, reiki, breathwork, sound therapy and more — online or in‑studio.';
+          $defaultDesc = 'Holistic therapy, classes, workshops and retreats from trusted practitioners across the UK, online and in person.';
           $defaultOg = asset('images/default-social-preview.jpg');
-          $canonical = url()->current();
+          $canonical = $seoService->canonicalUrl(request()->getPathInfo());
           $gtmId = env('GTM_ID') ?: env('VITE_GTM_ID');
           $gaId = env('GA_ID') ?: env('VITE_GA_ID') ?: 'G-MZMQNETBYH';
           $favicon = config('app.favicon_url', '/favicon.ico');
+          $ogTitle = $seoService->shortOgTitle($appName);
+          $ogDesc = $seoService->shortOgDescription($defaultDesc);
         @endphp
         <link rel="canonical" href="{{ $canonical }}" />
         <meta name="description" content="{{ $defaultDesc }}" />
+        <meta name="keywords" content="We Offer Wellness, WOW, wellness marketplace, therapies, classes, workshops, events, retreats">
 
         <!-- Open Graph defaults -->
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="{{ $appName }}" />
-        <meta property="og:description" content="{{ $defaultDesc }}" />
+        <meta property="og:title" content="{{ $ogTitle }}" />
+        <meta property="og:description" content="{{ $ogDesc }}" />
         <meta property="og:url" content="{{ $canonical }}" />
         <meta property="og:image" content="{{ $defaultOg }}" />
         <meta property="og:site_name" content="{{ $appName }}" />
 
         <!-- Twitter Card defaults -->
+        <meta name="twitter:site" content="@weofferwellness" />
+        <meta name="twitter:creator" content="@weofferwellness" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="{{ $appName }}" />
-        <meta name="twitter:description" content="{{ $defaultDesc }}" />
+        <meta name="twitter:title" content="{{ $ogTitle }}" />
+        <meta name="twitter:description" content="{{ $ogDesc }}" />
         <meta name="twitter:image" content="{{ $defaultOg }}" />
 
         <!-- Google Tag Manager (optional via env) -->

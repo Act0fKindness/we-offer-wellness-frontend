@@ -4,6 +4,12 @@ import { Head } from '@inertiajs/vue3'
 import SiteLayout from '@/Layouts/SiteLayout.vue'
 import WowButton from '@/Components/ui/WowButton.vue'
 import ProductCard from '@/Components/ProductCard.vue'
+import {
+  canonicalUrl,
+  pageKeywords,
+  shortOgDescription,
+  shortOgTitle,
+} from '@/lib/seo-meta'
 import { fetchProducts } from '@/services/products'
 
 const loading = ref(true)
@@ -18,6 +24,20 @@ const metrics = [
 ]
 
 const logos = ['Soho House', 'Pinterest', 'Universal Music', 'The Outnet', 'Lululemon', 'Bloomberg']
+const canonical = canonicalUrl('/events')
+const ogTitle = shortOgTitle('Events & Workshops | WOW®')
+const ogDesc = shortOgDescription('Immersive wellness events planned like a creative studio: turnkey production, measurable impact.')
+const keywords = pageKeywords({
+  type: 'events',
+  extra: [
+    'events',
+    'workshops',
+    'sound baths',
+    'breathwork',
+    'corporate events',
+    'wellness events',
+  ],
+})
 
 const promises = [
   {
@@ -337,7 +357,15 @@ onBeforeUnmount(() => {
 <template>
   <Head title="Events & Workshops">
     <meta name="description" content="Immersive wellness events planned like a creative studio: turnkey production, measurable impact." />
-    <link rel="canonical" :href="(typeof window !== 'undefined' ? window.location.origin : '') + '/events'" />
+    <meta name="keywords" :content="keywords.join(', ')" />
+    <link rel="canonical" :href="canonical" />
+    <meta property="og:title" :content="ogTitle" />
+    <meta property="og:description" :content="ogDesc" />
+    <meta property="og:url" :content="canonical" />
+    <meta name="twitter:site" content="@weofferwellness" />
+    <meta name="twitter:creator" content="@weofferwellness" />
+    <meta name="twitter:title" :content="ogTitle" />
+    <meta name="twitter:description" :content="ogDesc" />
   </Head>
   <SiteLayout>
     <section class="section hero-section">

@@ -3,7 +3,7 @@
 <head>
     @include('partials.head')
 </head>
-<body class="antialiased">
+<body class="antialiased @yield('body-class')">
 @php
   $showLocationPrompt = request()->is('locations*')
     || request()->is('near-me')
@@ -877,10 +877,10 @@
       if (!panel.classList.contains('wow-mega-shell')) {
         function showMenu(key){
           if(!key){ hideMenu(); return }
-          panel.style.display = 'block';
+          panel.hidden = false;
           panel.setAttribute('data-active', key);
         }
-        function hideMenu(){ panel.style.display = 'none'; panel.removeAttribute('data-active'); }
+        function hideMenu(){ panel.hidden = true; panel.removeAttribute('data-active'); }
 
         // Attach to nav links via data-mega-menu attribute (e.g., data-mega-menu="need").
         // If a link has no mega menu, hovering it will close any open panel.
@@ -913,8 +913,9 @@
 
   // Mobile menu toggle
   try {
-    var burger = document.querySelector('[data-wow-mobile-toggle]') || document.querySelector('button[aria-label="Toggle menu"]');
+    var burger = document.querySelector('[data-wow-mobile-toggle]') || document.querySelector('button[aria-label="Menu"]');
     var mobile = document.getElementById('mobile-menu');
+    var mobileBackdrop = document.getElementById('mobile-menu-backdrop');
     if (burger && mobile){
       function setBodyScroll(disabled){ try{ document.body.style.overflow = disabled ? 'hidden' : ''; }catch{} }
       function syncHamburger(state){
@@ -927,8 +928,20 @@
           }
         }catch(_err){}
       }
+      function syncBurgerLabel(state) {
+        try {
+          if (!burger) return;
+          burger.setAttribute('aria-label', state ? 'Close menu' : 'Menu');
+          burger.setAttribute('aria-expanded', state ? 'true' : 'false');
+          burger.classList.toggle('is-open', state);
+          var label = burger.querySelector('.mobile-nav-text-trigger__label');
+          if (label) {
+            label.textContent = state ? 'Close menu' : 'Menu';
+          }
+        } catch(_err) {}
+      }
       var open = false;
-      function closeMobile(){ mobile.style.display = 'none'; burger.classList.remove('opened'); burger.setAttribute('aria-expanded','false'); setBodyScroll(false); syncHamburger(false); open = false; }
+      function closeMobile(){ mobile.style.display = 'none'; if (mobileBackdrop) mobileBackdrop.classList.remove('is-visible'); syncBurgerLabel(false); setBodyScroll(false); syncHamburger(false); open = false; }
       function openMobile(){
         try {
           if (typeof window.__WOWCloseMobileSearch === 'function') {
@@ -944,15 +957,13 @@
             searchTrigger.classList.remove('is-open');
             searchTrigger.setAttribute('aria-expanded', 'false');
             searchTrigger.setAttribute('aria-label', 'Search');
-            const searchIcon = searchTrigger.querySelector('.mobile-search-trigger__icon--search');
-            const closeIcon = searchTrigger.querySelector('.mobile-search-trigger__icon--close');
-            if (searchIcon) searchIcon.hidden = false;
-            if (closeIcon) closeIcon.hidden = true;
+            const searchLabel = searchTrigger.querySelector('.mobile-nav-text-trigger__label');
+            if (searchLabel) searchLabel.textContent = 'Search';
           }
         } catch(_err){}
         mobile.style.display = 'block';
-        burger.classList.add('opened');
-        burger.setAttribute('aria-expanded','true');
+        if (mobileBackdrop) mobileBackdrop.classList.add('is-visible');
+        syncBurgerLabel(true);
         setBodyScroll(true);
         syncHamburger(true);
         open = true;
@@ -960,6 +971,7 @@
       burger.addEventListener('click', function(){ open ? closeMobile() : openMobile(); });
       document.addEventListener('keydown', function(e){ if(e.key==='Escape' && open){ closeMobile(); }});
       mobile.addEventListener('click', function(e){ var a = e.target.closest('a'); if(a){ closeMobile(); }});
+      if (mobileBackdrop) mobileBackdrop.addEventListener('click', closeMobile);
       // Close if window resized to desktop
       window.addEventListener('resize', function(){ if(window.innerWidth >= 768 && open){ closeMobile(); }});
     }
@@ -994,9 +1006,6 @@
       { slug: 'stress-and-anxiety', title: 'Stress & anxiety', url: '/needs/stress-and-anxiety' },
       { slug: 'sleep-issues', title: 'Sleep issues', url: '/needs/sleep-issues' },
       { slug: 'low-mood-burnout', title: 'Low mood & burnout', url: '/needs/low-mood-burnout' },
-      { slug: 'overwhelm', title: 'Overwhelm & frazzled feelings', url: '/needs/overwhelm' },
-      { slug: 'worry', title: 'Worry & racing thoughts', url: '/needs/worry' },
-      { slug: 'pain-management', title: 'Pain, tension & tightness', url: '/needs/pain-management' },
     ],
     trending: [
       { slug: 'online-breathwork', title: 'Trending: Online breathwork', url: '/needs/breathwork' },
@@ -1092,6 +1101,7 @@
       product_id: entry.product_id || meta.product_id || null,
       variant_id: entry.variant_id || meta.variant_id || null,
       variant_label: entry.variant_label || meta.variant_label || '',
+      source_version: entry.source_version || meta.source_version || null,
       title: entry.title || entry.name || '',
       price: Number(entry.price || entry.unit || 0) || 0,
       qty: Math.max(1, Number(entry.qty || entry.quantity || 1) || 1),

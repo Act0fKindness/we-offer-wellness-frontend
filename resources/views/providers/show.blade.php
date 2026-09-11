@@ -50,11 +50,9 @@
             $flattened = [];
             foreach ($value as $item) {
                 if (is_array($item)) {
-                    foreach ($item as $subItem) {
-                        $text = trim((string) $subItem);
-                        if ($text !== '') {
-                            $flattened[] = $text;
-                        }
+                    $text = trim((string) ($item['title'] ?? $item['name'] ?? $item['label'] ?? ''));
+                    if ($text !== '') {
+                        $flattened[] = $text;
                     }
                     continue;
                 }
@@ -76,17 +74,15 @@
         if ((str_starts_with($text, '[') && str_ends_with($text, ']')) || (str_starts_with($text, '{') && str_ends_with($text, '}'))) {
             $decoded = json_decode($text, true);
             if (is_array($decoded)) {
-                $flattened = [];
-                foreach ($decoded as $decodedItem) {
-                    if (is_array($decodedItem)) {
-                        foreach ($decodedItem as $subItem) {
-                            $subText = trim((string) $subItem);
+                    $flattened = [];
+                    foreach ($decoded as $decodedItem) {
+                        if (is_array($decodedItem)) {
+                            $subText = trim((string) ($decodedItem['title'] ?? $decodedItem['name'] ?? $decodedItem['label'] ?? ''));
                             if ($subText !== '') {
                                 $flattened[] = $subText;
                             }
+                            continue;
                         }
-                        continue;
-                    }
 
                     $decodedText = trim((string) $decodedItem);
                     if ($decodedText !== '') {
@@ -226,8 +222,38 @@
         $address = trim((string) ($location->formatted_address ?? ''));
         $country = trim((string) ($location->country ?? ''));
         $combined = trim(implode(', ', array_filter([$label, $address, $country])));
+        $normalizedCombined = Str::of($combined)
+            ->lower()
+            ->replaceMatches('/\s+/', ' ')
+            ->replaceMatches('/\s*,\s*/', ',')
+            ->toString();
+        $normalizedLabel = Str::of($label)->lower()->replaceMatches('/\s+/', ' ')->trim()->toString();
+        $normalizedAddress = Str::of($address)->lower()->replaceMatches('/\s+/', ' ')->trim()->toString();
+        $countryOnlyLabels = [
+            'uk',
+            'u.k.',
+            'gb',
+            'great britain',
+            'united kingdom',
+            'england',
+            'scotland',
+            'wales',
+            'northern ireland',
+        ];
+        $isCountryOnly = in_array($normalizedLabel, $countryOnlyLabels, true)
+            || in_array($normalizedAddress, $countryOnlyLabels, true);
+        $hasZeroCoordinates = is_numeric($location->lat ?? null)
+            && is_numeric($location->lng ?? null)
+            && (float) $location->lat === 0.0
+            && (float) $location->lng === 0.0;
 
-        if ($combined === '' || Str::of($combined)->lower()->contains('online')) {
+        if (
+            $combined === ''
+            || Str::of($combined)->lower()->contains('online')
+            || Str::of($combined)->lower()->contains('null')
+            || $isCountryOnly
+            || $hasZeroCoordinates
+        ) {
             return null;
         }
 
@@ -241,8 +267,16 @@
             'lat' => $lat,
             'lng' => $lng,
             'online' => false,
+            'dedupe_key' => $normalizedLabel . '|' . $normalizedAddress . '|' . $normalizedCombined,
         ];
-    })->filter()->values();
+    })->filter()
+        ->unique('dedupe_key')
+        ->map(static function (array $location): array {
+            unset($location['dedupe_key']);
+
+            return $location;
+        })
+        ->values();
 
     if (! $hasPhysicalOfferLocations) {
         $physicalLocations = collect();

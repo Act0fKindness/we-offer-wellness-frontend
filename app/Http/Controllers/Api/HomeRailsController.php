@@ -9,6 +9,8 @@ use App\Support\EventListing;
 use App\Support\ProductRanking;
 use App\Support\ProductSearchFilters;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -55,6 +57,10 @@ class HomeRailsController extends Controller
             ->reject(fn ($item) => EventListing::isPast($item))
             ->filter()
             ->map(function ($item) use ($cardView, $forceNewCard): string {
+                if (data_get($item, 'kind') === 'physical_product' || data_get($item, 'source_type') === 'physical_product') {
+                    return view('partials.store_product_card', ['product' => $item])->render();
+                }
+
                 return view($cardView, ['product' => $item, 'preferredLocation' => null, 'forceNewCard' => $forceNewCard])->render();
             })
             ->implode('');
@@ -296,8 +302,11 @@ class HomeRailsController extends Controller
                 return $offering;
             });
 
+        $physicalProducts = $this->latestPhysicalProductsFromOfferingApi();
+
         return $latestV3Offerings
             ->concat($latestLegacyProducts)
+            ->concat($physicalProducts)
             ->reject(fn ($item): bool => EventListing::isPast($item))
             ->sort(function ($left, $right): int {
                 $leftVersion = data_get($left, 'source_version') === 'v3' ? 1 : 0;
@@ -317,6 +326,63 @@ class HomeRailsController extends Controller
                 return $rightRank <=> $leftRank;
             })
             ->values();
+    }
+
+    /**
+     * Physical Store products are owned by the Backend. Keep this homepage rail
+     * on the same unified offering feed as the Frontend catalogue.
+     */
+    private function latestPhysicalProductsFromOfferingApi(): Collection
+    {
+        $backend = rtrim((string) env('BACKEND_URL', env('BACKEND_ASSET_URL', '')), '/');
+        if ($backend === '') {
+            return collect();
+        }
+
+        try {
+            $response = Http::acceptJson()
+                ->withHeaders([
+                    'Origin' => 'https://www.weofferwellness.co.uk',
+                    'Referer' => 'https://www.weofferwellness.co.uk/',
+                ])
+                ->timeout(8)
+                ->get($backend.'/api/offerings', [
+                    'version' => 'v3',
+                    'sort' => 'newest',
+                    'per_page' => 12,
+                ]);
+
+            if (! $response->successful()) {
+                return collect();
+            }
+
+            return collect($response->json('data', []))
+                ->filter(fn ($item): bool => data_get($item, 'kind') === 'physical_product' || data_get($item, 'source_type') === 'physical_product')
+                ->map(function (array $item): object {
+                    $publishedAt = $item['published_at'] ?? null;
+                    $createdAt = $publishedAt ?: ($item['created_at'] ?? null);
+
+                    return (object) [
+                        'id' => $item['id'] ?? null,
+                        'kind' => 'physical_product',
+                        'source_type' => 'physical_product',
+                        'source_version' => 'v3',
+                        'title' => $item['title'] ?? 'Physical product',
+                        'summary' => $item['summary'] ?? null,
+                        'brand' => $item['brand'] ?? data_get($item, 'vendor.name'),
+                        'price' => $item['price'] ?? null,
+                        'currency' => $item['currency'] ?? 'GBP',
+                        'image' => $item['image_url'] ?? null,
+                        'url' => $item['url'] ?? '/products/'.rawurlencode((string) ($item['slug'] ?? '')),
+                        'published_at' => $publishedAt,
+                        'created_at' => $createdAt,
+                        'catalogue_rank' => $createdAt ? Carbon::parse($createdAt)->timestamp : (int) ($item['id'] ?? 0),
+                    ];
+                })
+                ->values();
+        } catch (\Throwable $e) {
+            return collect();
+        }
     }
 
     private function comfortRail(float $priceMax, string $groupType, string $mode): Collection

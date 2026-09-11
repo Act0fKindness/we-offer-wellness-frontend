@@ -19,12 +19,21 @@ class CorporateController extends Controller
     {
         return view('corporate.coming-soon', [
             'seo' => [
-                'title' => 'Corporate Wellness — Coming Soon | We Offer Wellness™',
-                'description' => 'Corporate wellness services launching soon. Register interest.',
+                'title' => 'Corporate Wellness 2026 | Join the Waiting List | We Offer Wellness®',
+                'description' => 'Join the 2026 corporate wellness waiting list for workplace wellbeing days, employee rewards, team building and wellness workshops.',
+                'keywords' => [
+                    'corporate wellness',
+                    'workplace wellbeing',
+                    'employee rewards',
+                    'team building activities',
+                    'corporate gift vouchers',
+                    'wellness workshops',
+                    'wellbeing days',
+                    'HR wellbeing',
+                ],
                 'canonical' => url('/corporate-wellness'),
                 'robots' => 'noindex,follow',
             ],
         ]);
     }
 }
-

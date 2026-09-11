@@ -335,7 +335,7 @@
 
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="addToast" class="toast text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
-        <div class="d-flex"><div class="toast-body">Added to your basket</div>
+        <div class="d-flex"><div class="toast-body">Added to your cart</div>
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
     </div>
@@ -1264,11 +1264,11 @@ function findVariant(){
   var exact = product.variants.find(function(v){ var ops=v.options||[]; return (state.selected||[]).every(function(s, i){ return equalsAtIndex(i, s, ops[i]); }); });
   return exact || firstAvail;
 }
-function isGroup(){return (state.selected[1]||"").toLowerCase().includes("3+")}
+function isGroup(){return /group|3\+/.test(String(state.selected[1]||"").toLowerCase())}
 function variantFor(format,people){return product.variants.find(v=>v.options[0]===format&&v.options[1]===people)}
 function stepForFormat(format){const v1=variantFor(format,"1 Person");const v2=variantFor(format,"2 Persons");if(v1&&v2) return Math.max(0, v2.price - v1.price);const vg=variantFor(format,"3+ Group");if(v2&&vg) return Math.max(0, vg.price - v2.price);return 25000}
-function priceForGroup(format,n){const base=variantFor(format,"3+ Group");const step=stepForFormat(format);if(!base) return step*n;const extra=Math.max(0,n-3);return base.price + extra*step}
-function compareForGroup(format,n){const v1=variantFor(format,"1 Person");const v2=variantFor(format,"2 Persons");const base=variantFor(format,"3+ Group");let step=0;if(v1&&v2&&v2.compare&&v1.compare&&v2.compare>v1.compare) step=v2.compare-v1.compare;else if(base&&base.compare) step=Math.round(base.compare/3);const extra=Math.max(0,n-3);return (base&&base.compare?base.compare:0) + extra*step}
+function priceForGroup(format,n){const base=variantFor(format,"3+ Group");const step=stepForFormat(format);if(!base) return step*n;return base.price*n}
+function compareForGroup(format,n){const base=variantFor(format,"3+ Group");return base&&base.compare ? base.compare*n : 0}
 function unitPriceWithMode(){let base=state.variant.price;if(isGroup()){const format=state.selected[0];const n=Math.min(10, Math.max(3, parseInt(state.groupCount||3,10)));base=priceForGroup(format,n)}return base}
 function totals(){
   const unit=unitPriceWithMode();

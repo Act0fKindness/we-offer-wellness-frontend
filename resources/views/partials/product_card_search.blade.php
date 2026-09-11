@@ -56,6 +56,9 @@
     if (is_numeric($priceMin) && $priceMin > 1000 && $priceMin % 100 === 0) {
         $priceMin = $priceMin / 100;
     }
+    $priceDisplay = is_numeric($priceMin)
+        ? '£' . rtrim(rtrim(number_format((float) $priceMin, 2, '.', ''), '0'), '.')
+        : '—';
     $compareMin = $product->variants_min_compare ?? ($product->compare_at_price ?? null);
     if (is_numeric($compareMin) && $compareMin > 1000 && $compareMin % 100 === 0) {
         $compareMin = $compareMin / 100;
@@ -1149,7 +1152,7 @@
           <div class="wow-price-block">
             <p class="wow-price">
               <span class="from">From</span>
-              <span class="now">{{ \Illuminate\Support\Number::currency((float) $priceMin, 'GBP') }}</span>
+              <span class="now">{{ $priceDisplay }}</span>
             </p>
             <p class="wow-price-sub">{{ $priceNote }}</p>
             <span class="wow-price-note">{{ $isPastEvent ? 'Archived event · view only' : 'Secure checkout · instant confirmation' }}</span>

@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\BookingLinkController as BookingLinkApiController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\Api\V3SubscriberController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Api\StoreAbandonedCartController;
+use App\Http\Controllers\StoreProductsController;
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
@@ -27,12 +29,18 @@ Route::post('/cart/remove', [CartController::class, 'remove']);
 Route::post('/cart/update', [CartController::class, 'update']);
 Route::post('/cart/clear', [CartController::class, 'clear']);
 Route::post('/cart/gift', [CartController::class, 'gift']);
+Route::middleware('web')->group(function () {
+    Route::post('/store/abandoned-cart', [StoreAbandonedCartController::class, 'track']);
+    Route::post('/store/abandoned-cart/identify', [StoreAbandonedCartController::class, 'identify']);
+});
 
 // Checkout (Stripe)
 Route::post('/checkout/session', [CheckoutController::class, 'createSession']);
 
 // Lightweight frontend JSON endpoints
 Route::get('/products', [ProductController::class, 'index']);
+Route::get('/store/products', [StoreProductsController::class, 'apiIndex'])->name('api.store.products.index');
+Route::get('/store/products/{slug}', [StoreProductsController::class, 'apiShow'])->name('api.store.products.show');
 Route::get('/product-cards', [ProductCardsController::class, 'index']);
 Route::get('/home/rails', [HomeRailsController::class, 'index']);
 Route::get('/articles', [ArticleController::class, 'index']);

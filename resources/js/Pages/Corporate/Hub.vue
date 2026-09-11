@@ -2,15 +2,43 @@
 import { Head, Link } from '@inertiajs/vue3'
 import SiteLayout from '@/Layouts/SiteLayout.vue'
 import WowButton from '@/Components/ui/WowButton.vue'
+import {
+  canonicalUrl,
+  pageKeywords,
+  shortOgDescription,
+  shortOgTitle,
+} from '@/lib/seo-meta'
 
-const title = 'Corporate Wellness'
-const desc = 'Science‑backed workshops and experiences for teams — stress, sleep, energy and focus. On‑site or online.'
+const title = 'Corporate Wellness for Teams'
+const desc = 'Science-backed workshops and experiences for teams covering stress, sleep, energy and focus.'
+const canonical = canonicalUrl('/corporate')
+const ogTitle = shortOgTitle(`${title} | WOW®`)
+const ogDesc = shortOgDescription(desc)
+const keywords = pageKeywords({
+  type: 'corporate',
+  extra: [
+    'corporate wellness',
+    'team wellbeing',
+    'workplace workshops',
+    'stress relief',
+    'sleep support',
+    'energy and focus',
+  ],
+})
 </script>
 
 <template>
   <Head :title="title">
     <meta name="description" :content="desc" />
-    <link rel="canonical" :href="(typeof window!=='undefined'? window.location.origin + '/corporate' : '/corporate')" />
+    <meta name="keywords" :content="keywords.join(', ')" />
+    <link rel="canonical" :href="canonical" />
+    <meta property="og:title" :content="ogTitle" />
+    <meta property="og:description" :content="ogDesc" />
+    <meta property="og:url" :content="canonical" />
+    <meta name="twitter:site" content="@weofferwellness" />
+    <meta name="twitter:creator" content="@weofferwellness" />
+    <meta name="twitter:title" :content="ogTitle" />
+    <meta name="twitter:description" :content="ogDesc" />
   </Head>
   <SiteLayout>
     <!-- Hero -->

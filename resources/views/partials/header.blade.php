@@ -16,55 +16,70 @@
     button.md\:hidden.inline-flex.items-center.justify-center.p-2.rounded-md.text-ink-700.hover\:bg-ink-100 {
         border-radius: 40px !important;
     }
-    /* GSAP-powered hamburger (mobile) */
-    .hamburger{
-        --before-scale: 0.6;
-        --span-scale: 1;
-        --after-scale: 0.6;
-        --before-rot: 0deg;
-        --after-rot: 0deg;
-        --before-top: 0px;
-        --after-top: 22px;
-        --origin: right;
-        border:none;
-        background:none;
-        width:40px;
-        height:24px;
+    .mobile-nav-text-trigger{
+        border:1px solid rgba(15,23,42,.12);
+        background:#fff;
+        color:#0f172a;
+        border-radius:9999px;
+        min-height:40px;
+        padding:0 16px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        font-size:14px;
+        font-weight:700;
+        letter-spacing:.01em;
+        line-height:1;
+        box-shadow:0 8px 18px rgba(15,23,42,.08);
+        transition:background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .mobile-nav-text-trigger:hover,
+    .mobile-nav-text-trigger:focus,
+    .mobile-nav-text-trigger:active{
+        background:#f8fafc;
+        box-shadow:0 10px 22px rgba(15,23,42,.12);
+    }
+    .mobile-nav-text-trigger:focus-visible{
+        outline:2px solid currentColor;
+        outline-offset:3px;
+    }
+    .mobile-search-trigger.is-open{
+        background:#0f172a;
+        border-color:#0f172a;
+        color:#fff;
+    }
+    .mobile-nav-text-trigger__label{
         position:relative;
-        padding:0;
-        color:#0b1320;
-        cursor:pointer;
-    }
-    .hamburger:hover,
-    .hamburger:focus,
-    .hamburger:active{ background:none; box-shadow:none; }
-    .hamburger:focus-visible{ outline:2px solid currentColor; outline-offset:3px; }
-    .hamburger span,
-    .hamburger::before,
-    .hamburger::after{
-        content:"";
-        position:absolute;
-        right:0;
-        width:30px;
-        height:2px;
-        background: currentColor;
-        border-radius:1px;
-        transform-origin: var(--origin);
+        z-index:1;
         pointer-events:none;
+        white-space:nowrap;
     }
-    .hamburger span{ top:50%; transform: translateY(-50%) scaleX(var(--span-scale)); }
-    .hamburger::before{
-        top: var(--before-top);
-        transform: scaleX(var(--before-scale)) rotate(var(--before-rot));
-    }
-    .hamburger::after{
-        top: var(--after-top);
-        transform: scaleX(var(--after-scale)) rotate(var(--after-rot));
+    .wow-mobile-wordmark{
+        display:none;
+        font-size:17px;
+        font-weight:800;
+        letter-spacing:-.03em;
+        line-height:1;
+        color:#0b1320;
+        white-space:nowrap;
     }
     /* hover state inherit existing bg hover */
+    .utility-links__secondary .our-vibe-link{ border:1px solid transparent; background:transparent; padding:4px 12px; border-radius:4px; transition:background .2s ease, border-color .2s ease, box-shadow .2s ease; text-decoration:none; display:inline-flex; align-items:center; }
+    .utility-links__secondary .our-vibe-link__logo{ display:block; width:auto; height:22px; max-width:96px; object-fit:contain; }
+    .utility-links__secondary .our-vibe-link:hover{ background:#105b4b; border-color:#105b4b; color:#fff; box-shadow:0 10px 25px rgba(16,91,75,.2); }
+    .utility-links__secondary .our-vibe-link:focus-visible{ outline:2px solid #105b4b; outline-offset:2px; }
     .utility-links__secondary .wow-practitioner-trigger{ border:none; background:rgba(16,91,75,.05); padding:6px 16px; border-radius:4px; font-weight:600; color:#0b1320; cursor:pointer; transition:background .2s ease, box-shadow .2s ease, color .2s ease; text-decoration:none; display:inline-flex; align-items:center; }
     .utility-links__secondary .wow-practitioner-trigger:hover{ background:#105b4b; color:#fff; box-shadow:0 10px 25px rgba(16,91,75,.25); }
     .utility-links__secondary .wow-practitioner-trigger:focus-visible{ outline:2px solid #105b4b; outline-offset:2px; }
+    .wow-desktop-only{ display:none !important; }
+    .wow-desktop-utility{ display:none !important; }
+    .wow-mobile-tablet-only{ display:flex !important; }
+    @media (min-width:1280px){
+        .wow-desktop-utility{ display:block !important; }
+        .wow-desktop-only{ display:flex !important; }
+        .wow-mobile-tablet-only{ display:none !important; }
+    }
     .practitioner-modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:20px; z-index:1300; }
     .practitioner-modal::backdrop{ background:rgba(11,19,32,.72); }
     .practitioner-modal.is-visible{ display:flex; }
@@ -101,39 +116,85 @@
     .practitioner-modal__panel p{ margin:0; }
     .mobile-search-drawer{
         position:fixed;
-        left:0;
-        right:0;
+        inset:0;
         top:var(--wow-header-offset, 0px);
         z-index:1200;
-        height:100%;
-        background:rgba(0, 0, 0, 0.4);
         display:none;
+        align-items:flex-start;
+        justify-content:center;
+        padding:16px;
     }
-    .mobile-search-drawer.is-visible{ display:block; }
+    .mobile-search-drawer.is-visible{ display:flex; }
+    .mobile-search-drawer__backdrop{
+        position:absolute;
+        inset:0;
+        background:rgba(11,19,32,.62);
+        backdrop-filter:blur(10px);
+        -webkit-backdrop-filter:blur(10px);
+    }
     .mobile-search-drawer__inner{
         position:relative;
-        width:100%;
-        height:100%;
+        width:min(720px, 100%);
+        max-height:calc(100dvh - var(--wow-header-offset, 0px) - 32px);
         overflow:auto;
-        padding:12px 12px 16px;
+        margin-top:8px;
+        z-index:1;
+    }
+    .mobile-search-drawer__panel{
+        position:relative;
+        background:none;
+        border-radius:28px;
+        box-shadow:0 28px 80px rgba(11,19,32,.24);
+        padding:0;
+        overflow:hidden;
+    }
+    .mobile-search-drawer__header{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        padding:4px 4px 14px;
+    }
+    .mobile-search-drawer__eyebrow{
+        margin:0 0 6px;
+        color:#0f766e;
+        font-size:12px;
+        font-weight:800;
+        letter-spacing:.16em;
+        text-transform:uppercase;
+    }
+    .mobile-search-drawer__title{
+        margin:0;
+        color:#0f172a;
+        font-family:inherit;
+        font-size:22px;
+        font-weight:850;
+        line-height:1.05;
+        letter-spacing:-.04em;
+    }
+    .mobile-search-drawer__subtitle{
+        margin:8px 0 0;
+        color:var(--ink-600);
+        font-size:14px;
+        line-height:1.45;
+    }
+    .mobile-search-drawer__search{
+        width:100%;
     }
     .mobile-search-drawer__close{
-        position:absolute;
-        top:8px;
-        right:8px;
-        width:38px;
-        height:38px;
+        width:40px;
+        height:40px;
         border:none;
         border-radius:9999px;
-        background:#fff;
+        background:#f1f5f9;
         color:#111827;
         display:flex;
         align-items:center;
         justify-content:center;
-        box-shadow:0 8px 18px rgba(0,0,0,.12);
-        z-index:2;
+        box-shadow:0 8px 18px rgba(0,0,0,.08);
+        flex:0 0 auto;
     }
-    .mobile-search-drawer__close:hover{ background:#f9fafb; }
+    .mobile-search-drawer__close:hover{ background:#e2e8f0; }
     .mobile-search-trigger{
         position:relative;
         width:40px;
@@ -176,7 +237,19 @@
     @media (max-width: 480px){
         .practice-mode{ flex-direction:column; }
         .practitioner-form .field-row{ grid-template-columns:1fr; }
-        .mobile-search-drawer__inner{ padding:10px 10px 14px; }
+        .mobile-search-drawer{ padding:10px; }
+        .mobile-search-drawer__inner{
+            margin-top:0;
+            width:100%;
+            max-height:calc(100dvh - var(--wow-header-offset, 0px) - 20px);
+        }
+        .mobile-search-drawer__panel{ border-radius:22px; padding:12px; }
+        .mobile-search-drawer__header{ padding:2px 2px 12px; }
+        .mobile-search-drawer__title{ font-size:20px; }
+    }
+    @media (max-width: 1279.98px){
+        .wow-brand-mark{ display:none !important; }
+        .wow-mobile-wordmark{ display:inline-flex; align-items:center; }
     }
 </style>
 <style>
@@ -245,13 +318,13 @@
 <div id="mega-overlay" class="mega-overlay" style="display:none"></div>
 <div class="pointer-events-none fixed inset-0 -z-10"></div>
 <header id="wow-header-container">
-    <div class="utility-bar hidden md:block">
+    <div class="utility-bar wow-desktop-utility">
         <div class="container-page">
             <div class="utility-links">
                 <div class="utility-links__primary"><a href="/reset" style="display:none">Free 7-Day Reset</a><a href="/about">About We
                     Offer Wellness®</a><a href="/help" style="display:none;">Help Centre</a><a href="/safety-and-contraindications">Safety
                     &amp; Contraindications</a></div>
-                <div class="utility-links__secondary"><a href="/for-business" style="display:none">For Business</a><a class="wow-practitioner-trigger" href="https://studio.weofferwellness.co.uk/">Become a WOW Practitoner</a></div>
+                <div class="utility-links__secondary"><a href="/for-business" style="display:none">For Business</a><a class="our-vibe-link" href="https://ourvibe.weofferwellness.co.uk" target="_blank" rel="noopener"><img class="our-vibe-link__logo" src="https://studio.weofferwellness.co.uk/storage/uploads/images/87378301-ba9a-444d-b948-328c9e6046bc.png" alt="OUR VIBE"></a><a class="wow-practitioner-trigger" href="https://studio.weofferwellness.co.uk/">Become a WOW Practitoner</a></div>
             </div>
         </div>
     </div>
@@ -261,7 +334,7 @@
         <div class="container container-page header-inner h-16 flex items-center justify-between">
             <div class="flex items-center gap-4"><a class="flex items-center gap-2 shrink-0" href="/" aria-label="We Offer Wellness">
                 <!-- Inline SVG logo -->
-                <span class="block" style="height:28px; display:inline-flex; align-items:center">
+                <span class="wow-brand-mark block" style="height:28px; display:inline-flex; align-items:center">
                 <!-- BEGIN: WOW Logo -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240.46 141.78" height="28" aria-hidden="true">
                       <defs><style>.cls-1-header {fill:#599d91}.cls-2-header {fill:#000}</style></defs>
@@ -291,8 +364,9 @@
                     </svg>
                     <!-- END: WOW Logo -->
                 </span>
+                <span class="wow-mobile-wordmark">We Offer Wellness</span>
             </a>
-                <nav class="hidden md:flex items-center gap-1 wow-desktop-nav" id="desktopNav" aria-label="Main navigation">
+                <nav class="wow-desktop-only items-center gap-1 wow-desktop-nav" id="desktopNav" aria-label="Main navigation">
                     <div class="nav-item"><a class="link-wow--nav" data-mega-menu="need" tabindex="0" href="/needs">By Need</a></div>
                     <div class="nav-item"><a class="link-wow--nav" data-mega-menu="therapies" tabindex="0" href="/therapies">Therapies</a>
                     </div>
@@ -304,7 +378,7 @@
                     <span class="wow-nav-underline" id="navUnderline" aria-hidden="true"></span>
                 </nav>
             </div>
-            <div class="hidden md:flex items-center gap-2 position-relative">
+            <div class="wow-desktop-only items-center gap-2 position-relative">
                 <button
                     type="button"
                     class="icon-btn position-relative mobile-search-trigger"
@@ -329,7 +403,7 @@
                             $headerFullName = $headerProfile['full_name'] ?? 'Customer';
                             $headerInitials = $headerProfile['initials'] ?? 'YOU';
                         @endphp
-                        <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
+                        <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
                             <span class="account-trigger__avatar" aria-hidden="true">{{ $headerInitials }}</span>
                         </button>
                         <div class="account-dropdown" id="accountDropdown" hidden>
@@ -349,7 +423,7 @@
                             </div>
                         </div>
                     @else
-                        <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false">
+                        <button type="button" class="icon-btn account-trigger" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
                             <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                             </svg>
@@ -393,35 +467,26 @@
                 </div>
                 </div>
             </div><!---->
-            <div class="flex items-center gap-3 md:hidden">
+            <div class="wow-mobile-tablet-only items-center gap-3">
                 <button
                     type="button"
-                    class="icon-btn position-relative mobile-search-trigger"
+                    class="mobile-nav-text-trigger mobile-search-trigger"
                     aria-label="Search"
                     aria-expanded="false"
                     data-mobile-search-trigger>
-                    <span class="mobile-search-trigger__icon mobile-search-trigger__icon--search" aria-hidden="true">
-                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
-                        </svg>
-                    </span>
-                    <span class="mobile-search-trigger__icon mobile-search-trigger__icon--close" aria-hidden="true" hidden>
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                        </svg>
-                    </span>
+                    <span class="mobile-nav-text-trigger__label">Search</span>
                 </button>
                 <button
                     type="button"
-                    class="inline-flex items-center justify-center p-2 rounded-md text-ink-700 hamburger"
+                    class="mobile-nav-text-trigger mobile-menu-trigger"
                     data-wow-mobile-toggle
-                    aria-label="Toggle menu" aria-expanded="false">
-                    <span aria-hidden="true"></span>
+                    aria-label="Menu" aria-expanded="false">
+                    <span class="mobile-nav-text-trigger__label">Menu</span>
                 </button>
             </div>
         </div><!----><!---->
         <div class="wow-mega-layer" id="megaLayer">
-            <div id="mega-panel" class="mega-panel wow-mega-shell" aria-hidden="true">
+            <div id="mega-panel" class="mega-panel wow-mega-shell" hidden>
                 <span class="wow-mega-arrow" id="megaArrow"></span>
                 <div class="wow-mega-viewport">
                     <div class="wow-mega-track" id="megaTrack">
@@ -653,7 +718,6 @@
 @media (min-width: 992px){
     .account-dropdown{
         height:auto;
-        min-height:238px;
         max-height:calc(100vh - 120px);
         overflow-y:auto;
     }
@@ -682,6 +746,7 @@
 .mobile-account-logout button{ width:100%; }
 .mobile-account-guest-title{ margin:0; font-weight:800; letter-spacing:-.01em; color:var(--ink-900); }
 .mobile-account-guest-text{ margin:4px 0 0; color:var(--ink-700); font-size:13px; }
+.mobile-menu__kicker{ margin:0 12px 8px; color:var(--ink-500); font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
 
 /* Mega menu — Stripe-style polish */
 #mega-panel .container-page{ padding:0 !important; border-radius:0; }
@@ -926,7 +991,7 @@
     display:block;
     padding:12px;
     margin-left:-12px;
-    border-radius:14px;
+    border-radius:0px;
     color:#273142;
     text-decoration:none;
     transition:background 180ms ease, transform 180ms ease;
@@ -1172,8 +1237,10 @@
         
 
         <!-- Mobile menu (drawer) -->
+        <div id="mobile-menu-backdrop" class="mobile-menu-backdrop" aria-hidden="true"></div>
         <div id="mobile-menu" class="mobile-menu" style="display:none">
 	    <nav class="mobile-menu__nav">
+                <div class="mobile-menu__kicker">Explore</div>
                 <ul class="mobile-menu__list">
                     <li><a class="mobile-menu__link" href="/needs">By Need</a></li>
                     <li><a class="mobile-menu__link" href="/therapies">Therapies</a></li>
@@ -1250,9 +1317,28 @@
             </nav>
         </div>
 
-        <div id="mobile-search-drawer" class="mobile-search-drawer" aria-hidden="true">
+        <div id="mobile-search-drawer" class="mobile-search-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mobile-search-title">
+            <div class="mobile-search-drawer__backdrop" data-mobile-search-close aria-hidden="true"></div>
             <div class="mobile-search-drawer__inner">
-                <x-mobile-search-bar prefix="header-search" />
+                <div class="mobile-search-drawer__panel">
+                    <div
+                        class="mobile-search-drawer__search"
+                        data-wow-searchbar-v4
+                        data-id-prefix="header-search"
+                        data-search-url="{{ url('/search') }}"
+                        data-result-count="0"
+                        data-mobile-top-offset="0"
+                        data-initial-query='@json(request()->query())'
+                        data-static-layout="1"
+                        data-show-chrome="0"
+                        data-mobile-chrome="0"
+                        data-navigate-on-submit="1"
+                        data-force-mobile-layout="1"
+                        data-default-active-segment="what"
+                        data-hide-top-row="1"
+                        data-hide-mobile-close="1"
+                    ></div>
+                </div>
             </div>
         </div>
 
@@ -1352,32 +1438,115 @@
                 const triggers = document.querySelectorAll('[data-mobile-search-trigger]');
                 const modal = document.getElementById('mobile-search-drawer');
                 const mobileMenu = document.getElementById('mobile-menu');
+                const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
                 const burger = document.querySelector('[data-wow-mobile-toggle]');
+                const body = document.body;
                 if (!triggers.length || !modal) return;
+                let bodyOverflowBeforeSearch = '';
+                const pathname = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+                const isHomePage = pathname === '/';
+                const isSearchPage = pathname === '/search';
+                const inlineSearchPrefix = isHomePage ? 'home-search-v4' : (isSearchPage ? 'search-v4' : '');
 
                 const syncTriggerState = (isOpen) => {
                     triggers.forEach((button) => {
-                        const searchIcon = button.querySelector('.mobile-search-trigger__icon--search');
-                        const closeIcon = button.querySelector('.mobile-search-trigger__icon--close');
+                        const label = button.querySelector('.mobile-nav-text-trigger__label');
 
                         button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                         button.classList.toggle('is-open', isOpen);
                         button.setAttribute('aria-label', isOpen ? 'Close search' : 'Search');
-
-                        if (searchIcon) searchIcon.hidden = isOpen;
-                        if (closeIcon) closeIcon.hidden = ! isOpen;
+                        if (label) label.textContent = isOpen ? 'Close search' : 'Search';
                     });
                 };
 
                 const closeMobileMenu = () => {
                     if (!mobileMenu) return;
                     mobileMenu.style.display = 'none';
+                    if (mobileMenuBackdrop) mobileMenuBackdrop.classList.remove('is-visible');
                     burger?.setAttribute('aria-expanded', 'false');
+                    if (burger) burger.setAttribute('aria-label', 'Menu');
+                    const burgerLabel = burger?.querySelector('.mobile-nav-text-trigger__label');
+                    if (burgerLabel) burgerLabel.textContent = 'Menu';
+                    burger?.classList.remove('is-open');
                     try {
                         if (window.__WOWHamburger && typeof window.__WOWHamburger.set === 'function') {
                             window.__WOWHamburger.set(false);
                         }
                     } catch (_) {}
+                };
+
+                const focusInlineWhat = (restoreScroll = false) => {
+                    if (!inlineSearchPrefix) return false;
+
+                    const input = document.getElementById(`${inlineSearchPrefix}-what`);
+                    if (input && typeof input.focus === 'function') {
+                        const beforeY = restoreScroll ? (window.scrollY || window.pageYOffset || 0) : 0;
+                        input.focus({ preventScroll: true });
+                        if (restoreScroll) {
+                            window.requestAnimationFrame(() => {
+                                window.scrollTo(0, beforeY);
+                            });
+                        }
+                        return true;
+                    }
+
+                    return false;
+                };
+
+                const openInlineSearch = () => {
+                    if (!inlineSearchPrefix) return false;
+
+                    try {
+                        window.__WOWCloseMobileSearch?.();
+                    } catch (_) {}
+
+                    if (isHomePage) {
+                        if (window.matchMedia && window.matchMedia('(max-width: 1040px)').matches) {
+                            const beforeY = window.scrollY || window.pageYOffset || 0;
+                            try {
+                                const api = window.__WOWSearchBarV4?.[inlineSearchPrefix];
+                                if (api?.open) {
+                                    api.open('what');
+                                    window.requestAnimationFrame(() => {
+                                        window.scrollTo(0, beforeY);
+                                    });
+                                    return true;
+                                }
+                            } catch (_) {}
+
+                            if (focusInlineWhat(true)) {
+                                return true;
+                            }
+                            return true;
+                        }
+
+                        const root = document.querySelector('.wow-home-search-wrap') || document.getElementById(`${inlineSearchPrefix}-root`);
+                        if (root && typeof root.scrollIntoView === 'function') {
+                            root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+
+                        if (focusInlineWhat()) {
+                            return true;
+                        }
+
+                        return true;
+                    }
+
+                    if (isSearchPage) {
+                        if (focusInlineWhat()) {
+                            return true;
+                        }
+
+                        try {
+                            const api = window.__WOWSearchBarV4?.[inlineSearchPrefix];
+                            if (api?.open) {
+                                api.open('what');
+                                return true;
+                            }
+                        } catch (_) {}
+                    }
+
+                    return focusInlineWhat();
                 };
 
                 const openSearch = () => {
@@ -1386,17 +1555,26 @@
                         return;
                     }
                     closeMobileMenu();
+                    if (bodyOverflowBeforeSearch === '') {
+                        bodyOverflowBeforeSearch = body.style.overflow || '';
+                    }
+                    body.style.overflow = 'hidden';
                     modal.classList.add('is-visible');
                     modal.setAttribute('aria-hidden', 'false');
                     syncTriggerState(true);
                     try {
-                        window.setupUltraSearchBar?.('header-search');
+                        window.__WOWSearchBarV4?.['header-search']?.open?.('what');
                     } catch (_) {}
                 };
 
                 const closeSearch = () => {
+                    try {
+                        window.__WOWSearchBarV4?.['header-search']?.close?.();
+                    } catch (_) {}
                     modal.classList.remove('is-visible');
                     modal.setAttribute('aria-hidden', 'true');
+                    body.style.overflow = bodyOverflowBeforeSearch;
+                    bodyOverflowBeforeSearch = '';
                     syncTriggerState(false);
                 };
                 window.__WOWCloseMobileSearch = closeSearch;
@@ -1411,10 +1589,15 @@
                     trigger.addEventListener('click', (event) => {
                         event.preventDefault();
                         event.stopPropagation();
+                        if (inlineSearchPrefix) {
+                            openInlineSearch();
+                            return;
+                        }
                         openSearch();
                     });
                 });
                 modal.addEventListener('click', (event) => {
+                    if (event.target?.closest?.('[data-mobile-search-close]')) closeSearch();
                     if (event.target === modal) closeSearch();
                 });
                 document.addEventListener('keydown', (event) => {

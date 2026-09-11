@@ -49,7 +49,13 @@ class PageController extends Controller
                     $target .= $query;
                 }
 
-                return redirect()->to($target, $redir->http_code ?? 301);
+                $status = $redir->http_code ?? 301;
+                $response = $this->isAbsoluteUrl($target)
+                    ? redirect()->away($target, $status)
+                    : redirect()->to($target, $status);
+                $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+
+                return $response;
             }
         }
 
@@ -243,12 +249,16 @@ class PageController extends Controller
 
         $parts = parse_url($target);
         if (is_array($parts) && isset($parts['scheme']) && isset($parts['host'])) {
-            $path = (string) ($parts['path'] ?? '/');
-            $query = isset($parts['query']) ? '?' . $parts['query'] : '';
-
-            return ($path !== '' ? $path : '/') . $query;
+            return $target;
         }
 
         return str_starts_with($target, '/') ? $target : '/' . $target;
+    }
+
+    private function isAbsoluteUrl(string $target): bool
+    {
+        $parts = parse_url($target);
+
+        return is_array($parts) && isset($parts['scheme'], $parts['host']);
     }
 }

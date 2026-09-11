@@ -1,23 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://localhost/classes</loc>
+    <loc>https://www.weofferwellness.co.uk/classes</loc>
     <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/events</loc>
-    <lastmod>2026-06-05T18:49:38+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/events</loc>
+    <lastmod>2026-06-26T10:32:52+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/retreats</loc>
-    <lastmod>2026-03-03T10:43:58+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/retreats</loc>
+    <lastmod>2026-07-30T07:14:23+00:00</lastmod>
   </url>
   <url>
-    <loc>http://localhost/therapies</loc>
-    <lastmod>2026-06-11T07:33:19+00:00</lastmod>
-  </url>
-  <url>
-    <loc>http://localhost/workshops</loc>
-    <lastmod>2026-05-31T08:42:07+00:00</lastmod>
+    <loc>https://www.weofferwellness.co.uk/workshops</loc>
+    <lastmod>2026-03-03T10:43:59+00:00</lastmod>
   </url>
 </urlset>

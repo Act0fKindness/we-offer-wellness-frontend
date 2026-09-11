@@ -266,7 +266,14 @@
   }
 
   @media (max-width: 768px){
-    img.ourvibe-poster{ max-height: 34vh; }
+    img.ourvibe-poster{
+      width: min(280px, 85vw);
+      height: auto;
+      max-width: min(280px, 85vw);
+      max-height: none;
+      aspect-ratio: 588 / 594;
+      object-fit: contain;
+    }
   }
 
   @media (max-width: 575px){
@@ -344,10 +351,10 @@
       {{-- Glow signs (desktop only, left, stacked) --}}
       <div class="glow-signs" aria-hidden="true">
         <div class="glow-sign glow-sign--1">
-          <img src="{{ asset('images/hero-slider-2/glow-sign-1.png') }}" alt="">
+          <img src="{{ asset('images/hero-slider-2/glow-sign-1.png') }}" alt="" width="219" height="335">
         </div>
         <div class="glow-sign glow-sign--2">
-          <img src="{{ asset('images/hero-slider-2/glow-sign-2.png') }}" alt="">
+          <img src="{{ asset('images/hero-slider-2/glow-sign-2.png') }}" alt="" width="318" height="181">
         </div>
       </div>
 
@@ -357,7 +364,7 @@
             <img
               src="{{ asset('images/hero-slider-2/poster.png') }}"
               alt="OUR VIBE — Sound Healing & Meditation Festival" class="ourvibe-poster"
-              loading="eager"
+              loading="eager" width="588" height="594"
             >
         </a>
       </div>

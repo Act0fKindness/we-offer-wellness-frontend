@@ -1,6 +1,6 @@
 
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 @php
   $gaId = env('GA_ID') ?: env('VITE_GA_ID') ?: 'G-MZMQNETBYH';
@@ -18,11 +18,12 @@
 
 
 @php
+  $seoService = app(\App\Services\SeoStructureService::class);
   $defaultTitle = 'Holistic Therapy That Works | We Offer Wellness®';
-  $defaultDesc  = 'Holistic therapy, done right: new classes daily, frequent workshops & events, plus restorative retreats—led by trusted practitioners at We Offer Wellness®.';
+  $defaultDesc  = 'Holistic therapy, classes, workshops and retreats from trusted practitioners across the UK, online and in person.';
   $title = $seo['title'] ?? ($pageTitle ?? $defaultTitle);
   $desc  = $seo['description'] ?? ($metaDescription ?? $defaultDesc);
-  $canonicalUrl = $seo['canonical'] ?? ($canonical ?? url()->current());
+  $canonicalUrl = $seoService->canonicalUrl($seo['canonical'] ?? ($canonical ?? null));
   $ogImage = $seo['og_image'] ?? asset('images/default-social-preview.jpg');
   $ogImageAlt = $seo['og_image_alt'] ?? $title;
   $siteName = $seo['site_name'] ?? config('app.name', 'We Offer Wellness');
@@ -30,27 +31,54 @@
   $ogType = $seo['og_type'] ?? 'website';
   $favicon = config('app.favicon_url', '/favicon.ico');
   $isHomePage = trim((string) request()->getPathInfo(), '/') === '';
+  $keywords = $seo['keywords'] ?? $seoService->keywordsForPage([
+    'type' => $type ?? null,
+    'category' => $category ?? null,
+    'categories' => $categories ?? null,
+    'landing' => $landing ?? null,
+    'location' => $location ?? null,
+    'locationQuery' => $locationQuery ?? null,
+    'locationSearch' => $locationSearch ?? null,
+    'city' => $city ?? null,
+    'county' => $county ?? null,
+    'town' => $town ?? null,
+    'products' => $products ?? null,
+    'results' => $results ?? null,
+    'offeringResults' => $offeringResults ?? null,
+    'page' => $page ?? null,
+  ]);
+  $ogTitle = $seoService->shortOgTitle((string) $title);
+  $ogDesc = $seoService->shortOgDescription((string) $desc);
+  $twitterTitle = trim((string) ($seo['twitter_title'] ?? $ogTitle));
+  $twitterDesc = trim((string) ($seo['twitter_description'] ?? $ogDesc));
 @endphp
 
 <title>{{ $title }}</title>
 <meta name="description" content="{{ $desc }}">
+@if(!empty($keywords))
+<meta name="keywords" content="{{ implode(', ', array_values(array_unique(array_filter(array_map('trim', (array) $keywords))))) }}">
+@endif
 <link rel="canonical" href="{{ $canonicalUrl }}">
 <!-- Favicon -->
 <link rel="icon" type="image/png" href="{{ $favicon }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ $favicon }}">
 <link rel="shortcut icon" href="{{ $favicon }}">
 <link rel="apple-touch-icon" href="{{ $favicon }}">
+<meta name="msapplication-TileImage" content="{{ $favicon }}">
 <meta property="og:type" content="{{ $ogType }}">
-<meta property="og:title" content="{{ $title }}">
-<meta property="og:description" content="{{ $desc }}">
+<meta property="og:title" content="{{ $ogTitle }}">
+<meta property="og:description" content="{{ $ogDesc }}">
 <meta property="og:url" content="{{ $canonicalUrl }}">
 <meta property="og:site_name" content="{{ $siteName }}">
 @if(!empty($ogImage))
 <meta property="og:image" content="{{ $ogImage }}">
 <meta property="og:image:alt" content="{{ $ogImageAlt }}">
 @endif
+<meta name="twitter:site" content="@weofferwellness">
+<meta name="twitter:creator" content="@weofferwellness">
 <meta name="twitter:card" content="{{ $twitterCard }}">
-<meta name="twitter:title" content="{{ $title }}">
-<meta name="twitter:description" content="{{ $desc }}">
+<meta name="twitter:title" content="{{ $twitterTitle }}">
+<meta name="twitter:description" content="{{ $twitterDesc }}">
 @if(!empty($ogImage))
 <meta name="twitter:image" content="{{ $ogImage }}">
 <meta name="twitter:image:alt" content="{{ $ogImageAlt }}">
@@ -81,7 +109,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
 @stack('styles')
 
-<link rel="manifest" href="/manifest.json?v=3">
+<link rel="manifest" href="/manifest.json?v=4">
 <meta name="theme-color" content="#90b9a9">
 
 <!-- Built assets via Vite (JS only here; keep inline <style> below intact) -->
@@ -120,7 +148,7 @@
 .auth-switch{ text-align:center; margin-top:10px; color: var(--ink-600); }
 .auth-switch a{ font-weight:700; }
 .account-wrap{ position:relative; }
-.account-dropdown{ position:absolute; right:0; top:calc(100% + 8px); width:280px; height:auto; min-height:238px; max-height:calc(100vh - 120px); overflow-y:auto; background:#fff; border:1px solid rgba(0,0,0,0.15); border-radius:3px; box-shadow:0 20px 40px rgba(15,23,42,.15); padding:16px 16px 0; display:none; z-index:70; }
+.account-dropdown{ position:absolute; right:0; top:calc(100% + 8px); width:280px; height:auto; max-height:calc(100vh - 120px); overflow-y:auto; background:#fff; border:1px solid rgba(0,0,0,0.15); border-radius:3px; box-shadow:0 20px 40px rgba(15,23,42,.15); padding:16px 16px 0; display:none; z-index:70; }
 .account-dropdown.show{ display:block; }
 .account-name{ font-weight:600; font-size:18px; margin-bottom:4px; }
 .account-email{ color: var(--ink-600); margin-bottom:12px; font-size:14px; }
@@ -23171,7 +23199,7 @@ a:hover {
 .wow-ultra .item:hover, .wow-ultra .item[aria-selected="true"]{ background:#f2f5ff }
 .wow-ultra .item .title{ font-weight:600; color:#0f172a }
 .wow-ultra .item .type{ font-size:.75rem; padding:.1rem .5rem; border-radius:999px; background:#eef2ff; color:#2536eb; margin-left:.5rem }
-.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; width:min(680px, 96vw); max-width:min(980px, 96vw); border-radius:18px }
+.wow-ultra [id$='when-pane']{ left:50%; transform:translateX(-50%); right:auto; width:min(700px, 96vw); max-width:min(980px, 96vw); border-radius:18px }
 .wow-ultra [id$='who-pane']{ left:auto; right:0; max-width:min(560px, 96vw); border-radius:18px }
 @media (max-width: 768px){ .wow-ultra [id$='who-pane']{ left:0; right:0; max-width:100%; } }
 /* Utility bar */
@@ -24046,6 +24074,58 @@ a:hover {
 .mobile-menu__link:hover{ background: var(--ink-100); color: var(--ink-900); }
 .mobile-menu__section{ margin-top: 10px; padding-top: 10px; border-top:1px solid var(--ink-200); }
 .mobile-menu__section-title{ font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-500); font-weight:700; margin-bottom:8px; }
+.mobile-menu-backdrop{ display:none; }
+
+/* Tablet menu: keep the burger, but give it a more spacious panel layout than mobile. */
+@media (min-width: 768px) and (max-width: 1279px){
+  .mobile-menu{
+    z-index:3500;
+    top:calc(var(--wow-header-offset, 88px) + 20px) !important;
+    margin-top:10px !important;
+    left:50% !important;
+    right:auto !important;
+    bottom:auto;
+    width:min(680px, calc(100vw - 48px));
+    max-height:calc(100vh - var(--wow-header-offset, 88px) - 54px);
+    transform:translateX(-50%) !important;
+    border:1px solid rgba(16,24,40,.12);
+    border-radius:24px;
+    box-shadow:0 24px 70px rgba(16,24,40,.18);
+    background:rgba(255,255,255,.98);
+    backdrop-filter:blur(14px);
+  }
+  .mobile-menu-backdrop.is-visible{
+    display:block;
+    position:fixed;
+    top:var(--wow-header-offset, 88px);
+    right:0;
+    bottom:0;
+    left:0;
+    z-index:3499;
+    background:rgba(15,23,42,.34);
+  }
+  .mobile-menu__nav{ padding:24px; }
+  .mobile-menu__list{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:6px 14px;
+  }
+  .mobile-menu__link{
+    padding:12px 14px;
+    border:1px solid transparent;
+    font-size:14px;
+  }
+  .mobile-menu__link:hover{
+    border-color:rgba(84,148,131,.24);
+    background:rgba(84,148,131,.08);
+  }
+  .mobile-menu__section{
+    margin-top:22px;
+    padding-top:18px;
+  }
+  .mobile-menu__section-title{ padding-left:14px; margin-bottom:10px; }
+  .mobile-menu__account{ margin-top:22px; padding-top:18px; }
+}
 
 .drawer-item > summary {
     padding: .6rem .75rem;
@@ -25572,8 +25652,8 @@ header .nav-item > a:hover {
     --btn-ring: #d3d8e6;
 
     /* CTA */
-    --cta-bg: #549483;
-    --cta-hover: #000000;
+    --cta-bg: #2f6f60;
+    --cta-hover: #214f44;
     --cta-ring: #cfe6df;
 
     /* Secondary / Neutral */

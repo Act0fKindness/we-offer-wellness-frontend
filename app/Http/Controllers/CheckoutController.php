@@ -115,6 +115,16 @@ class CheckoutController extends Controller
             return response()->json(['ok'=>false,'error'=>'empty_cart'], 400);
         }
 
+        $hasPhysicalProduct = collect($items)->contains(function ($item): bool {
+            $meta = is_array($item['meta'] ?? null) ? $item['meta'] : [];
+            $source = strtolower(trim((string) ($item['source_version'] ?? ($meta['source_version'] ?? ''))));
+            $kind = strtolower(trim((string) ($meta['product_kind'] ?? $meta['type'] ?? '')));
+            $id = strtolower(trim((string) ($item['id'] ?? '')));
+            return $source === 'store'
+                || str_starts_with($id, 'store-')
+                || in_array($kind, ['physical', 'physical_product', 'store_product'], true);
+        });
+
         // Build line items and compute totals
         $currency = 'gbp';
         $lineItems = [];
@@ -228,7 +238,7 @@ class CheckoutController extends Controller
                 $metadata['order_id'] = (string)$order->id;
             }
 
-            $session = StripeSession::create([
+            $sessionPayload = [
                 'mode' => 'payment',
                 'payment_method_types' => ['card'],
                 'line_items' => $lineItems,
@@ -237,7 +247,13 @@ class CheckoutController extends Controller
                 'customer_email' => $resolvedEmail,
                 'success_url' => route('checkout.success', [], true).'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => route('checkout.cancel', [], true).'?session_id={CHECKOUT_SESSION_ID}',
-            ]);
+            ];
+            if ($hasPhysicalProduct) {
+                $sessionPayload['shipping_address_collection'] = [
+                    'allowed_countries' => ['GB'],
+                ];
+            }
+            $session = StripeSession::create($sessionPayload);
 
             if ($attempt) {
                 $attempt->stripe_session_id = $session->id ?? null;
@@ -417,8 +433,8 @@ class CheckoutController extends Controller
                     'quantity' => $qty,
                     'meta' => $meta,
                 ];
-                if ($hasProductId && $sourceVersion !== 'v3') {
-                    // Legacy product-backed lines keep the foreign key; v3 offerings are stored in meta only.
+                if ($hasProductId && ! in_array($sourceVersion, ['v3', 'store'], true)) {
+                    // Legacy product-backed lines keep the foreign key; V3 offerings and Store products are stored in meta only.
                     $payload['product_id'] = $productId ?: 0;
                 } elseif ($hasProductId) {
                     $payload['product_id'] = null;

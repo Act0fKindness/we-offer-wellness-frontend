@@ -2,23 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-
 class HelpPagesController extends Controller
 {
     public function faq()
     {
-        $body = <<<'HTML'
-<h2>Frequently asked questions</h2>
-<p><strong>How do I manage a booking?</strong><br>Visit your confirmation email to reschedule or cancel, or message the practitioner directly from your account.</p>
-<p><strong>What if I need to cancel?</strong><br>Each listing includes a cancellation window. If you cannot find it, <a href="/contact?topic=support">contact support</a>.</p>
-<p><strong>Do I need any equipment?</strong><br>Most therapies only require comfortable clothing and a quiet space. Classes will note props if needed.</p>
-HTML;
-        return Inertia::render('General/Page', [
-            'title' => 'FAQ',
-            'metaDescription' => 'Common booking, payment and account questions.',
-            'bodyHtml' => $body,
-            'canonical' => url('/help/faq'),
+        return view('help.faq', [
+            'seo' => [
+                'title' => 'FAQ | We Offer Wellness®',
+                'description' => 'Common booking, payment, account and provider questions for We Offer Wellness®.',
+                'canonical' => url('/help/faq'),
+            ],
         ]);
     }
 
@@ -46,4 +39,3 @@ HTML;
         ]);
     }
 }
-

@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('store:run-abandoned-cart')->hourly()->withoutOverlapping();
 use App\Models\LegacyPageVisit;
 use App\Models\Product;
 use App\Models\ProductStatus;

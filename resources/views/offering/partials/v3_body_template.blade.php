@@ -10,7 +10,9 @@
     $mode = trim((string) ($offering['mode'] ?? ''));
     $bookingFlow = strtolower(trim((string) ($offering['booking_flow'] ?? 'flexible')));
     $sourceVersion = strtolower(trim((string) ($offering['source_version'] ?? '')));
-    $usesLegacyBuybox = false;
+    $isStoreProduct = (bool) ($isStoreProduct ?? false) || ($offering['kind'] ?? '') === 'physical_product';
+    $productOnly = (bool) ($productOnly ?? false);
+    $usesLegacyBuybox = $isStoreProduct;
     $currency = strtoupper(trim((string) ($offering['currency'] ?? 'GBP')));
     $price = is_numeric($offering['price'] ?? null) ? (float) $offering['price'] : 0.0;
     $priceMin = is_numeric($offering['price_min'] ?? null) ? (float) $offering['price_min'] : $price;
@@ -161,7 +163,9 @@
 </svg>
 SVG;
     };
-    $galleryImages = is_array($offering['images'] ?? null) ? array_values(array_filter($offering['images'])) : [];
+    $galleryImages = is_array($offering['images'] ?? null)
+        ? array_values(array_unique(array_filter($offering['images'])))
+        : [];
     $primaryImage = trim((string) ($offering['image'] ?? ''));
     if ($primaryImage !== '' && ! in_array($primaryImage, $galleryImages, true)) {
         array_unshift($galleryImages, $primaryImage);
@@ -181,7 +185,18 @@ SVG;
     }
     $practitionerBio = trim((string) ($practitioner['bio'] ?? ''));
     $practitionerLocation = trim((string) ($practitioner['location'] ?? ''));
-    $practitionerCredentials = trim((string) ($practitioner['credentials'] ?? ''));
+    $practitionerCredentialsRaw = $practitioner['credentials'] ?? '';
+    if (is_array($practitionerCredentialsRaw)) {
+        $practitionerCredentialsRaw = array_values(array_filter(array_map(
+            static fn ($credential): string => is_array($credential)
+                ? trim((string) ($credential['title'] ?? $credential['name'] ?? $credential['label'] ?? ''))
+                : trim((string) $credential),
+            $practitionerCredentialsRaw
+        )));
+    }
+    $practitionerCredentials = is_array($practitionerCredentialsRaw)
+        ? implode(', ', $practitionerCredentialsRaw)
+        : trim((string) $practitionerCredentialsRaw);
     $practitionerProfileUrl = trim((string) ($practitioner['profile_url'] ?? ''));
     $practitionerSpecialties = is_array($practitioner['specialties'] ?? null) ? array_values(array_filter(array_map('trim', $practitioner['specialties']))) : [];
     $splitList = static function (string $text): array {
@@ -242,6 +257,21 @@ SVG;
         }
 
         $label = trim((string) ($row['label'] ?? ''));
+        $isOnlineVenue = ! empty($row['online']) || str_contains(strtolower($label), 'online');
+        if ($isOnlineVenue) {
+            $locations[] = [
+                'id' => 'loc-online',
+                'label' => 'Online session',
+                'address' => 'Live session link sent after booking',
+                'notes' => 'Online appointment',
+                'lat' => null,
+                'lng' => null,
+                'online' => true,
+                'location_key' => 'online',
+                'variant_ids' => [],
+            ];
+            continue;
+        }
         $streetAddressLines = array_values(array_filter([
             trim((string) ($row['address_line_1'] ?? '')),
             trim((string) ($row['address_line_2'] ?? '')),
@@ -263,18 +293,16 @@ SVG;
         $lat = is_numeric($row['lat'] ?? null) ? (float) $row['lat'] : null;
         $lng = is_numeric($row['lng'] ?? null) ? (float) $row['lng'] : null;
         $notes = trim((string) ($row['notes'] ?? ''));
-        $displayLabel = trim(implode(', ', array_filter([
-            trim((string) ($row['city'] ?? '')),
-            trim((string) ($row['county'] ?? '')),
-            $country,
-        ])));
+        $displayLabel = $label !== ''
+            ? $label
+            : trim(implode(', ', array_filter([
+                trim((string) ($row['city'] ?? '')),
+                trim((string) ($row['county'] ?? '')),
+                $country,
+            ])));
         $displayLabel = $displayLabel !== ''
             ? $displayLabel
-            : ($label !== ''
-                ? $label
-                : ($streetAddress !== ''
-                    ? $streetAddress
-                    : ('Location ' . ($index + 1))));
+            : ($streetAddress !== '' ? $streetAddress : ('Location ' . ($index + 1)));
 
         $locations[] = [
             'id' => 'loc-venue-' . ($index + 1),
@@ -362,6 +390,57 @@ SVG;
 
     $physicalLocations = array_values(array_filter($locations, fn ($location) => empty($location['online'])));
     $hasOnlineLocation = collect($locations)->contains(fn ($location) => ! empty($location['online']));
+
+    $variantSelections = collect(is_array($offering['variants'] ?? null) ? $offering['variants'] : [])->flatMap(static function (array $variant): array {
+        return array_map(static fn ($value): string => strtolower(trim((string) $value)), (array) ($variant['selection'] ?? []));
+    });
+    $hasInPersonVariant = $variantSelections->contains(static fn (string $value): bool => str_contains($value, 'in-person') || str_contains($value, 'in person'));
+    if (empty($physicalLocations) && $hasInPersonVariant && is_array($practitioner['locations'] ?? null)) {
+        $fallbackLocations = [];
+        foreach ($practitioner['locations'] as $index => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $label = trim((string) ($row['label'] ?? ''));
+            $address = trim((string) ($row['formatted_address'] ?? $row['address'] ?? ''));
+            $combined = trim(implode(', ', array_filter([$label, $address])));
+            $normalized = strtolower(preg_replace('/\s+/', ' ', $combined) ?? $combined);
+            $lat = is_numeric($row['lat'] ?? null) ? (float) $row['lat'] : null;
+            $lng = is_numeric($row['lng'] ?? null) ? (float) $row['lng'] : null;
+
+            if (
+                $combined === ''
+                || str_contains($normalized, 'online')
+                || str_contains($normalized, 'null')
+                || preg_match('/^(uk|u\.k\.|gb|great britain|united kingdom|england|scotland|wales|northern ireland)$/i', $label)
+                || ($lat === 0.0 && $lng === 0.0)
+            ) {
+                continue;
+            }
+
+            $fallbackLocations[] = [
+                'id' => 'loc-practitioner-' . ($index + 1),
+                'label' => $label !== '' ? $label : $address,
+                'address' => $address !== '' ? $address : $label,
+                'street_address' => '',
+                'full_address' => $address !== '' ? $address : $label,
+                'notes' => '',
+                'lat' => $lat,
+                'lng' => $lng,
+                'online' => false,
+                'location_key' => $normalizeLocationKey($label !== '' ? $label : $address),
+                'variant_ids' => [],
+            ];
+        }
+
+        $physicalLocations = collect($fallbackLocations)
+            ->unique(static fn (array $location): string => strtolower(trim((string) ($location['label'] ?? '') . '|' . ($location['address'] ?? ''))))
+            ->values()
+            ->all();
+        $locations = array_merge($physicalLocations, $locations);
+    }
+
     $onlineOnlyLocation = $hasOnlineLocation && count($physicalLocations) === 0;
     if ($onlineOnlyLocation) {
         $locations = array_map(static function (array $location): array {
@@ -385,16 +464,24 @@ SVG;
         }
     }
 
-    $formatLabel = 'In-person';
-    $simpleLocationLabels = array_map(fn ($location) => strtolower((string) ($location['label'] ?? '')), $locations);
-    $simpleLocationLabels = array_values(array_filter($simpleLocationLabels));
-    if ($hasOnlineLocation && count($physicalLocations) > 0) {
-        $formatLabel = 'In-person & online';
-    } elseif ($hasOnlineLocation && count($physicalLocations) === 0) {
+    $variantFormatValues = collect(is_array($offering['variants'] ?? null) ? $offering['variants'] : [])->flatMap(static function (array $variant): array {
+        return array_map(
+            static fn ($value): string => strtolower(trim((string) $value)),
+            (array) ($variant['selection'] ?? [])
+        );
+    });
+    $hasOnlineVariant = $variantFormatValues->contains(static fn (string $value): bool => str_contains($value, 'online'));
+    $hasInPersonVariant = $variantFormatValues->contains(static fn (string $value): bool => str_contains($value, 'in-person') || str_contains($value, 'in person'));
+    $hasOnlineAvailability = $hasOnlineLocation || $hasOnlineVariant || str_contains(strtolower($mode), 'online');
+    $hasInPersonAvailability = count($physicalLocations) > 0
+        || $hasInPersonVariant
+        || str_contains(strtolower($mode), 'person');
+
+    if ($hasOnlineAvailability && $hasInPersonAvailability) {
+        $formatLabel = 'Online + In-person';
+    } elseif ($hasOnlineAvailability) {
         $formatLabel = 'Exclusively online';
-    } elseif (str_contains(strtolower($mode), 'online')) {
-        $formatLabel = $hasOnlineLocation ? 'Exclusively online' : 'Online';
-    } elseif (str_contains(strtolower($mode), 'person') || count($physicalLocations) > 0) {
+    } else {
         $formatLabel = 'In-person';
     }
 
@@ -459,9 +546,13 @@ SVG;
 SVG;
     $formatIconUrl = null;
     $formatLabelLower = strtolower($formatLabel);
-    if ((str_contains($formatLabelLower, 'online') || $onlineOnlyLocation) && ! str_contains($formatLabelLower, '&')) {
+    if ((str_contains($formatLabelLower, 'online') || $onlineOnlyLocation)
+        && ! str_contains($formatLabelLower, '&')
+        && ! str_contains($formatLabelLower, '+')) {
         $formatIconUrl = null;
-    } elseif ((str_contains($formatLabelLower, 'in-person') || str_contains($formatLabelLower, 'in person')) && ! str_contains($formatLabelLower, '&')) {
+    } elseif ((str_contains($formatLabelLower, 'in-person') || str_contains($formatLabelLower, 'in person'))
+        && ! str_contains($formatLabelLower, '&')
+        && ! str_contains($formatLabelLower, '+')) {
         $formatIconUrl = asset('images/offering-format-icons/format-inperson.png');
     } elseif (count($physicalLocations) > 0 && ! $hasOnlineLocation) {
         $formatIconUrl = asset('images/offering-format-icons/format-inperson.png');
@@ -590,6 +681,45 @@ SVG;
         ? (int) $offering['selectedVariantPriceOptionId']
         : ($selectedVariantCard['price_option_id'] ?? null);
 
+    // V3 group options are stored as a per-person rate.
+    $groupPricing = false;
+    $groupMin = null;
+    $groupMax = null;
+    foreach ($variantCards as $variantCard) {
+        $variantText = implode(' ', array_filter(array_merge(
+            [(string) ($variantCard['label'] ?? '')],
+            array_map('strval', (array) ($variantCard['selection'] ?? []))
+        )));
+        if (preg_match('/(?:3\+\s*group|(\d+)\s*(?:-|–|to)\s*(\d+)\s*group|(\d+)\s*people?)/i', $variantText, $groupMatch)) {
+            $groupPricing = true;
+            $minimum = (int) ($groupMatch[1] ?? $groupMatch[3] ?? 3);
+            $maximum = isset($groupMatch[2]) && $groupMatch[2] !== ''
+                ? (int) $groupMatch[2]
+                : (isset($groupMatch[3]) && $groupMatch[3] !== '' ? $minimum : null);
+            if ($minimum >= 3) {
+                $groupMin = $groupMin === null ? $minimum : min($groupMin, $minimum);
+                if ($maximum !== null) {
+                    $groupMax = $groupMax === null ? $maximum : max($groupMax, $maximum);
+                }
+            }
+        }
+    }
+    $groupMin = $groupMin ?? 3;
+    $selectedGroupCount = $groupMin;
+    $selectedGroupText = implode(' ', array_filter(array_merge(
+        [(string) ($selectedVariantLabel ?? '')],
+        array_map('strval', $selectedVariantSelection)
+    )));
+    if (preg_match('/(\d+)\s*(?:-|–|to)\s*(\d+)\s*group/i', $selectedGroupText, $selectedGroupMatch)) {
+        $selectedGroupCount = max($groupMin, (int) $selectedGroupMatch[1]);
+    } elseif (preg_match('/(\d+)\s*people?/i', $selectedGroupText, $selectedGroupMatch)) {
+        $selectedGroupCount = max($groupMin, (int) $selectedGroupMatch[1]);
+    }
+    if ($groupMax !== null) {
+        $groupMax = max($groupMin, $groupMax);
+        $selectedGroupCount = min($groupMax, $selectedGroupCount);
+    }
+
     $venueLocationLookup = [];
     foreach ($locations as $location) {
         $locationKey = trim((string) ($location['location_key'] ?? ''));
@@ -601,6 +731,7 @@ SVG;
     }
 
     $variantLocationGroups = [];
+    $inPersonVariantIds = [];
     foreach ($variantCards as $variantCard) {
         $selection = array_values(array_filter(array_map('trim', (array) ($variantCard['selection'] ?? []))));
         if (empty($selection)) {
@@ -619,6 +750,15 @@ SVG;
             if (str_contains($selectionLower, 'online')) {
                 $locationValue = 'Online session';
                 $locationKey = 'online';
+                break;
+            }
+            if (str_contains($selectionLower, 'in-person') || str_contains($selectionLower, 'in person')) {
+                $inPersonVariantIds[] = (string) ($variantCard['id'] ?? '');
+                if (count($physicalLocations) === 1) {
+                    $physicalLocation = $physicalLocations[0];
+                    $locationValue = (string) ($physicalLocation['label'] ?? 'In-person');
+                    $locationKey = (string) ($physicalLocation['location_key'] ?? '');
+                }
                 break;
             }
 
@@ -676,8 +816,31 @@ SVG;
             ];
         }
 
-        $onlineLocations = array_values(array_filter($locations, fn (array $location): bool => ! empty($location['online'])));
-        $locations = array_merge($rebuiltLocations, $onlineLocations);
+        $rebuiltLocationKeys = array_values(array_filter(array_map(
+            static fn (array $location): string => (string) ($location['location_key'] ?? ''),
+            $rebuiltLocations
+        )));
+        $remainingLocations = array_values(array_filter($locations, static function (array $location) use ($rebuiltLocationKeys): bool {
+            if (! empty($location['online'])) {
+                return true;
+            }
+
+            return ! in_array((string) ($location['location_key'] ?? ''), $rebuiltLocationKeys, true);
+        }));
+        $locations = array_merge($rebuiltLocations, $remainingLocations);
+    }
+
+    if (count($physicalLocations) > 1 && ! empty($inPersonVariantIds)) {
+        $locations = array_map(static function (array $location) use ($inPersonVariantIds): array {
+            if (empty($location['online'])) {
+                $location['variant_ids'] = array_values(array_unique(array_merge(
+                    (array) ($location['variant_ids'] ?? []),
+                    $inPersonVariantIds
+                )));
+            }
+
+            return $location;
+        }, $locations);
     }
 
     $dedupedLocations = [];
@@ -724,8 +887,18 @@ SVG;
 
     $selectedVariantMode = strtolower(trim(implode(' ', $selectedVariantSelection)));
     $preferredLocation = null;
+    $selectedVariantLocationKey = null;
+    foreach (array_reverse($selectedVariantSelection) as $selectionValue) {
+        $selectionKey = $normalizeLocationKey((string) $selectionValue);
+        if ($selectionKey !== '' && isset($knownLocationKeys[$selectionKey]) && $selectionKey !== 'online') {
+            $selectedVariantLocationKey = $selectionKey;
+            break;
+        }
+    }
     if ($selectedVariantMode !== '') {
-        if (str_contains($selectedVariantMode, 'in-person') || str_contains($selectedVariantMode, 'in person')) {
+        if ($selectedVariantLocationKey !== null) {
+            $preferredLocation = collect($locations)->first(fn (array $location): bool => ($location['location_key'] ?? '') === $selectedVariantLocationKey);
+        } elseif (str_contains($selectedVariantMode, 'in-person') || str_contains($selectedVariantMode, 'in person')) {
             $preferredLocation = collect($locations)->first(fn (array $location): bool => empty($location['online']));
         } elseif (str_contains($selectedVariantMode, 'online')) {
             $preferredLocation = collect($locations)->first(fn (array $location): bool => ! empty($location['online']));
@@ -736,11 +909,6 @@ SVG;
         $selectedLocationId = (string) ($preferredLocation['id'] ?? $selectedLocationId);
         $selectedLocationLabel = trim((string) ($preferredLocation['label'] ?? $selectedLocationLabel));
         $selectedLocationAddress = trim((string) ($preferredLocation['address'] ?? $selectedLocationAddress));
-    }
-
-    $selectedLocationRow = collect($locations)->first(fn (array $location): bool => (string) ($location['id'] ?? '') === (string) $selectedLocationId);
-    if (is_array($selectedLocationRow)) {
-        $formatLabel = ! empty($selectedLocationRow['online']) ? 'Online' : 'In-person';
     }
 
     $quickInfo = [
@@ -792,6 +960,39 @@ SVG;
 
         return $card;
     }, $quickInfo);
+
+    if ($isStoreProduct) {
+        $stockQuantity = is_numeric($offering['inventory_quantity'] ?? null)
+            ? max(0, (int) $offering['inventory_quantity'])
+            : null;
+        $isInStock = (bool) ($offering['in_stock'] ?? true) && ($stockQuantity === null || $stockQuantity > 0);
+        if (! $isInStock) {
+            $stockStatusLabel = 'Out of stock';
+            $stockStatusClass = 'is-urgent';
+        } elseif ($stockQuantity !== null && $stockQuantity <= 10) {
+            $stockStatusLabel = 'Only ' . $stockQuantity . ' left — order soon';
+            $stockStatusClass = 'is-urgent';
+        } elseif ($stockQuantity !== null && $stockQuantity < 30) {
+            $stockStatusLabel = 'Low stock — ' . $stockQuantity . ' remaining';
+            $stockStatusClass = 'is-low';
+        } else {
+            $stockStatusLabel = 'In stock';
+            $stockStatusClass = '';
+        }
+        $typeLabel = 'Product';
+        $formatLabel = 'Physical product';
+        $locationSummary = 'Ships to you';
+        $durationLabel = 'Ships to you';
+        $bookingSummaryLabel = $offering['in_stock'] ?? true ? 'In stock' : 'Unavailable';
+        $priceSummary = '£' . number_format($price, 2);
+        $quickInfo = [
+            ['label' => 'Format', 'value' => 'Physical product', 'icon' => 'format'],
+            ['label' => 'Delivery', 'value' => 'Ships to you', 'icon' => 'delivery'],
+            ['label' => 'Stock', 'value' => $stockStatusLabel, 'icon' => 'booking'],
+            ['label' => 'Price', 'value' => $priceSummary, 'icon' => 'price'],
+        ];
+        $quickInfoMobile = $quickInfo;
+    }
 
     $renderRichHtml = static function (string $value): string {
         return \App\Support\ContentFormatter::format($value);
@@ -856,6 +1057,10 @@ SVG;
         'selectedVariantSelection' => $selectedVariantSelection,
         'selectedVariantPrice' => $selectedVariantPrice,
         'selectedVariantPriceOptionId' => $selectedVariantPriceOptionId,
+        'groupPricing' => $groupPricing,
+        'groupMin' => $groupMin,
+        'groupMax' => $groupMax,
+        'selectedGroupCount' => $selectedGroupCount,
         'practitioner' => $practitioner,
         'sourceVersion' => $sourceVersion !== '' ? $sourceVersion : 'legacy',
         'bookingEndpoint' => url('/api/booking/' . ($sourceVersion === 'v3' ? 'offering' : 'product') . '/' . (int) ($offering['id'] ?? 0)),
@@ -1204,6 +1409,18 @@ SVG;
         background: var(--green);
         border-radius: 2px;
     }
+    .wow-v3-offering-page .status-dot.is-low {
+        color: #815c00;
+        background: #fff7d6;
+        border-color: #f0d36a;
+    }
+    .wow-v3-offering-page .status-dot.is-low::before { background: #d49a00; }
+    .wow-v3-offering-page .status-dot.is-urgent {
+        color: #a33127;
+        background: #fff0ee;
+        border-color: #edaaa2;
+    }
+    .wow-v3-offering-page .status-dot.is-urgent::before { background: #d94b3d; }
     .wow-v3-offering-page .mobile-panel-pick { display: none; margin-top: 14px; }
     .wow-v3-offering-page .booking-fields { display: block; }
     .wow-v3-offering-page .field-label {
@@ -1448,6 +1665,15 @@ SVG;
         color: var(--muted);
         font-size: 12px;
         margin-top: 3px;
+    }
+    .wow-v3-offering-page .ticket-control-group {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex: 1;
+        padding-right: 14px;
+        border-right: 1px solid var(--line);
     }
     .wow-v3-offering-page .qty {
         display: inline-flex;
@@ -2599,6 +2825,10 @@ SVG;
         .wow-v3-offering-page .hero-meta { display: none; }
         .wow-v3-offering-page .quick-glance-section { display: block; }
         .wow-v3-offering-page .quick-glance-section .section-heading { display: none; }
+        .wow-v3-offering-page .store-v3-quick-glance .section-heading { display: flex; }
+        .wow-v3-offering-page .store-v3-mobile-product-image{display:block;margin:22px 0 0;overflow:hidden;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft)}
+        .wow-v3-offering-page .store-v3-mobile-product-image img{display:block;width:100%;height:260px;object-fit:cover}
+        .wow-v3-offering-page .store-v3-desktop-gallery { display: none; }
         .wow-v3-offering-page .content-main {
             display: flex;
             flex-direction: column;
@@ -2725,23 +2955,23 @@ SVG;
             line-height: 1.15;
         }
         .wow-v3-offering-page .quick-info-icon {
-            width: 65px !important;
-            height: 65px !important;
+            width: 56px !important;
+            height: 56px !important;
         }
         .wow-v3-offering-page .quick-info-icon--duration,
         .wow-v3-offering-page .quick-info-icon--format {
-            width: 65px !important;
-            height: 65px !important;
+            width: 56px !important;
+            height: 56px !important;
         }
         .wow-v3-offering-page .quick-info-icon svg,
         .wow-v3-offering-page .quick-info-icon img {
-            width: 65px !important;
-            height: 65px !important;
+            width: 56px !important;
+            height: 56px !important;
         }
         .wow-v3-offering-page .quick-info-icon--duration svg,
         .wow-v3-offering-page .quick-info-icon--format img {
-            width: 65px !important;
-            height: 65px !important;
+            width: 56px !important;
+            height: 56px !important;
         }
         .wow-v3-offering-page .quick-info-card small,
         .wow-v3-offering-page .quick-info-card strong {
@@ -2840,10 +3070,45 @@ SVG;
         }
         body.wow-v3-mobile-ticket-visible { padding-bottom: 82px; }
     }
+    .store-v3-reviews .offering-reviews__header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+    .store-v3-reviews .offering-reviews__header h2{margin:0;color:var(--ink);font-size:clamp(28px,3vw,42px);letter-spacing:-.035em}
+    .wow-v3-offering-page .store-v3-reviews h2{font-family:inherit;font-size:clamp(26px,3vw,40px);line-height:1;letter-spacing:-.05em;font-weight:500;color:var(--ink)}
+    .store-v3-reviews .offering-reviews__header .kicker{margin:0 0 8px;color:var(--green);font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+    .store-v3-reviews .offering-reviews__badge{display:inline-flex;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:3px;background:var(--soft);color:var(--green-dark);font-size:13px;font-weight:700;white-space:nowrap}
+    .store-v3-review-empty{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:24px;padding:24px;border:1px solid var(--line);border-radius:3px;background:var(--soft);color:var(--ink)}
+    .store-v3-review-empty div{display:flex;flex-direction:column;gap:6px}.store-v3-review-empty span{color:var(--muted);font-size:13px}.store-v3-review-empty .btn{flex:0 0 auto}
+    .store-v3-mobile-product-image{display:none}
+    .store-v3-desktop-gallery{display:block}
+    .wow-v3-product-only .hero-wrap{min-height:100vh;background:var(--soft)}
+    .wow-v3-product-only .hero{min-height:100vh;background:var(--soft)}
+    .wow-v3-product-only .hero-slide,.wow-v3-product-only .hero-overlay,.wow-v3-product-only .hero-watermark{display:none}
+    .wow-v3-product-only .hero-content{max-width:1280px;padding:clamp(28px,6vw,80px);margin:0 auto;display:grid;grid-template-columns:minmax(280px,1fr) minmax(360px,.8fr);gap:clamp(28px,6vw,84px);align-items:center}
+    .wow-v3-product-only .hero-main{display:block;min-width:0}
+    .wow-v3-product-only .store-v3-product-only-image{display:flex;align-items:center;justify-content:center;order:-1;margin:0;min-height:clamp(360px,62vh,680px);border:1px solid var(--line);border-radius:var(--radius);background:#fff;overflow:hidden}
+    .wow-v3-product-only .store-v3-product-only-image img{width:100%;height:100%;max-height:680px;object-fit:contain}
+    .wow-v3-product-only .hero-content>.booking-panel{grid-column:2;grid-row:1}
+    .wow-v3-product-only .content-wrap{display:none}
+    .wow-v3-product-only .hero-review-badge{display:none}
+    @media(max-width:760px){
+        .wow-v3-product-only .hero-wrap,.wow-v3-product-only .hero{min-height:0}
+        .wow-v3-product-only .hero-content{padding:24px 16px 34px}
+        .wow-v3-product-only .hero-content{display:flex;flex-direction:column;align-items:stretch;gap:22px}
+        .wow-v3-product-only .hero-main{display:block}
+        .wow-v3-product-only .store-v3-product-only-image{order:0;min-height:360px}
+        .wow-v3-product-only .hero-content>.booking-panel{order:3}
+    }
+    .store-v3-review-actions{display:flex!important;flex-direction:row!important;gap:10px!important}.store-v3-review-composer{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);gap:28px;margin-top:24px;padding:24px;border:1px solid var(--line);border-radius:3px;background:#fff;box-shadow:var(--shadow)}.store-v3-review-composer h3{margin:0;color:var(--ink);font-size:22px}.store-v3-review-composer p:not(.eyebrow){color:var(--muted);font-size:13px}.store-v3-review-composer form{display:grid;gap:12px}.store-v3-review-stars{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:4px}.store-v3-review-stars input{position:absolute;opacity:0}.store-v3-review-stars span{color:#c9d2ce;font-size:28px;cursor:pointer}.store-v3-review-stars label:hover span,.store-v3-review-stars label:has(input:checked) span,.store-v3-review-stars label:has(~ label input:checked) span{color:#d49a2a}.store-v3-review-input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:3px;padding:12px 14px;background:#fff;color:var(--ink);font:inherit}.store-v3-review-input:focus{outline:2px solid rgba(84,148,131,.25);border-color:var(--green)}
+    .store-v3-checkout-panel .store-v3-compare-price{margin-top:6px;color:#98a29e;font-size:15px;font-weight:700;text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:#98a29e}
+    .store-v3-variant-picker{display:grid;gap:8px;margin:20px 0 0}.store-v3-variant-picker>span{color:var(--muted);font-size:12px;font-weight:700}.store-v3-variant-options{display:grid;gap:8px}.store-v3-variant-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--ink);text-align:left;cursor:pointer}.store-v3-variant-option:hover,.store-v3-variant-option.is-selected{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}.store-v3-variant-option.is-selected{background:var(--green-pale)}.store-v3-variant-option[disabled]{cursor:not-allowed;opacity:.5}.store-v3-variant-option strong{font-size:13px}.store-v3-variant-option small{color:var(--muted);font-size:12px;white-space:nowrap}
+    .store-v3-purchase-summary{display:grid;gap:0;margin:22px 0 20px;border:1px solid var(--line);border-radius:3px;background:var(--soft)}
+    .store-v3-purchase-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:13px 14px;border-bottom:1px solid var(--line)}
+    .store-v3-purchase-row:last-child{border-bottom:0}.store-v3-purchase-row span{color:var(--muted);font-size:12px}.store-v3-purchase-row strong{max-width:68%;color:var(--ink);font-size:13px;text-align:right;line-height:1.35}
+    .store-v3-stock-copy.is-low{color:#815c00!important}.store-v3-stock-copy.is-urgent{color:#a33127!important}
+    @media(max-width:760px){.store-v3-reviews .offering-reviews__header{display:block}.store-v3-reviews .offering-reviews__summary{margin-top:14px}.store-v3-review-empty{align-items:stretch;flex-direction:column}.store-v3-review-empty .btn{width:100%}.store-v3-review-actions{flex-direction:column!important}.store-v3-review-composer{grid-template-columns:1fr}}
 </style>
 @endpush
 
-<div class="wow-v3-offering-page">
+<div class="wow-v3-offering-page {{ $productOnly ? 'wow-v3-product-only' : '' }}">
     <header class="hero-wrap">
         <section class="hero">
             @foreach($heroImages as $index => $heroImage)
@@ -2874,6 +3139,13 @@ SVG;
 
                     <h1>{{ $title }}</h1>
 
+                    @if($isStoreProduct && ! empty($primaryImage))
+                        <div class="store-v3-mobile-product-image {{ $productOnly ? 'store-v3-product-only-image' : '' }}">
+                            <img src="{{ $primaryImage }}" alt="{{ $title }}" loading="eager">
+                        </div>
+                    @endif
+
+                    @if($sourceVersion === 'v3' && ! $isStoreProduct)
                     <div class="hero-meta">
                         @foreach($quickInfo as $card)
                             @php
@@ -2897,9 +3169,59 @@ SVG;
                             </article>
                         @endforeach
                     </div>
+                    @endif
                 </div>
 
-                @if($usesLegacyBuybox)
+                @if($isStoreProduct)
+                    <aside class="booking-panel store-v3-checkout-panel" id="booking">
+                        <div class="booking-top">
+                            <div>
+                                <div class="price-label">Price</div>
+                                @if(data_get($offering, 'compare_at_price') !== null && (float) data_get($offering, 'compare_at_price') > $price)
+                                    <div class="store-v3-compare-price">£{{ number_format((float) data_get($offering, 'compare_at_price'), 2) }}</div>
+                                @endif
+                                <div class="price">£{{ number_format($price, 2) }}</div>
+                            </div>
+                            <span class="status-dot {{ $stockStatusClass }}">{{ $stockStatusLabel }}</span>
+                        </div>
+
+                        @if(count($variantCards) > 1)
+                            <div class="store-v3-variant-picker" aria-label="Choose an option">
+                                <span>Choose an option</span>
+                                <div class="store-v3-variant-options" role="radiogroup">
+                                    @foreach($variantCards as $variantCard)
+                                        <button
+                                            class="store-v3-variant-option {{ (string) ($variantCard['id'] ?? '') === (string) $selectedVariantId ? 'is-selected' : '' }}"
+                                            type="button"
+                                            role="radio"
+                                            aria-checked="{{ (string) ($variantCard['id'] ?? '') === (string) $selectedVariantId ? 'true' : 'false' }}"
+                                            data-variant-id="{{ $variantCard['id'] }}"
+                                            data-variant-label="{{ $variantCard['label'] }}"
+                                            data-variant-price="{{ number_format((float) ($variantCard['price'] ?? 0), 2, '.', '') }}"
+                                            data-variant-compare="{{ $variantCard['compare'] !== null ? number_format((float) $variantCard['compare'], 2, '.', '') : '' }}"
+                                            {{ empty($variantCard['available']) ? 'disabled' : '' }}
+                                        >
+                                            <strong>{{ $variantCard['label'] }}</strong>
+                                            <small>£{{ number_format((float) ($variantCard['price'] ?? 0), 2) }}</small>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="store-v3-purchase-summary">
+                            <div class="store-v3-purchase-row"><span>Product</span><strong>{{ $title }}</strong></div>
+                            <div class="store-v3-purchase-row"><span>Delivery</span><strong>{{ ($offering['requires_shipping'] ?? true) ? 'Ships to you' : 'Digital delivery' }}</strong></div>
+                            @if($stockQuantity !== null)<div class="store-v3-purchase-row"><span>Availability</span><strong class="store-v3-stock-copy {{ $stockStatusClass }}">{{ $stockStatusLabel }}</strong></div>@endif
+                        </div>
+
+                        <div class="desktop-booking-buttons">
+                            <button class="btn secondary-checkout js-add-to-cart js-open-cart" type="button" data-id="store-{{ $offering['id'] ?? 0 }}" data-product-id="{{ $offering['id'] ?? 0 }}" data-source-version="store" data-title="{{ $title }}" data-price="{{ number_format($price, 2, '.', '') }}" data-variant-id="{{ $selectedVariantId }}" data-variant-label="{{ $selectedVariantLabel }}" data-image="{{ $primaryImage }}" data-product-url="{{ $offering['url'] ?? url()->current() }}" data-url="{{ $offering['url'] ?? url()->current() }}" data-qty="1">Add to cart</button>
+                            <button class="btn checkout-button js-buy-now" type="button" data-id="store-{{ $offering['id'] ?? 0 }}" data-product-id="{{ $offering['id'] ?? 0 }}" data-source-version="store" data-title="{{ $title }}" data-price="{{ number_format($price, 2, '.', '') }}" data-variant-id="{{ $selectedVariantId }}" data-variant-label="{{ $selectedVariantLabel }}" data-image="{{ $primaryImage }}" data-product-url="{{ $offering['url'] ?? url()->current() }}" data-url="{{ $offering['url'] ?? url()->current() }}" data-qty="1">Buy now</button>
+                        </div>
+                        <p class="secure-note">Secure checkout. Stripe payment. Email order confirmation.</p>
+                    </aside>
+                @elseif($usesLegacyBuybox)
                     <div class="legacy-buybox-shell">
                         @include('offering.partials.advanced_buybox')
                     </div>
@@ -2949,7 +3271,7 @@ SVG;
                                 <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
                                     <span class="custom-select-value">
                                         <strong id="sessionSelectTitle">{{ $selectedVariantLabel }}</strong>
-                                        <span id="sessionSelectMeta">{{ $variantCards[0]['meta'] ?? $selectedVariantLabel }} · {{ $priceSummary }}</span>
+                                        <span id="sessionSelectMeta">{{ $selectedVariantCard['meta'] ?? $selectedVariantLabel }} · {{ '£' . number_format($selectedVariantPrice, 2) }}</span>
                                     </span>
                                     <span class="custom-select-arrow" aria-hidden="true"></span>
                                 </button>
@@ -2980,6 +3302,19 @@ SVG;
                                         @endif
                                     </button>
                                 @endforeach
+                                </div>
+                            </div>
+
+                            <div id="groupSizeControl" class="ticket-control group-size-control" hidden>
+                                <div>
+                                    <strong>Group size</strong>
+                                    <small id="groupPricePerPerson">Per person</small>
+                                </div>
+
+                                <div class="qty" aria-label="Group size">
+                                    <button type="button" id="minusGroup">−</button>
+                                    <span id="groupValue">3</span>
+                                    <button type="button" id="plusGroup">+</button>
                                 </div>
                             </div>
 
@@ -3027,7 +3362,7 @@ SVG;
                         </div>
 
                         <div class="desktop-booking-buttons">
-                            <button class="btn secondary-checkout" type="button" id="desktopSecondaryAction">Add to basket</button>
+                            <button class="btn secondary-checkout" type="button" id="desktopSecondaryAction">Add to cart</button>
                             <button class="btn checkout-button" type="button" id="desktopPrimaryAction">Book now</button>
                         </div>
 
@@ -3040,6 +3375,87 @@ SVG;
 
     <div class="content-wrap">
         <div class="content-main">
+            @if($isStoreProduct)
+                @if(! empty($galleryImages))
+                    <section class="section flat store-v3-desktop-gallery">
+                        <div class="gallery gallery-count-{{ count($galleryImages) }}">
+                            @if(count($galleryImages) === 1)
+                                <div class="gallery-main">
+                                    <img src="{{ $galleryImages[0] }}" alt="{{ $title }} image">
+                                </div>
+                            @elseif(count($galleryImages) === 2)
+                                <div class="gallery-main">
+                                    <img src="{{ $galleryImages[0] }}" alt="{{ $title }} image">
+                                </div>
+                                <div class="gallery-main">
+                                    <img src="{{ $galleryImages[1] }}" alt="{{ $title }} image">
+                                </div>
+                            @else
+                                <div class="gallery-main">
+                                    <img src="{{ $galleryImages[0] }}" alt="{{ $title }} image">
+                                </div>
+                                <div class="gallery-side">
+                                    <div class="gallery-tile">
+                                        <img src="{{ $galleryImages[1] }}" alt="{{ $title }} image">
+                                    </div>
+                                    <div class="gallery-tile">
+                                        <img src="{{ $galleryImages[2] }}" alt="{{ $title }} image">
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </section>
+                @endif
+                @if(! $productOnly)
+                <section class="section" id="about-therapy">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Overview</p>
+                            <h2>About this product</h2>
+                        </div>
+                    </div>
+                    <div class="practitioner-rich-text">
+                        {!! $renderRichHtml($bodyHtml ?: $summary) !!}
+                    </div>
+                </section>
+
+                <section class="section quick-glance-section store-v3-quick-glance">
+                    <div class="section-heading"><div><p class="eyebrow">Product snapshot</p><h2>At a glance</h2><p class="section-intro">The essentials before you order.</p></div></div>
+                    <div class="quick-info-grid" aria-label="Product information">
+                        @foreach($quickInfoMobile as $card)
+                            <article class="quick-info-card"><span class="quick-info-icon" aria-hidden="true">{!! $quickInfoIconSvg($card['icon']) !!}</span><div><small>{{ $card['label'] }}</small><strong>{{ $card['value'] }}</strong></div></article>
+                        @endforeach
+                    </div>
+                </section>
+
+                <section class="section store-v3-specifications">
+                    <div class="section-heading"><div><p class="eyebrow">Specifications</p><h2>Product information</h2></div></div>
+                    <div class="split">
+                        <article class="info-panel"><h3>Product details</h3><div class="mini-list">
+                            @if(data_get($offering, 'sku'))<div class="mini-row"><span>SKU</span><strong>{{ data_get($offering, 'sku') }}</strong></div>@endif
+                            @if(data_get($offering, 'weight_grams') !== null)<div class="mini-row"><span>Weight</span><strong>{{ data_get($offering, 'weight_grams') }} g</strong></div>@endif
+                            @if(data_get($offering, 'dimensions.length_mm'))<div class="mini-row"><span>Dimensions</span><strong>{{ data_get($offering, 'dimensions.length_mm') }} × {{ data_get($offering, 'dimensions.width_mm') }} × {{ data_get($offering, 'dimensions.height_mm') }} mm</strong></div>@endif
+                            <div class="mini-row"><span>Brand</span><strong>{{ data_get($offering, 'brand', 'We Offer Wellness®') }}</strong></div>
+                        </div></article>
+                        <article class="info-panel"><h3>Ordering &amp; delivery</h3><div class="mini-list">
+                            <div class="mini-row"><span>Delivery</span><strong>{{ data_get($offering, 'requires_shipping') ? 'Ships to you' : 'Digital delivery' }}</strong></div>
+                            <div class="mini-row"><span>Payment</span><strong>Secure Stripe checkout</strong></div>
+                            <div class="mini-row"><span>Confirmation</span><strong>Email order confirmation</strong></div>
+                        </div></article>
+                    </div>
+                </section>
+
+                @php
+                    $storeReviewProduct = $offering;
+                    $storeReviewProduct['client_reviews'] = is_array($offering['reviews'] ?? null) ? $offering['reviews'] : [];
+                    $storeReviewProduct['practitioner'] = [
+                        'name' => (string) ($offering['brand'] ?? 'We Offer Wellness®'),
+                        'review_url' => route('store.product.reviews.store', ['category' => data_get($offering, 'category.slug'), 'slug' => data_get($offering, 'slug')]),
+                    ];
+                @endphp
+                @include('offering.partials.reviews_section', ['product' => $storeReviewProduct, 'type' => 'product'])
+                @endif
+            @else
             @if(! empty($galleryImages))
                 <section class="section flat">
                     <div class="gallery gallery-count-{{ count($galleryImages) }}">
@@ -3260,9 +3676,29 @@ SVG;
             </section>
 
             @include('offering.partials.reviews_section', ['product' => $product, 'type' => $type])
+            @endif
         </div>
 
         <aside class="side-stack">
+            @if($isStoreProduct)
+                <div class="side-card">
+                    <h3>Product snapshot</h3>
+                    <div class="mini-list">
+                        <div class="mini-row"><span>Format</span><strong>Physical product</strong></div>
+                        <div class="mini-row"><span>Delivery</span><strong>Ships to you</strong></div>
+                        <div class="mini-row"><span>Stock</span><strong class="store-v3-stock-copy {{ $stockStatusClass }}">{{ $stockStatusLabel }}</strong></div>
+                        <div class="mini-row"><span>Price</span><strong>£{{ number_format($price, 2) }}</strong></div>
+                    </div>
+                </div>
+                <div class="side-card">
+                    <h3>Good to know</h3>
+                    <div class="mini-list">
+                        <div class="mini-row"><span>Payment</span><strong>Secure Stripe checkout</strong></div>
+                        <div class="mini-row"><span>Confirmation</span><strong>Email receipt</strong></div>
+                        <div class="mini-row"><span>Returns</span><strong>See store policy</strong></div>
+                    </div>
+                </div>
+            @else
             <div class="side-card practitioner-side-card" id="practitioner">
                 <div class="practitioner-side-head">
                     <img class="practitioner-side-avatar" src="{{ $practitioner['photo'] ?? asset('images/default-social-preview.jpg') }}" alt="Practitioner profile photo">
@@ -3307,13 +3743,15 @@ SVG;
 
             <div class="side-card">
                 <h3>Therapy snapshot</h3>
-                <div class="mini-list">
-                    <div class="mini-row"><span>Format</span><strong>{{ $typeLabel }}</strong></div>
-                    <div class="mini-row"><span>Locations</span><strong>{{ $locationSummary }}</strong></div>
-                    <div class="mini-row"><span>Duration</span><strong>{{ $durationLabel }}</strong></div>
-                    <div class="mini-row"><span>Booking</span><strong>{{ $bookingSummaryLabel }}</strong></div>
-                    <div class="mini-row"><span>Price</span><strong>{{ $priceSummary }}</strong></div>
-                </div>
+                    <div class="mini-list">
+                        <div class="mini-row"><span>Format</span><strong>{{ $typeLabel }}</strong></div>
+                        <div class="mini-row"><span>Locations</span><strong>{{ $locationSummary }}</strong></div>
+                        @if($sourceVersion === 'v3')
+                        <div class="mini-row"><span>Duration</span><strong>{{ $durationLabel }}</strong></div>
+                        @endif
+                        <div class="mini-row"><span>Booking</span><strong>{{ $bookingSummaryLabel }}</strong></div>
+                        <div class="mini-row"><span>Price</span><strong>{{ $priceSummary }}</strong></div>
+                    </div>
             </div>
 
             <div class="side-card">
@@ -3324,10 +3762,19 @@ SVG;
                     <div class="mini-row"><span>Secure checkout</span><strong>Yes</strong></div>
                 </div>
             </div>
+            @endif
         </aside>
     </div>
 
-    @if(! $usesLegacyBuybox)
+    @if($isStoreProduct && ! $productOnly)
+    <div class="mobile-ticket-bar store-v3-mobile-buybar" id="storeMobileBuyBar">
+        <div>
+            <strong>£{{ number_format($price, 2) }}</strong>
+            <span class="store-v3-mobile-stock {{ $stockStatusClass }}">{{ $stockStatusLabel }} · Ships to you</span>
+        </div>
+        <button class="btn checkout-button js-buy-now" type="button" data-id="store-{{ $offering['id'] ?? 0 }}" data-product-id="{{ $offering['id'] ?? 0 }}" data-source-version="store" data-title="{{ $title }}" data-price="{{ number_format($price, 2, '.', '') }}" data-variant-id="{{ $selectedVariantId }}" data-variant-label="{{ $selectedVariantLabel }}" data-image="{{ $primaryImage }}" data-product-url="{{ $offering['url'] ?? url()->current() }}" data-url="{{ $offering['url'] ?? url()->current() }}" data-qty="1">Buy now</button>
+    </div>
+    @elseif(! $usesLegacyBuybox)
     <div class="mobile-ticket-bar" id="mobileTicketBar">
         <div>
             <strong id="mobilePrice">{{ $priceSummary }}</strong>
@@ -3530,6 +3977,11 @@ SVG;
     const qtyValue = page.querySelector('#qtyValue');
     const minusQty = page.querySelector('#minusQty');
     const plusQty = page.querySelector('#plusQty');
+    const groupSizeControl = page.querySelector('#groupSizeControl');
+    const groupValue = page.querySelector('#groupValue');
+    const minusGroup = page.querySelector('#minusGroup');
+    const plusGroup = page.querySelector('#plusGroup');
+    const groupPricePerPerson = page.querySelector('#groupPricePerPerson');
     const holdBanner = page.querySelector('#holdBanner');
     const holdTimer = page.querySelector('#holdTimer');
     const bookingFields = page.querySelector('#bookingFields');
@@ -3592,6 +4044,7 @@ SVG;
     let selectedVariantSelection = Array.isArray(selectedVariant?.selection) ? selectedVariant.selection.slice() : [];
     let selectedVariantPrice = Number(selectedVariant?.price ?? config.price ?? 0);
     let selectedPriceOptionId = Number(selectedVariant?.price_option_id ?? 0) || null;
+    let groupCount = Number(config.selectedGroupCount || config.groupMin || 3) || 3;
     let qty = 1;
     let selectedAvailabilityMode = 'confirm';
     let selectedDateKey = null;
@@ -3799,7 +4252,11 @@ SVG;
     }
 
     function cartLineId() {
-        return selectedVariantId ? `v:${selectedVariantId}` : `p:${offeringId}`;
+        if (!selectedVariantId) return `p:${offeringId}`;
+        const groupKey = variantIsGroup(selectedVariant)
+            ? `:g:${groupCount}`
+            : '';
+        return `v:${selectedVariantId}${groupKey}`;
     }
 
     function selectedLocation() {
@@ -3895,18 +4352,18 @@ SVG;
     }
 
     function variantForLocation(location, currentVariant = selectedVariant) {
-        if (!location || location.online) {
-            return currentVariant || variants[0] || null;
-        }
-
-        const desiredKey = locationKeyForLocation(location);
         const currentSignature = variantSelectionSignatureKey(currentVariant);
-        const candidateIds = Array.isArray(location.variant_ids) ? location.variant_ids.map(id => String(id)) : [];
+        const isOnline = Boolean(location?.online);
+        const desiredKey = location ? locationKeyForLocation(location) : '';
+        const candidateIds = Array.isArray(location?.variant_ids) ? location.variant_ids.map(id => String(id)) : [];
         const sameLocationVariants = candidateIds.length > 0
             ? variants.filter(candidate => candidateIds.includes(String(candidate.id)))
-            : (desiredKey !== ''
-                ? variants.filter(candidate => variantLocationKey(candidate) === desiredKey)
-                : []);
+            : variants.filter(candidate => {
+                const preference = variantLocationPreference(candidate);
+                if (isOnline) return preference === 'online';
+                if (preference !== 'in-person') return false;
+                return desiredKey === '' || variantLocationKey(candidate) === desiredKey || variantLocationKey(candidate) === '';
+            });
 
         if (sameLocationVariants.length > 0) {
             const exactMatch = sameLocationVariants.find(candidate => variantSelectionSignatureKey(candidate) === currentSignature);
@@ -4015,15 +4472,20 @@ SVG;
     }
 
     function syncPanelSummary() {
-        const total = selectedVariantPrice * qty;
+        const isGroup = variantIsGroup(selectedVariant);
+        const groupTotal = isGroup ? selectedVariantPrice * groupCount : selectedVariantPrice;
+        const total = groupTotal * qty;
         panelPrice.textContent = money(total);
-        mobilePrice.textContent = money(selectedVariantPrice);
+        mobilePrice.textContent = money(total);
         selectedLocationTitle.textContent = selectedLocationLabel();
         selectedLocationAddress.textContent = selectedLocationAddressValue();
         summaryLocation.textContent = selectedLocationLabel();
         summarySession.textContent = selectedVariantLabel;
         summaryDate.textContent = bookingSummaryText();
         qtyValue.textContent = String(qty);
+        if (groupValue) groupValue.textContent = String(groupCount);
+        if (groupSizeControl) groupSizeControl.hidden = !isGroup;
+        if (groupPricePerPerson) groupPricePerPerson.textContent = isGroup ? `${money(selectedVariantPrice)} per person` : 'Per person';
         timezoneLabel.textContent = bookingTimezone || 'Europe/London';
         qsa('[data-location-chip]', page).forEach(chip => {
             chip.classList.toggle('is-active', String(chip.dataset.locationChip) === String(selectedLocationId));
@@ -4043,7 +4505,7 @@ SVG;
         }
         if (desktopSecondaryAction) {
             desktopSecondaryAction.disabled = false;
-            desktopSecondaryAction.textContent = 'Add to basket';
+            desktopSecondaryAction.textContent = 'Add to cart';
         }
         if (confirmDateTime) {
             confirmDateTime.disabled = !(selectedAvailabilityMode === 'pick' && selectedDateKey && selectedTime);
@@ -4343,6 +4805,7 @@ SVG;
         selectedVariantSelection = Array.isArray(next.selection) ? next.selection.slice() : [];
         selectedVariantPrice = Number(next.price ?? 0);
         selectedPriceOptionId = Number(next.price_option_id ?? 0) || null;
+        groupCount = groupCountForVariant(next);
 
         const preference = variantLocationPreference(next);
         const currentLocation = selectedLocation();
@@ -4368,15 +4831,37 @@ SVG;
         fetchBookingAvailability();
     }
 
+    function variantIsGroup(variant) {
+        const text = [variant?.label, ...(Array.isArray(variant?.selection) ? variant.selection : [])]
+            .filter(Boolean).join(' ');
+        return /group/i.test(text) || /(?:\d+\s*people?)/i.test(text);
+    }
+
+    function groupCountForVariant(variant) {
+        const text = [variant?.label, ...(Array.isArray(variant?.selection) ? variant.selection : [])]
+            .filter(Boolean).join(' ');
+        const range = text.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*group/i);
+        const people = text.match(/(\d+)\s*people?/i);
+        const minimum = range ? Number(range[1]) : (people ? Number(people[1]) : Number(config.groupMin || 3));
+        const hasMaximum = config.groupMax !== null
+            && config.groupMax !== undefined
+            && config.groupMax !== ''
+            && Number.isFinite(Number(config.groupMax));
+        const maximum = hasMaximum ? Number(config.groupMax) : Infinity;
+        return Math.min(maximum, Math.max(Number(config.groupMin || 3), minimum || 3));
+    }
+
     function buildLineItem() {
         const location = selectedLocation();
+        const isGroup = variantIsGroup(selectedVariant);
+        const linePrice = isGroup ? selectedVariantPrice * groupCount : selectedVariantPrice;
         return {
             id: cartLineId(),
             product_id: offeringId,
             variant_id: selectedVariantId || null,
             variant_label: selectedVariantLabel,
             title: config.title || document.title,
-            price: Number(selectedVariantPrice || 0),
+            price: Number(linePrice || 0),
             qty,
             image: heroSlides[0]?.style?.backgroundImage ? (config.images?.[0] || null) : (config.images?.[0] || null),
             url: config.url || window.location.pathname,
@@ -4397,7 +4882,7 @@ SVG;
                 location_label: location.label || null,
             },
             selected: Array.isArray(selectedVariantSelection) ? selectedVariantSelection : [],
-            group_count: qty,
+            group_count: isGroup ? groupCount : qty,
             reservation_id: reservationId,
             hold_expires_at: holdExpiresAt,
             location: selectedLocationId,
@@ -4423,7 +4908,7 @@ SVG;
                     location_label: location.label || null,
                 },
                 selected: Array.isArray(selectedVariantSelection) ? selectedVariantSelection : [],
-                group_count: qty,
+                group_count: isGroup ? groupCount : qty,
                 reservation_id: reservationId,
                 hold_expires_at: holdExpiresAt,
                 location: selectedLocationId,
@@ -4654,7 +5139,15 @@ SVG;
     }
 
     function physicalLocations() {
-        return locations.filter(location => !location.online && Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng)));
+        return locations.filter(location => !location.online && hasCoordinates(location));
+    }
+
+    function hasCoordinates(location) {
+        if (!location || location.lat === null || location.lng === null || location.lat === '' || location.lng === '') {
+            return false;
+        }
+
+        return Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng));
     }
 
     function initDesktopMap() {
@@ -4747,7 +5240,7 @@ SVG;
 
     function focusMapsOnSelectedLocation() {
         const location = selectedLocation();
-        if (desktopMap && location && !location.online && Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng))) {
+        if (desktopMap && location && !location.online && hasCoordinates(location)) {
             desktopMap.flyTo({
                 center: [Number(location.lng), Number(location.lat)],
                 zoom: 13.4,
@@ -4757,7 +5250,7 @@ SVG;
             });
         }
 
-        if (locationModalMap && location && !location.online && Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng))) {
+        if (locationModalMap && location && !location.online && hasCoordinates(location)) {
             locationModalMap.flyTo({
                 center: [Number(location.lng), Number(location.lat)],
                 zoom: 13.4,
@@ -4784,7 +5277,7 @@ SVG;
 
     function focusLocationModalMap(locationId, animate = true) {
         const location = locations.find(item => String(item.id) === String(locationId)) || selectedLocation();
-        if (!locationModalMap || !location || location.online || !Number.isFinite(Number(location.lat)) || !Number.isFinite(Number(location.lng))) {
+        if (!locationModalMap || !location || location.online || !hasCoordinates(location)) {
             if (locationModalMapCard) {
                 locationModalMapCard.classList.toggle('is-online', Boolean(location?.online));
             }
@@ -4953,6 +5446,20 @@ SVG;
         syncPanelSummary();
     });
 
+    minusGroup?.addEventListener('click', () => {
+        groupCount = Math.max(Number(config.groupMin || 3), groupCount - 1);
+        syncPanelSummary();
+    });
+    plusGroup?.addEventListener('click', () => {
+        const hasMaximum = config.groupMax !== null
+            && config.groupMax !== undefined
+            && config.groupMax !== ''
+            && Number.isFinite(Number(config.groupMax));
+        const maximum = hasMaximum ? Number(config.groupMax) : Infinity;
+        groupCount = Math.min(maximum, groupCount + 1);
+        syncPanelSummary();
+    });
+
     [desktopPrimaryAction, mobilePrimaryAction].filter(Boolean).forEach(button => {
         button.addEventListener('click', () => handlePrimaryAction(true));
     });
@@ -5017,5 +5524,46 @@ SVG;
     updateMobileStickyBar();
 })();
 </script>
+@if($isStoreProduct)
+<script>
+(() => {
+    const options = Array.from(document.querySelectorAll('.store-v3-variant-option'));
+    if (!options.length) return;
+
+    const price = document.querySelector('.store-v3-checkout-panel .price');
+    const compare = document.querySelector('.store-v3-checkout-panel .store-v3-compare-price');
+    const actions = Array.from(document.querySelectorAll('.store-v3-checkout-panel [data-variant-id], #storeMobileBuyBar [data-variant-id]'));
+    const baseUrl = new URL(window.location.href);
+
+    const money = value => `£${Number(value || 0).toFixed(2)}`;
+    const sync = option => {
+        const variantId = option.dataset.variantId || '';
+        const variantLabel = option.dataset.variantLabel || '';
+        const variantPrice = Number(option.dataset.variantPrice || 0);
+        const variantCompare = Number(option.dataset.variantCompare || 0);
+
+        options.forEach(item => {
+            const selected = item === option;
+            item.classList.toggle('is-selected', selected);
+            item.setAttribute('aria-checked', selected ? 'true' : 'false');
+        });
+        if (price) price.textContent = money(variantPrice);
+        if (compare) {
+            compare.textContent = variantCompare > variantPrice ? money(variantCompare) : '';
+            compare.hidden = !(variantCompare > variantPrice);
+        }
+        actions.forEach(action => {
+            action.dataset.variantId = variantId;
+            action.dataset.variantLabel = variantLabel;
+            action.dataset.price = variantPrice.toFixed(2);
+        });
+        baseUrl.searchParams.set('variant', variantId);
+        window.history.replaceState({}, '', baseUrl.toString());
+    };
+
+    options.forEach(option => option.addEventListener('click', () => sync(option)));
+})();
+</script>
+@endif
 @endpush
 @endif

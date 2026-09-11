@@ -8,12 +8,14 @@ use Illuminate\Console\Command;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class SubmitSearchConsoleSitemap extends Command
 {
     private const REQUIRED_SEGMENTS = [
         'static',
+        'schedules',
         'types',
         'modalities',
         'near-me',
@@ -43,6 +45,8 @@ class SubmitSearchConsoleSitemap extends Command
         if (function_exists('ini_set')) {
             @ini_set('max_execution_time', '0');
         }
+
+        $this->forcePublicSiteUrl();
 
         try {
             $sitemapService = app(SitemapService::class);
@@ -103,6 +107,18 @@ class SubmitSearchConsoleSitemap extends Command
             $this->error($e->getMessage());
             return self::FAILURE;
         }
+    }
+
+    private function forcePublicSiteUrl(): void
+    {
+        $baseUrl = rtrim((string) config('services.public_site_url', 'https://www.weofferwellness.co.uk'), '/');
+
+        if ($baseUrl === '') {
+            $baseUrl = 'https://www.weofferwellness.co.uk';
+        }
+
+        URL::forceRootUrl($baseUrl);
+        URL::forceScheme('https');
     }
 
     /**
