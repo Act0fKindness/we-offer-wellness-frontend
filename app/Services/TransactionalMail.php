@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\CheckoutAttempt;
+use App\Models\OfferingV3;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -367,6 +368,24 @@ class TransactionalMail
             if (empty($items)) {
                 continue;
             }
+            $items = array_map(function (array $item): array {
+                $offering = ! empty($item['product_id'])
+                    ? OfferingV3::find((int) $item['product_id'])
+                    : null;
+                $event = $offering?->when['event'] ?? [];
+                $dates = collect($event['dates'] ?? [])
+                    ->map(fn ($date) => is_array($date) ? ($date['date'] ?? $date['start_date'] ?? null) : null)
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                if ($dates !== []) {
+                    $item['fixed_dates'] = $dates;
+                }
+
+                return $item;
+            }, $items);
             $bookings = Booking::query()
                 ->where('order_id', $order->id)
                 ->where('user_id', (int) ($group['vendor']->user_id ?? 0))
