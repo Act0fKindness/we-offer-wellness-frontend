@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Booking;
 use App\Models\CheckoutAttempt;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -14,7 +15,7 @@ class TransactionalMail
 {
     public static function subscriberConfirm(V3Subscriber $subscriber): void
     {
-        if (!$subscriber->email || !$subscriber->confirmation_token) {
+        if (! $subscriber->email || ! $subscriber->confirmation_token) {
             return;
         }
 
@@ -38,7 +39,7 @@ class TransactionalMail
 
     public static function subscriberWelcome(V3Subscriber $subscriber): void
     {
-        if (!$subscriber->email) {
+        if (! $subscriber->email) {
             return;
         }
 
@@ -60,7 +61,7 @@ class TransactionalMail
 
     public static function subscriberPreferencePrompt(V3Subscriber $subscriber): void
     {
-        if (!$subscriber->email) {
+        if (! $subscriber->email) {
             return;
         }
 
@@ -80,7 +81,7 @@ class TransactionalMail
 
     public static function subscriberPreferencesUpdated(V3Subscriber $subscriber): void
     {
-        if (!$subscriber->email) {
+        if (! $subscriber->email) {
             return;
         }
 
@@ -101,7 +102,7 @@ class TransactionalMail
 
     public static function subscriberUnsubscribed(V3Subscriber $subscriber): void
     {
-        if (!$subscriber->email) {
+        if (! $subscriber->email) {
             return;
         }
 
@@ -121,7 +122,7 @@ class TransactionalMail
 
     public static function subscriberResubscribed(V3Subscriber $subscriber): void
     {
-        if (!$subscriber->email) {
+        if (! $subscriber->email) {
             return;
         }
 
@@ -141,7 +142,7 @@ class TransactionalMail
 
     public static function subscriberPractitionerInterest(V3Subscriber $subscriber): void
     {
-        if (!$subscriber->email) {
+        if (! $subscriber->email) {
             return;
         }
 
@@ -162,7 +163,7 @@ class TransactionalMail
 
     public static function accountWelcome(User $user): void
     {
-        if (!$user->email) {
+        if (! $user->email) {
             return;
         }
 
@@ -177,13 +178,13 @@ class TransactionalMail
             ],
             null,
             null,
-            ['tags' => ['account', 'welcome', 'wow']] 
+            ['tags' => ['account', 'welcome', 'wow']]
         );
     }
 
     public static function passwordChanged(User $user, array $context = []): void
     {
-        if (!$user->email) {
+        if (! $user->email) {
             return;
         }
 
@@ -239,7 +240,7 @@ class TransactionalMail
 
     public static function loginAlert(User $user, array $context = []): void
     {
-        if (!$user->email) {
+        if (! $user->email) {
             return;
         }
 
@@ -259,7 +260,7 @@ class TransactionalMail
 
     public static function accountDeleted(?string $email, ?string $name = null): void
     {
-        if (!$email) {
+        if (! $email) {
             return;
         }
 
@@ -279,9 +280,9 @@ class TransactionalMail
 
     public static function orderReceipt(Order $order): void
     {
-        $order->loadMissing('items');
+        $order->loadMissing(['items', 'customerProfile']);
         $email = $order->email;
-        if (!$email) {
+        if (! $email) {
             return;
         }
 
@@ -291,6 +292,7 @@ class TransactionalMail
             'emails.order-confirmation',
             [
                 'order' => $order,
+                'customerName' => self::customerName($order),
                 'supportUrl' => url('/help'),
             ],
             null,
@@ -309,7 +311,7 @@ class TransactionalMail
         $sent = false;
         foreach ($groups as $group) {
             $email = $group['email'] ?? null;
-            if (!$email) {
+            if (! $email) {
                 continue;
             }
             $items = self::itemsForVendor($group);
@@ -319,7 +321,7 @@ class TransactionalMail
             MailService::send(
                 $email,
                 'New We Offer Wellness booking (Order #'.$order->id.')',
-                'emails.vendor-order-notification',
+                'emails.studio.vendor-order-notification',
                 [
                     'order' => $order,
                     'vendor' => $group['vendor'],
@@ -328,7 +330,11 @@ class TransactionalMail
                 ],
                 null,
                 null,
-                ['tags' => ['order', 'vendor', 'booking']]
+                [
+                    'tags' => ['order', 'vendor', 'booking'],
+                    'source_type' => 'frontend-studio',
+                    'source_label' => 'WOW Studio order notification',
+                ]
             );
             $sent = true;
         }
@@ -339,7 +345,7 @@ class TransactionalMail
     public static function vendorIntroduction(Order $order): bool
     {
         $customerEmail = $order->email;
-        if (!$customerEmail) {
+        if (! $customerEmail) {
             return false;
         }
 
@@ -354,7 +360,7 @@ class TransactionalMail
         $sent = false;
         foreach ($groups as $group) {
             $email = $group['email'] ?? null;
-            if (!$email) {
+            if (! $email) {
                 continue;
             }
             $items = self::itemsForVendor($group);
@@ -366,11 +372,13 @@ class TransactionalMail
                 ['email' => $customerEmail, 'name' => $customerName ?: $customerEmail],
                 $supportEmail ? ['email' => $supportEmail, 'name' => 'We Offer Wellness'] : null,
             ], function (?array $entry) {
-                return !empty($entry['email']);
+                return ! empty($entry['email']);
             }));
 
             $options = [
                 'tags' => ['order', 'introduction'],
+                'source_type' => 'frontend-studio',
+                'source_label' => 'WOW Studio booking introduction',
                 'cc' => $cc,
             ];
 
@@ -384,15 +392,15 @@ class TransactionalMail
             MailService::send(
                 $email,
                 'Booking introduction for Order #'.$order->id,
-                'emails.order-introduction',
+                'emails.studio.order-introduction',
                 [
-                'order' => $order,
-                'vendor' => $group['vendor'],
-                'items' => $items,
-                'customerEmail' => $customerEmail,
-                'customerName' => $customerName,
-                'supportEmail' => $supportEmail,
-            ],
+                    'order' => $order,
+                    'vendor' => $group['vendor'],
+                    'items' => $items,
+                    'customerEmail' => $customerEmail,
+                    'customerName' => $customerName,
+                    'supportEmail' => $supportEmail,
+                ],
                 null,
                 null,
                 $options
@@ -435,7 +443,7 @@ class TransactionalMail
     {
         $order?->loadMissing('items');
         $email = $order->email ?? $attempt->email ?? null;
-        if (!$email) {
+        if (! $email) {
             return;
         }
 
@@ -459,7 +467,7 @@ class TransactionalMail
     {
         $order?->loadMissing('items');
         $email = $attempt->email ?? $order->email ?? null;
-        if (!$email) {
+        if (! $email) {
             return;
         }
 
@@ -482,7 +490,7 @@ class TransactionalMail
     {
         $order->loadMissing('items');
         $email = $order->email;
-        if (!$email) {
+        if (! $email) {
             return;
         }
 
@@ -504,7 +512,7 @@ class TransactionalMail
     {
         $order->loadMissing('items');
         $email = $order->email;
-        if (!$email) {
+        if (! $email) {
             return;
         }
 
@@ -561,24 +569,24 @@ class TransactionalMail
                 }
             }
 
-            if (!$vendor) {
+            if (! $vendor) {
                 $offeringId = self::extractOfferingId($item);
                 if ($offeringId && $offerings->has($offeringId)) {
                     $vendor = optional($offerings->get($offeringId))->vendor;
                 }
             }
 
-            if (!$vendor) {
+            if (! $vendor) {
                 continue;
             }
 
             $email = self::resolveVendorEmail($vendor);
-            if (!$email) {
+            if (! $email) {
                 continue;
             }
 
             $key = (string) $vendor->id;
-            if (!isset($groups[$key])) {
+            if (! isset($groups[$key])) {
                 $groups[$key] = [
                     'vendor' => $vendor,
                     'email' => $email,
@@ -589,6 +597,34 @@ class TransactionalMail
             $groups[$key]['items'][] = self::formatVendorItem($item, $vendor, $productId);
         }
 
+        if (empty($groups)) {
+            $bookings = Booking::query()
+                ->with('user.vendorDetail')
+                ->where('order_id', $order->id)
+                ->get();
+
+            foreach ($bookings as $booking) {
+                $vendor = $booking->user?->vendorDetail;
+                $email = self::resolveVendorEmail($vendor);
+                if (! $vendor || ! $email) {
+                    continue;
+                }
+
+                $key = (string) $vendor->id;
+                if (! isset($groups[$key])) {
+                    $groups[$key] = [
+                        'vendor' => $vendor,
+                        'email' => $email,
+                        'items' => [],
+                    ];
+                }
+
+                foreach ($items as $item) {
+                    $groups[$key]['items'][] = self::formatVendorItem($item, $vendor);
+                }
+            }
+        }
+
         return array_values($groups);
     }
 
@@ -596,6 +632,7 @@ class TransactionalMail
     {
         $meta = is_array($item->meta) ? $item->meta : [];
         $productId = $productId ?? self::extractProductId($item);
+
         return [
             'name' => $item->name,
             'quantity' => (int) $item->quantity,
@@ -638,6 +675,7 @@ class TransactionalMail
         if ($item->sku && preg_match('/(\d+)/', (string) $item->sku, $matches)) {
             return (int) $matches[1];
         }
+
         return null;
     }
 
@@ -658,7 +696,7 @@ class TransactionalMail
 
     protected static function resolveVendorEmail(?VendorDetail $vendor): ?string
     {
-        if (!$vendor) {
+        if (! $vendor) {
             return null;
         }
         $raw = trim((string) ($vendor->user?->email ?: $vendor->vendor_contact));
@@ -668,12 +706,14 @@ class TransactionalMail
         if (str_contains($raw, '<') && preg_match('/<([^>]+)>/', $raw, $matches)) {
             $raw = trim($matches[1]);
         }
+
         return filter_var($raw, FILTER_VALIDATE_EMAIL) ? $raw : null;
     }
 
     protected static function conciergeEmail(): ?string
     {
         $email = config('mail.concierge_address') ?: 'hello@weofferwellness.co.uk';
+
         return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
     }
 
@@ -681,18 +721,19 @@ class TransactionalMail
     {
         $order->loadMissing('customerProfile');
         $profile = $order->customerProfile;
-        if (!$profile) {
+        if (! $profile) {
             return null;
         }
         $name = trim(implode(' ', array_filter([$profile->first_name, $profile->last_name], function ($value) {
             return is_string($value) && trim($value) !== '';
         })));
+
         return $name !== '' ? $name : null;
     }
 
     protected static function preferencesUrl(V3Subscriber $subscriber): string
     {
-        if (!$subscriber->manage_token) {
+        if (! $subscriber->manage_token) {
             return url('/');
         }
 
@@ -701,7 +742,7 @@ class TransactionalMail
 
     protected static function resubscribeUrl(V3Subscriber $subscriber): string
     {
-        if (!$subscriber->manage_token) {
+        if (! $subscriber->manage_token) {
             return url('/');
         }
 
@@ -731,6 +772,7 @@ class TransactionalMail
                     'amount' => $price >= 1000 ? (int) round($price) : (int) round($price * 100),
                 ];
             }
+
             return $items;
         }
 
