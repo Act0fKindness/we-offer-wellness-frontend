@@ -24,6 +24,23 @@
       padding:20px;
     }
 
+button.wowsearch-shrink-0.wowsearch-w-\[58px\].wowsearch-h-\[58px\].wowsearch-mr-\[4px\].wowsearch-rounded-full.wowsearch-bg-\[\#101828\].wowsearch-text-white.wowsearch-flex.wowsearch-items-center.wowsearch-justify-center.wowsearch-shadow-\[0_4px_12px_rgba\(0\,0\,0\,0\.18\)\].wowsearch-hover\:bg-\[\#1d2939\].wowsearch-active\:scale-\[0\.96\].wowsearch-transition-all.wowsearch-duration-150 {
+    border-radius: 40px;
+}
+
+button#wowsearch-desktop-clear-where, button#wowsearch-desktop-clear-what {
+    border-radius: 20px;
+}
+
+
+.wowsearch-component-scope {
+    background: none !important;
+}
+
+.wowsearch-component-scope {
+    background: none !important;
+}
+
   </style>
 
 <div class="wowsearch-component-scope">
